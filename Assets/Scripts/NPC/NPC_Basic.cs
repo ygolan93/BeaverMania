@@ -46,7 +46,7 @@ public class NPC_Basic : MonoBehaviour
     public GameObject Head;
     public GameObject Wing;
     public GameObject Leg;
-    public GameObject Log;
+    public GameObject Reward;
     // Start is called before the first frame update    
     public void Start()
     {
@@ -55,7 +55,6 @@ public class NPC_Basic : MonoBehaviour
         CurrentHealth = MaxHealth;
         PlayerTarget = GameObject.FindGameObjectWithTag("Player");
         PlayerHealth = PlayerTarget.GetComponent<Behavior>();
-        Log = GameObject.FindGameObjectWithTag("Part");
         HitEffect.SetActive(false);
         RandoMovement();
         NPC.velocity = Distance;
@@ -149,8 +148,8 @@ public class NPC_Basic : MonoBehaviour
         Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
         Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
         Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Log, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Log, transform.position + new Vector3(0, 1, 0), transform.rotation);
+        Instantiate(Reward, transform.position + new Vector3(0, 1, 0), transform.rotation);
+        Instantiate(Reward, transform.position + new Vector3(0, 1, 0), transform.rotation);
         GameObject.Destroy(gameObject);
     }
 

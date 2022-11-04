@@ -10,7 +10,7 @@ public class DebugReference : MonoBehaviour
     public TextMeshProUGUI DisplayText;
     public TextMeshProUGUI LogCountText;
     public TextMeshProUGUI HealingDisplay;
-
+    public TextMeshProUGUI CurrencyCount;
 
     //// Text LegacyText;
     //private void Start()
@@ -21,6 +21,7 @@ public class DebugReference : MonoBehaviour
     {
         DisplayText.text = Player.DebugText;
         LogCountText.text = Player.LogCount;
+        CurrencyCount.text = Player.Wallet;
         HealingDisplay.text = Player.HealingText;
     }
 }

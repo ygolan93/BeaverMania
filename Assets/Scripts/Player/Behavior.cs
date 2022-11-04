@@ -66,6 +66,8 @@ public class Behavior : MonoBehaviour
     public string LogCount;
     public string DebugText;
     public string HealingText;
+    public int Currency=0;
+    public string Wallet;
     public GameMaster GM;
     public void OnCollisionEnter(Collision OBJ)
     {
@@ -240,7 +242,7 @@ public class Behavior : MonoBehaviour
         //Update UI text
         HealthPercent = System.Math.Round((CurrentHealth / MaxHealth) * 100f, 1);
         DebugText = HealthPercent + "%";
-
+        Wallet = Currency+" Coins";
         if (Lives == 3)
         {
             ICON_1.SetActive(true);

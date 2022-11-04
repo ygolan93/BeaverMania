@@ -1,0 +1,89 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class BeaverNPC : MonoBehaviour
+{
+    // Start is called before the first frame update
+    Rigidbody Beaver;
+    Animator BeaverAnimator;
+    public float steer = 0.9f;
+    public float speed = 3;
+    public float heading;
+    public float time2turn = 4;
+    public float time2REST = 4;
+    public int MaxHealth = 2000;
+    bool grounded=false;
+    public Vector3 Wander;
+    public Quaternion rotGoal;
+
+    void Start()
+    {
+        Beaver = GetComponent<Rigidbody>();
+         BeaverAnimator = GetComponent<Animator>();
+    }
+
+    private void OnCollisionStay(Collision OBJ)
+    {
+        if (OBJ.gameObject.tag=="Isle")
+        {
+            grounded = true;
+        }
+        
+    }
+    private void OnCollisionExit(Collision OBJ)
+    {
+        if (OBJ.gameObject.tag == "Isle")
+        {
+            grounded = false;
+        }
+
+    }
+    void Movement()
+    {
+        Wander.x = Mathf.Cos(heading);
+        Wander.z = Mathf.Sin(heading);
+        Wander.y = Beaver.velocity.y;
+
+        rotGoal = Quaternion.LookRotation(new Vector3(Wander.x, 0, Wander.z));
+        transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+        Beaver.velocity = Wander * speed;
+    }
+
+    // Update is called once per frame
+
+
+    void Update()
+    {
+        if (grounded==false)
+        {
+            BeaverAnimator.SetBool("Midair", true);
+            BeaverAnimator.SetBool("Walk", false);
+        }
+        if (grounded == true)
+        {
+            BeaverAnimator.SetBool("Midair", false);
+
+
+            if (time2turn > 0)
+            {
+                time2turn -= Time.deltaTime;
+                BeaverAnimator.SetBool("Walk", true);
+                Movement();
+            }
+
+            if (time2turn <= 0)
+            {
+                time2REST -= Time.deltaTime;
+                Beaver.velocity = new Vector3(0, Beaver.velocity.y, 0);
+                BeaverAnimator.SetBool("Walk", false);
+                if (time2REST <= 0)
+                {
+                    time2turn = 4;
+                    heading = Random.Range(0, 360);
+
+                }
+            }
+        }
+    }
+}

@@ -94,6 +94,10 @@ public class Behavior : MonoBehaviour
             }
 
         }
+        if (OBJ.gameObject.CompareTag("Coin"))
+        {
+            Sound.Coin();
+        }
 
     }
     public void OnCollisionStay(Collision OBJ)

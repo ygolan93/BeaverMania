@@ -9,6 +9,13 @@ public class AudioScript : MonoBehaviour
 
     // Sound clips that are conditioned with animations
 
+    public void Coin()
+    {
+        audioSource.clip = audioClip[6];
+        audioSource.volume = 7f;
+        audioSource2.pitch = 1f;
+        audioSource.PlayOneShot(audioClip[6]);
+    }
     public void Heal()
     {
         audioSource2.clip = audioClip[5];
@@ -51,6 +58,7 @@ public class AudioScript : MonoBehaviour
         audioSource2.pitch = 0.8f;
         audioSource2.PlayOneShot(audioClip[0]);
     }
+
 
 
 }

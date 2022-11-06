@@ -148,8 +148,8 @@ public class NPC_Basic : MonoBehaviour
         Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
         Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
         Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Reward, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Reward, transform.position + new Vector3(0, 1, 0), transform.rotation);
+        Instantiate(Reward, transform.position + new Vector3(0, 7, 0), transform.rotation);
+        Instantiate(Reward, transform.position + new Vector3(0, 7, 0), transform.rotation);
         GameObject.Destroy(gameObject);
     }
 

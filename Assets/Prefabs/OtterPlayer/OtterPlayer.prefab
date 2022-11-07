@@ -549,7 +549,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 2.0843604, y: 1}
+    m_SensorSize: {x: 1.8605963, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -904,7 +904,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1748013134017469012}
-  m_LocalRotation: {x: 0.0662963, y: 0.70517945, z: -0.06652254, w: 0.7027813}
+  m_LocalRotation: {x: 0.0662963, y: 0.70517945, z: -0.06652253, w: 0.7027813}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -949,7 +949,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 2.0843604, y: 1}
+    m_SensorSize: {x: 1.8605963, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -1151,7 +1151,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 2.0843604, y: 1}
+    m_SensorSize: {x: 1.8605963, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -1677,7 +1677,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 2.0843604, y: 1}
+    m_SensorSize: {x: 1.8605963, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -18157,6 +18157,8 @@ MonoBehaviour:
   LogCount: 
   DebugText: 
   HealingText: 
+  Currency: 0
+  Wallet: 
   GM: {fileID: 0}
 --- !u!114 &7080714720866271185
 MonoBehaviour:
@@ -18181,8 +18183,8 @@ MonoBehaviour:
   - {fileID: 5651136455202610726}
   - {fileID: 5651136454469857860}
   - {fileID: 5651136454469857860}
-  Bridge: {fileID: 0}
-  Log: {fileID: 0}
+  Bridge: {fileID: 701757154447555572, guid: fc92eb9cc0b23c2499068ca81586978a, type: 3}
+  Log: {fileID: 5113599283708557397, guid: dd223c211faee8f47877592620b75861, type: 3}
   BridgeDrop: {fileID: 1748013134334296994}
   LogDrop: {fileID: 1748013133666443717}
   Goal: {fileID: 7080714720866271184}
@@ -18220,7 +18222,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 112
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
 --- !u!136 &7080714720866270764
 CapsuleCollider:
   m_ObjectHideFlags: 0

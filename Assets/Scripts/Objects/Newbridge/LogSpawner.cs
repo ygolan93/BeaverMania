@@ -5,7 +5,7 @@ using UnityEngine;
 public class LogSpawner : MonoBehaviour
 {
     // Start is called before the first frame update
-    public Rigidbody Logger;
+    public GameObject Logger;
     public bool AtRange;
     [SerializeField] Transform SpawnPoint;
     [SerializeField] Transform Log1;
@@ -16,7 +16,7 @@ public class LogSpawner : MonoBehaviour
 
     void Start()
     {
-        Logger = GetComponent<Rigidbody>();
+        Logger = GetComponent<GameObject>();
     }
     void Update()
     {

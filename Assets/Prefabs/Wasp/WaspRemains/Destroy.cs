@@ -8,7 +8,7 @@ public class Destroy : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-         Clock = 10f;
+         Clock = 5f;
     }
 
     // Update is called once per frame
@@ -16,6 +16,8 @@ public class Destroy : MonoBehaviour
     {
         Clock -= Time.deltaTime;
         if (Clock <= 0)
-            GameObject.Destroy(gameObject);
+        {
+            Destroy(gameObject);
+        }
     }
 }

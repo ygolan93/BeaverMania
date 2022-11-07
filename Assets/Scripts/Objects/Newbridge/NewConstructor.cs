@@ -11,6 +11,7 @@ public class NewConstructor : MonoBehaviour
     [SerializeField] GameObject BridgePart;
     public AudioSource WoodKnock;
     public Rigidbody Bridge;
+    public string BridgeUI;
     //public string BridgeUI;
     float X;
     private void Awake()
@@ -23,8 +24,8 @@ public class NewConstructor : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.LeftControl))
             {
-                Bridge.constraints = RigidbodyConstraints.FreezeAll;
-                //BridgeUI = "Locked";
+                Bridge.isKinematic = true;
+                BridgeUI = "Locked";
             }
             if (Input.GetKeyDown(KeyCode.Delete))
             {

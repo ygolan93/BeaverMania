@@ -5,11 +5,12 @@ using UnityEngine;
 public class Drawn : MonoBehaviour
 {
     public Rigidbody Log;
-    public GameObject Player;
+    Behavior Player;
 
     //Distance from log to player
     public Vector3 distance;
     public float avgDistance;
+
     public bool Click;
 
     public GameObject DrawnEffect;
@@ -33,6 +34,10 @@ public class Drawn : MonoBehaviour
         {
             Destroy(gameObject);
         }
+    }
+    private void Start()
+    {
+        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
     }
     [System.Obsolete]
     public void FixedUpdate()

@@ -31,6 +31,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 1360.24, y: 1002.51, z: 603.75}
   m_LocalScale: {x: 0.4479157, y: 0.8472599, z: 0.4479157}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -54,6 +55,7 @@ MeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
@@ -111,12 +113,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Log: {fileID: 5113599283708557397}
-  Player: {fileID: 0}
   distance: {x: 0, y: 0, z: 0}
   avgDistance: 0
   Click: 0
-  DrawnEffect: {fileID: 0}
-  Load: {fileID: 0}
+  DrawnEffect: {fileID: 6230735508686078763, guid: 31eeb47d63642f641a5ae492c7d3c428, type: 3}
+  Load: {fileID: 7080714720866271185, guid: 9a3277e3630403b4bb673093a64d5d9a, type: 3}
 --- !u!54 &5113599283708557397
 Rigidbody:
   m_ObjectHideFlags: 0

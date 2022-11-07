@@ -1,5 +1,62 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &802169640067431829
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 3780850970444110959}
+    m_Modifications:
+    - target: {fileID: 1036625100667250374, guid: 462793c018d79c64d8eca73fdd888f74, type: 3}
+      propertyPath: m_Name
+      value: RemainEffect
+      objectReference: {fileID: 0}
+    - target: {fileID: 9155009619232580110, guid: 462793c018d79c64d8eca73fdd888f74, type: 3}
+      propertyPath: m_RootOrder
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9155009619232580110, guid: 462793c018d79c64d8eca73fdd888f74, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9155009619232580110, guid: 462793c018d79c64d8eca73fdd888f74, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9155009619232580110, guid: 462793c018d79c64d8eca73fdd888f74, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9155009619232580110, guid: 462793c018d79c64d8eca73fdd888f74, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 9155009619232580110, guid: 462793c018d79c64d8eca73fdd888f74, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 9155009619232580110, guid: 462793c018d79c64d8eca73fdd888f74, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9155009619232580110, guid: 462793c018d79c64d8eca73fdd888f74, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9155009619232580110, guid: 462793c018d79c64d8eca73fdd888f74, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: 9155009619232580110, guid: 462793c018d79c64d8eca73fdd888f74, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9155009619232580110, guid: 462793c018d79c64d8eca73fdd888f74, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 462793c018d79c64d8eca73fdd888f74, type: 3}
 --- !u!1001 &3743334136819907460
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -69,10 +126,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 863509ffc8ab0614894c18aa9a4c9d72, type: 3}
       propertyPath: m_TagString
-      value: Isle
+      value: Remain
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 863509ffc8ab0614894c18aa9a4c9d72, type: 3}
+--- !u!4 &3780850970444110959 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 863509ffc8ab0614894c18aa9a4c9d72, type: 3}
+  m_PrefabInstance: {fileID: 3743334136819907460}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &4554149956192257749 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 863509ffc8ab0614894c18aa9a4c9d72, type: 3}
@@ -107,6 +169,20 @@ SphereCollider:
   serializedVersion: 2
   m_Radius: 0.87
   m_Center: {x: 0, y: 0.3, z: 0}
+--- !u!114 &-7863160124184792033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4554149956192257749}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d5bcc1ff8571384a829612c378f3be3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GrowingTree: {fileID: 3957574019169429477, guid: 9201b03cddb819b4e8ce156415d30948, type: 3}
+  grounded: 0
 --- !u!114 &-627731097286901690
 MonoBehaviour:
   m_ObjectHideFlags: 0

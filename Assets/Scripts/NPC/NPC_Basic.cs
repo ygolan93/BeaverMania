@@ -223,11 +223,13 @@ public class NPC_Basic : MonoBehaviour
         transform.rotation = rotGoal;
         NPC.useGravity = true;
         Wasp.SetBool("Beat", true);
-        //HitEffect.SetActive(true);
+        HitEffect.SetActive(true);
         Wasp.SetBool("Sting", false);
         CurrentHealth -= Damage;
         Sound.Beat();
         combo++;
         NPCHealthBar.SetNPCHealth(CurrentHealth);
+
+
     }
 }

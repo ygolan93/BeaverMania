@@ -38,14 +38,14 @@ public class Behavior : MonoBehaviour
     public GameObject ICON_3;
 
     //Combat
-    float Beat = 1;
+    public float Beat = 0;
 
     public Transform AttackPoint;
     public Transform Sphere;
     public float attackRange = 0.5f;
     public LayerMask enemyLayers;
     public float GroundBeat = 0.3f;
-    float BeatGrounded = 0.3f;
+    float BeatGrounded = 0.4f;
     public float AirBeat = 0.2f;
     float BeatAir = 0.2f;
     float FallClock;
@@ -166,7 +166,6 @@ public class Behavior : MonoBehaviour
                 {
                     Debug.Log("Hit " + enemy.name);
                     enemy.GetComponent<NPC_Basic>().TakeDamage(GroundAttack);
-                    enemy.GetComponent<NPC_Basic>().HitEffect.SetActive(true);
 
                 }
             }
@@ -182,7 +181,6 @@ public class Behavior : MonoBehaviour
                 {
                     Debug.Log("Hit " + enemy.name);
                     enemy.GetComponent<NPC_Basic>().TakeDamage(40);
-                    enemy.GetComponent<NPC_Basic>().HitEffect.SetActive(true);
                 }
 
             }
@@ -488,30 +486,25 @@ public class Behavior : MonoBehaviour
             }
             if (grounded == true)
             {
-                Beat -= Time.deltaTime/10;
-                if (Beat > 0)
+                //Beat += Time.deltaTime;
+                //if (Otter.speed > 0.3f)
+                //    Otter.speed -= Beat / 5;
+                //if (GroundAttack > 1)
+                //    GroundAttack -= (int)Beat;
+                BeatGrounded -= Time.deltaTime;
+                if (BeatGrounded <= 0)
                 {
-                    Otter.speed = Beat;
-                    BeatGrounded -= Time.deltaTime*Beat;
-                    if (BeatGrounded <= 0)
-                    {
-                        Attack();
-                    }
-                }
-                else
-                {
-                    Otter.SetBool("fight", false);
-                    Beat = 1;
-                    Otter.speed = 1;
+                    Attack();
                 }
             }
+
         }
         else
         {
             Otter.SetBool("fight", false);
             InitiateAir = 0.5f;
-            //GroundAttack = 30;
-            Beat = 1;
+            GroundAttack = 30;
+            Beat = 0;
             Otter.speed = 1;
         }
 

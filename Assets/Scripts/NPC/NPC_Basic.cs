@@ -210,7 +210,7 @@ public class NPC_Basic : MonoBehaviour
             a = Random.Range(-1, 1);
             b = Random.Range(-0.1f, 0.1f);
             c = Random.Range(-1, 1);
-            NPC.velocity = new Vector3(a, b, c).normalized * 5;
+            NPC.velocity = new Vector3(a, b, c);
             ChangeNav = 5f;
         }
         else

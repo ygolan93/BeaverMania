@@ -11,10 +11,10 @@ public class Behavior : MonoBehaviour
     public Carry Load;
     public Quaternion rotGoal;
     public float speed = 5;
-    public float steer = 0.9f;
+    public float steer = 2f;
     public float JumpForce = 3;
-    public float Walk = 4;
-    public float Run = 12;
+    public float Walk = 5;
+    public float Run = 20;
     float levitation = 10f;
     float InitiateAir = 0.5f;
 
@@ -117,7 +117,7 @@ public class Behavior : MonoBehaviour
             {
                 RightHandWeapon.SetActive(true);
                 LeftHandWeapon.SetActive(true);
-                GroundAttack = 150;
+                GroundAttack = 250;
                 Destroy(OBJ.gameObject);
             }
         }
@@ -205,29 +205,34 @@ public class Behavior : MonoBehaviour
     }
     public void PlayerMove(Vector3 Direction)
     {
-        rotGoal = Quaternion.LookRotation(Direction);
+        rotGoal = Quaternion.LookRotation(Player.velocity);
         transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
         Otter.SetBool("walk", true);
         if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey)
         {
-            Otter.SetBool("run", true);
+            if (Player.velocity.magnitude > Walk)
+            {
+                Otter.SetBool("run", true);
+            }
+            else
+            {
+                Otter.SetBool("run", false);
+            }
             speed = Run;
-            steer = 0.2f;
+            steer = 0.09f;
+            if (Player.velocity.magnitude<speed)
+            Player.AddForce(Direction * 20);
         }
-        if (!Input.GetKey(KeyCode.LeftShift))
+
+        else
         {
             Otter.SetBool("run", false);
             speed = Walk;
-            steer = 0.12f;
+            steer = 0.1f;
+            Player.velocity =(Direction.normalized * speed) + new Vector3(0, Player.velocity.y, 0);
+
         }
-        if (grounded == true)
-        {
-            Player.velocity = Direction.normalized * speed + new Vector3(0, Player.velocity.y, 0);
-        }
-        if (grounded == false)
-        {
-            Player.AddForce(Direction.normalized * 2f);
-        }
+
     }
 
     public void Start()
@@ -266,6 +271,7 @@ public class Behavior : MonoBehaviour
             ICON_2.SetActive(false);
             ICON_3.SetActive(true);
         }
+
 
 
         //Lock and hide mouse icon
@@ -308,6 +314,7 @@ public class Behavior : MonoBehaviour
         Vector3 XZBack = new Vector3(cameraRelativeBack.x, 0, cameraRelativeBack.z);
         Vector3 XZRight = new Vector3(cameraRelativeRight.x, 0, cameraRelativeRight.z);
         Vector3 XZLeft = new Vector3(cameraRelativeLeft.x, 0, cameraRelativeLeft.z);
+
 
         //Basic movement setup
         if (!Input.GetKey(KeyCode.LeftControl)) //Crouch action stops all movement on ground

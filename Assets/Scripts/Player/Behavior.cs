@@ -11,10 +11,10 @@ public class Behavior : MonoBehaviour
     public Carry Load;
     public Quaternion rotGoal;
     public float speed = 5;
-    public float steer = 2f;
+    public float steer = 0.9f;
     public float JumpForce = 3;
-    public float Walk = 5;
-    public float Run = 20;
+    public float Walk = 4;
+    public float Run = 12;
     float levitation = 10f;
     float InitiateAir = 0.5f;
 
@@ -208,36 +208,24 @@ public class Behavior : MonoBehaviour
         rotGoal = Quaternion.LookRotation(new Vector3(Player.velocity.x,0,Player.velocity.z));
         transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
         Otter.SetBool("walk", true);
-        if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey)
+        if (grounded == true)
         {
-            if (Player.velocity.magnitude > 7)
+            if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey)
             {
-                Otter.speed = 1;
                 Otter.SetBool("run", true);
+                speed = Run;
+                steer = 0.15f;
             }
             else
-            {
-                Otter.speed += 0.3f;
-                Otter.SetBool("run", false);
-            }
-            speed = Run;
-            steer = 0.5f;
-            if (Player.velocity.magnitude<speed)
-            Player.AddForce(Direction * 20);
-        }
-
-        else
-        {
-            if (grounded == true)
             {
                 Otter.SetBool("run", false);
                 speed = Walk;
                 steer = 0.1f;
-                Player.velocity = (Direction.normalized * speed) + new Vector3(0, Player.velocity.y, 0);
             }
-
+            Player.velocity = (Direction.normalized * speed) + new Vector3(0, Player.velocity.y, 0);
         }
-
+        if (grounded == false)
+            Player.AddForce(Direction.normalized*5);
     }
 
     public void Start()

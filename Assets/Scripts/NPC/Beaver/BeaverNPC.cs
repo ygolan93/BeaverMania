@@ -7,7 +7,7 @@ public class BeaverNPC : MonoBehaviour
     // Start is called before the first frame update
     Rigidbody Beaver;
     Animator BeaverAnimator;
-    public float steer = 0.9f;
+    public float steer = 0.1f;
     public float speed = 3;
     public float heading;
     public float time2turn = 4;

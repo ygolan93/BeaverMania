@@ -205,31 +205,36 @@ public class Behavior : MonoBehaviour
     }
     public void PlayerMove(Vector3 Direction)
     {
-        rotGoal = Quaternion.LookRotation(Player.velocity);
+        rotGoal = Quaternion.LookRotation(new Vector3(Player.velocity.x,0,Player.velocity.z));
         transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
         Otter.SetBool("walk", true);
         if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey)
         {
-            if (Player.velocity.magnitude > Walk)
+            if (Player.velocity.magnitude > 7)
             {
+                Otter.speed = 1;
                 Otter.SetBool("run", true);
             }
             else
             {
+                Otter.speed += 0.3f;
                 Otter.SetBool("run", false);
             }
             speed = Run;
-            steer = 0.09f;
+            steer = 0.5f;
             if (Player.velocity.magnitude<speed)
             Player.AddForce(Direction * 20);
         }
 
         else
         {
-            Otter.SetBool("run", false);
-            speed = Walk;
-            steer = 0.1f;
-            Player.velocity =(Direction.normalized * speed) + new Vector3(0, Player.velocity.y, 0);
+            if (grounded == true)
+            {
+                Otter.SetBool("run", false);
+                speed = Walk;
+                steer = 0.1f;
+                Player.velocity = (Direction.normalized * speed) + new Vector3(0, Player.velocity.y, 0);
+            }
 
         }
 

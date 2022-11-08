@@ -47,7 +47,7 @@ public class AudioScript : MonoBehaviour
     private void Step()
     {
         audioSource.clip = audioClip[1];
-        audioSource.volume = 0.8f;
+        audioSource.volume = 0.4f;
         audioSource.pitch = 0.8f;
         audioSource.PlayOneShot(audioClip[1]);
     }

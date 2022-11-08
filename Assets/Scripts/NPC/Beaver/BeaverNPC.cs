@@ -22,7 +22,14 @@ public class BeaverNPC : MonoBehaviour
         Beaver = GetComponent<Rigidbody>();
          BeaverAnimator = GetComponent<Animator>();
     }
-
+    private void OnCollisionEnter(Collision OBJ)
+    {
+        if (OBJ.gameObject.CompareTag("Damage"))
+        {
+            Beaver.constraints = RigidbodyConstraints.None;
+            BeaverAnimator.Play("Idle");
+        }
+    }
     private void OnCollisionStay(Collision OBJ)
     {
         if (OBJ.gameObject.tag=="Isle")
@@ -85,5 +92,6 @@ public class BeaverNPC : MonoBehaviour
                 }
             }
         }
+       
     }
 }

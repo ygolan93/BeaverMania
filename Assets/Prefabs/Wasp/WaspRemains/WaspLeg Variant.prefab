@@ -63,9 +63,17 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -753890797589095910, guid: 55f4e1e68de8a3243beaf33cb8d0a47d, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 55f4e1e68de8a3243beaf33cb8d0a47d, type: 3}
       propertyPath: m_Name
       value: WaspLeg Variant
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 55f4e1e68de8a3243beaf33cb8d0a47d, type: 3}
+      propertyPath: m_Layer
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 55f4e1e68de8a3243beaf33cb8d0a47d, type: 3}
       propertyPath: m_TagString
@@ -103,7 +111,7 @@ CapsuleCollider:
   m_GameObject: {fileID: 8780894494686982430}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   m_Radius: 0.13000003
   m_Height: 1.0058403
   m_Direction: 0
@@ -117,7 +125,7 @@ CapsuleCollider:
   m_GameObject: {fileID: 8780894494686982430}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   m_Radius: 0.1669391
   m_Height: 2.65
   m_Direction: 1
@@ -134,5 +142,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb320059d2209204aac1872dd9ba6cea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GivingTree: {fileID: 1022977966684311792, guid: 973023a5853556b44b49f7bb95d38cd3, type: 3}
-  Remain: {fileID: 2045864653453026079}

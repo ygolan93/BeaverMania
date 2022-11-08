@@ -39,7 +39,7 @@ public class Behavior : MonoBehaviour
 
     //Combat
     public float Beat = 0;
-
+    public Projectile Ball;
     public Transform AttackPoint;
     public Transform Sphere;
     public float attackRange = 0.5f;
@@ -49,6 +49,7 @@ public class Behavior : MonoBehaviour
     public float AirBeat = 0.2f;
     float BeatAir = 0.2f;
     float FallClock;
+    float Throw = 0;
     public int GroundAttack = 30;
     [SerializeField] GameObject RightHandWeapon;
     [SerializeField] GameObject LeftHandWeapon;
@@ -293,6 +294,7 @@ public class Behavior : MonoBehaviour
 
     }
 
+
     [System.Obsolete]
     public void FixedUpdate()
     {
@@ -457,8 +459,8 @@ public class Behavior : MonoBehaviour
             HealLight.enabled = true;
         }
 
-        //Fight action
-        if (Input.GetKey(KeyCode.Mouse0) && Otter.speed < 2)
+        //Melee action
+        if (Input.GetKey(KeyCode.Mouse0))
         {
 
             Otter.SetBool("fight", true); //Airkick leveitation
@@ -486,11 +488,6 @@ public class Behavior : MonoBehaviour
             }
             if (grounded == true)
             {
-                //Beat += Time.deltaTime;
-                //if (Otter.speed > 0.3f)
-                //    Otter.speed -= Beat / 5;
-                //if (GroundAttack > 1)
-                //    GroundAttack -= (int)Beat;
                 BeatGrounded -= Time.deltaTime;
                 if (BeatGrounded <= 0)
                 {
@@ -508,6 +505,24 @@ public class Behavior : MonoBehaviour
             Otter.speed = 1;
         }
 
+        //Stoning action
+        if (Input.GetKey(KeyCode.F)&& grounded==true)
+        {
+            HealingText = "(<X>)";
+            if (!Input.GetKey(KeyCode.S)&& !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
+            {
+                rotGoal = Quaternion.LookRotation(XZForward);
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            }
+            Throw -= Time.deltaTime;
+            if (Throw <= 0)
+            {
+                Otter.Play("Throw");
+                Instantiate(Ball, AttackPoint.position, Quaternion.identity);
+                Throw = 0.4f;
+            }
+
+        }
         //Draw logs action
         if (Input.GetKey(KeyCode.Mouse1))
         {

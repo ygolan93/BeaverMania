@@ -167,6 +167,12 @@ public class NPC_Basic : MonoBehaviour
         {
             Death();
         }
+        if (OBJ.gameObject.CompareTag("Damage"))
+        {
+            TakeDamage(10);
+            combo = 3;
+        }
+
     }
 
 

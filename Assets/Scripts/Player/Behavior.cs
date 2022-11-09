@@ -38,6 +38,8 @@ public class Behavior : MonoBehaviour
     public GameObject ICON_3;
 
     //Combat
+    public float Beat = 0;
+
     public Transform AttackPoint;
     public Transform Sphere;
     public float attackRange = 0.5f;
@@ -66,7 +68,7 @@ public class Behavior : MonoBehaviour
     public string LogCount;
     public string DebugText;
     public string HealingText;
-    public int Currency=0;
+    public int Currency = 0;
     public string Wallet;
     public GameMaster GM;
     public void OnCollisionEnter(Collision OBJ)
@@ -115,7 +117,7 @@ public class Behavior : MonoBehaviour
             {
                 RightHandWeapon.SetActive(true);
                 LeftHandWeapon.SetActive(true);
-                GroundAttack = 200;
+                GroundAttack = 150;
                 Destroy(OBJ.gameObject);
             }
         }
@@ -125,7 +127,7 @@ public class Behavior : MonoBehaviour
             if (CurrentHealth < MaxHealth)
             {
                 TakeDamage(-10);
-                TouchShroom=true;
+                TouchShroom = true;
             }
             if (CurrentHealth >= MaxHealth)
                 TouchShroom = false;
@@ -135,7 +137,7 @@ public class Behavior : MonoBehaviour
             DebugText = "You Can't Swim!";
             transform.position = GM.lastCheckPointPos;
             Lives--;
-            if (Lives==0)
+            if (Lives == 0)
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
 
         }
@@ -149,7 +151,7 @@ public class Behavior : MonoBehaviour
         if (OBJ.gameObject.tag == "Life")
         {
             TouchShroom = false;
-            
+
         }
     }
     public void Attack()
@@ -180,9 +182,9 @@ public class Behavior : MonoBehaviour
                     Debug.Log("Hit " + enemy.name);
                     enemy.GetComponent<NPC_Basic>().TakeDamage(40);
                 }
-                
+
             }
-            BeatAir = AirBeat*Otter.speed;
+            BeatAir = AirBeat * Otter.speed;
         }
     }
 
@@ -238,7 +240,6 @@ public class Behavior : MonoBehaviour
         HealShape = HealEffect.shape;
         RightHandWeapon.SetActive(false);
         LeftHandWeapon.SetActive(false);
-        GroundAttack = 30;
         Lives = 3;
     }
     public void Update()
@@ -246,7 +247,7 @@ public class Behavior : MonoBehaviour
         //Update UI text
         HealthPercent = System.Math.Round((CurrentHealth / MaxHealth) * 100f, 1);
         DebugText = HealthPercent + "%";
-        Wallet = Currency+" Coins";
+        Wallet = Currency + " Coins";
         if (Lives == 3)
         {
             ICON_1.SetActive(true);
@@ -274,7 +275,7 @@ public class Behavior : MonoBehaviour
         //Jump action
         if (Input.GetKeyDown(KeyCode.Space) && JumpLimit > 0)
         {
-            Otter.SetBool("midair",true);
+            Otter.SetBool("midair", true);
             Player.velocity = new Vector3(Player.velocity.x, JumpForce, Player.velocity.z);
             Sound.Jump();
             JumpLimit--;
@@ -395,10 +396,14 @@ public class Behavior : MonoBehaviour
                 if (Player.velocity.magnitude < 6)
                     Player.velocity = new Vector3(0, Player.velocity.y, 0);
             }
-            if (grounded==false||Input.anyKey)
+            else
             {
                 neutralAndMoving = false;
             }
+        }
+        else
+        {
+            neutralAndMoving = false;
         }
 
         if (neutralAndMoving == true)
@@ -432,14 +437,14 @@ public class Behavior : MonoBehaviour
             HurtLight.enabled = true;
             HealLight.enabled = false;
         }
-        if (heal == false && hurt == false && TouchShroom==false)
+        if (heal == false && hurt == false && TouchShroom == false)
         {
             HurtEffect.enableEmission = false;
             HealEffect.enableEmission = false;
             HurtLight.enabled = false;
             HealLight.enabled = false;
         }
-        if (TouchShroom==true)
+        if (TouchShroom == true)
         {
             Sound.Heal();
             HealShape.radius = 10;
@@ -453,7 +458,7 @@ public class Behavior : MonoBehaviour
         }
 
         //Fight action
-        if (Input.GetKey(KeyCode.Mouse0))
+        if (Input.GetKey(KeyCode.Mouse0) && Otter.speed < 2)
         {
 
             Otter.SetBool("fight", true); //Airkick leveitation
@@ -479,19 +484,28 @@ public class Behavior : MonoBehaviour
                     }
                 }
             }
-            if (grounded==true)
+            if (grounded == true)
             {
+                //Beat += Time.deltaTime;
+                //if (Otter.speed > 0.3f)
+                //    Otter.speed -= Beat / 5;
+                //if (GroundAttack > 1)
+                //    GroundAttack -= (int)Beat;
                 BeatGrounded -= Time.deltaTime;
                 if (BeatGrounded <= 0)
                 {
                     Attack();
                 }
             }
+
         }
         else
         {
             Otter.SetBool("fight", false);
             InitiateAir = 0.5f;
+            GroundAttack = 30;
+            Beat = 0;
+            Otter.speed = 1;
         }
 
         //Draw logs action

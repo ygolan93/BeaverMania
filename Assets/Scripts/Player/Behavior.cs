@@ -17,7 +17,7 @@ public class Behavior : MonoBehaviour
     public float Run = 12;
     float levitation = 10f;
     float InitiateAir = 0.5f;
-
+    bool StandOnIsle;
     //float AirClock;
     public bool neutralAndMoving;
     [SerializeField] int JumpLimit = 2;
@@ -38,6 +38,7 @@ public class Behavior : MonoBehaviour
     public GameObject ICON_3;
 
     //Combat
+    public GameObject Stone;
     public float Beat = 0;
     public Projectile Ball;
     public Transform AttackPoint;
@@ -49,8 +50,9 @@ public class Behavior : MonoBehaviour
     public float AirBeat = 0.2f;
     float BeatAir = 0.2f;
     float FallClock;
-    float Throw = 0;
+    float Shoot = 0;
     public int GroundAttack = 30;
+    bool StoneHeld=false;
     [SerializeField] GameObject RightHandWeapon;
     [SerializeField] GameObject LeftHandWeapon;
 
@@ -110,7 +112,10 @@ public class Behavior : MonoBehaviour
             JumpLimit = 2;
             grounded = true;
         }
-
+        if (OBJ.gameObject.CompareTag("Isle"))
+        {
+            StandOnIsle = true;
+        }
         if (OBJ.gameObject.CompareTag("Weapon"))
         {
             HealingText = "Pick  it up!";
@@ -148,6 +153,7 @@ public class Behavior : MonoBehaviour
         if (OBJ.gameObject.CompareTag("Isle") || OBJ.gameObject.CompareTag("Bridge"))
         {
             grounded = false;
+            StandOnIsle = false;
         }
         if (OBJ.gameObject.tag == "Life")
         {
@@ -352,6 +358,11 @@ public class Behavior : MonoBehaviour
         //Crouch action
         if (Input.GetKey(KeyCode.LeftControl) && grounded == true)
         {
+            if (StandOnIsle == true)
+            {
+                StoneHeld = true;
+                Stone.SetActive(true);
+            }
             speed = 0;
             Otter.SetBool("crouch", true);
             if (Input.GetKey(KeyCode.Mouse0) && CurrentHealth < MaxHealth)
@@ -506,7 +517,7 @@ public class Behavior : MonoBehaviour
         }
 
         //Stoning action
-        if (Input.GetKey(KeyCode.F)&& grounded==true)
+        if (Input.GetKey(KeyCode.F)&& StoneHeld==true)
         {
             HealingText = "(<X>)";
             if (!Input.GetKey(KeyCode.S)&& !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
@@ -514,14 +525,13 @@ public class Behavior : MonoBehaviour
                 rotGoal = Quaternion.LookRotation(XZForward);
                 transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
             }
-            Throw -= Time.deltaTime;
-            if (Throw <= 0)
-            {
-                Otter.Play("Throw");
-                Instantiate(Ball, AttackPoint.position, Quaternion.identity);
-                Throw = 0.4f;
-            }
-
+        }
+        if (Input.GetKeyUp(KeyCode.F)&&StoneHeld==true)
+        {
+            Otter.Play("Throw");
+            Instantiate(Ball, AttackPoint.position, Quaternion.identity);
+            Stone.SetActive(false);
+            StoneHeld = false;
         }
         //Draw logs action
         if (Input.GetKey(KeyCode.Mouse1))

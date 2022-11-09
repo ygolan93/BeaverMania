@@ -7,6 +7,8 @@ public class BeaverNPC : MonoBehaviour
     // Start is called before the first frame update
     Rigidbody Beaver;
     Animator BeaverAnimator;
+    Behavior Player;
+    bool isHIT = false;
     public float steer = 0.1f;
     public float speed = 3;
     public float heading;
@@ -21,22 +23,41 @@ public class BeaverNPC : MonoBehaviour
     {
         Beaver = GetComponent<Rigidbody>();
          BeaverAnimator = GetComponent<Animator>();
+        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
     }
     private void OnCollisionEnter(Collision OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Damage"))
+        if (OBJ.gameObject.CompareTag("NPC"))
         {
             Beaver.constraints = RigidbodyConstraints.None;
-            BeaverAnimator.Play("Idle");
+            isHIT = true;
         }
+        if (OBJ.gameObject.CompareTag("Damage"))
+        {
+            isHIT = true;
+            Player.Currency--;
+        }
+
     }
+    [System.Obsolete]
     private void OnCollisionStay(Collision OBJ)
     {
         if (OBJ.gameObject.tag=="Isle")
         {
             grounded = true;
         }
-        
+        if (OBJ.gameObject.tag == "Player")
+        {
+            if (Input.GetKeyDown(KeyCode.LeftControl))
+            {
+                transform.rotation = Quaternion.EulerAngles(0, 0, 0);
+                isHIT = false;
+                Player.Currency++;
+            }
+        }
+
+
+
     }
     private void OnCollisionExit(Collision OBJ)
     {
@@ -62,36 +83,47 @@ public class BeaverNPC : MonoBehaviour
 
     void Update()
     {
-        if (grounded==false)
+        if (isHIT == false)
         {
-            BeaverAnimator.SetBool("Midair", true);
-            BeaverAnimator.SetBool("Walk", false);
-        }
-        if (grounded == true)
-        {
-            BeaverAnimator.SetBool("Midair", false);
+            Beaver.constraints = RigidbodyConstraints.FreezeRotation;
 
-
-            if (time2turn > 0)
+            if (grounded == false)
             {
-                time2turn -= Time.deltaTime;
-                BeaverAnimator.SetBool("Walk", true);
-                Movement();
-            }
-
-            if (time2turn <= 0)
-            {
-                time2REST -= Time.deltaTime;
-                Beaver.velocity = new Vector3(0, Beaver.velocity.y, 0);
+                BeaverAnimator.SetBool("Midair", true);
                 BeaverAnimator.SetBool("Walk", false);
-                if (time2REST <= 0)
-                {
-                    time2turn = 4;
-                    heading = Random.Range(0, 360);
+            }
+            if (grounded == true)
+            {
+                BeaverAnimator.SetBool("Midair", false);
 
+
+                if (time2turn > 0)
+                {
+                    time2turn -= Time.deltaTime;
+                    BeaverAnimator.SetBool("Walk", true);
+                    Movement();
+                }
+
+                if (time2turn <= 0)
+                {
+                    time2REST -= Time.deltaTime;
+                    Beaver.velocity = new Vector3(0, Beaver.velocity.y, 0);
+                    BeaverAnimator.SetBool("Walk", false);
+                    if (time2REST <= 0)
+                    {
+                        time2turn = 4;
+                        heading = Random.Range(0, 360);
+
+                    }
                 }
             }
         }
-       
+        else
+        {
+            Beaver.constraints = RigidbodyConstraints.None;
+            BeaverAnimator.SetBool("Midair", false);
+            BeaverAnimator.SetBool("Walk", false);
+
+        }
     }
 }

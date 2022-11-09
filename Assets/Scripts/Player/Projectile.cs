@@ -6,14 +6,12 @@ public class Projectile : MonoBehaviour
 {
    public Rigidbody Ball;
     Behavior Player;
-    NPC_Basic Enemy;
     float clock = 2f;
     // Start is called before the first frame update
     void Start()
     {
-        Enemy = GameObject.FindGameObjectWithTag("NPC").GetComponent<NPC_Basic>();
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
-        Ball.velocity = Camera.main.transform.TransformDirection(Vector3.forward)*60+Vector3.up*12;
+        Ball.velocity = Camera.main.transform.TransformDirection(Vector3.forward)*30+Vector3.up*12;
     }
     private void Update()
     {
@@ -24,5 +22,20 @@ public class Projectile : MonoBehaviour
         }
         
     }
+    private void OnCollisionEnter(Collision OBJ)
+    {
+        if (OBJ.gameObject.CompareTag("NPC"))
+        {
+            OBJ.gameObject.GetComponent<NPC_Basic>().TakeDamage((int)Ball.velocity.magnitude);
+            if (Ball.velocity.magnitude>70)
+            {
+                OBJ.gameObject.GetComponent<NPC_Basic>().combo = 3;
 
+            }
+        }
+        if (OBJ.gameObject.CompareTag("Hive"))
+        {
+            OBJ.gameObject.GetComponent<Static_Hive>().TakeDamage((int)Ball.velocity.magnitude);
+        }
+    }
 }

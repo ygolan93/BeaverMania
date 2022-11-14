@@ -12,7 +12,7 @@ public class BeaverNPC : MonoBehaviour
     public float steer = 0.1f;
     public float speed = 3;
     public float heading;
-    public float time2turn = 4;
+    public float time2turn = 10;
     public float time2REST = 4;
     public int MaxHealth = 2000;
     bool grounded=false;
@@ -24,9 +24,11 @@ public class BeaverNPC : MonoBehaviour
         Beaver = GetComponent<Rigidbody>();
          BeaverAnimator = GetComponent<Animator>();
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
+        Movement();
     }
     private void OnCollisionEnter(Collision OBJ)
     {
+
         if (OBJ.gameObject.CompareTag("NPC"))
         {
             Beaver.constraints = RigidbodyConstraints.None;
@@ -42,6 +44,10 @@ public class BeaverNPC : MonoBehaviour
     [System.Obsolete]
     private void OnCollisionStay(Collision OBJ)
     {
+        if (OBJ.gameObject.tag != "NPC" && OBJ.gameObject.tag != "Damage" && OBJ.gameObject.tag != "Isle")
+        {
+            Movement();
+        }
         if (OBJ.gameObject.tag=="Isle")
         {
             grounded = true;
@@ -111,9 +117,9 @@ public class BeaverNPC : MonoBehaviour
                     BeaverAnimator.SetBool("Walk", false);
                     if (time2REST <= 0)
                     {
-                        time2turn = 4;
+                        time2turn = 10;
                         heading = Random.Range(0, 360);
-
+                        time2REST = Random.value * 10;
                     }
                 }
             }

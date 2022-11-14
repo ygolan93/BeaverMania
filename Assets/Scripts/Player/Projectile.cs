@@ -6,12 +6,13 @@ public class Projectile : MonoBehaviour
 {
    public Rigidbody Ball;
     Behavior Player;
+    [SerializeField] AudioSource RockSound;
     float clock = 2f;
     // Start is called before the first frame update
     void Start()
     {
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
-        Ball.velocity = Camera.main.transform.TransformDirection(Vector3.forward)*30+Vector3.up*12;
+        Ball.velocity = Camera.main.transform.TransformDirection(Vector3.forward)*65+Vector3.up*12;
     }
     private void Update()
     {
@@ -24,14 +25,21 @@ public class Projectile : MonoBehaviour
     }
     private void OnCollisionEnter(Collision OBJ)
     {
+        if (OBJ.gameObject != Player)
+        {
+            RockSound.PlayOneShot(RockSound.clip);
+            RockSound.volume = 0.4f;
+            RockSound.pitch = 0.8f;
+        }
         if (OBJ.gameObject.CompareTag("NPC"))
         {
             OBJ.gameObject.GetComponent<NPC_Basic>().TakeDamage((int)Ball.velocity.magnitude);
-            if (Ball.velocity.magnitude>70)
-            {
-                OBJ.gameObject.GetComponent<NPC_Basic>().combo = 3;
-
-            }
+            OBJ.gameObject.GetComponent<NPC_Basic>().combo = 3;
+        }
+        if (OBJ.gameObject.CompareTag("Bear"))
+        {
+            OBJ.gameObject.GetComponent<BearNPC>().TakeDamage((int)Ball.velocity.magnitude);
+            OBJ.gameObject.GetComponent<BearNPC>().combo = 3;
         }
         if (OBJ.gameObject.CompareTag("Hive"))
         {

@@ -9,6 +9,13 @@ public class AudioScript : MonoBehaviour
 
     // Sound clips that are conditioned with animations
 
+    public void BlahBlah()
+    {
+        audioSource.clip = audioClip[7];
+        audioSource.volume = 7f;
+        audioSource2.pitch = 1f;
+        audioSource.PlayOneShot(audioClip[6]);
+    }
     public void Coin()
     {
         audioSource.clip = audioClip[6];

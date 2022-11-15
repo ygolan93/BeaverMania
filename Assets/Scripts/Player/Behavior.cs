@@ -11,7 +11,7 @@ public class Behavior : MonoBehaviour
     public Carry Load;
     public Quaternion rotGoal;
     public float speed = 5;
-    public float steer = 0.9f;
+    public float steer = 0.12f;
     public float JumpForce = 3;
     public float Walk = 4;
     public float Run = 12;

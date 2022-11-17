@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class NewConstructor : MonoBehaviour
@@ -11,12 +9,21 @@ public class NewConstructor : MonoBehaviour
     [SerializeField] GameObject BridgePart;
     public AudioSource WoodKnock;
     public Rigidbody Bridge;
+    public Material Cel;
+    public Material Synthi;
+    MeshRenderer Ramp;
     public string BridgeUI;
     //public string BridgeUI;
     float X;
     private void Awake()
     {
+        //Cel = Resources.Load<Material>("RampMATCel");
+        //Synthi = Resources.Load<Material>("RampMatSynthi");
+        Ramp = GetComponent<MeshRenderer>();
+        Ramp.material = Cel;
         Bridge = GetComponent<Rigidbody>();
+        
+
     }
     private void Update()
     {
@@ -26,6 +33,8 @@ public class NewConstructor : MonoBehaviour
             {
                 Bridge.isKinematic = true;
                 BridgeUI = "Locked";
+                Ramp.material = Synthi;
+
             }
             if (Input.GetKeyDown(KeyCode.Delete))
             {

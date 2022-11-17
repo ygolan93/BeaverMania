@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: tree_branches
-  m_Shader: {fileID: 10601, guid: 0000000000000000f000000000000000, type: 0}
+  m_Shader: {fileID: 10606, guid: 0000000000000000f000000000000000, type: 0}
   m_ValidKeywords: []
   m_InvalidKeywords:
   - _ALPHATEST_ON
@@ -86,7 +86,7 @@ Material:
     - _AO: 0
     - _BaseLight: 0.409
     - _BumpScale: 1
-    - _Cutoff: 0.633
+    - _Cutoff: 1
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _FresnelBrightness: 0
@@ -108,25 +108,25 @@ Material:
     - _RimAlpha: 0.09
     - _RimDropOff: 0
     - _RimPower: 0
-    - _ShadowStrength: 1
+    - _ShadowStrength: 0.823
     - _Shininess: 0.01
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SquashAmount: 1
     - _SrcBlend: 1
-    - _TranslucencyViewDependency: 0.7
+    - _TranslucencyViewDependency: 0.859
     - _UVSec: 0
     - _ZWrite: 1
     - __dirty: 0
     m_Colors:
-    - _Color: {r: 0.9434342, g: 0.9716981, b: 0.9295301, a: 0.24705882}
+    - _Color: {r: 1, g: 1, b: 1, a: 0.24705882}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 0}
     - _FresnelColor: {r: 1, g: 1, b: 1, a: 1}
     - _HighColor: {r: 1, g: 1, b: 1, a: 1}
     - _LowColor: {r: 1, g: 1, b: 1, a: 1}
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _RimColor: {r: 1, g: 1, b: 1, a: 1}
-    - _TranslucencyColor: {r: 0.73, g: 0.85, b: 0.40999997, a: 1}
+    - _TranslucencyColor: {r: 0.8509804, g: 0.7717795, b: 0.4117647, a: 1}
     - _TreeInstanceColor: {r: 1, g: 1, b: 1, a: 1}
     - _TreeInstanceScale: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []

@@ -8,8 +8,9 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Rock2
-  m_Shader: {fileID: 4800000, guid: 8fa84e1c8f3a97b4bb416e8eb087630e, type: 3}
-  m_ValidKeywords: []
+  m_Shader: {fileID: 4800000, guid: a1ea0d9a2710ee54c9acd5cdfd83b2e7, type: 3}
+  m_ValidKeywords:
+  - LOD_FADE_CROSSFADE
   m_InvalidKeywords:
   - _DETAIL_MULX2
   - _EMISSION
@@ -26,6 +27,10 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _Albedo:
+        m_Texture: {fileID: 2800000, guid: 162c810bf5419394188c1c46a5db065e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _BumpMap:
         m_Texture: {fileID: 2800000, guid: 3a821c28b70b2b447ab3e66e3a2229e5, type: 3}
         m_Scale: {x: 9, y: 9}
@@ -54,6 +59,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _LOD_DitheringMap:
+        m_Texture: {fileID: 2800000, guid: e33cfde976023144c9866837549818a7, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 2800000, guid: 162c810bf5419394188c1c46a5db065e, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -64,6 +73,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
         m_Texture: {fileID: 2800000, guid: e0a129ea7aef5bf49a02cdc7e2c0c943, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NormalMap:
+        m_Texture: {fileID: 2800000, guid: 3a821c28b70b2b447ab3e66e3a2229e5, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NormalTex:
@@ -82,6 +95,10 @@ Material:
         m_Texture: {fileID: 2800000, guid: e0a129ea7aef5bf49a02cdc7e2c0c943, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _texcoord:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - _BumpScale: 1.15
@@ -95,10 +112,13 @@ Material:
     - _Glossiness: 0.5
     - _GlossyReflections: 1
     - _HighIntensity: 10
+    - _LOD_FADE_CROSSFADE_in: 1
+    - _LOD_FADE_CROSSFADE_out: 1
     - _LightScalar: 1.2
     - _LowIntensity: 2.6
     - _Metallic: 0
     - _Mode: 0
+    - _NormalAmount: 1
     - _OcclusionStrength: 1
     - _Opacity: 1
     - _OutlineSize: 125.97
@@ -107,12 +127,15 @@ Material:
     - _RimAlpha: 0
     - _RimDropOff: 0
     - _RimPower: 0
+    - _Smoothness: 0.2
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _UVSec: 0
     - _ZWrite: 1
+    - __dirty: 1
     m_Colors:
+    - _AlbedoColour: {r: 1, g: 1, b: 1, a: 0}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _FresnelColor: {r: 1, g: 1, b: 1, a: 1}

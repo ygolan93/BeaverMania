@@ -78,7 +78,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _LeafTex:
-        m_Texture: {fileID: 2800000, guid: 1a4e4b9833bcf11468042ab2e91c749f, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Leaves_NoiseTexture2:
@@ -142,11 +142,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TrunkNormalMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 1a4e4b9833bcf11468042ab2e91c749f, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TunkTex:
-        m_Texture: {fileID: 2800000, guid: 1a4e4b9833bcf11468042ab2e91c749f, type: 3}
+        m_Texture: {fileID: 2800000, guid: 1d49d1e2d8a2b97478e3e0355dbf3a07, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _texcoord:
@@ -175,11 +175,11 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _GustAmount: 0.166
+    - _GustAmount: 0.214
     - _GustFreq: 0.224
-    - _GustLargeFreq: 0.094
-    - _GustScale: 0.311
-    - _GustSmallFreq: 0.468
+    - _GustLargeFreq: 0.266
+    - _GustScale: 0.161
+    - _GustSmallFreq: 0.207
     - _JitterAmount: 0
     - _JitterFreq: 0.235
     - _LOD_FADE_CROSSFADE: 1
@@ -187,13 +187,13 @@ Material:
     - _LOD_FADE_CROSSFADE2: 1
     - _LOD_FADE_CROSSFADE_in: 1
     - _LOD_FADE_CROSSFADE_out: 1
-    - _LeafBigNoiseAmount: 0
-    - _LeafBigNoiseScale: 1
+    - _LeafBigNoiseAmount: 0.129
+    - _LeafBigNoiseScale: 1.75
     - _LeafFlatColourSwitch: 0
     - _LeafMetallic: 0.144
     - _LeafNoiseAmount: 0
     - _LeafNoiseScale: 1
-    - _LeafNormalAmount: 0.5
+    - _LeafNormalAmount: 0.376
     - _LeafSmoothness: 0.484
     - _Metallic: 0.132
     - _Mode: 0
@@ -212,21 +212,21 @@ Material:
     - _SrcBlend: 1
     - _Tiling: 1
     - _Tint_Tiling: 0.5
-    - _TotalWindAmount: 0.5
+    - _TotalWindAmount: 0.397
     - _TrunkFlatColourSwitch: 0
     - _TrunkMetallic: 0
-    - _TrunkNormalAmount: 0.5
-    - _TrunkSmoothness: 0.2
+    - _TrunkNormalAmount: 0.329
+    - _TrunkSmoothness: 0
     - _UVSec: 0
     - _WindAmount: 1
-    - _WindBaseline: 0
-    - _WindDirection: 0.77
+    - _WindBaseline: 2.36
+    - _WindDirection: 0.397
     - _WindDirection1: 0
     - _WindNoiseScale: 0.018
     - _WindNoiseScale1: 14.76
     - _WindWorldScale: 0.08
     - _WindWorldScale1: 0.001
-    - _Y_multiplier: -0.5
+    - _Y_multiplier: -0.79
     - _ZWrite: 1
     - __dirty: 0
     - _leafNoiseScale: 1

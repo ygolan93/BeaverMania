@@ -55,6 +55,10 @@ public class Behavior : MonoBehaviour
     [SerializeField] GameObject RightHandWeapon;
     [SerializeField] GameObject LeftHandWeapon;
 
+    //Other objects
+    public GameObject Seed;
+
+
     //Audio & effects
     public AudioScript Sound;
     float HealQue = 3;
@@ -71,6 +75,8 @@ public class Behavior : MonoBehaviour
     public string DebugText;
     public string HealingText;
     public int Currency = 0;
+    public int NutCount;
+    public string SeedText;
     public string Wallet;
     public GameMaster GM;
     public void OnCollisionEnter(Collision OBJ)
@@ -79,9 +85,14 @@ public class Behavior : MonoBehaviour
         {
             DebugText = ("Congrats! You've finished the demo level");
         }
-        if (OBJ.gameObject.CompareTag("Part"))
+        if (OBJ.gameObject.CompareTag("Part")|| OBJ.gameObject.CompareTag("Seed"))
         {
             Otter.Play("Crouch");
+            if (OBJ.gameObject.CompareTag("Seed"))
+            {
+                NutCount++;
+                Destroy(OBJ.gameObject);
+            }
         }
 
         if (OBJ.gameObject.CompareTag("Life"))
@@ -261,6 +272,7 @@ public class Behavior : MonoBehaviour
         HealthPercent = System.Math.Round((CurrentHealth / MaxHealth) * 100f, 1);
         DebugText = HealthPercent + "%";
         Wallet = Currency + " Coins";
+        SeedText = NutCount + " Nuts";
         if (Lives == 3)
         {
             ICON_1.SetActive(true);
@@ -544,13 +556,20 @@ public class Behavior : MonoBehaviour
             StoneHeld = false;
         }
         //Draw logs action
-        if (Input.GetKey(KeyCode.Mouse1))
+        if (Input.GetKey(KeyCode.Mouse1) && !Input.GetKey(KeyCode.LeftControl))
         {
             TakeDamage(10);
         }
         if (!Input.GetKey(KeyCode.Mouse1))
         {
             hurt = false;
+        }
+
+        //Plant Seed action
+        if (Input.GetKey(KeyCode.LeftControl)&& Input.GetKeyDown(KeyCode.Mouse1) && NutCount>0)
+        {
+            Instantiate(Seed, AttackPoint.position, Quaternion.identity);
+            NutCount--;
         }
     }
 

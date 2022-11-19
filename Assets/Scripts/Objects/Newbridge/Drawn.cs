@@ -46,16 +46,16 @@ public class Drawn : MonoBehaviour
         Vector3 distance = (transform.position - Player.transform.position);
         Distance = distance.magnitude;
         //Check if the log is close enough to be drawn + player's health above minimum **         
-        if (Input.GetKey(KeyCode.Mouse1) && Distance <= 15)
+        if (Input.GetKey(KeyCode.Mouse1) && Distance <= 15 && !Input.GetKey(KeyCode.LeftControl))
         {
-            Log.velocity = new Vector3(-distance.x, 1, -distance.z);
-            Click = true;
-            ////Check if player's load is still clear to carry more
-            //bool CanDraw = Load.CanCarry;
-            //if (CanDraw == true)
-            //{
 
-            //}
+            //Check if player's load is still clear to carry more
+            bool CanDraw = Load.CanCarry;
+            if (CanDraw == true)
+            {
+                Log.velocity = new Vector3(-distance.x, 1, -distance.z);
+                Click = true;
+            }
         }
         else
         {

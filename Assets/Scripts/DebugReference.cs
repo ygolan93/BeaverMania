@@ -11,6 +11,7 @@ public class DebugReference : MonoBehaviour
     public TextMeshProUGUI LogCountText;
     public TextMeshProUGUI HealingDisplay;
     public TextMeshProUGUI CurrencyCount;
+    public TextMeshProUGUI SeedCount;
 
     //// Text LegacyText;
     //private void Start()
@@ -23,5 +24,6 @@ public class DebugReference : MonoBehaviour
         LogCountText.text = Player.LogCount;
         CurrencyCount.text = Player.Wallet;
         HealingDisplay.text = Player.HealingText;
+        SeedCount.text = Player.SeedText;
     }
 }

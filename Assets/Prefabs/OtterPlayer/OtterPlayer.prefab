@@ -549,7 +549,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.8605963, y: 1}
+    m_SensorSize: {x: 2.2631578, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -904,7 +904,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1748013134017469012}
-  m_LocalRotation: {x: 0.0662963, y: 0.70517945, z: -0.06652253, w: 0.7027813}
+  m_LocalRotation: {x: 0.0662963, y: 0.70517945, z: -0.06652254, w: 0.7027813}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -949,7 +949,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.8605963, y: 1}
+    m_SensorSize: {x: 2.2631578, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -1151,7 +1151,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.8605963, y: 1}
+    m_SensorSize: {x: 2.2631578, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -1677,7 +1677,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.8605963, y: 1}
+    m_SensorSize: {x: 2.2631578, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -18137,6 +18137,9 @@ MonoBehaviour:
   ICON_1: {fileID: 0}
   ICON_2: {fileID: 0}
   ICON_3: {fileID: 0}
+  Stone: {fileID: 0}
+  Beat: 0
+  Ball: {fileID: 0}
   AttackPoint: {fileID: 7080714719265208176}
   Sphere: {fileID: 7080714718776478338}
   attackRange: 1
@@ -18148,6 +18151,7 @@ MonoBehaviour:
   GroundAttack: 30
   RightHandWeapon: {fileID: 1748013134001093028}
   LeftHandWeapon: {fileID: 1748013135158093713}
+  Seed: {fileID: 1833183328993575629, guid: 0997a4efa32c9084292acc428ccaae13, type: 3}
   Sound: {fileID: 1478123503765573754}
   SlideEffect: {fileID: 4829962913845245053}
   HealEffect: {fileID: 4829962914335099649}
@@ -18158,6 +18162,7 @@ MonoBehaviour:
   DebugText: 
   HealingText: 
   Currency: 0
+  SeedText: 
   Wallet: 
   GM: {fileID: 0}
 --- !u!114 &7080714720866271185

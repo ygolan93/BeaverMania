@@ -17,8 +17,6 @@ public class NewConstructor : MonoBehaviour
     float X;
     private void Awake()
     {
-        //Cel = Resources.Load<Material>("RampMATCel");
-        //Synthi = Resources.Load<Material>("RampMatSynthi");
         Ramp = GetComponent<MeshRenderer>();
         Ramp.material = Cel;
         Bridge = GetComponent<Rigidbody>();
@@ -65,7 +63,7 @@ public class NewConstructor : MonoBehaviour
                     Player.HealthBar.SetHealth(Player.CurrentHealth);
                 }
             PartCount++;
-            X = 4.4f;
+            X = 4.5f;
           var newPart = Instantiate(BridgePart, Bridge.transform.position + Bridge.transform.up * -X * PartCount + Bridge.transform.forward*-0.5f, Bridge.transform.rotation);
             newPart.transform.parent = Bridge.transform;
 

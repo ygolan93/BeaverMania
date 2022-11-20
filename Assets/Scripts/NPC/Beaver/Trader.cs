@@ -40,6 +40,7 @@ public class Trader : MonoBehaviour
         {
             Words = "Who's gonna grab my tiny nuts?";
             transform.rotation = Quaternion.Slerp(transform.rotation, FormalLook, 0.1f);
+            PlayerResponse = "";
         }
     }
 }

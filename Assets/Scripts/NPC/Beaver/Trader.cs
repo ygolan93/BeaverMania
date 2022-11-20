@@ -30,8 +30,8 @@ public class Trader : MonoBehaviour
                 Words = "Ever heard of my magical nuts? Betcha didn't";
                 if (Input.GetKeyDown(KeyCode.T))
                 PlayerResponse = "Sounds tempting but I think I'll pass.";
-                if (Input.GetKeyDown(KeyCode.T))
-                    Words = "Oh come on, Don't be like that.";
+                //if (Input.GetKeyDown(KeyCode.T))
+                //    Words = "Oh come on, Don't be like that.";
 
 
             }

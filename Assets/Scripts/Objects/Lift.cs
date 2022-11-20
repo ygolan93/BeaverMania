@@ -31,11 +31,11 @@ public class Lift : MonoBehaviour
             Beams.velocity = new Vector3(0, -LiftSpeed, 0);
         }
 
-        if (CurrentPos>HeightStart+15)
+        if (CurrentPos>HeightStart+18)
         {
             Up = false;
         }
-        if (CurrentPos<HeightStart-15)
+        if (CurrentPos<HeightStart-18)
         {
             Up = true;
         }

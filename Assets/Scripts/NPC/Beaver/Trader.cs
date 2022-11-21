@@ -24,14 +24,34 @@ public class Trader : MonoBehaviour
         if (PlayerDistance.magnitude<10)
         {
             transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(PlayerDistance), 0.1f);
-            Words = "Hey, you there!";
+            Words = "Hey, you there! Buy Nuts with E and sell them with Q";
             if (PlayerDistance.magnitude<6)
             {
-                Words = "Ever heard of my magical nuts? Betcha didn't";
-                if (Input.GetKeyDown(KeyCode.T))
-                PlayerResponse = "Sounds tempting but I think I'll pass.";
-                //if (Input.GetKeyDown(KeyCode.T))
-                //    Words = "Oh come on, Don't be like that.";
+                if (Input.GetKeyDown(KeyCode.E) &&  Player.Currency>0)
+                {
+                    PlayerResponse = "Ok";
+
+                    if (Player.Currency >=3)
+                    {
+                        Player.NutCount++;
+                        Player.Currency -= 3;
+                    }
+                }
+                if (Input.GetKeyDown(KeyCode.Q) && Player.NutCount > 0)
+                {
+                    {
+                        PlayerResponse = "Ok";
+
+                        if (Player.NutCount > 0)
+                        {
+                            Player.NutCount--;
+                            Player.Currency += 3;
+                        }
+                    }
+                }
+                else
+                    PlayerResponse = "";
+
 
 
             }
@@ -40,7 +60,6 @@ public class Trader : MonoBehaviour
         {
             Words = "Who's gonna grab my tiny nuts?";
             transform.rotation = Quaternion.Slerp(transform.rotation, FormalLook, 0.1f);
-            PlayerResponse = "";
         }
     }
 }

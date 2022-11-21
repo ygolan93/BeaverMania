@@ -58,6 +58,8 @@ public class Behavior : MonoBehaviour
     //Other objects
     public GameObject Seed;
 
+    //Chat
+    public string Plattering;
 
     //Audio & effects
     public AudioScript Sound;
@@ -99,6 +101,7 @@ public class Behavior : MonoBehaviour
         {
             GM.lastCheckPointPos = transform.position;
             HealingText = "Checkpoint saved";
+            Plattering= "at last";
         }
 
         if (OBJ.gameObject.tag == "Isle" || OBJ.gameObject.CompareTag("Bridge"))
@@ -142,6 +145,7 @@ public class Behavior : MonoBehaviour
         {
             if (CurrentHealth < MaxHealth)
             {
+                Plattering  = "aH WTF";
                 TakeDamage(-10);
                 TouchShroom = true;
             }
@@ -168,7 +172,7 @@ public class Behavior : MonoBehaviour
         if (OBJ.gameObject.tag == "Life")
         {
             TouchShroom = false;
-
+            Plattering = "shroom";
         }
     }
     public void Attack()
@@ -183,6 +187,8 @@ public class Behavior : MonoBehaviour
                 {
                     Debug.Log("Hit " + enemy.name);
                     enemy.GetComponent<NPC_Basic>().TakeDamage(GroundAttack);
+                    Plattering = "take this!";
+
                 }
                 if (enemy.CompareTag("Bear"))
                 {
@@ -558,11 +564,14 @@ public class Behavior : MonoBehaviour
         //Draw logs action
         if (Input.GetKey(KeyCode.Mouse1) && !Input.GetKey(KeyCode.LeftControl))
         {
+            Plattering= "To me! my loyal logs";
+
             TakeDamage(10);
         }
         if (!Input.GetKey(KeyCode.Mouse1))
         {
             hurt = false;
+            Plattering = "";
         }
 
         //Plant Seed action

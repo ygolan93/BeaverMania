@@ -1457,8 +1457,9 @@ GameObject:
   - component: {fileID: 1271803784539997324}
   - component: {fileID: 6922718636534246250}
   - component: {fileID: 6470255145214422039}
+  - component: {fileID: 8934006512137477679}
   m_Layer: 5
-  m_Name: DialogueText
+  m_Name: FirstTraderDialogue
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1581,6 +1582,25 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &8934006512137477679
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5926299052523067850}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d3c53d8ec40a9cf4081d0219df78e083, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  textComponent: {fileID: 6470255145214422039}
+  lines:
+  - Hey there, stranger!
+  - -Um, hello
+  - -Interested in my magic nuts?
+  - -...I don't think so
+  textSpeed: 0.01
 --- !u!1 &8730614496064970064
 GameObject:
   m_ObjectHideFlags: 0

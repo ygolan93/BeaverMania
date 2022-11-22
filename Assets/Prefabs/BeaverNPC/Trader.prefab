@@ -661,6 +661,7 @@ MonoBehaviour:
   Merchant: {fileID: 2954568729148759325}
   Player: {fileID: 0}
   Words: 
+  PlayerResponse: 
   PlayerDistance: {x: 0, y: 0, z: 0}
 --- !u!1 &3081823167392677446
 GameObject:
@@ -1677,6 +1678,10 @@ PrefabInstance:
     - target: {fileID: 2131452563116059533, guid: 8679f85db05202c4d8d0c54298e2a80d, type: 3}
       propertyPath: m_Name
       value: SpinningUI
+      objectReference: {fileID: 0}
+    - target: {fileID: 2131452563116059533, guid: 8679f85db05202c4d8d0c54298e2a80d, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5692439974141768434, guid: 8679f85db05202c4d8d0c54298e2a80d, type: 3}
       propertyPath: m_RootOrder

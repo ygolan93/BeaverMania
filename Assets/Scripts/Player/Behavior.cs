@@ -52,6 +52,7 @@ public class Behavior : MonoBehaviour
     float FallClock;
     public int GroundAttack = 30;
     bool StoneHeld=false;
+    bool HammerHeld = false;
     [SerializeField] GameObject RightHandWeapon;
     [SerializeField] GameObject LeftHandWeapon;
 
@@ -136,7 +137,7 @@ public class Behavior : MonoBehaviour
             {
                 RightHandWeapon.SetActive(true);
                 LeftHandWeapon.SetActive(true);
-                GroundAttack = 450;
+                HammerHeld = true;
                 Destroy(OBJ.gameObject);
             }
         }
@@ -298,7 +299,10 @@ public class Behavior : MonoBehaviour
             ICON_3.SetActive(true);
         }
 
-
+        if (HammerHeld==true)
+        {
+            GroundAttack = 450;
+        }
 
         //Lock and hide mouse icon
         Cursor.lockState = CursorLockMode.Locked;
@@ -575,10 +579,15 @@ public class Behavior : MonoBehaviour
         }
 
         //Plant Seed action
-        if (Input.GetKey(KeyCode.LeftControl)&& Input.GetKeyDown(KeyCode.Mouse1) && NutCount>0)
+        if (Input.GetKeyDown(KeyCode.R) && NutCount>0)
         {
+            Otter.Play("Crouch");
             Instantiate(Seed, AttackPoint.position, Quaternion.identity);
             NutCount--;
+        }
+        if (Input.GetKeyUp(KeyCode.R))
+        {
+            Otter.SetBool("Crouch", false);
         }
     }
 

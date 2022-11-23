@@ -5,18 +5,20 @@ using UnityEngine;
 public class ActivateDialogue : MonoBehaviour
 {
     public GameObject Dialogue;
-    public Behavior Player;
+    public GameObject Target;
+    public GameObject Player;
+    public float Distance;
     // Start is called before the first frame update
     void Start()
     {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
         Dialogue.SetActive(false);
     }
 
     // Update is called once per frame
     void Update()
     {
-        if ((transform.position - Player.transform.position).magnitude <= 5)
+        Distance = (Player.transform.position - Target.transform.position).magnitude;
+        if ( Distance<= 5&& Target.transform.position!=null)
         {
             Dialogue.SetActive(true);
         }

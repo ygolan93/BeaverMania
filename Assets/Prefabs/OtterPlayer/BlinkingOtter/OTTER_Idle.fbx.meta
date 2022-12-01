@@ -8,7 +8,13 @@ ModelImporter:
     second: OTTER_Idle
   - first:
       74: -2799005786086568110
+    second: Blink
+  - first:
+      74: -2799005786086568110
     second: Armature|KeyAction
+  - first:
+      74: -701877523992768443
+    second: Blink
   externalObjects: {}
   materials:
     materialImportMode: 2
@@ -68,7 +74,7 @@ ModelImporter:
       maskSource: {instanceID: 0}
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
-      name: Armature|KeyAction
+      name: Blink
       takeName: Armature|KeyAction
       internalID: 0
       firstFrame: 0
@@ -153,7 +159,7 @@ ModelImporter:
     legStretch: 0.05
     feetSpacing: 0
     globalScale: 1
-    rootMotionBoneName: 
+    rootMotionBoneName: mixamorig:Hips
     hasTranslationDoF: 0
     hasExtraRoot: 1
     skeletonHasParents: 1

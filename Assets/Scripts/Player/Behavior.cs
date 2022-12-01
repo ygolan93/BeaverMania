@@ -311,7 +311,7 @@ public class Behavior : MonoBehaviour
         //Jump action
         if (Input.GetKeyDown(KeyCode.Space) && JumpLimit > 0)
         {
-            Otter.SetBool("midair", true);
+            //Otter.Play("Midair");
             Player.velocity = new Vector3(Player.velocity.x, JumpForce, Player.velocity.z);
             Sound.Jump();
             JumpLimit--;
@@ -346,6 +346,9 @@ public class Behavior : MonoBehaviour
         Vector3 XZRight = new Vector3(cameraRelativeRight.x, 0, cameraRelativeRight.z);
         Vector3 XZLeft = new Vector3(cameraRelativeLeft.x, 0, cameraRelativeLeft.z);
 
+        Otter.SetBool("walk", false);
+        Otter.SetBool("run", false);
+        Otter.SetBool("midair", false);
 
         //Basic movement setup
         if (!Input.GetKey(KeyCode.LeftControl)) //Crouch action stops all movement on ground
@@ -591,11 +594,4 @@ public class Behavior : MonoBehaviour
         }
     }
 
-    public void LateUpdate()
-    {
-        //Stop movement animations by default
-        Otter.SetBool("walk", false);
-        Otter.SetBool("run", false);
-        Otter.SetBool("midair", false);
-    }
 }

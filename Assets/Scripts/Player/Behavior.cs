@@ -596,6 +596,6 @@ public class Behavior : MonoBehaviour
         //Stop movement animations by default
         Otter.SetBool("walk", false);
         Otter.SetBool("run", false);
-        Otter.SetBool("midair", false);
+        //Otter.SetBool("midair", false);
     }
 }

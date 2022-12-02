@@ -6452,6 +6452,9 @@ MonoBehaviour:
   CurrentPos: 0
   HighLimit: 18
   LowLimit: 18
+  MaxHeight: 0
+  MinHeight: 0
+  StopTimer: 3
   HeightStart: 0
 --- !u!1 &3736569890757476760
 GameObject:
@@ -18855,7 +18858,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8462758131027891792}
   serializedVersion: 2
-  m_Mass: 0.1
+  m_Mass: 10
   m_Drag: 0
   m_AngularDrag: 0
   m_UseGravity: 1

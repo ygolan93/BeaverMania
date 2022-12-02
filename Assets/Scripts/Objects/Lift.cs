@@ -7,15 +7,25 @@ public class Lift : MonoBehaviour
     [SerializeField] Rigidbody Beams;
     [SerializeField] float LiftSpeed;
     [SerializeField] float CurrentPos;
-    public int HighLimit = 18;
-    public int LowLimit = 18;
+    public float HighLimit = 18;
+    public float LowLimit = 18;
+    public float MaxHeight;
+    public float MinHeight;
+    float NormalSpeed;
+    [SerializeField] float StopTimer = 3f;
+    float InitialTimer;
     bool Up;
+    bool Stop;
     
 
     public float HeightStart;
     private void Start()
     {
         HeightStart = Beams.transform.position.y;
+        NormalSpeed = LiftSpeed;
+        InitialTimer = StopTimer;
+         MaxHeight = HeightStart + HighLimit;
+         MinHeight = HeightStart - LowLimit;
     }
 
 
@@ -24,21 +34,27 @@ public class Lift : MonoBehaviour
     void FixedUpdate()
     {
         CurrentPos = Beams.transform.position.y;
-        if (Up==true)
+        if (Up==true&&Stop==false)
         {
             Beams.velocity = new Vector3(0, LiftSpeed, 0);
         }
-        else
+        if (Up == false && Stop == false)
         {
             Beams.velocity = new Vector3(0, -LiftSpeed, 0);
         }
 
-        if (CurrentPos>HeightStart+HighLimit)
+        if (CurrentPos<MaxHeight&&CurrentPos>MinHeight)
         {
+            StopTimer = InitialTimer;
+        }
+        if (CurrentPos>= MaxHeight)
+        {
+            StopLift();
             Up = false;
         }
-        if (CurrentPos<HeightStart-LowLimit)
+        if (CurrentPos<=MinHeight)
         {
+            StopLift();
             Up = true;
         }
 
@@ -46,5 +62,18 @@ public class Lift : MonoBehaviour
 
     }
 
-    
+    void StopLift()
+    {
+        Stop = true;
+        if (StopTimer > 0 && Stop==true)
+        {
+            Beams.velocity = new Vector3(0, 0, 0);
+            StopTimer -= Time.deltaTime;
+        }
+        if (StopTimer<=0)
+        {
+            Stop = false;
+        }
+    }
+
 }

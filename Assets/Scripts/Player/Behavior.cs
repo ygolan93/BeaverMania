@@ -58,7 +58,7 @@ public class Behavior : MonoBehaviour
 
     //Other objects
     public GameObject Seed;
-
+    public int GobletPickup = 0;
     //Chat
     public string Plattering;
 
@@ -117,6 +117,14 @@ public class Behavior : MonoBehaviour
         {
             Sound.Coin();
         }
+        if (OBJ.gameObject.CompareTag("GobletKey"))
+        {
+            Sound.Coin();
+            GobletPickup++;
+            Destroy(OBJ.gameObject);
+
+        }
+
 
     }
     public void OnCollisionStay(Collision OBJ)

@@ -9,7 +9,7 @@ public class Behavior : MonoBehaviour
     [Header("Movement and animation")]
     public Rigidbody Player;
     Rigidbody Ground;
-    
+
     public Carry Load;
     public Quaternion rotGoal;
     public float speed = 5;
@@ -53,7 +53,7 @@ public class Behavior : MonoBehaviour
     float BeatAir = 0.2f;
     float FallClock;
     public int GroundAttack = 30;
-    bool StoneHeld=false;
+    bool StoneHeld = false;
     bool HammerHeld = false;
     [SerializeField] GameObject RightHandWeapon;
     [SerializeField] GameObject LeftHandWeapon;
@@ -91,7 +91,7 @@ public class Behavior : MonoBehaviour
         {
             DebugText = ("Congrats! You've finished the demo level");
         }
-        if (OBJ.gameObject.CompareTag("Part")|| OBJ.gameObject.CompareTag("Seed"))
+        if (OBJ.gameObject.CompareTag("Part") || OBJ.gameObject.CompareTag("Seed"))
         {
             Otter.Play("Crouch");
             if (OBJ.gameObject.CompareTag("Seed"))
@@ -105,7 +105,7 @@ public class Behavior : MonoBehaviour
         {
             GM.lastCheckPointPos = transform.position;
             HealingText = "Checkpoint saved";
-            Plattering= "at last";
+            Plattering = "at last";
         }
 
         if (OBJ.gameObject.tag == "Isle" || OBJ.gameObject.CompareTag("Bridge"))
@@ -157,7 +157,7 @@ public class Behavior : MonoBehaviour
         {
             if (CurrentHealth < MaxHealth)
             {
-                Plattering  = "aH WTF";
+                Plattering = "aH WTF";
                 TakeDamage(-10);
                 TouchShroom = true;
             }
@@ -249,7 +249,7 @@ public class Behavior : MonoBehaviour
     }
     public void PlayerMove(Vector3 Direction)
     {
-        rotGoal = Quaternion.LookRotation(new Vector3(Direction.x,0,Direction.z));
+        rotGoal = Quaternion.LookRotation(new Vector3(Direction.x, 0, Direction.z));
         transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
         Otter.SetBool("walk", true);
         if (grounded == true)
@@ -266,18 +266,18 @@ public class Behavior : MonoBehaviour
                 speed = Walk;
                 steer = 0.1f;
             }
-            if (Ground!=null)
+            if (Ground != null)
             {
                 Player.velocity = (Direction.normalized * speed + Ground.velocity) + new Vector3(0, Player.velocity.y, 0);
             }
-            if (Ground==null)
+            if (Ground == null)
             {
                 Player.velocity = (Direction.normalized * speed) + new Vector3(0, Player.velocity.y, 0);
             }
 
         }
         if (grounded == false)
-            Player.AddForce(Direction.normalized*5);
+            Player.AddForce(Direction.normalized * 5);
     }
 
     public void Start()
@@ -318,7 +318,7 @@ public class Behavior : MonoBehaviour
             ICON_3.SetActive(true);
         }
 
-        if (HammerHeld==true)
+        if (HammerHeld == true)
         {
             GroundAttack = 450;
         }
@@ -365,11 +365,10 @@ public class Behavior : MonoBehaviour
         Vector3 XZRight = new Vector3(cameraRelativeRight.x, 0, cameraRelativeRight.z);
         Vector3 XZLeft = new Vector3(cameraRelativeLeft.x, 0, cameraRelativeLeft.z);
 
-        if (!Input.anyKey)
-        {
-            Otter.SetBool("walk", false);
-            Otter.SetBool("run", false);
-        }
+
+        Otter.SetBool("walk", false);
+        Otter.SetBool("run", false);
+
         Otter.SetBool("midair", false);
 
         //Basic movement setup
@@ -411,9 +410,9 @@ public class Behavior : MonoBehaviour
             }
         }
         //Crouch action
-        if (Input.GetKey(KeyCode.LeftControl)  && grounded == true)
+        if (Input.GetKey(KeyCode.LeftControl) && grounded == true)
         {
-            if (StandOnIsle == true && Load.i==0 && Input.GetKey(KeyCode.Mouse0))
+            if (StandOnIsle == true && Load.i == 0 && Input.GetKey(KeyCode.Mouse0))
             {
                 StoneHeld = true;
                 Stone.SetActive(true);
@@ -526,7 +525,7 @@ public class Behavior : MonoBehaviour
         }
 
         //Melee action
-        if (Input.GetKey(KeyCode.Mouse0)&& StoneHeld==false)
+        if (Input.GetKey(KeyCode.Mouse0) && StoneHeld == false)
         {
 
             Otter.SetBool("fight", true); //Airkick leveitation
@@ -572,18 +571,18 @@ public class Behavior : MonoBehaviour
         }
 
         //Stoning action
-        if (Input.GetKey(KeyCode.Mouse0)&& StoneHeld==true)
+        if (Input.GetKey(KeyCode.Mouse0) && StoneHeld == true)
         {
             Otter.SetBool("fight", false);
             Otter.SetBool("crouch", false);
             HealingText = "(<X>)";
-            if (!Input.GetKey(KeyCode.S)&& !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
+            if (!Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
             {
                 rotGoal = Quaternion.LookRotation(XZForward);
                 transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
             }
         }
-        if (Input.GetKeyUp(KeyCode.Mouse0)&&StoneHeld==true)
+        if (Input.GetKeyUp(KeyCode.Mouse0) && StoneHeld == true)
         {
             Otter.Play("Throw");
             Instantiate(Ball, AttackPoint.position, Quaternion.identity);
@@ -593,7 +592,7 @@ public class Behavior : MonoBehaviour
         //Draw logs action
         if (Input.GetKey(KeyCode.Mouse1) && !Input.GetKey(KeyCode.LeftControl))
         {
-            Plattering= "To me! my loyal logs";
+            Plattering = "To me! my loyal logs";
 
             TakeDamage(10);
         }
@@ -604,7 +603,7 @@ public class Behavior : MonoBehaviour
         }
 
         //Plant Seed action
-        if (Input.GetKeyDown(KeyCode.R) && NutCount>0)
+        if (Input.GetKeyDown(KeyCode.R) && NutCount > 0)
         {
             Otter.Play("Crouch");
             Instantiate(Seed, AttackPoint.position, Quaternion.identity);

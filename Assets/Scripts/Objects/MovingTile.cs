@@ -71,7 +71,6 @@ public class MovingTile : MonoBehaviour
         {
             var Child = OBJ.GetComponent<Rigidbody>();
             Child.transform.parent = Tile.transform;
-            Child.velocity = new Vector3(Tile.velocity.x, Child.velocity.y, Tile.velocity.z);
         }
 
 

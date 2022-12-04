@@ -13,6 +13,7 @@ public class NewConstructor : MonoBehaviour
     public Material Synthi;
     MeshRenderer Ramp;
     public string BridgeUI;
+
     //public string BridgeUI;
     float X;
     private void Awake()
@@ -29,7 +30,7 @@ public class NewConstructor : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.LeftControl))
             {
-                Bridge.isKinematic = true;
+                Bridge.constraints = RigidbodyConstraints.FreezeAll;
                 BridgeUI = "Locked";
                 Ramp.material = Synthi;
 
@@ -45,14 +46,18 @@ public class NewConstructor : MonoBehaviour
     public void OnCollisionExit(Collision collision)
     {
         if (collision.gameObject.tag == "Player")
+        {
             Standing = false;
+        }
     }
 
     public void OnCollisionStay(Collision collision)
     {
 
         if (collision.gameObject.tag == "Player")
+        {
             Standing = true;
+        }
 
         if (collision.gameObject.tag == "Part"/*&& PartCount <= BridgeLimit*/)
         {
@@ -72,5 +77,8 @@ public class NewConstructor : MonoBehaviour
         }
 
     }
+
+
+
    
  

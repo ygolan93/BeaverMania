@@ -7,18 +7,20 @@ public class Lift : MonoBehaviour
     [SerializeField] Rigidbody Beams;
     [SerializeField] float LiftSpeed;
     [SerializeField] float CurrentPos;
+    [Header("Height factor limits")]
     public float HighLimit = 18;
     public float LowLimit = 18;
+    public float HeightStart;
+    [Header("World Height limits")]
     public float MaxHeight;
     public float MinHeight;
     float NormalSpeed;
+    [Header("Rest timer")]
     [SerializeField] float StopTimer = 3f;
     float InitialTimer;
     bool Up;
     bool Stop;
-    
 
-    public float HeightStart;
     private void Start()
     {
         HeightStart = Beams.transform.position.y;

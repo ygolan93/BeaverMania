@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 
 public class Behavior : MonoBehaviour
 {
-    //Movement and animation
+    [Header("Movement and animation")]
     public Rigidbody Player;
     public Carry Load;
     public Quaternion rotGoal;
@@ -18,13 +18,12 @@ public class Behavior : MonoBehaviour
     float levitation = 10f;
     float InitiateAir = 0.5f;
     bool StandOnIsle;
-    //float AirClock;
     public bool neutralAndMoving;
     [SerializeField] int JumpLimit = 2;
     public Animator Otter;
     public bool grounded;
 
-    //Health
+    [Header("Health")]
     public float MaxHealth = 1000;
     public float CurrentHealth;
     public Health_Bar_Script HealthBar;
@@ -37,7 +36,7 @@ public class Behavior : MonoBehaviour
     public GameObject ICON_2;
     public GameObject ICON_3;
 
-    //Combat
+    [Header("Combat")]
     public GameObject Stone;
     public float Beat = 0;
     public Projectile Ball;
@@ -56,24 +55,23 @@ public class Behavior : MonoBehaviour
     [SerializeField] GameObject RightHandWeapon;
     [SerializeField] GameObject LeftHandWeapon;
 
-    //Other objects
+    [Header("Other Objects")]
     public GameObject Seed;
     public int GobletPickup = 0;
-    //Chat
+    [Header("Chat")]
     public string Plattering;
 
-    //Audio & effects
+    [Header("Audio & Effects")]
     public AudioScript Sound;
     float HealQue = 3;
     [SerializeField] ParticleSystem SlideEffect;
     [SerializeField] ParticleSystem HealEffect;
     public ParticleSystem.ShapeModule HealShape;
-
     [SerializeField] Light HealLight;
     [SerializeField] ParticleSystem HurtEffect;
     [SerializeField] Light HurtLight;
 
-    //UI
+    [Header("UI")]
     public string LogCount;
     public string DebugText;
     public string HealingText;
@@ -129,7 +127,7 @@ public class Behavior : MonoBehaviour
     }
     public void OnCollisionStay(Collision OBJ)
     {
-        if (OBJ.gameObject.tag == "Isle" || OBJ.gameObject.CompareTag("Bridge"))
+        if (OBJ.gameObject.tag == "Isle" || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("Tile"))
         {
             JumpLimit = 2;
             grounded = true;
@@ -149,7 +147,6 @@ public class Behavior : MonoBehaviour
                 Destroy(OBJ.gameObject);
             }
         }
-
         if (OBJ.gameObject.tag == "Life")
         {
             if (CurrentHealth < MaxHealth)
@@ -246,7 +243,7 @@ public class Behavior : MonoBehaviour
     }
     public void PlayerMove(Vector3 Direction)
     {
-        rotGoal = Quaternion.LookRotation(new Vector3(Player.velocity.x,0,Player.velocity.z));
+        rotGoal = Quaternion.LookRotation(new Vector3(Direction.x,0,Direction.z));
         transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
         Otter.SetBool("walk", true);
         if (grounded == true)

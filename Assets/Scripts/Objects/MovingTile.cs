@@ -8,9 +8,8 @@ public class MovingTile : MonoBehaviour
     [SerializeField] float TileSpeed;
     [SerializeField] float MovementTime = 10f;
     float InitialTimer;
-
-    
-
+    bool Move = true;
+    Rigidbody Player;
     Vector3 PosStart;
     public Vector3 MoveTo;
     private void Start()
@@ -23,22 +22,69 @@ public class MovingTile : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        MovementTime -= Time.deltaTime;
-        if (MovementTime > InitialTimer*0.5f)
+        if (Move == true)
         {
-            Tile.velocity = MoveTo.normalized*TileSpeed;
+            MovementTime -= Time.deltaTime;
+            if (MovementTime > InitialTimer * 0.5f)
+            {
+                Tile.velocity = MoveTo.normalized * TileSpeed;
+            }
+            if (MovementTime <= InitialTimer * 0.5f)
+            {
+                Tile.velocity = -MoveTo.normalized * TileSpeed;
+            }
+            if (MovementTime <= 0)
+            {
+                MovementTime = InitialTimer;
+            }
         }
-        if (MovementTime <= InitialTimer*0.5f)
+        if (Move == false)
         {
-            Tile.velocity = -MoveTo.normalized*TileSpeed;
+            Tile.velocity = new Vector3(0, 0, 0);
+            MovementTime -= Time.deltaTime;
+            if (MovementTime <= 0)
+            {
+                MovementTime = InitialTimer;
+                Move = true;
+            }
         }
-        if (MovementTime <= 0)
+    }
+
+    private void OnCollisionEnter(Collision OBJ)
+    {
+        if (OBJ.gameObject.CompareTag("Damage"))
         {
-            MovementTime = InitialTimer;
+            Move = false;
         }
+    }
+
+    private void OnTriggerStay(Collider OBJ)
+    {
+
+        if (OBJ.gameObject.CompareTag("Bridge"))
+        {
+            var Child = OBJ.GetComponent<Transform>();
+            Child.transform.parent = Tile.transform;
+
+        }
+        if (OBJ.gameObject.CompareTag("Player"))
+        {
+            var Child = OBJ.GetComponent<Rigidbody>();
+            Child.transform.parent = Tile.transform;
+            Child.velocity = new Vector3(Tile.velocity.x, Child.velocity.y, Tile.velocity.z);
+        }
+
 
     }
 
+    private void OnTriggerExit(Collider OBJ)
+    {
+        if (OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("Player"))
+        {
+            var Child = OBJ.transform;
+            Child.parent = null;
+        }
+    }
 
 
 

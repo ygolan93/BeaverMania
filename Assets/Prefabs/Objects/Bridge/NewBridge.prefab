@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 701757154447555574}
   - component: {fileID: 701757154447555575}
   - component: {fileID: 701757154447555568}
+  - component: {fileID: 6358520068500365305}
   m_Layer: 3
   m_Name: NewBridge
   m_TagString: Bridge
@@ -29,7 +30,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 701757154447555572}
-  m_LocalRotation: {x: -0.53347886, y: -0.46411243, z: -0.46411243, w: 0.53347886}
+  m_LocalRotation: {x: -0.6107286, y: -0.35638544, z: -0.35638544, w: 0.6107286}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 70, y: 70, z: 70}
   m_ConstrainProportionsScale: 0
@@ -215,7 +216,7 @@ Rigidbody:
   m_GameObject: {fileID: 701757154447555572}
   serializedVersion: 2
   m_Mass: 10
-  m_Drag: 0
+  m_Drag: 0.3
   m_AngularDrag: 0.01
   m_UseGravity: 1
   m_IsKinematic: 0
@@ -229,13 +230,26 @@ MeshCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 701757154447555572}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 371ac1296f4268847bc9bc0ca9c0e0b8, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 4
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: -478882678752539408, guid: 479e7f1fa94ac3f409c479db0373cc01, type: 3}
+--- !u!65 &6358520068500365305
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 701757154447555572}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.045202255, y: 0.0753743, z: 0.017227072}
+  m_Center: {x: -0.0000000022855133, y: 0.0069164233, z: 0.0105761625}
 --- !u!1 &1029522753710182304
 GameObject:
   m_ObjectHideFlags: 0

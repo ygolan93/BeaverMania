@@ -4,12 +4,15 @@ using UnityEngine;
 
 public class Carry : MonoBehaviour
 {
+    [Header("Objects & Prefabs")]
     public GameObject[] CarryPoint;
     public GameObject Bridge;
     public Rigidbody Log;
     public Transform BridgeDrop;
     public Transform LogDrop;
     public Behavior Goal;
+
+    [Header("Movement affect factors")]
     public int i = 0;
     public float WalkFactor=0.07f;
     public float RunFactor=0.8f;

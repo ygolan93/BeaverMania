@@ -11,11 +11,12 @@ GameObject:
   - component: {fileID: 213627161169305934}
   - component: {fileID: 3844155778282827499}
   - component: {fileID: 1350473068450994721}
+  - component: {fileID: 5656467652754683134}
   - component: {fileID: 701757154447555569}
   - component: {fileID: 701757154447555574}
   - component: {fileID: 701757154447555575}
   - component: {fileID: 701757154447555568}
-  - component: {fileID: 6358520068500365305}
+  - component: {fileID: 6696910233779408537}
   m_Layer: 3
   m_Name: NewBridge
   m_TagString: Bridge
@@ -30,7 +31,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 701757154447555572}
-  m_LocalRotation: {x: -0.6107286, y: -0.35638544, z: -0.35638544, w: 0.6107286}
+  m_LocalRotation: {x: -0.6824112, y: 0.1852431, z: 0.1852431, w: 0.6824112}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 70, y: 70, z: 70}
   m_ConstrainProportionsScale: 0
@@ -89,6 +90,18 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &5656467652754683134
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 701757154447555572}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 42ffe43640206fb45862fad17454d851, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &701757154447555569
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -230,14 +243,14 @@ MeshCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 701757154447555572}
-  m_Material: {fileID: 13400000, guid: 371ac1296f4268847bc9bc0ca9c0e0b8, type: 2}
+  m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 4
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: -478882678752539408, guid: 479e7f1fa94ac3f409c479db0373cc01, type: 3}
---- !u!65 &6358520068500365305
+--- !u!65 &6696910233779408537
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -248,8 +261,8 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 0.045202255, y: 0.0753743, z: 0.017227072}
-  m_Center: {x: -0.0000000022855133, y: 0.0069164233, z: 0.0105761625}
+  m_Size: {x: 0.045202237, y: 0.07537425, z: 0.01722706}
+  m_Center: {x: 0, y: 0.006916421, z: 0.01057616}
 --- !u!1 &1029522753710182304
 GameObject:
   m_ObjectHideFlags: 0

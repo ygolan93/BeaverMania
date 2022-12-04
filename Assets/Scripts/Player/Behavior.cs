@@ -8,6 +8,8 @@ public class Behavior : MonoBehaviour
 {
     [Header("Movement and animation")]
     public Rigidbody Player;
+    Rigidbody Ground;
+    
     public Carry Load;
     public Quaternion rotGoal;
     public float speed = 5;
@@ -22,6 +24,7 @@ public class Behavior : MonoBehaviour
     [SerializeField] int JumpLimit = 2;
     public Animator Otter;
     public bool grounded;
+
 
     [Header("Health")]
     public float MaxHealth = 1000;
@@ -80,6 +83,8 @@ public class Behavior : MonoBehaviour
     public string SeedText;
     public string Wallet;
     public GameMaster GM;
+
+
     public void OnCollisionEnter(Collision OBJ)
     {
         if (OBJ.gameObject.name == "Isle2")
@@ -127,10 +132,11 @@ public class Behavior : MonoBehaviour
     }
     public void OnCollisionStay(Collision OBJ)
     {
-        if (OBJ.gameObject.tag == "Isle" || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("Tile"))
+        if (OBJ.gameObject.tag == "Isle" || OBJ.gameObject.CompareTag("Bridge"))
         {
             JumpLimit = 2;
             grounded = true;
+            Ground = OBJ.transform.GetComponent<Rigidbody>();
         }
         if (OBJ.gameObject.CompareTag("Isle"))
         {
@@ -260,7 +266,15 @@ public class Behavior : MonoBehaviour
                 speed = Walk;
                 steer = 0.1f;
             }
-            Player.velocity = (Direction.normalized * speed) + new Vector3(0, Player.velocity.y, 0);
+            if (Ground!=null)
+            {
+                Player.velocity = (Direction.normalized * speed + Ground.velocity) + new Vector3(0, Player.velocity.y, 0);
+            }
+            if (Ground==null)
+            {
+                Player.velocity = (Direction.normalized * speed) + new Vector3(0, Player.velocity.y, 0);
+            }
+
         }
         if (grounded == false)
             Player.AddForce(Direction.normalized*5);
@@ -351,8 +365,11 @@ public class Behavior : MonoBehaviour
         Vector3 XZRight = new Vector3(cameraRelativeRight.x, 0, cameraRelativeRight.z);
         Vector3 XZLeft = new Vector3(cameraRelativeLeft.x, 0, cameraRelativeLeft.z);
 
-        Otter.SetBool("walk", false);
-        Otter.SetBool("run", false);
+        if (!Input.anyKey)
+        {
+            Otter.SetBool("walk", false);
+            Otter.SetBool("run", false);
+        }
         Otter.SetBool("midair", false);
 
         //Basic movement setup

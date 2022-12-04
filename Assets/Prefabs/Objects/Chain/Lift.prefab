@@ -2355,13 +2355,13 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 573265268030345198}
   serializedVersion: 2
-  m_Mass: 0.1
+  m_Mass: 2
   m_Drag: 0
   m_AngularDrag: 0
   m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 14
+  m_Constraints: 126
   m_CollisionDetection: 0
 --- !u!64 &8801560412284016952
 MeshCollider:
@@ -12940,10 +12940,10 @@ MonoBehaviour:
   CurrentPos: 0
   HighLimit: 18
   LowLimit: 18
+  HeightStart: 0
   MaxHeight: 0
   MinHeight: 0
   StopTimer: 3
-  HeightStart: 0
 --- !u!1 &3750505768377618636
 GameObject:
   m_ObjectHideFlags: 0
@@ -13622,7 +13622,7 @@ HingeJoint:
   m_GameObject: {fileID: 4153760613340670270}
   m_ConnectedBody: {fileID: 3630559979847960577}
   m_ConnectedArticulationBody: {fileID: 0}
-  m_Anchor: {x: 0, y: 0, z: 0.03}
+  m_Anchor: {x: 0, y: 0, z: 0.06}
   m_Axis: {x: 0, y: 1, z: 0}
   m_AutoConfigureConnectedAnchor: 1
   m_ConnectedAnchor: {x: 0.000000501405, y: 0.0000072108255, z: 0.0007331844}
@@ -13992,13 +13992,13 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4198394032222405462}
   serializedVersion: 2
-  m_Mass: 0.1
+  m_Mass: 2
   m_Drag: 0
   m_AngularDrag: 0
   m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 14
+  m_Constraints: 126
   m_CollisionDetection: 0
 --- !u!64 &263219947953229756
 MeshCollider:
@@ -16030,7 +16030,7 @@ HingeJoint:
   m_GameObject: {fileID: 4545367755878052553}
   m_ConnectedBody: {fileID: 3734902691235320108}
   m_ConnectedArticulationBody: {fileID: 0}
-  m_Anchor: {x: 0, y: 0, z: 0.03}
+  m_Anchor: {x: 0, y: 0, z: 0.06}
   m_Axis: {x: 0, y: 1, z: 0}
   m_AutoConfigureConnectedAnchor: 1
   m_ConnectedAnchor: {x: 0, y: 0, z: 0.00043694332}
@@ -16910,13 +16910,13 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4545367756599703625}
   serializedVersion: 2
-  m_Mass: 0.1
+  m_Mass: 2
   m_Drag: 0
   m_AngularDrag: 0
   m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 14
+  m_Constraints: 126
   m_CollisionDetection: 0
 --- !u!64 &3734902691235320109
 MeshCollider:
@@ -19605,13 +19605,13 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5062715265318903551}
   serializedVersion: 2
-  m_Mass: 0.1
+  m_Mass: 2
   m_Drag: 0
   m_AngularDrag: 0
   m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 14
+  m_Constraints: 126
   m_CollisionDetection: 0
 --- !u!64 &3205070849403514427
 MeshCollider:
@@ -23758,7 +23758,7 @@ HingeJoint:
   m_GameObject: {fileID: 5821345306895484622}
   m_ConnectedBody: {fileID: 2028914980336594688}
   m_ConnectedArticulationBody: {fileID: 0}
-  m_Anchor: {x: 0, y: 0, z: 0.03}
+  m_Anchor: {x: 0, y: 0, z: 0.06}
   m_Axis: {x: 0, y: 1, z: 0}
   m_AutoConfigureConnectedAnchor: 1
   m_ConnectedAnchor: {x: 0.000000501405, y: 0.0000072108255, z: 0.0007331844}
@@ -32327,7 +32327,7 @@ HingeJoint:
   m_GameObject: {fileID: 7950892098866753288}
   m_ConnectedBody: {fileID: 4016140152259970205}
   m_ConnectedArticulationBody: {fileID: 0}
-  m_Anchor: {x: 0, y: 0, z: 0.03}
+  m_Anchor: {x: 0, y: 0, z: 0.06}
   m_Axis: {x: 0, y: 1, z: 0}
   m_AutoConfigureConnectedAnchor: 1
   m_ConnectedAnchor: {x: 0.000000501405, y: 0.0000072108255, z: 0.0007331844}
@@ -33750,13 +33750,13 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8462758131027891792}
   serializedVersion: 2
-  m_Mass: 10
+  m_Mass: 5
   m_Drag: 0
   m_AngularDrag: 0
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 112
+  m_Constraints: 122
   m_CollisionDetection: 0
 --- !u!59 &1950831377759518850
 HingeJoint:

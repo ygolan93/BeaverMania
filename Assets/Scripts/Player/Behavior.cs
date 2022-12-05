@@ -268,7 +268,7 @@ public class Behavior : MonoBehaviour
             }
             if (Ground != null)
             {
-                Player.velocity = (Direction.normalized * speed + Ground.velocity) /*+ new Vector3(0, Player.velocity.y, 0)*/;
+                Player.velocity = (Direction.normalized * speed + Ground.velocity) + new Vector3(0, Player.velocity.y, 0);
             }
             if (Ground == null)
             {

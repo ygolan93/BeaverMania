@@ -25,6 +25,7 @@ public class BeaverNPC : MonoBehaviour
          BeaverAnimator = GetComponent<Animator>();
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
         Movement();
+        gameObject.SetActive(false);
     }
     private void OnCollisionEnter(Collision OBJ)
     {
@@ -89,6 +90,7 @@ public class BeaverNPC : MonoBehaviour
 
     void Update()
     {
+
         if (isHIT == false)
         {
             Beaver.constraints = RigidbodyConstraints.FreezeRotation;

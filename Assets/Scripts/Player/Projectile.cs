@@ -36,10 +36,10 @@ public class Projectile : MonoBehaviour
             OBJ.gameObject.GetComponent<NPC_Basic>().TakeDamage((int)Ball.velocity.magnitude);
             OBJ.gameObject.GetComponent<NPC_Basic>().combo = 3;
         }
-        if (OBJ.gameObject.CompareTag("Bear"))
+        if (OBJ.gameObject.CompareTag("Boss"))
         {
-            OBJ.gameObject.GetComponent<BearNPC>().TakeDamage((int)Ball.velocity.magnitude);
-            OBJ.gameObject.GetComponent<BearNPC>().combo = 3;
+            OBJ.gameObject.GetComponent<BossScript>().TakeDamage((int)Ball.velocity.magnitude);
+            OBJ.gameObject.GetComponent<BossScript>().combo = 3;
         }
         if (OBJ.gameObject.CompareTag("Hive"))
         {

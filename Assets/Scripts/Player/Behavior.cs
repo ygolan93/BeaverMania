@@ -202,10 +202,10 @@ public class Behavior : MonoBehaviour
                     Plattering = "take this!";
 
                 }
-                if (enemy.CompareTag("Bear"))
+                if (enemy.CompareTag("Boss"))
                 {
                     Debug.Log("Hit " + enemy.name);
-                    enemy.GetComponent<BearNPC>().TakeDamage(GroundAttack);
+                    enemy.GetComponent<BossScript>().TakeDamage(GroundAttack);
                 }
             }
             BeatGrounded = GroundBeat;
@@ -221,10 +221,10 @@ public class Behavior : MonoBehaviour
                     Debug.Log("Hit " + enemy.name);
                     enemy.GetComponent<NPC_Basic>().TakeDamage(40);
                 }
-                if (enemy.CompareTag("Bear"))
+                if (enemy.CompareTag("Boss"))
                 {
                     Debug.Log("Hit " + enemy.name);
-                    enemy.GetComponent<BearNPC>().TakeDamage(40);
+                    enemy.GetComponent<BossScript>().TakeDamage(40);
                 }
 
             }
@@ -268,7 +268,7 @@ public class Behavior : MonoBehaviour
             }
             if (Ground != null)
             {
-                Player.velocity = (Direction.normalized * speed + Ground.velocity) + new Vector3(0, Player.velocity.y, 0);
+                Player.velocity = (Direction.normalized * speed + Ground.velocity) /*+ new Vector3(0, Player.velocity.y, 0)*/;
             }
             if (Ground == null)
             {
@@ -285,6 +285,7 @@ public class Behavior : MonoBehaviour
         //Player.velocity = new Vector3(0, 0, 20);
         Player = GetComponent<Rigidbody>();
         GM = GameObject.FindGameObjectWithTag("GM").GetComponent<GameMaster>();
+        //Physics.IgnoreLayerCollision(0, 3);
         CurrentHealth = MaxHealth;
         HealthBar.SetMaxHealth(CurrentHealth);
         HealShape = HealEffect.shape;

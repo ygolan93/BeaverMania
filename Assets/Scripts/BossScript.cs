@@ -2,16 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BearNPC : MonoBehaviour
+public class BossScript : MonoBehaviour
 {
-    Rigidbody Bear;
-    public NPC_Health BearHealth;
+    Rigidbody Boss;
+    public NPC_Health BossHealth;
     public int CurrentHealth;
     public int MaxHealth = 2000;
     public int combo = 0;
     public GameObject HitEffect;
     public GameObject Explosion;
-    public NPC_Audio Sound;
+    public AudioSource Sound;
     GameObject Player;
     Behavior PlayerHealth;
     Vector3 SpawnPos;
@@ -26,24 +26,37 @@ public class BearNPC : MonoBehaviour
     float speed;
     private void Start()
     {
-        Bear = GetComponent<Rigidbody>();
+        Boss = GetComponent<Rigidbody>();
         Player = GameObject.FindGameObjectWithTag("Player");
         PlayerHealth = Player.GetComponent<Behavior>();
-        SpawnPos = Bear.position;
+        SpawnPos = Boss.position;
         CurrentHealth = MaxHealth;
         InitialBeat = BeatClock;
     }
     private void FixedUpdate()
     {
-        Bear.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.2f);
-        Distance = Player.transform.position - Bear.position;
+        if (Hit==true)
+        {
+            AttackPlayer(1f, 0, 20);
+            StrideClock -= Time.deltaTime;
+            if (StrideClock<=0)
+            {
+                Hit = false;
+            }
+        }
+        if (Hit == false)
+        {
+            RandoMovement();
+            Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.02f);
+            Distance = Player.transform.position - Boss.position;
+        }
         if (CurrentHealth > MaxHealth * 0.75f)
         {
-            AttackPlayer(8, 0, 20);
+            AttackPlayer(1.5f, 0, 20);
         }
         if (CurrentHealth <= MaxHealth * 0.75f)
         {
-            AttackPlayer(15, 9, 20);
+            AttackPlayer(3f, 9, 20);
         }
 
 
@@ -63,19 +76,20 @@ public class BearNPC : MonoBehaviour
         if (Distance.magnitude <= AttackDistance || Hit == true)
         {
             rotGoal = Quaternion.LookRotation(new Vector3(Distance.x, 0, Distance.z));
+            Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.03f);
             BeatClock -= Time.deltaTime;
             if (BeatClock <= AttackTime)
             {
-                Bear.velocity = new Vector3(Distance.x * AttackSpeed, Bear.velocity.y, Distance.z * AttackSpeed);
+                Boss.velocity = new Vector3(Distance.x * AttackSpeed, Boss.velocity.y, Distance.z * AttackSpeed);
             }
             else
             {
-                Bear.velocity = new Vector3(0, Bear.velocity.y, 0);
+                Boss.velocity = new Vector3(0, Boss.velocity.y, 0);
             }
         }
         else
         {
-            rotGoal = Quaternion.LookRotation(new Vector3(Bear.velocity.x, 0, Bear.velocity.z));
+            rotGoal = Quaternion.LookRotation(new Vector3(Boss.velocity.x, 0, Boss.velocity.z));
             RandoMovement();
         }
     }
@@ -90,20 +104,16 @@ public class BearNPC : MonoBehaviour
             b = Random.Range(-1, 2) * Random.value;
             StrideClock = 7f;
         }
-        Bear.velocity = new Vector3(a, 0, b).normalized * 3 + new Vector3(a, Bear.velocity.y, b);
+        Boss.velocity = new Vector3(a, 0, b).normalized * 3 + new Vector3(a, Boss.velocity.y, b);
     }
     public void TakeDamage(int Damage)
     {
-        rotGoal = Quaternion.LookRotation(Distance);
         transform.rotation = rotGoal;
-        Bear.useGravity = true;
-        //Wasp.SetBool("Beat", true);
         HitEffect.SetActive(true);
-        //Wasp.SetBool("Sting", false);
         CurrentHealth -= Damage;
-        Sound.Beat();
+        Sound.Play();
         combo++;
-        BearHealth.SetNPCHealth(CurrentHealth);
+        BossHealth.SetNPCHealth(CurrentHealth);
     }
     private void Death()
     {
@@ -115,7 +125,7 @@ public class BearNPC : MonoBehaviour
         if (OBJ.gameObject==Player)
         {
             PlayerHealth.TakeDamage(50);
-            Hit = false;
+            //Hit = false;
             BeatClock = InitialBeat;
         }
     }

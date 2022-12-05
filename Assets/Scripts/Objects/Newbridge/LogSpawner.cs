@@ -5,7 +5,6 @@ using UnityEngine;
 public class LogSpawner : MonoBehaviour
 {
     // Start is called before the first frame update
-    Behavior Player;
     [SerializeField] Transform SpawnPoint;
     [SerializeField] Transform Log1;
     [SerializeField] Transform Log2;
@@ -13,13 +12,9 @@ public class LogSpawner : MonoBehaviour
     [SerializeField] Transform Log4;
 
 
-    void Start()
+    private void OnCollisionStay(Collision OBJ)
     {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
-    }
-    void Update()
-    {
-        if ((Player.transform.position - transform.position).magnitude<=1)
+        if (OBJ.gameObject.CompareTag("Player"))
         {
             if (Input.GetKey(KeyCode.Mouse0))
             {
@@ -31,5 +26,4 @@ public class LogSpawner : MonoBehaviour
             }
         }
     }
-
 }

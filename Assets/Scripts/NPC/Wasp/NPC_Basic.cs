@@ -137,6 +137,7 @@ public class NPC_Basic : MonoBehaviour
 
     private void Death()
     {
+        //Sound.StopBuzzing();
         Instantiate(Explosion, transform.position + new Vector3(0, 1, 0), transform.rotation);
         Instantiate(Body, transform.position + new Vector3(0, 1, 0), transform.rotation);
         Instantiate(Head, transform.position + new Vector3(0, 1, 0), transform.rotation);
@@ -180,6 +181,7 @@ public class NPC_Basic : MonoBehaviour
 
     void Stunned()
     {
+        //Sound.StopBuzzing();
         NPC.constraints = RigidbodyConstraints.None;
         NPC.useGravity = true;
         Wasp.SetBool("Stunned", true);
@@ -188,6 +190,7 @@ public class NPC_Basic : MonoBehaviour
 
     void Recovered()
     {
+        //Sound.Buzz();
         Wasp.SetBool("Stunned", false);
         Recovery = 10f;
         NPC.constraints = RigidbodyConstraints.FreezeRotation;
@@ -219,6 +222,7 @@ public class NPC_Basic : MonoBehaviour
 
     public void TakeDamage(int Damage)
     {
+        //Sound.StopBuzzing();
         rotGoal = Quaternion.LookRotation(Distance);
         transform.rotation = rotGoal;
         NPC.useGravity = true;

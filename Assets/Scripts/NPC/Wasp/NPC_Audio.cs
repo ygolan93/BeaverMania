@@ -3,29 +3,30 @@ using UnityEngine;
 public class NPC_Audio : MonoBehaviour
 {
     [SerializeField] AudioClip[] audioClip;
-    [SerializeField] AudioSource audioSource1;
-    [SerializeField] AudioSource audioSource2;
+    [SerializeField] AudioSource ActionSource;
+    [SerializeField] AudioSource BuzzSource;
 
     public void Beat()
     {
-        audioSource1.clip = audioClip[0];
-        audioSource1.volume = 0.4f;
-        audioSource1.pitch = 1f;
-        audioSource1.PlayOneShot(audioClip[0]);
+        ActionSource.clip = audioClip[0];
+        ActionSource.volume = 0.4f;
+        ActionSource.pitch = 1f;
+        ActionSource.PlayOneShot(audioClip[0]);
     }
     public void Sting()
     {
-        audioSource1.clip = audioClip[1];
-        audioSource1.volume = 0.4f;
-        audioSource1.pitch = 1f;
-        audioSource1.PlayOneShot(audioClip[1]);
+        ActionSource.clip = audioClip[1];
+        ActionSource.volume = 0.7f;
+        ActionSource.pitch = 1f;
+        ActionSource.PlayOneShot(audioClip[1]);
+    }
+    public void StopBuzzing()
+    {
+        BuzzSource.Stop();
     }
     public void Buzz()
     {
-        audioSource2.clip = audioClip[2];
-        audioSource2.volume = 0.02f;
-        audioSource2.pitch = 1f;
-        audioSource2.PlayOneShot(audioClip[2]);
+        BuzzSource.Play();
     }
 
 }

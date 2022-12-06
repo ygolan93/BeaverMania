@@ -339,9 +339,9 @@ AnimatorStateTransition:
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0.092484236
+  m_TransitionDuration: 0.59421635
   m_TransitionOffset: 0
-  m_ExitTime: 0.84000105
+  m_ExitTime: 0.67275673
   m_HasExitTime: 1
   m_HasFixedDuration: 1
   m_InterruptionSource: 0
@@ -1032,9 +1032,9 @@ AnimatorStateMachine:
   m_AnyStateTransitions: []
   m_EntryTransitions: []
   m_StateMachineTransitions:
-  - first: {fileID: -420459061413422372}
-    second: []
   - first: {fileID: -8312349474208066801}
+    second: []
+  - first: {fileID: -420459061413422372}
     second: []
   m_StateMachineBehaviours: []
   m_AnyStatePosition: {x: 960, y: 240, z: 0}
@@ -1482,7 +1482,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Blink
-  m_Speed: 0.5
+  m_Speed: 1
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: -8482260495009823150}
@@ -1540,7 +1540,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Idle
-  m_Speed: 1
+  m_Speed: 0.01
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: 7365801427141267598}
@@ -3247,9 +3247,9 @@ AnimatorStateMachine:
   - {fileID: 4704692279425077493}
   m_EntryTransitions: []
   m_StateMachineTransitions:
-  - first: {fileID: 7454711717937136264}
-    second: []
   - first: {fileID: -440071133356497029}
+    second: []
+  - first: {fileID: 7454711717937136264}
     second: []
   m_StateMachineBehaviours: []
   m_AnyStatePosition: {x: 1100, y: 20, z: 0}
@@ -3271,9 +3271,9 @@ AnimatorStateTransition:
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0.097996175
+  m_TransitionDuration: 0.5823343
   m_TransitionOffset: 0
-  m_ExitTime: 0.83247286
+  m_ExitTime: 0.6710266
   m_HasExitTime: 1
   m_HasFixedDuration: 1
   m_InterruptionSource: 0

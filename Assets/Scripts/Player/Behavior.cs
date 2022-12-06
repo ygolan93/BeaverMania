@@ -21,10 +21,12 @@ public class Behavior : MonoBehaviour
     float InitiateAir = 0.5f;
     bool StandOnIsle;
     public bool neutralAndMoving;
-    [SerializeField] int JumpLimit = 2;
+    [SerializeField] int JumpNum;
+    int JumpLimit;
+    int JumpNumPreserve;
+
     public Animator Otter;
     public bool grounded;
-
 
     [Header("Health")]
     public float MaxHealth = 1000;
@@ -52,6 +54,7 @@ public class Behavior : MonoBehaviour
     public float AirBeat = 0.2f;
     float BeatAir = 0.2f;
     float FallClock;
+    [SerializeField] float InitialFall = 0.2f;
     public int GroundAttack = 30;
     bool StoneHeld = false;
     bool HammerHeld = false;
@@ -110,6 +113,7 @@ public class Behavior : MonoBehaviour
 
         if (OBJ.gameObject.tag == "Isle" || OBJ.gameObject.CompareTag("Bridge"))
         {
+            FallClock = InitialFall;
             if (Player.velocity.magnitude > 8 && !Input.anyKey)
             {
                 Otter.Play("Roll");
@@ -134,7 +138,6 @@ public class Behavior : MonoBehaviour
     {
         if (OBJ.gameObject.tag == "Isle" || OBJ.gameObject.CompareTag("Bridge"))
         {
-            JumpLimit = 2;
             grounded = true;
             Ground = OBJ.transform.GetComponent<Rigidbody>();
         }
@@ -282,16 +285,16 @@ public class Behavior : MonoBehaviour
 
     public void Start()
     {
-        //Player.velocity = new Vector3(0, 0, 20);
         Player = GetComponent<Rigidbody>();
         GM = GameObject.FindGameObjectWithTag("GM").GetComponent<GameMaster>();
-        //Physics.IgnoreLayerCollision(0, 3);
         CurrentHealth = MaxHealth;
         HealthBar.SetMaxHealth(CurrentHealth);
         HealShape = HealEffect.shape;
         RightHandWeapon.SetActive(false);
         LeftHandWeapon.SetActive(false);
         Lives = 3;
+        JumpLimit = JumpNum;
+        FallClock = InitialFall;
     }
     public void Update()
     {
@@ -329,18 +332,20 @@ public class Behavior : MonoBehaviour
         Cursor.visible = false;
 
         //Jump action
-        if (Input.GetKeyDown(KeyCode.Space) && JumpLimit > 0)
+        if (Input.GetKeyDown(KeyCode.Space) && JumpNum > 0)
         {
-            //Otter.Play("Midair");
             Player.velocity = new Vector3(Player.velocity.x, JumpForce, Player.velocity.z);
             Sound.Jump();
-            JumpLimit--;
             levitation = 10;
             Otter.speed = 1;
+            JumpNum--;
+            JumpNumPreserve = JumpNum;
         }
+        if (Input.GetKey(KeyCode.Space)|| Input.GetKeyUp(KeyCode.Space))
+        JumpNum = JumpNumPreserve;
 
-        //Reload scene on death
-        if (CurrentHealth <= 0)
+            //Reload scene on death
+            if (CurrentHealth <= 0)
         {
             transform.position = GM.lastCheckPointPos;
             Lives--;
@@ -446,15 +451,23 @@ public class Behavior : MonoBehaviour
         //+ Player's slide and full-break conditioning on ground
         if (grounded == false)
         {
-            FallClock -= Time.deltaTime;
-            if (FallClock <= 0)
+            if(JumpNum<JumpLimit)
             {
                 Otter.SetBool("midair", true);
+            }
+            if (JumpNum== JumpLimit)
+            {
+                Otter.SetBool("midair", false);
+                FallClock -= Time.deltaTime;
+                if (FallClock <= 0)
+                {
+                    Otter.SetBool("midair", true);
+                }
             }
         }
         if (grounded == true)
         {
-            FallClock = 0.08f;
+            JumpNum = JumpLimit;
             Otter.SetBool("midair", false);
             levitation = 10;
             Otter.speed = 1;

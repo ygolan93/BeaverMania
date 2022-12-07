@@ -1,0 +1,1327 @@
+fileFormatVersion: 2
+guid: 02224dd035343bf44a474b2ff1189a38
+timeCreated: 1472616853
+licenseType: Store
+ModelImporter:
+  serializedVersion: 18
+  fileIDToRecycleName:
+    100000: 2bottom_leaf1.L
+    100002: 2bottom_leaf1.R
+    100004: 2bottom_leaf2.L
+    100006: 2bottom_leaf2.L_end
+    100008: 2bottom_leaf2.R
+    100010: 2bottom_leaf2.R_end
+    100012: //RootNode
+    100014: Angry_flower.000
+    100016: Angry_flower.002
+    100018: Angry_flower.003
+    100020: Angry_Flower_arma
+    100022: Angry_flower_stem
+    100024: head
+    100026: head_end
+    100028: IK
+    100030: IK2
+    100032: IK_end
+    100034: IK_target
+    100036: IK_target_end
+    100038: jaw
+    100040: jaw_end
+    100042: neck
+    100044: petals
+    100046: petals_end
+    100048: root
+    100050: spine_leaf1
+    100052: spine_leaf2
+    100054: spine_leaf2_end
+    100056: stem0
+    100058: stem1
+    100060: stem2
+    100062: stem2.001
+    100064: stem3
+    100066: upper_leaf1.L
+    100068: upper_leaf1.R
+    100070: upper_leaf2.L
+    100072: upper_leaf2.L_end
+    100074: upper_leaf2.R
+    100076: upper_leaf2.R_end
+    400000: 2bottom_leaf1.L
+    400002: 2bottom_leaf1.R
+    400004: 2bottom_leaf2.L
+    400006: 2bottom_leaf2.L_end
+    400008: 2bottom_leaf2.R
+    400010: 2bottom_leaf2.R_end
+    400012: //RootNode
+    400014: Angry_flower.000
+    400016: Angry_flower.002
+    400018: Angry_flower.003
+    400020: Angry_Flower_arma
+    400022: Angry_flower_stem
+    400024: head
+    400026: head_end
+    400028: IK
+    400030: IK2
+    400032: IK_end
+    400034: IK_target
+    400036: IK_target_end
+    400038: jaw
+    400040: jaw_end
+    400042: neck
+    400044: petals
+    400046: petals_end
+    400048: root
+    400050: spine_leaf1
+    400052: spine_leaf2
+    400054: spine_leaf2_end
+    400056: stem0
+    400058: stem1
+    400060: stem2
+    400062: stem2.001
+    400064: stem3
+    400066: upper_leaf1.L
+    400068: upper_leaf1.R
+    400070: upper_leaf2.L
+    400072: upper_leaf2.L_end
+    400074: upper_leaf2.R
+    400076: upper_leaf2.R_end
+    4300000: Angry_flower.003
+    4300002: Angry_flower.000
+    4300004: Angry_flower.002
+    4300006: Angry_flower_stem
+    7400000: Angry_Flower_arma|Angry_Flower_armaAction
+    7400002: idle
+    7400004: idle_battle
+    7400006: attack1
+    7400008: attack2
+    7400010: power_attack
+    7400012: cast
+    7400014: hit1
+    7400016: hit2
+    7400018: death1
+    7400020: death2
+    9500000: //RootNode
+    13700000: Angry_flower.000
+    13700002: Angry_flower.002
+    13700004: Angry_flower.003
+    13700006: Angry_flower_stem
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: .5
+    animationPositionError: .5
+    animationScaleError: .5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations:
+    - serializedVersion: 16
+      name: Angry_Flower_arma|Angry_Flower_armaAction
+      takeName: Angry_Flower_arma|Angry_Flower_armaAction
+      firstFrame: 0
+      lastFrame: 350
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: Angry_flower.000
+        weight: 1
+      - path: Angry_flower.002
+        weight: 1
+      - path: Angry_flower.003
+        weight: 1
+      - path: Angry_Flower_arma
+        weight: 1
+      - path: Angry_Flower_arma/IK2
+        weight: 1
+      - path: Angry_Flower_arma/IK2/IK
+        weight: 1
+      - path: Angry_Flower_arma/IK2/IK/IK_end
+        weight: 1
+      - path: Angry_Flower_arma/IK_target
+        weight: 1
+      - path: Angry_Flower_arma/IK_target/IK_target_end
+        weight: 1
+      - path: Angry_Flower_arma/root
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L/2bottom_leaf2.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L/2bottom_leaf2.L/2bottom_leaf2.L_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R/2bottom_leaf2.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R/2bottom_leaf2.R/2bottom_leaf2.R_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1/spine_leaf2
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1/spine_leaf2/spine_leaf2_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/head
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/head/head_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/jaw
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/jaw/jaw_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/petals
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/petals/petals_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L/upper_leaf2.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L/upper_leaf2.L/upper_leaf2.L_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R/upper_leaf2.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R/upper_leaf2.R/upper_leaf2.R_end
+        weight: 1
+      - path: Angry_flower_stem
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: idle
+      takeName: Angry_Flower_arma|Angry_Flower_armaAction
+      firstFrame: 10
+      lastFrame: 100
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 2
+      loop: 0
+      loopTime: 1
+      loopBlend: 1
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves:
+      - name: Curve
+        curve:
+          serializedVersion: 2
+          curve:
+          - time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+          - time: 1
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+          preInfinity: 2
+          postInfinity: 2
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: Angry_flower.000
+        weight: 1
+      - path: Angry_flower.002
+        weight: 1
+      - path: Angry_flower.003
+        weight: 1
+      - path: Angry_Flower_arma
+        weight: 1
+      - path: Angry_Flower_arma/IK2
+        weight: 1
+      - path: Angry_Flower_arma/IK2/IK
+        weight: 1
+      - path: Angry_Flower_arma/IK2/IK/IK_end
+        weight: 1
+      - path: Angry_Flower_arma/IK_target
+        weight: 1
+      - path: Angry_Flower_arma/IK_target/IK_target_end
+        weight: 1
+      - path: Angry_Flower_arma/root
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L/2bottom_leaf2.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L/2bottom_leaf2.L/2bottom_leaf2.L_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R/2bottom_leaf2.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R/2bottom_leaf2.R/2bottom_leaf2.R_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1/spine_leaf2
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1/spine_leaf2/spine_leaf2_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/head
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/head/head_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/jaw
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/jaw/jaw_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/petals
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/petals/petals_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L/upper_leaf2.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L/upper_leaf2.L/upper_leaf2.L_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R/upper_leaf2.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R/upper_leaf2.R/upper_leaf2.R_end
+        weight: 1
+      - path: Angry_flower_stem
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: attack1
+      takeName: Angry_Flower_arma|Angry_Flower_armaAction
+      firstFrame: 145
+      lastFrame: 165
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: Angry_flower.000
+        weight: 1
+      - path: Angry_flower.002
+        weight: 1
+      - path: Angry_flower.003
+        weight: 1
+      - path: Angry_Flower_arma
+        weight: 1
+      - path: Angry_Flower_arma/IK2
+        weight: 1
+      - path: Angry_Flower_arma/IK2/IK
+        weight: 1
+      - path: Angry_Flower_arma/IK2/IK/IK_end
+        weight: 1
+      - path: Angry_Flower_arma/IK_target
+        weight: 1
+      - path: Angry_Flower_arma/IK_target/IK_target_end
+        weight: 1
+      - path: Angry_Flower_arma/root
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L/2bottom_leaf2.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L/2bottom_leaf2.L/2bottom_leaf2.L_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R/2bottom_leaf2.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R/2bottom_leaf2.R/2bottom_leaf2.R_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1/spine_leaf2
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1/spine_leaf2/spine_leaf2_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/head
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/head/head_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/jaw
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/jaw/jaw_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/petals
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/petals/petals_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L/upper_leaf2.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L/upper_leaf2.L/upper_leaf2.L_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R/upper_leaf2.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R/upper_leaf2.R/upper_leaf2.R_end
+        weight: 1
+      - path: Angry_flower_stem
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: attack2
+      takeName: Angry_Flower_arma|Angry_Flower_armaAction
+      firstFrame: 165
+      lastFrame: 190
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: Angry_flower.000
+        weight: 1
+      - path: Angry_flower.002
+        weight: 1
+      - path: Angry_flower.003
+        weight: 1
+      - path: Angry_Flower_arma
+        weight: 1
+      - path: Angry_Flower_arma/IK2
+        weight: 1
+      - path: Angry_Flower_arma/IK2/IK
+        weight: 1
+      - path: Angry_Flower_arma/IK2/IK/IK_end
+        weight: 1
+      - path: Angry_Flower_arma/IK_target
+        weight: 1
+      - path: Angry_Flower_arma/IK_target/IK_target_end
+        weight: 1
+      - path: Angry_Flower_arma/root
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L/2bottom_leaf2.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L/2bottom_leaf2.L/2bottom_leaf2.L_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R/2bottom_leaf2.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R/2bottom_leaf2.R/2bottom_leaf2.R_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1/spine_leaf2
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1/spine_leaf2/spine_leaf2_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/head
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/head/head_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/jaw
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/jaw/jaw_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/petals
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/petals/petals_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L/upper_leaf2.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L/upper_leaf2.L/upper_leaf2.L_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R/upper_leaf2.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R/upper_leaf2.R/upper_leaf2.R_end
+        weight: 1
+      - path: Angry_flower_stem
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: power_attack
+      takeName: Angry_Flower_arma|Angry_Flower_armaAction
+      firstFrame: 190
+      lastFrame: 230
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: Angry_flower.000
+        weight: 1
+      - path: Angry_flower.002
+        weight: 1
+      - path: Angry_flower.003
+        weight: 1
+      - path: Angry_Flower_arma
+        weight: 1
+      - path: Angry_Flower_arma/IK2
+        weight: 1
+      - path: Angry_Flower_arma/IK2/IK
+        weight: 1
+      - path: Angry_Flower_arma/IK2/IK/IK_end
+        weight: 1
+      - path: Angry_Flower_arma/IK_target
+        weight: 1
+      - path: Angry_Flower_arma/IK_target/IK_target_end
+        weight: 1
+      - path: Angry_Flower_arma/root
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L/2bottom_leaf2.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L/2bottom_leaf2.L/2bottom_leaf2.L_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R/2bottom_leaf2.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R/2bottom_leaf2.R/2bottom_leaf2.R_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1/spine_leaf2
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1/spine_leaf2/spine_leaf2_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/head
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/head/head_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/jaw
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/jaw/jaw_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/petals
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/petals/petals_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L/upper_leaf2.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L/upper_leaf2.L/upper_leaf2.L_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R/upper_leaf2.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R/upper_leaf2.R/upper_leaf2.R_end
+        weight: 1
+      - path: Angry_flower_stem
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: cast
+      takeName: Angry_Flower_arma|Angry_Flower_armaAction
+      firstFrame: 230
+      lastFrame: 260
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: Angry_flower.000
+        weight: 1
+      - path: Angry_flower.002
+        weight: 1
+      - path: Angry_flower.003
+        weight: 1
+      - path: Angry_Flower_arma
+        weight: 1
+      - path: Angry_Flower_arma/IK2
+        weight: 1
+      - path: Angry_Flower_arma/IK2/IK
+        weight: 1
+      - path: Angry_Flower_arma/IK2/IK/IK_end
+        weight: 1
+      - path: Angry_Flower_arma/IK_target
+        weight: 1
+      - path: Angry_Flower_arma/IK_target/IK_target_end
+        weight: 1
+      - path: Angry_Flower_arma/root
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L/2bottom_leaf2.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L/2bottom_leaf2.L/2bottom_leaf2.L_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R/2bottom_leaf2.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R/2bottom_leaf2.R/2bottom_leaf2.R_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1/spine_leaf2
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1/spine_leaf2/spine_leaf2_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/head
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/head/head_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/jaw
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/jaw/jaw_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/petals
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/petals/petals_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L/upper_leaf2.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L/upper_leaf2.L/upper_leaf2.L_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R/upper_leaf2.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R/upper_leaf2.R/upper_leaf2.R_end
+        weight: 1
+      - path: Angry_flower_stem
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: hit1
+      takeName: Angry_Flower_arma|Angry_Flower_armaAction
+      firstFrame: 260
+      lastFrame: 275
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: Angry_flower.000
+        weight: 1
+      - path: Angry_flower.002
+        weight: 1
+      - path: Angry_flower.003
+        weight: 1
+      - path: Angry_Flower_arma
+        weight: 1
+      - path: Angry_Flower_arma/IK2
+        weight: 1
+      - path: Angry_Flower_arma/IK2/IK
+        weight: 1
+      - path: Angry_Flower_arma/IK2/IK/IK_end
+        weight: 1
+      - path: Angry_Flower_arma/IK_target
+        weight: 1
+      - path: Angry_Flower_arma/IK_target/IK_target_end
+        weight: 1
+      - path: Angry_Flower_arma/root
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L/2bottom_leaf2.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L/2bottom_leaf2.L/2bottom_leaf2.L_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R/2bottom_leaf2.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R/2bottom_leaf2.R/2bottom_leaf2.R_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1/spine_leaf2
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1/spine_leaf2/spine_leaf2_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/head
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/head/head_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/jaw
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/jaw/jaw_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/petals
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/petals/petals_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L/upper_leaf2.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L/upper_leaf2.L/upper_leaf2.L_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R/upper_leaf2.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R/upper_leaf2.R/upper_leaf2.R_end
+        weight: 1
+      - path: Angry_flower_stem
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: hit2
+      takeName: Angry_Flower_arma|Angry_Flower_armaAction
+      firstFrame: 275
+      lastFrame: 290
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: Angry_flower.000
+        weight: 1
+      - path: Angry_flower.002
+        weight: 1
+      - path: Angry_flower.003
+        weight: 1
+      - path: Angry_Flower_arma
+        weight: 1
+      - path: Angry_Flower_arma/IK2
+        weight: 1
+      - path: Angry_Flower_arma/IK2/IK
+        weight: 1
+      - path: Angry_Flower_arma/IK2/IK/IK_end
+        weight: 1
+      - path: Angry_Flower_arma/IK_target
+        weight: 1
+      - path: Angry_Flower_arma/IK_target/IK_target_end
+        weight: 1
+      - path: Angry_Flower_arma/root
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L/2bottom_leaf2.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L/2bottom_leaf2.L/2bottom_leaf2.L_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R/2bottom_leaf2.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R/2bottom_leaf2.R/2bottom_leaf2.R_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1/spine_leaf2
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1/spine_leaf2/spine_leaf2_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/head
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/head/head_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/jaw
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/jaw/jaw_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/petals
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/petals/petals_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L/upper_leaf2.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L/upper_leaf2.L/upper_leaf2.L_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R/upper_leaf2.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R/upper_leaf2.R/upper_leaf2.R_end
+        weight: 1
+      - path: Angry_flower_stem
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: death1
+      takeName: Angry_Flower_arma|Angry_Flower_armaAction
+      firstFrame: 290
+      lastFrame: 315
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: Angry_flower.000
+        weight: 1
+      - path: Angry_flower.002
+        weight: 1
+      - path: Angry_flower.003
+        weight: 1
+      - path: Angry_Flower_arma
+        weight: 1
+      - path: Angry_Flower_arma/IK2
+        weight: 1
+      - path: Angry_Flower_arma/IK2/IK
+        weight: 1
+      - path: Angry_Flower_arma/IK2/IK/IK_end
+        weight: 1
+      - path: Angry_Flower_arma/IK_target
+        weight: 1
+      - path: Angry_Flower_arma/IK_target/IK_target_end
+        weight: 1
+      - path: Angry_Flower_arma/root
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L/2bottom_leaf2.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L/2bottom_leaf2.L/2bottom_leaf2.L_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R/2bottom_leaf2.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R/2bottom_leaf2.R/2bottom_leaf2.R_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1/spine_leaf2
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1/spine_leaf2/spine_leaf2_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/head
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/head/head_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/jaw
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/jaw/jaw_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/petals
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/petals/petals_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L/upper_leaf2.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L/upper_leaf2.L/upper_leaf2.L_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R/upper_leaf2.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R/upper_leaf2.R/upper_leaf2.R_end
+        weight: 1
+      - path: Angry_flower_stem
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: death2
+      takeName: Angry_Flower_arma|Angry_Flower_armaAction
+      firstFrame: 325
+      lastFrame: 350
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: Angry_flower.000
+        weight: 1
+      - path: Angry_flower.002
+        weight: 1
+      - path: Angry_flower.003
+        weight: 1
+      - path: Angry_Flower_arma
+        weight: 1
+      - path: Angry_Flower_arma/IK2
+        weight: 1
+      - path: Angry_Flower_arma/IK2/IK
+        weight: 1
+      - path: Angry_Flower_arma/IK2/IK/IK_end
+        weight: 1
+      - path: Angry_Flower_arma/IK_target
+        weight: 1
+      - path: Angry_Flower_arma/IK_target/IK_target_end
+        weight: 1
+      - path: Angry_Flower_arma/root
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L/2bottom_leaf2.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L/2bottom_leaf2.L/2bottom_leaf2.L_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R/2bottom_leaf2.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R/2bottom_leaf2.R/2bottom_leaf2.R_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1/spine_leaf2
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1/spine_leaf2/spine_leaf2_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/head
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/head/head_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/jaw
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/jaw/jaw_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/petals
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/petals/petals_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L/upper_leaf2.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L/upper_leaf2.L/upper_leaf2.L_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R/upper_leaf2.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R/upper_leaf2.R/upper_leaf2.R_end
+        weight: 1
+      - path: Angry_flower_stem
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+    - serializedVersion: 16
+      name: idle_battle
+      takeName: Angry_Flower_arma|Angry_Flower_armaAction
+      firstFrame: 110
+      lastFrame: 140
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      loopTime: 1
+      loopBlend: 1
+      loopBlendOrientation: 0
+      loopBlendPositionY: 0
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask:
+      - path: 
+        weight: 1
+      - path: Angry_flower.000
+        weight: 1
+      - path: Angry_flower.002
+        weight: 1
+      - path: Angry_flower.003
+        weight: 1
+      - path: Angry_Flower_arma
+        weight: 1
+      - path: Angry_Flower_arma/IK2
+        weight: 1
+      - path: Angry_Flower_arma/IK2/IK
+        weight: 1
+      - path: Angry_Flower_arma/IK2/IK/IK_end
+        weight: 1
+      - path: Angry_Flower_arma/IK_target
+        weight: 1
+      - path: Angry_Flower_arma/IK_target/IK_target_end
+        weight: 1
+      - path: Angry_Flower_arma/root
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L/2bottom_leaf2.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.L/2bottom_leaf2.L/2bottom_leaf2.L_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R/2bottom_leaf2.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/2bottom_leaf1.R/2bottom_leaf2.R/2bottom_leaf2.R_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1/spine_leaf2
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/spine_leaf1/spine_leaf2/spine_leaf2_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/head
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/head/head_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/jaw
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/jaw/jaw_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/petals
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/stem3/neck/petals/petals_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L/upper_leaf2.L
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.L/upper_leaf2.L/upper_leaf2.L_end
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R/upper_leaf2.R
+        weight: 1
+      - path: Angry_Flower_arma/root/stem0/stem1/stem2/stem2.001/upper_leaf1.R/upper_leaf2.R/upper_leaf2.R_end
+        weight: 1
+      - path: Angry_flower_stem
+        weight: 1
+      maskType: 0
+      maskSource: {instanceID: 0}
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 0
+  tangentSpace:
+    normalSmoothAngle: 60
+    splitTangentsAcrossUV: 1
+    normalImportMode: 0
+    tangentImportMode: 1
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: .5
+    foreArmTwist: .5
+    upperLegTwist: .5
+    legTwist: .5
+    armStretch: .0500000007
+    legStretch: .0500000007
+    feetSpacing: 0
+    rootMotionBoneName: 
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

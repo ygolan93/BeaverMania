@@ -12,7 +12,7 @@ public class LogSpawner : MonoBehaviour
     [SerializeField] Transform Log4;
 
 
-    private void OnCollisionStay(Collision OBJ)
+    private void OnTriggerStay(Collider OBJ)
     {
         if (OBJ.gameObject.CompareTag("Player"))
         {

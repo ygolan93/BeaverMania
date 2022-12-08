@@ -30,7 +30,7 @@ public class NewConstructor : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.LeftControl))
             {
-                Bridge.constraints = RigidbodyConstraints.FreezeAll;
+                Bridge.isKinematic = true;
                 BridgeUI = "Locked";
                 Ramp.material = Synthi;
 
@@ -43,23 +43,23 @@ public class NewConstructor : MonoBehaviour
         }
     }
 
-    public void OnCollisionExit(Collision collision)
+    public void OnTriggerExit(Collider OBJ)
     {
-        if (collision.gameObject.tag == "Player")
+        if (OBJ.gameObject.tag == "Player")
         {
             Standing = false;
         }
     }
 
-    public void OnCollisionStay(Collision collision)
+    public void OnTriggerStay(Collider OBJ)
     {
 
-        if (collision.gameObject.tag == "Player")
+        if (OBJ.gameObject.tag == "Player")
         {
             Standing = true;
         }
 
-        if (collision.gameObject.tag == "Part"/*&& PartCount <= BridgeLimit*/)
+        if (OBJ.gameObject.tag == "Part"/*&& PartCount <= BridgeLimit*/)
         {
                 WoodKnock.Play();
                 if (Player.CurrentHealth < Player.MaxHealth)
@@ -72,7 +72,7 @@ public class NewConstructor : MonoBehaviour
           var newPart = Instantiate(BridgePart, Bridge.transform.position + Bridge.transform.up * -X * PartCount + Bridge.transform.forward*-0.5f, Bridge.transform.rotation);
             newPart.transform.parent = Bridge.transform;
 
-            Destroy(collision.gameObject);
+            Destroy(OBJ.gameObject);
             }
         }
 

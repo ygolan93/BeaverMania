@@ -255,32 +255,58 @@ public class Behavior : MonoBehaviour
         rotGoal = Quaternion.LookRotation(new Vector3(Direction.x, 0, Direction.z));
         transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
         Otter.SetBool("walk", true);
-        if (grounded == true)
+        if (Player.isKinematic == false)
         {
-            if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey)
+            if (grounded == true)
             {
-                Otter.SetBool("run", true);
-                speed = Run;
-                steer = 0.15f;
-            }
-            else
-            {
-                Otter.SetBool("run", false);
-                speed = Walk;
-                steer = 0.1f;
-            }
-            if (Ground != null)
-            {
-                Player.velocity = (Direction.normalized * speed + Ground.velocity) + new Vector3(0, Player.velocity.y, 0);
-            }
-            if (Ground == null)
-            {
-                Player.velocity = (Direction.normalized * speed) + new Vector3(0, Player.velocity.y, 0);
-            }
+                if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey)
+                {
+                    Otter.SetBool("run", true);
+                    speed = Run;
+                    steer = 0.15f;
+                }
+                else
+                {
+                    Otter.SetBool("run", false);
+                    speed = Walk;
+                    steer = 0.1f;
+                }
+                if (Ground != null)
+                {
+                    Player.velocity = (Direction.normalized * speed + Ground.velocity) + new Vector3(0, Player.velocity.y, 0);
+                }
+                if (Ground == null)
+                {
+                    Player.velocity = (Direction.normalized * speed) + new Vector3(0, Player.velocity.y, 0);
+                }
 
+            }
+            if (grounded == false)
+                Player.AddForce(Direction.normalized * 5);
         }
-        if (grounded == false)
-            Player.AddForce(Direction.normalized * 5);
+        if (Player.isKinematic==true)
+        {
+            if (grounded == true)
+            {
+                if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey)
+                {
+                    Otter.SetBool("run", true);
+                    speed = Run;
+                    steer = 0.15f;
+                }
+                else
+                {
+                    Otter.SetBool("run", false);
+                    speed = Walk;
+                    steer = 0.1f;
+                }
+
+                    Player.transform.position += (Direction.normalized);
+
+            }
+            if (grounded == false)
+                Player.AddForce(Direction.normalized * 5);
+        }
     }
 
     public void Start()

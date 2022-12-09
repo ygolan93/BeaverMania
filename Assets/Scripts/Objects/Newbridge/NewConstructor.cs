@@ -5,7 +5,6 @@ public class NewConstructor : MonoBehaviour
     public Behavior Player;
     public int PartCount = 0;
     public int BridgeLimit = 20;
-    public bool Standing = false;
     [SerializeField] GameObject BridgePart;
     public AudioSource WoodKnock;
     public Rigidbody Bridge;
@@ -21,12 +20,14 @@ public class NewConstructor : MonoBehaviour
         Ramp = GetComponent<MeshRenderer>();
         Ramp.material = Cel;
         Bridge = GetComponent<Rigidbody>();
-        
+        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
 
     }
-    private void Update()
+
+    public void OnTriggerStay(Collider OBJ)
     {
-        if (Standing == true)
+
+        if (OBJ.gameObject.tag == "Player")
         {
             if (Input.GetKeyDown(KeyCode.LeftControl))
             {
@@ -39,27 +40,9 @@ public class NewConstructor : MonoBehaviour
             {
                 Destroy(gameObject);
             }
-
-        }
-    }
-
-    public void OnTriggerExit(Collider OBJ)
-    {
-        if (OBJ.gameObject.tag == "Player")
-        {
-            Standing = false;
-        }
-    }
-
-    public void OnTriggerStay(Collider OBJ)
-    {
-
-        if (OBJ.gameObject.tag == "Player")
-        {
-            Standing = true;
         }
 
-        if (OBJ.gameObject.tag == "Part"/*&& PartCount <= BridgeLimit*/)
+        if (OBJ.gameObject.tag == "Part")
         {
                 WoodKnock.Play();
                 if (Player.CurrentHealth < Player.MaxHealth)

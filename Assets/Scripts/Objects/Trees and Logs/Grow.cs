@@ -10,27 +10,20 @@ public class Grow : MonoBehaviour
     Vector3 scaleChange;
     [SerializeField] Transform Log1;
     [SerializeField] Transform Log2;
+
     // Start is called before the first frame update
     void Start()
     {
         Clock = 12f;
-        scaleChange = new Vector3(0.002f, 0.001f, 0.002f);
+        scaleChange = new Vector3(0.003f, 0.002f, 0.003f);
     }
+
 
     // Update is called once per frame
     void Update()
     {
-        if (AtRange == true)
-        {
-            if (Input.GetKey(KeyCode.Mouse0))
-            {
-                Instantiate(Log1, transform.position, Quaternion.identity);
-                Instantiate(Log2, transform.position, Quaternion.identity);
-                Destroy(gameObject);
-            }
-        }
-
-    gameObject.transform.localScale += scaleChange;
+        gameObject.transform.localScale += scaleChange;
+        transform.Rotate(Vector3.up * 0.8f, Space.World);
         Clock -= Time.deltaTime;
         if (Clock <= 0)
         {
@@ -38,26 +31,17 @@ public class Grow : MonoBehaviour
             GameObject.Destroy(gameObject);
         }
     }
-    private void OnCollisionEnter(Collision OBJ)
-    {
-        if (OBJ.gameObject.tag == "Player")
-        {
-            AtRange = true;
-        }
-    }
-    private void OnCollisionStay(Collision OBJ)
-    {
-        if (OBJ.gameObject.tag == "Player")
-        {
-            AtRange = true;
-        }
-    }
 
-    private void OnCollisionExit(Collision OBJ)
+    private void OnTriggerStay(Collider OBJ)
     {
         if (OBJ.gameObject.tag == "Player")
         {
-            AtRange = false;
+            if (Input.GetKey(KeyCode.Mouse0))
+            {
+                Instantiate(Log1, transform.position, Quaternion.identity);
+                Instantiate(Log2, transform.position, Quaternion.identity);
+                Destroy(gameObject);
+            }
         }
     }
 }

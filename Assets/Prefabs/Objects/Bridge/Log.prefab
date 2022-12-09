@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 1264892297037668391}
   - component: {fileID: 178303096510984171}
   - component: {fileID: 5113599283708557397}
+  - component: {fileID: 955908766269730134}
   m_Layer: 0
   m_Name: Log
   m_TagString: Part
@@ -29,11 +30,11 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2403880353969387516}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1360.24, y: 1002.51, z: 603.75}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.4479157, y: 0.8472599, z: 0.4479157}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 9010090941893963001}
+  - {fileID: 8799408695101435804}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -100,7 +101,7 @@ CapsuleCollider:
   m_Radius: 0.5000001
   m_Height: 2
   m_Direction: 1
-  m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &178303096510984171
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -114,10 +115,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Log: {fileID: 5113599283708557397}
-  Distance: 0
   Click: 0
-  DrawnEffect: {fileID: 9010090941893962998}
-  Load: {fileID: 7016787653037946413, guid: b922004aea0ae754c917e6abedafb749, type: 3}
+  DrawnEffect: {fileID: 8799408695101435805}
 --- !u!54 &5113599283708557397
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -134,7 +133,21 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!1001 &3130636260384206813
+--- !u!136 &955908766269730134
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2403880353969387516}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  m_Radius: 8.07
+  m_Height: 11.09
+  m_Direction: 1
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!1001 &3199178033393347768
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -185,23 +198,19 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6230735508686078757, guid: 31eeb47d63642f641a5ae492c7d3c428, type: 3}
-      propertyPath: EmissionModule.enabled
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 6230735508686078763, guid: 31eeb47d63642f641a5ae492c7d3c428, type: 3}
       propertyPath: m_Name
       value: DrawnEffect
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 31eeb47d63642f641a5ae492c7d3c428, type: 3}
---- !u!1 &9010090941893962998 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6230735508686078763, guid: 31eeb47d63642f641a5ae492c7d3c428, type: 3}
-  m_PrefabInstance: {fileID: 3130636260384206813}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &9010090941893963001 stripped
+--- !u!4 &8799408695101435804 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6230735508686078756, guid: 31eeb47d63642f641a5ae492c7d3c428, type: 3}
-  m_PrefabInstance: {fileID: 3130636260384206813}
+  m_PrefabInstance: {fileID: 3199178033393347768}
+  m_PrefabAsset: {fileID: 0}
+--- !u!198 &8799408695101435805 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 6230735508686078757, guid: 31eeb47d63642f641a5ae492c7d3c428, type: 3}
+  m_PrefabInstance: {fileID: 3199178033393347768}
   m_PrefabAsset: {fileID: 0}

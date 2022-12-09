@@ -14,7 +14,7 @@ public class LogSpawner : MonoBehaviour
 
     private void OnTriggerStay(Collider OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Player"))
+        if (OBJ.gameObject.tag=="Player")
         {
             if (Input.GetKey(KeyCode.Mouse0))
             {

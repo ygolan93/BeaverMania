@@ -27,8 +27,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 314371799987817768}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.869, z: 0}
-  m_LocalScale: {x: 1.2229177, y: 1.2229177, z: 1.2229177}
+  m_LocalPosition: {x: 0, y: -0.11, z: 0}
+  m_LocalScale: {x: 1.2229177, y: 0.70107424, z: 1.2229177}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3954610062611186567}
@@ -111,6 +111,7 @@ GameObject:
   - component: {fileID: 3944620527470546195}
   - component: {fileID: 3966693056527221993}
   - component: {fileID: 1041160186769418383}
+  - component: {fileID: 9096504952221692919}
   m_Layer: 0
   m_Name: GrowingTree
   m_TagString: Bridge
@@ -126,7 +127,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3957574019169429477}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1320.725, y: 35.99469, z: 127.25974}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.23993, y: 0.23993, z: 0.23993}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -195,7 +196,7 @@ CapsuleCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  m_Radius: 0.2781284
+  m_Radius: 0.17
   m_Height: 7.515227
   m_Direction: 1
   m_Center: {x: 0.03, y: 3.28, z: -0.15}
@@ -215,3 +216,18 @@ MonoBehaviour:
   AtRange: 0
   Log1: {fileID: 3984402577127926059, guid: dd223c211faee8f47877592620b75861, type: 3}
   Log2: {fileID: 3984402577127926059, guid: dd223c211faee8f47877592620b75861, type: 3}
+  Player: {fileID: 7016787653037946412, guid: b922004aea0ae754c917e6abedafb749, type: 3}
+--- !u!136 &9096504952221692919
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3957574019169429477}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  m_Radius: 0.29
+  m_Height: 7.515227
+  m_Direction: 1
+  m_Center: {x: 0.02, y: 3.7576134, z: 0}

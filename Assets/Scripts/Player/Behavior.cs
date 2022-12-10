@@ -144,7 +144,7 @@ public class Behavior : MonoBehaviour
         {
             StandOnIsle = true;
         }
-        if (OBJ.gameObject.tag == "Tile")
+        if (OBJ.gameObject.tag == "Tile" || OBJ.gameObject.CompareTag("Bridge"))
         {
 
             var OBJVelocity = OBJ.transform.GetComponent<Rigidbody>();
@@ -198,7 +198,7 @@ public class Behavior : MonoBehaviour
             TouchShroom = false;
             Plattering = "shroom";
         }
-        if (OBJ.gameObject.tag == "Tile")
+        if (OBJ.gameObject.tag == "Tile" || OBJ.gameObject.CompareTag("Bridge"))
         {
             grounded = false;
             OnPlatform = false;

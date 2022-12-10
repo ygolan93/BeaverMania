@@ -60,28 +60,17 @@ public class MovingTile : MonoBehaviour
 
     private void OnTriggerStay(Collider OBJ)
     {
-
-        if (OBJ.gameObject.CompareTag("Bridge"))
+        if (OBJ.gameObject.CompareTag("Player")|| OBJ.gameObject.CompareTag("Bridge"))
         {
-            var Child = OBJ.GetComponent<Transform>();
-            Child.transform.parent = Tile.transform;
-
+            OBJ.transform.parent = Tile.transform;
         }
-        if (OBJ.gameObject.CompareTag("Player"))
-        {
-            var Child = OBJ.GetComponent<Rigidbody>();
-            Child.transform.parent = Tile.transform;
-        }
-
-
     }
 
     private void OnTriggerExit(Collider OBJ)
     {
         if (OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("Player"))
         {
-            var Child = OBJ.transform;
-            Child.parent = null;
+            OBJ.transform.parent = null;
         }
     }
 

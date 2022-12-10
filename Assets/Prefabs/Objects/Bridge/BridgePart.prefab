@@ -540,8 +540,6 @@ GameObject:
   m_Component:
   - component: {fileID: 7802360069892173882}
   - component: {fileID: 5625815111607727320}
-  - component: {fileID: 8685754982903053453}
-  - component: {fileID: 350935710369857325}
   m_Layer: 0
   m_Name: BridgePart
   m_TagString: Isle
@@ -583,28 +581,3 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 3.492, y: 4.4948525, z: 0.217965}
   m_Center: {x: 0, y: -0.22308803, z: 1.2414205}
---- !u!65 &8685754982903053453
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8832268069726459598}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 1
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 3.5, y: 5.151985, z: 3.5268126}
-  m_Center: {x: 0, y: 0.118848205, z: 1.2634065}
---- !u!114 &350935710369857325
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8832268069726459598}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 42ffe43640206fb45862fad17454d851, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 

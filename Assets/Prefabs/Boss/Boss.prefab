@@ -146,7 +146,7 @@ GameObject:
   - component: {fileID: 3011567703257628792}
   m_Layer: 0
   m_Name: Boss
-  m_TagString: NPC
+  m_TagString: Boss
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -184,13 +184,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BossHealth: {fileID: 3011567703257628793}
-  BossHit: {fileID: 0}
   CurrentHealth: 0
   MaxHealth: 2000
   combo: 0
   HitEffect: {fileID: 9121868134434936517}
   Explosion: {fileID: 8441742525532789622, guid: 40e313c95bc0b6b44bfc43db170973fc, type: 3}
-  Sound: {fileID: 0}
+  Sound: {fileID: 3011567703257628792}
   rotGoal: {x: 0, y: 0, z: 0, w: 0}
   StrideClock: 7
   BeatClock: 10

@@ -27,7 +27,7 @@ public class Behavior : MonoBehaviour
 
     public Animator Otter;
     public bool grounded;
-    public bool OnPlatform=false;
+    public bool OnPlatform = false;
     [Header("Health")]
     public float MaxHealth = 1000;
     public float CurrentHealth;
@@ -144,7 +144,7 @@ public class Behavior : MonoBehaviour
         {
             StandOnIsle = true;
         }
-        if (OBJ.gameObject.tag == "Tile" || OBJ.gameObject.CompareTag("Bridge"))
+        if (OBJ.gameObject.tag == "Tile")
         {
 
             var OBJVelocity = OBJ.transform.GetComponent<Rigidbody>();
@@ -198,7 +198,7 @@ public class Behavior : MonoBehaviour
             TouchShroom = false;
             Plattering = "shroom";
         }
-        if (OBJ.gameObject.tag == "Tile" || OBJ.gameObject.CompareTag("Bridge"))
+        if (OBJ.gameObject.tag == "Tile")
         {
             grounded = false;
             OnPlatform = false;
@@ -270,7 +270,7 @@ public class Behavior : MonoBehaviour
         rotGoal = Quaternion.LookRotation(new Vector3(Direction.x, 0, Direction.z));
         transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
         Otter.SetBool("walk", true);
-        if (OnPlatform==false)
+        if (OnPlatform == false)
         {
             if (grounded == true)
             {
@@ -286,14 +286,14 @@ public class Behavior : MonoBehaviour
                     speed = Walk;
                     steer = 0.1f;
                 }
-      
-                    Player.velocity = (Direction.normalized * speed) + new Vector3(0, Player.velocity.y, 0);
+
+                Player.velocity = (Direction.normalized * speed) + new Vector3(0, Player.velocity.y, 0);
 
             }
             if (grounded == false)
                 Player.AddForce(Direction.normalized * 5);
         }
-        if (OnPlatform==true)
+        if (OnPlatform == true)
         {
             if (grounded == true)
             {
@@ -310,7 +310,7 @@ public class Behavior : MonoBehaviour
                     steer = 0.1f;
                 }
 
-                Player.velocity = (Direction.normalized * speed) +PlatformVelocity;
+                Player.velocity = (Direction.normalized * speed) + PlatformVelocity;
 
             }
             if (grounded == false)
@@ -369,25 +369,18 @@ public class Behavior : MonoBehaviour
         //Jump action
         if (Input.GetKeyDown(KeyCode.Space) && JumpNum > 0)
         {
-            if (OnPlatform == false)
-            {
-                Player.velocity = new Vector3(Player.velocity.x, JumpForce, Player.velocity.z);
-            }
-            if (OnPlatform == true)
-            {
-                Player.velocity += new Vector3(0, JumpForce, 0);
-            }
+            Player.velocity = new Vector3(Player.velocity.x, JumpForce, Player.velocity.z);
             Sound.Jump();
             levitation = 10;
             Otter.speed = 1;
             JumpNum--;
             JumpNumPreserve = JumpNum;
         }
-        if (Input.GetKey(KeyCode.Space)|| Input.GetKeyUp(KeyCode.Space))
-        JumpNum = JumpNumPreserve;
+        if (Input.GetKey(KeyCode.Space) || Input.GetKeyUp(KeyCode.Space))
+            JumpNum = JumpNumPreserve;
 
-            //Reload scene on death
-            if (CurrentHealth <= 0)
+        //Reload scene on death
+        if (CurrentHealth <= 0)
         {
             transform.position = GM.lastCheckPointPos;
             Lives--;
@@ -493,11 +486,11 @@ public class Behavior : MonoBehaviour
         //+ Player's slide and full-break conditioning on ground
         if (grounded == false)
         {
-            if(JumpNum<JumpLimit)
+            if (JumpNum < JumpLimit)
             {
                 Otter.SetBool("midair", true);
             }
-            if (JumpNum== JumpLimit)
+            if (JumpNum == JumpLimit)
             {
                 Otter.SetBool("midair", false);
                 FallClock -= Time.deltaTime;

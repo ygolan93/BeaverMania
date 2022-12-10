@@ -13177,6 +13177,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Player: {fileID: 7016787653037946834}
+  PlatformVelocity: {x: 0, y: 0, z: 0}
   Load: {fileID: 7016787653037946413}
   rotGoal: {x: 0, y: 0, z: 0, w: 0}
   speed: 5
@@ -13188,6 +13189,7 @@ MonoBehaviour:
   JumpNum: 0
   Otter: {fileID: 2470047760310531081}
   grounded: 0
+  OnPlatform: 0
   MaxHealth: 5000
   CurrentHealth: 0
   HealthBar: {fileID: 7016787653037946410}

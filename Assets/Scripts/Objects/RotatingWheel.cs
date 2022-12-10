@@ -5,10 +5,10 @@ using UnityEngine;
 public class RotatingWheel : MonoBehaviour
 {
     // Start is called before the first frame update
-    [SerializeField] Transform Ramp1;
-    [SerializeField] Transform Ramp2;
-    [SerializeField] Transform Ramp3;
-    [SerializeField] Transform Ramp4;
+    //[SerializeField] Transform Ramp1;
+    //[SerializeField] Transform Ramp2;
+    //[SerializeField] Transform Ramp3;
+    //[SerializeField] Transform Ramp4;
     [SerializeField] float RotateWheel;
 
 
@@ -17,9 +17,9 @@ public class RotatingWheel : MonoBehaviour
     {
 
         transform.Rotate(Vector3.forward*RotateWheel, Space.World);
-        Ramp1.rotation = Quaternion.EulerAngles(0, 0, 0);
-        Ramp2.rotation = Quaternion.EulerAngles(0, 0, 0);
-        Ramp3.rotation = Quaternion.EulerAngles(0, 0, 0);
-        Ramp4.rotation = Quaternion.EulerAngles(0, 0, 0);
+        //Ramp1.rotation = Quaternion.EulerAngles(0, 0, 0);
+        //Ramp2.rotation = Quaternion.EulerAngles(0, 0, 0);
+        //Ramp3.rotation = Quaternion.EulerAngles(0, 0, 0);
+        //Ramp4.rotation = Quaternion.EulerAngles(0, 0, 0);
     }
 }

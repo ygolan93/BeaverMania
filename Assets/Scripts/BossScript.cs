@@ -5,6 +5,7 @@ using UnityEngine;
 public class BossScript : MonoBehaviour
 {
     Rigidbody Boss;
+    [SerializeField] Animator Scorpion;
     public NPC_Health BossHealth;
     public int CurrentHealth;
     public int MaxHealth = 2000;
@@ -37,7 +38,16 @@ public class BossScript : MonoBehaviour
     {
         if (Hit==true)
         {
-            AttackPlayer(1f, 0, 20);
+            if (CurrentHealth > MaxHealth * 0.75f)
+            {
+                Scorpion.speed = 0.8f;
+                AttackPlayer(1.5f, 0, 20);
+            }
+            if (CurrentHealth <= MaxHealth * 0.75f)
+            {
+                Scorpion.speed = 2;
+                AttackPlayer(3f, 9, 20);
+            }
             StrideClock -= Time.deltaTime;
             if (StrideClock<=0)
             {
@@ -47,17 +57,10 @@ public class BossScript : MonoBehaviour
         if (Hit == false)
         {
             RandoMovement();
-            Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.02f);
+            Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
             Distance = Player.transform.position - Boss.position;
         }
-        if (CurrentHealth > MaxHealth * 0.75f)
-        {
-            AttackPlayer(1.5f, 0, 20);
-        }
-        if (CurrentHealth <= MaxHealth * 0.75f)
-        {
-            AttackPlayer(3f, 9, 20);
-        }
+        
 
 
         if (CurrentHealth <= 0)
@@ -73,10 +76,11 @@ public class BossScript : MonoBehaviour
 
     private void AttackPlayer(float AttackSpeed, float AttackTime, float AttackDistance)
     {
+        Scorpion.SetBool("Walk", true);
         if (Distance.magnitude <= AttackDistance || Hit == true)
         {
             rotGoal = Quaternion.LookRotation(new Vector3(Distance.x, 0, Distance.z));
-            Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.03f);
+            Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.5f);
             BeatClock -= Time.deltaTime;
             if (BeatClock <= AttackTime)
             {
@@ -84,6 +88,7 @@ public class BossScript : MonoBehaviour
             }
             else
             {
+                Scorpion.SetBool("Walk", false);
                 Boss.velocity = new Vector3(0, Boss.velocity.y, 0);
             }
         }
@@ -104,6 +109,8 @@ public class BossScript : MonoBehaviour
             b = Random.Range(-1, 2) * Random.value;
             StrideClock = 7f;
         }
+        Scorpion.speed = 0.4f;
+        Scorpion.SetBool("Walk", true);
         Boss.velocity = new Vector3(a, 0, b).normalized * 3 + new Vector3(a, Boss.velocity.y, b);
     }
     public void TakeDamage(int Damage)

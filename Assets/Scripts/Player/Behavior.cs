@@ -524,6 +524,8 @@ public class Behavior : MonoBehaviour
 
         if (neutralAndMoving == true)
         {
+            rotGoal = Quaternion.LookRotation(Player.velocity);
+            transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.5f);
             Otter.SetBool("moving", true);
             SlideEffect.enableEmission = true;
         }

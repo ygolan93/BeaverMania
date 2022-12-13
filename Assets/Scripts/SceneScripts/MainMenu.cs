@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 public class MainMenu : MonoBehaviour
 {
     double Timer=57;
-    Behavior Ottis;
+    //Behavior Ottis;
     //Start is called before the first frame update
     private void Update()
     {

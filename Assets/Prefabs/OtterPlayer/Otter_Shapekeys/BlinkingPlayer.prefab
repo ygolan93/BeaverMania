@@ -11646,9 +11646,9 @@ CapsuleCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   m_Radius: 0.2572165
-  m_Height: 1.4042282
+  m_Height: 1.0881042
   m_Direction: 1
-  m_Center: {x: 0, y: 0.69586563, z: 0.07278353}
+  m_Center: {x: 0, y: 0.8539276, z: 0.07278353}
 --- !u!1 &3877109475856756527
 GameObject:
   m_ObjectHideFlags: 0
@@ -16608,7 +16608,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4013287787272620569}
   m_LocalRotation: {x: -0.00000015739356, y: 0.00000046938663, z: -0.00000041723254, w: 1}
-  m_LocalPosition: {x: -0, y: 0.018240735, z: -5.9604643e-10}
+  m_LocalPosition: {x: -0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 0.99999994, z: 0.9999998}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -17553,7 +17553,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.6959405, y: 1}
+    m_SensorSize: {x: 1.736355, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -17826,7 +17826,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.6959405, y: 1}
+    m_SensorSize: {x: 1.736355, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -18145,7 +18145,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5751011702544441608}
-  m_LocalRotation: {x: -0.00016743872, y: 0.99982524, z: -0.011166272, w: -0.014992423}
+  m_LocalRotation: {x: -0.0001674387, y: 0.99982524, z: -0.011166272, w: -0.0149924215}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -18190,7 +18190,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.6959405, y: 1}
+    m_SensorSize: {x: 1.736355, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -18295,7 +18295,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.6959405, y: 1}
+    m_SensorSize: {x: 1.736355, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -18730,6 +18730,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1525544659155883989}
   - component: {fileID: 4226729752470972945}
+  - component: {fileID: 5122971507969157516}
   m_Layer: 0
   m_Name: Otter
   m_TagString: Untagged
@@ -18845,6 +18846,22 @@ SkinnedMeshRenderer:
     m_Center: {x: -0.0006329678, y: 0.013798155, z: -0.01718074}
     m_Extent: {x: 0.10877292, y: 0.21021706, z: 0.10914232}
   m_DirtyAABB: 0
+--- !u!114 &5122971507969157516
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7724479496503327457}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bdd8b963d626844f8c87cd56d1924e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Skin: {fileID: 0}
+  BlinkLimit: 0
+  BlinkSpeed: 0
+  BlinkBreak: 0
 --- !u!1 &8774370183837886961
 GameObject:
   m_ObjectHideFlags: 0

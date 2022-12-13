@@ -9,8 +9,6 @@ public class MovingTile : MonoBehaviour
     [SerializeField] float MovementTime = 10f;
     float InitialTimer;
     bool Move = true;
-    Rigidbody Player;
-    Vector3 PosStart;
     public Vector3 MoveTo;
     private void Start()
     {

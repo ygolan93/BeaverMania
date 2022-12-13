@@ -6,14 +6,15 @@ public class RotateGameObject : MonoBehaviour {
 	public float rot_speed_y=0;
 	public float rot_speed_z=0;
 	public bool local=false;
-	
-	// Use this for initialization
-	void Start () { 
-	
-	}
-	
-	// Update is called once per frame
-	void FixedUpdate () {
+
+    // Use this for initialization
+    void Start()
+    {
+
+    }
+	[System.Obsolete]
+    // Update is called once per frame
+    void FixedUpdate () {
 		if (local) {
 			transform.RotateAroundLocal(transform.up, Time.fixedDeltaTime*rot_speed_x);
 		} else {

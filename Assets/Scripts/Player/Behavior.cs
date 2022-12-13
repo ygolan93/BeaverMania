@@ -90,10 +90,7 @@ public class Behavior : MonoBehaviour
 
     public void OnCollisionEnter(Collision OBJ)
     {
-        if (OBJ.gameObject.name == "Isle2")
-        {
-            DebugText = ("Congrats! You've finished the demo level");
-        }
+
         if (OBJ.gameObject.CompareTag("Part") || OBJ.gameObject.CompareTag("Seed"))
         {
             Otter.Play("Crouch");
@@ -107,7 +104,6 @@ public class Behavior : MonoBehaviour
         if (OBJ.gameObject.CompareTag("Life"))
         {
             GM.lastCheckPointPos = transform.position;
-            HealingText = "Checkpoint saved";
             Plattering = "at last";
         }
 
@@ -167,6 +163,7 @@ public class Behavior : MonoBehaviour
         }
         if (OBJ.gameObject.tag == "Life")
         {
+            HealingText = "Checkpoint saved";
             if (CurrentHealth < MaxHealth)
             {
                 Plattering = "aH WTF";

@@ -11,8 +11,9 @@ Material:
   m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
   m_ValidKeywords:
   - _EMISSION
+  - _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
   m_InvalidKeywords: []
-  m_LightmapFlags: 0
+  m_LightmapFlags: 1
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
@@ -75,7 +76,7 @@ Material:
     - _FresnelPower: 0.659
     - _FresnelShadowDropoff: 0
     - _GlossMapScale: 1
-    - _Glossiness: 0.5
+    - _Glossiness: 0.433
     - _GlossyReflections: 1
     - _HighIntensity: 2.84
     - _LightScalar: 1.11
@@ -89,14 +90,14 @@ Material:
     - _RimAlpha: 0.326
     - _RimDropOff: 0
     - _RimPower: 0.252
-    - _SmoothnessTextureChannel: 0
+    - _SmoothnessTextureChannel: 1
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
-    - _Color: {r: 1, g: 0.72484726, b: 0, a: 1}
-    - _EmissionColor: {r: 0.7830189, g: 0.4916087, b: 0, a: 1}
+    - _Color: {r: 1, g: 0.7254902, b: 0, a: 1}
+    - _EmissionColor: {r: 1, g: 0.65471697, b: 0.07924521, a: 1}
     - _FresnelColor: {r: 1, g: 0.67408085, b: 0, a: 1}
     - _HighColor: {r: 1, g: 1, b: 1, a: 1}
     - _LowColor: {r: 1, g: 1, b: 1, a: 1}

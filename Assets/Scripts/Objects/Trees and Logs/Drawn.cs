@@ -20,16 +20,17 @@ public class Drawn : MonoBehaviour
     [System.Obsolete]
     private void OnTriggerStay(Collider OBJ)
     {
-        if (OBJ.gameObject.tag=="Player")
+        if (OBJ.gameObject.tag == "Player")
         {
             var Player = OBJ.GetComponent<Behavior>();
             var PlayerLoad = OBJ.GetComponent<Carry>();
             //Check if the log is close enough to be drawn + player's health above minimum **         
             if (Input.GetKey(KeyCode.Mouse1) && !Input.GetKey(KeyCode.LeftControl))
             {
-       
+                Player.Plattering = ("To me! my loyal logs");
+                Player.ChangeSpeech = 1;
                 //Check if player's load is still clear to carry more
-                bool CanDraw =PlayerLoad.CanCarry;
+                bool CanDraw = PlayerLoad.CanCarry;
                 if (CanDraw == true)
                 {
                     Log.velocity = (Player.transform.position - Log.transform.position).normalized * 1.5f;
@@ -41,6 +42,6 @@ public class Drawn : MonoBehaviour
             {
                 DrawnEffect.enableEmission = false;
             }
-        }
+        } 
     }
 }

@@ -7,6 +7,8 @@ public class DebugReference : MonoBehaviour
 {
     public Behavior Player;
 
+
+    public TextMeshProUGUI PlatetringText;
     public TextMeshProUGUI DisplayText;
     public TextMeshProUGUI LogCountText;
     public TextMeshProUGUI HealingDisplay;
@@ -20,6 +22,7 @@ public class DebugReference : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        PlatetringText.text = Player.Plattering;
         DisplayText.text = Player.DebugText;
         LogCountText.text = Player.LogCount;
         CurrencyCount.text = Player.Wallet;

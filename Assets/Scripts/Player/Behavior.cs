@@ -68,7 +68,6 @@ public class Behavior : MonoBehaviour
     public int GobletPickup = 0;
     [Header("Chat")]
     public string Plattering;
-
     [Header("Audio & Effects")]
     public AudioScript Sound;
     float HealQue = 3;
@@ -91,9 +90,10 @@ public class Behavior : MonoBehaviour
     public GameObject AimIcon;
     bool IsCursorOn;
     public CinemachineFreeLook FreeLook;
+    public float ChangeSpeech = 1F;
     public void OnCollisionEnter(Collision OBJ)
     {
-
+    
         if (OBJ.gameObject.CompareTag("Part") || OBJ.gameObject.CompareTag("Seed"))
         {
             Otter.Play("Crouch");
@@ -107,17 +107,11 @@ public class Behavior : MonoBehaviour
         if (OBJ.gameObject.CompareTag("Life"))
         {
             GM.lastCheckPointPos = transform.position;
-            Plattering = "at last";
         }
 
         if (OBJ.gameObject.tag == "Isle" || OBJ.gameObject.CompareTag("Bridge"))
         {
             FallClock = InitialFall;
-            if (Player.velocity.magnitude > 8 && !Input.anyKey)
-            {
-                Otter.Play("Roll");
-            }
-
         }
         if (OBJ.gameObject.CompareTag("Coin"))
         {
@@ -128,9 +122,7 @@ public class Behavior : MonoBehaviour
             Sound.Coin();
             GobletPickup++;
             Destroy(OBJ.gameObject);
-
         }
-
 
     }
     public void OnCollisionStay(Collision OBJ)
@@ -145,40 +137,49 @@ public class Behavior : MonoBehaviour
         }
         if (OBJ.gameObject.tag == "Tile")
         {
-
             var OBJVelocity = OBJ.transform.GetComponent<Rigidbody>();
-            if (OBJVelocity != null)
-            {
-                PlatformVelocity = OBJVelocity.velocity;
-                OnPlatform = true;
-            }
+            PlatformVelocity = OBJVelocity.velocity;
+            OnPlatform = true;
+            
         }
         if (OBJ.gameObject.CompareTag("Weapon"))
         {
-            HealingText = "Pick  it up!";
+            Plattering = ("Hm, What's this?");
+            ChangeSpeech = 1;
             if (Input.GetKey(KeyCode.LeftControl))
             {
                 RightHandWeapon.SetActive(true);
                 LeftHandWeapon.SetActive(true);
                 HammerHeld = true;
                 Destroy(OBJ.gameObject);
+                Plattering = ("Why do I hear boss music?");
+                ChangeSpeech = 5;
             }
         }
         if (OBJ.gameObject.tag == "Life")
         {
+            if (CurrentHealth < MaxHealth)
+            {
+                Plattering = ("Shroom!");
+                ChangeSpeech = 1;
+            }
             HealingText = "Checkpoint saved";
             if (CurrentHealth < MaxHealth)
             {
-                Plattering = "aH WTF";
                 TakeDamage(-10);
                 TouchShroom = true;
             }
             if (CurrentHealth >= MaxHealth)
                 TouchShroom = false;
         }
+        if (OBJ.gameObject.CompareTag("NPC"))
+        {
+            Plattering = "Get off me ya nasty bastards!";
+            ChangeSpeech = 3;
+        }
         if (OBJ.gameObject.tag == "Strike")
         {
-            DebugText = "You Can't Swim!";
+            HealingText = "You Can't Swim!";
             transform.position = GM.lastCheckPointPos;
             Lives--;
             if (Lives == 0)
@@ -195,8 +196,9 @@ public class Behavior : MonoBehaviour
         }
         if (OBJ.gameObject.tag == "Life")
         {
+            //Plattering = ("That's what i'm talking about");
+            //ChangeSpeech = 1;
             TouchShroom = false;
-            Plattering = "shroom";
         }
         if (OBJ.gameObject.tag == "Tile")
         {
@@ -217,8 +219,6 @@ public class Behavior : MonoBehaviour
                 {
                     Debug.Log("Hit " + enemy.name);
                     enemy.GetComponent<NPC_Basic>().TakeDamage(GroundAttack);
-                    Plattering = "take this!";
-
                 }
                 if (enemy.CompareTag("Boss"))
                 {
@@ -249,6 +249,8 @@ public class Behavior : MonoBehaviour
             BeatAir = AirBeat * Otter.speed;
         }
     }
+
+    //Player Character talks nonesense
 
     public void TakeDamage(float Damage)
     {
@@ -295,7 +297,7 @@ public class Behavior : MonoBehaviour
         }
         if (OnPlatform == true)
         {
-            if (grounded == true)
+            //if (grounded == true)
             {
                 if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey)
                 {
@@ -309,12 +311,11 @@ public class Behavior : MonoBehaviour
                     speed = Walk;
                     steer = 0.1f;
                 }
-
                 Player.velocity = (Direction.normalized * speed) + PlatformVelocity;
 
             }
-            if (grounded == false)
-                Player.AddForce(Direction.normalized * 5);
+            //if (grounded == false)
+            //    Player.AddForce(Direction.normalized * 5);
         }
     }
     public void ShowCursor()
@@ -349,8 +350,15 @@ public class Behavior : MonoBehaviour
     public void Update()
     {
         HideCursor();
-
         //Update UI text
+        if (Plattering != "")
+        {
+            ChangeSpeech -= Time.deltaTime;
+            if (ChangeSpeech <= 0)
+            {
+                Plattering = "";
+            }
+        }
         HealthPercent = System.Math.Round((CurrentHealth / MaxHealth) * 100f, 1);
         DebugText = HealthPercent + "%";
         Wallet = Currency + " Coins";
@@ -383,6 +391,11 @@ public class Behavior : MonoBehaviour
         //Jump action
         if (Input.GetKeyDown(KeyCode.Space) && JumpNum > 0)
         {
+            if (Player.transform.parent!=null)
+            {
+                Player.transform.parent = null;
+            }
+            OnPlatform = false;
             Player.velocity = new Vector3(Player.velocity.x, JumpForce, Player.velocity.z);
             Sound.Jump();
             levitation = 10;
@@ -538,7 +551,7 @@ public class Behavior : MonoBehaviour
 
         if (neutralAndMoving == true)
         {
-            rotGoal = Quaternion.LookRotation(Player.velocity);
+            rotGoal = Quaternion.LookRotation(new Vector3(Player.velocity.x,0,Player.velocity.z));
             transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.5f);
             Otter.SetBool("moving", true);
             SlideEffect.enableEmission = true;
@@ -592,10 +605,11 @@ public class Behavior : MonoBehaviour
         //Melee action
         if (Input.GetKey(KeyCode.Mouse0) && StoneHeld == false && IsCursorOn==false)
         {
-
             Otter.SetBool("fight", true); //Airkick leveitation
             if (grounded == false)
             {
+                //Plattering = "Copter time!";
+                //ChangeSpeech = 1f;
                 BeatAir -= Time.deltaTime;
                 if (BeatAir <= 0)
                 {
@@ -658,14 +672,11 @@ public class Behavior : MonoBehaviour
         //Draw logs action
         if (Input.GetKey(KeyCode.Mouse1) && !Input.GetKey(KeyCode.LeftControl))
         {
-            Plattering = "To me! my loyal logs";
-
             TakeDamage(10);
         }
         if (!Input.GetKey(KeyCode.Mouse1))
         {
             hurt = false;
-            Plattering = "";
         }
 
         //Plant Seed action

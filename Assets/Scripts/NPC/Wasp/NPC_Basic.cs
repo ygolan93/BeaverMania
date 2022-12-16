@@ -137,6 +137,8 @@ public class NPC_Basic : MonoBehaviour
 
     private void Death()
     {
+        PlayerHealth.Plattering = ("HA! gotcha");
+        PlayerHealth.ChangeSpeech = 1;
         //Sound.StopBuzzing();
         Instantiate(Explosion, transform.position + new Vector3(0, 1, 0), transform.rotation);
         Instantiate(Body, transform.position + new Vector3(0, 1, 0), transform.rotation);

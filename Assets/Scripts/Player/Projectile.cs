@@ -35,6 +35,8 @@ public class Projectile : MonoBehaviour
         {
             OBJ.gameObject.GetComponent<NPC_Basic>().TakeDamage((int)Ball.velocity.magnitude);
             OBJ.gameObject.GetComponent<NPC_Basic>().combo = 3;
+            Player.Plattering = "Bam! Take that";
+            Player.ChangeSpeech = 1f;
         }
         if (OBJ.gameObject.CompareTag("Boss"))
         {

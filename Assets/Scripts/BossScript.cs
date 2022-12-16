@@ -24,7 +24,9 @@ public class BossScript : MonoBehaviour
     public float a;
     public float b;
     bool Hit=false;
-    float speed;
+    [SerializeField]float speed;
+    [SerializeField]float time;
+    [SerializeField]float distance;
     private void Start()
     {
         Boss = GetComponent<Rigidbody>();
@@ -38,16 +40,10 @@ public class BossScript : MonoBehaviour
     {
         if (Hit==true)
         {
-            if (CurrentHealth > MaxHealth * 0.75f)
-            {
-                Scorpion.speed = 0.8f;
-                AttackPlayer(1.5f, 0, 20);
-            }
-            if (CurrentHealth <= MaxHealth * 0.75f)
-            {
-                Scorpion.speed = 2;
-                AttackPlayer(3f, 9, 20);
-            }
+            speed++;
+            time--;
+            distance -= 3;
+            AttackPlayer(speed,time,distance);
             StrideClock -= Time.deltaTime;
             if (StrideClock<=0)
             {
@@ -129,7 +125,7 @@ public class BossScript : MonoBehaviour
     }
     private void OnCollisionStay(Collision OBJ)
     {
-        if (OBJ.gameObject==Player)
+        if (OBJ.gameObject==Player && Boss.velocity.magnitude>10)
         {
             PlayerHealth.TakeDamage(50);
             //Hit = false;

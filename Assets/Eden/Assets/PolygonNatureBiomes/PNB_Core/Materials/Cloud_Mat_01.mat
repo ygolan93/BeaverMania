@@ -2,14 +2,16 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!21 &2100000
 Material:
-  serializedVersion: 6
+  serializedVersion: 8
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Cloud_Mat_01
   m_Shader: {fileID: 4800000, guid: 852113d15a525b849b1d469228f450ce, type: 3}
-  m_ShaderKeywords: _EMISSION
+  m_ValidKeywords: []
+  m_InvalidKeywords:
+  - _EMISSION
   m_LightmapFlags: 2
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -87,6 +89,7 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    m_Ints: []
     m_Floats:
     - _Big_Wave1: 1
     - _Big_WindAmount1: 1
@@ -105,7 +108,7 @@ Material:
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
-    - _PanningSpeed: 0.015
+    - _PanningSpeed: 0
     - _PanningSpeed1: 1
     - _Parallax: 0.02
     - _SmoothnessTextureChannel: 0
@@ -120,8 +123,8 @@ Material:
     - _Translucency: 12
     - _UVSec: 0
     - _WindDirection1: 1.24
-    - _WindEffect: 1
-    - _WindNoiseScale: 0.005
+    - _WindEffect: 0.58
+    - _WindNoiseScale: 0
     - _WindNoiseScale1: 0.662
     - _WindWorldScale: 0.02
     - _WindWorldScale1: 2.47
@@ -140,9 +143,9 @@ Material:
     - _lightMin: 0.246
     - _lightingContrast: 121.99
     - _maxEmit: 1.301
-    - _minEmit: 0.912
+    - _minEmit: 1
     - _minEmit1: 0.19
-    - _minEmit_dir: 0.611
+    - _minEmit_dir: 0.537
     - _poster: 9.08
     - _rimLight: 0.75
     - _rimLight1: 0.5
@@ -152,13 +155,14 @@ Material:
     - _Color: {r: 0.8773585, g: 0.8773585, b: 0.8773585, a: 1}
     - _Color0: {r: 0.631, g: 0.80809605, b: 1, a: 0}
     - _Color3: {r: 0.723, g: 0.80609995, b: 1, a: 0}
-    - _Colour: {r: 0.88699996, g: 0.93207437, b: 1, a: 0}
+    - _Colour: {r: 1, g: 1, b: 1, a: 0}
     - _Colour1: {r: 0.5, g: 0.5, b: 0.5, a: 0}
     - _Colour2: {r: 0.681, g: 0.8245501, b: 1, a: 0}
     - _EmissionColor: {r: 0.092, g: 0.092, b: 0.092, a: 1}
-    - _EmissiveColour: {r: 0.36378607, g: 0.5328233, b: 0.7075472, a: 0}
+    - _EmissiveColour: {r: 0.635671, g: 0.76911414, b: 0.9056604, a: 0}
     - _GustSmoothing1: {r: 1, g: 1, b: 1, a: 0}
     - _Tint: {r: 0.5, g: 0.5, b: 0.5, a: 0}
     - _Translucency: {r: 0.5, g: 0.5, b: 0.5, a: 0}
     - _emissiveColour: {r: 0.759, g: 0.8125556, b: 1, a: 0}
     - _emissiveColour1: {r: 0.656535, g: 0.7297195, b: 0.865, a: 0}
+  m_BuildTextureStacks: []

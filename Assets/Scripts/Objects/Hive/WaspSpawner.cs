@@ -5,7 +5,7 @@ using UnityEngine;
 public class WaspSpawner : MonoBehaviour
 {
     public GameObject Wasp;
-    public Rigidbody Hive;
+    public GameObject Hive;
     public Transform Player;
     public Vector3 Distance;
     public int WaspCounter=3;
@@ -27,7 +27,7 @@ public class WaspSpawner : MonoBehaviour
             if (Counter > 0)
             {
                Quaternion RotWasp = Quaternion.LookRotation(Distance);
-               var NewWasp =Instantiate(Wasp, Hive.position, RotWasp);
+               var NewWasp =Instantiate(Wasp, Hive.transform.position, RotWasp);
                 Counter--;
             }
             if (Counter <=0)

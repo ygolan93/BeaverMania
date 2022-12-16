@@ -38,11 +38,8 @@ public class BossScript : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        if (Hit==true)
+        if (Hit==true|| Distance.magnitude<100)
         {
-            speed++;
-            time--;
-            distance -= 3;
             AttackPlayer(speed,time,distance);
             StrideClock -= Time.deltaTime;
             if (StrideClock<=0)
@@ -80,7 +77,7 @@ public class BossScript : MonoBehaviour
             BeatClock -= Time.deltaTime;
             if (BeatClock <= AttackTime)
             {
-                Boss.velocity = new Vector3(Distance.x * AttackSpeed, Boss.velocity.y, Distance.z * AttackSpeed);
+                Boss.velocity = new Vector3(Distance.x, 0, Distance.z).normalized*AttackSpeed+ new Vector3(0,Boss.velocity.y,0);
             }
             else
             {
@@ -105,12 +102,16 @@ public class BossScript : MonoBehaviour
             b = Random.Range(-1, 2) * Random.value;
             StrideClock = 7f;
         }
-        Scorpion.speed = 0.4f;
+        //speed = 1f;
+        //Scorpion.speed = 0.4f;
         Scorpion.SetBool("Walk", true);
         Boss.velocity = new Vector3(a, 0, b).normalized * 3 + new Vector3(a, Boss.velocity.y, b);
     }
     public void TakeDamage(int Damage)
     {
+        Hit = true;
+        speed += 0.04f;
+        Scorpion.speed += 0.01f;
         transform.rotation = rotGoal;
         HitEffect.SetActive(true);
         CurrentHealth -= Damage;
@@ -127,7 +128,7 @@ public class BossScript : MonoBehaviour
     {
         if (OBJ.gameObject==Player && Boss.velocity.magnitude>10)
         {
-            PlayerHealth.TakeDamage(50);
+            PlayerHealth.TakeDamage(Boss.velocity.magnitude*5);
             //Hit = false;
             BeatClock = InitialBeat;
         }

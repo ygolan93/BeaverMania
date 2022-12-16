@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Cinemachine;
+using Cinemachine.Utility;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -24,7 +26,7 @@ public class Behavior : MonoBehaviour
     [SerializeField] int JumpNum;
     int JumpLimit;
     int JumpNumPreserve;
-
+    public Transform Root;
     public Animator Otter;
     public bool grounded;
     public bool OnPlatform = false;
@@ -86,8 +88,9 @@ public class Behavior : MonoBehaviour
     public string SeedText;
     public string Wallet;
     public GameMaster GM;
-
-
+    public GameObject AimIcon;
+    bool IsCursorOn;
+    public CinemachineFreeLook FreeLook;
     public void OnCollisionEnter(Collision OBJ)
     {
 
@@ -314,9 +317,24 @@ public class Behavior : MonoBehaviour
                 Player.AddForce(Direction.normalized * 5);
         }
     }
-
+    public void ShowCursor()
+    {
+        //show mouse icon
+        IsCursorOn = true;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+    public void HideCursor()
+    {
+        //Lock and hide mouse icon
+        IsCursorOn = false;
+        FreeLook.m_LookAt=Root;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
     public void Start()
     {
+        AimIcon.SetActive(false);
         Player = GetComponent<Rigidbody>();
         GM = GameObject.FindGameObjectWithTag("GM").GetComponent<GameMaster>();
         CurrentHealth = MaxHealth;
@@ -330,6 +348,8 @@ public class Behavior : MonoBehaviour
     }
     public void Update()
     {
+        HideCursor();
+
         //Update UI text
         HealthPercent = System.Math.Round((CurrentHealth / MaxHealth) * 100f, 1);
         DebugText = HealthPercent + "%";
@@ -359,9 +379,6 @@ public class Behavior : MonoBehaviour
             GroundAttack = 450;
         }
 
-        //Lock and hide mouse icon
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
 
         //Jump action
         if (Input.GetKeyDown(KeyCode.Space) && JumpNum > 0)
@@ -573,7 +590,7 @@ public class Behavior : MonoBehaviour
         }
 
         //Melee action
-        if (Input.GetKey(KeyCode.Mouse0) && StoneHeld == false)
+        if (Input.GetKey(KeyCode.Mouse0) && StoneHeld == false && IsCursorOn==false)
         {
 
             Otter.SetBool("fight", true); //Airkick leveitation
@@ -623,7 +640,7 @@ public class Behavior : MonoBehaviour
         {
             Otter.SetBool("fight", false);
             Otter.SetBool("crouch", false);
-            HealingText = "(<X>)";
+            AimIcon.SetActive(true);
             if (!Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
             {
                 rotGoal = Quaternion.LookRotation(XZForward);
@@ -636,6 +653,7 @@ public class Behavior : MonoBehaviour
             Instantiate(Ball, AttackPoint.position, Quaternion.identity);
             Stone.SetActive(false);
             StoneHeld = false;
+            AimIcon.SetActive(false);
         }
         //Draw logs action
         if (Input.GetKey(KeyCode.Mouse1) && !Input.GetKey(KeyCode.LeftControl))

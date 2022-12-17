@@ -17,6 +17,7 @@ public class Trader : MonoBehaviour
     void Start()
     {
         FormalLook=transform.rotation;
+        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
     }
 
     // Update is called once per frame

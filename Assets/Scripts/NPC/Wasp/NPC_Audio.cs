@@ -20,6 +20,13 @@ public class NPC_Audio : MonoBehaviour
         ActionSource.pitch = 1f;
         ActionSource.PlayOneShot(audioClip[1]);
     }
+    public void Ahh()
+    {
+        ActionSource.clip = audioClip[3];
+        ActionSource.volume = 0.7f;
+        ActionSource.pitch = 1f;
+        ActionSource.PlayOneShot(audioClip[3]);
+    }
     public void StopBuzzing()
     {
         BuzzSource.Stop();

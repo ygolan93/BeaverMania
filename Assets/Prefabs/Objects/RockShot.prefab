@@ -13,8 +13,8 @@ GameObject:
   - component: {fileID: 7267472145450735645}
   - component: {fileID: 1429953180212373313}
   - component: {fileID: -4409854831365679520}
-  - component: {fileID: 3354004161587186279}
   - component: {fileID: 8440659277245134393}
+  - component: {fileID: 4189322866150992592}
   m_Layer: 0
   m_Name: RockShot
   m_TagString: Damage
@@ -117,20 +117,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!64 &3354004161587186279
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6553853189663251025}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 4
-  m_Convex: 1
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 4300002, guid: 2fb97ace31b7543e7b09c8bffbdc6fad, type: 3}
 --- !u!82 &8440659277245134393
 AudioSource:
   m_ObjectHideFlags: 0
@@ -143,8 +129,8 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 8300000, guid: 2e95282c0721b084ba12bc8a48a60d02, type: 3}
   m_PlayOnAwake: 0
-  m_Volume: 0.024
-  m_Pitch: 1
+  m_Volume: 0.041
+  m_Pitch: 0.33
   Loop: 0
   Mute: 0
   Spatialize: 0
@@ -227,3 +213,16 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!135 &4189322866150992592
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6553853189663251025}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.42
+  m_Center: {x: 0, y: 0, z: 0}

@@ -5,11 +5,11 @@ using UnityEngine;
 
 public class NPC_Basic : MonoBehaviour
 {
-    //Body and animation
+    [Header("Body and animation")]
     public Rigidbody NPC;
     [SerializeField] Animator Wasp;
 
-    //Movement 
+    [Header("Movement")] 
     GameObject PlayerTarget;
     Behavior PlayerHealth;
     GameObject AnotherWasp;
@@ -27,9 +27,8 @@ public class NPC_Basic : MonoBehaviour
     float c;
     Vector3 SpawnPos;
 
-    //Health and damage
+    [Header("Health and damage")]
     public int combo = 0;
-
     public int Damage2Player = 1;
     public int MaxHealth = 2000;
     public int CurrentHealth;
@@ -37,11 +36,11 @@ public class NPC_Basic : MonoBehaviour
     public GameObject HitEffect;
     public GameObject Explosion;
 
-    //Sound
+    
+    [Header("Sound")]
     public NPC_Audio Sound;
 
-
-    //On death
+    [Header("On Death")]
     public GameObject Body;
     public GameObject Head;
     public GameObject Wing;
@@ -139,7 +138,7 @@ public class NPC_Basic : MonoBehaviour
     {
         PlayerHealth.Plattering = ("HA! gotcha");
         PlayerHealth.ChangeSpeech = 1;
-        //Sound.StopBuzzing();
+        Sound.Ahh();
         Instantiate(Explosion, transform.position + new Vector3(0, 1, 0), transform.rotation);
         Instantiate(Body, transform.position + new Vector3(0, 1, 0), transform.rotation);
         Instantiate(Head, transform.position + new Vector3(0, 1, 0), transform.rotation);

@@ -333,6 +333,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Player: {fileID: 0}
+  PlatetringText: {fileID: 0}
   DisplayText: {fileID: 1213725825389655549}
   LogCountText: {fileID: 1213725825981477682}
   HealingDisplay: {fileID: 1213725826446233405}
@@ -349,7 +350,6 @@ GameObject:
   - component: {fileID: 1213725825981477692}
   - component: {fileID: 1213725825981477683}
   - component: {fileID: 1213725825981477682}
-  - component: {fileID: 1213725825981477693}
   m_Layer: 5
   m_Name: LogCount
   m_TagString: Untagged
@@ -475,24 +475,6 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!114 &1213725825981477693
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1213725825981477695}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 66e3189e81ab2eb41ae0a551e8ad811e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Player: {fileID: 0}
-  DisplayText: {fileID: 1213725825389655549}
-  LogCountText: {fileID: 1213725825981477682}
-  HealingDisplay: {fileID: 1213725826446233405}
-  CurrencyCount: {fileID: 5831098722121661332}
-  SeedCount: {fileID: 0}
 --- !u!1 &1213725826022712466
 GameObject:
   m_ObjectHideFlags: 0
@@ -826,6 +808,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Player: {fileID: 0}
+  PlatetringText: {fileID: 0}
   DisplayText: {fileID: 1213725825389655549}
   LogCountText: {fileID: 1213725826446233405}
   HealingDisplay: {fileID: 1213725826446233405}
@@ -919,7 +902,6 @@ GameObject:
   - component: {fileID: 7481653638926199727}
   - component: {fileID: 2949443203056774908}
   - component: {fileID: 2671751839040476730}
-  - component: {fileID: 145516189168087233}
   m_Layer: 5
   m_Name: SeedCount
   m_TagString: Untagged
@@ -1045,24 +1027,6 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!114 &145516189168087233
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2470888509827519341}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 66e3189e81ab2eb41ae0a551e8ad811e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Player: {fileID: 7080714720866271184, guid: 9a3277e3630403b4bb673093a64d5d9a, type: 3}
-  DisplayText: {fileID: 1213725825389655549}
-  LogCountText: {fileID: 1213725825981477682}
-  HealingDisplay: {fileID: 1213725826446233405}
-  CurrencyCount: {fileID: 5831098722121661332}
-  SeedCount: {fileID: 2671751839040476730}
 --- !u!1 &5081931407289273244
 GameObject:
   m_ObjectHideFlags: 0
@@ -1150,7 +1114,6 @@ GameObject:
   - component: {fileID: 5831098722121661338}
   - component: {fileID: 5831098722121661335}
   - component: {fileID: 5831098722121661332}
-  - component: {fileID: 5831098722121661333}
   m_Layer: 5
   m_Name: CurrencyCount
   m_TagString: Untagged
@@ -1276,24 +1239,6 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!114 &5831098722121661333
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5831098722121661339}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 66e3189e81ab2eb41ae0a551e8ad811e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Player: {fileID: 0}
-  DisplayText: {fileID: 1213725825389655549}
-  LogCountText: {fileID: 5831098722121661332}
-  HealingDisplay: {fileID: 1213725826446233405}
-  CurrencyCount: {fileID: 5831098722121661332}
-  SeedCount: {fileID: 0}
 --- !u!1 &5831098722627261549
 GameObject:
   m_ObjectHideFlags: 0

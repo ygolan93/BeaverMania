@@ -10,6 +10,10 @@ public class DisappearOnAway : MonoBehaviour
     public Vector3 DistanceVec;
     [SerializeField] float ActualDistance;
     [SerializeField] float PopUpDistance;
+    private void Start()
+    {
+        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
+    }
     private void Update()
     {
         DistanceVec = Player.transform.position - Item.transform.position;
@@ -22,19 +26,7 @@ public class DisappearOnAway : MonoBehaviour
             Item.SetActive(false);
     }
 
-    //private void Start()
-    //{
-    //    Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
-    //}
-    //private void OnTriggerStay(Collider OBJ)
-    //{
-    //    if (OBJ.gameObject == Player)
-    //        Item.SetActive(true);
-    //}
-    //private void OnTriggerExit(Collider OBJ)
-    //{
-    //    if (OBJ.gameObject == Player)
-    //        Item.SetActive(false);
-    //}
+
+
 
 }

@@ -13,7 +13,7 @@ public class DebugReference : MonoBehaviour
     public TextMeshProUGUI HealingDisplay;
     public TextMeshProUGUI CurrencyCount;
     public TextMeshProUGUI SeedCount;
-
+    public TextMeshProUGUI GobletCount;
     private void Start()
     {
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
@@ -26,5 +26,6 @@ public class DebugReference : MonoBehaviour
         CurrencyCount.text = Player.Wallet;
         HealingDisplay.text = Player.HealingText;
         SeedCount.text = Player.SeedText;
+        GobletCount.text = Player.GobletText;
     }
 }

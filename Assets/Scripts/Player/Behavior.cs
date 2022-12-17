@@ -66,6 +66,7 @@ public class Behavior : MonoBehaviour
     [Header("Other Objects")]
     public GameObject Seed;
     public int GobletPickup = 0;
+    public string GobletText;
     [Header("Chat")]
     public string Plattering;
     [Header("Audio & Effects")]
@@ -373,6 +374,7 @@ public class Behavior : MonoBehaviour
         DebugText = HealthPercent + "%";
         Wallet = Currency + " Coins";
         SeedText = NutCount + " Nuts";
+        GobletText = GobletPickup + " Goblets";
         if (Lives == 3)
         {
             ICON_1.SetActive(true);

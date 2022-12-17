@@ -6,7 +6,7 @@ public class WaspSpawner : MonoBehaviour
 {
     public GameObject Wasp;
     public GameObject Hive;
-    public Transform Player;
+    public Behavior Player;
     public Vector3 Distance;
     public int WaspCounter=3;
     int Counter;
@@ -17,10 +17,11 @@ public class WaspSpawner : MonoBehaviour
     {
         Counter=WaspCounter;
         RealClock = SpawnClock;
+        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
     }
     public void Update()
     {
-         Distance = Player.position - transform.position;
+         Distance = Player.transform.position - transform.position;
 
         if (Mathf.Abs(Distance.magnitude) < 100 )
         {

@@ -225,6 +225,11 @@ public class Behavior : MonoBehaviour
                     Debug.Log("Hit " + enemy.name);
                     enemy.GetComponent<BossScript>().TakeDamage(GroundAttack);
                 }
+                if (enemy.CompareTag("Hive"))
+                {
+                    Debug.Log("Hit " + enemy.name);
+                    enemy.GetComponent<Static_Hive>().TakeDamage(GroundAttack);
+                }
             }
             BeatGrounded = GroundBeat;
         }
@@ -243,6 +248,11 @@ public class Behavior : MonoBehaviour
                 {
                     Debug.Log("Hit " + enemy.name);
                     enemy.GetComponent<BossScript>().TakeDamage(40);
+                }
+                if (enemy.CompareTag("Hive"))
+                {
+                    Debug.Log("Hit " + enemy.name);
+                    enemy.GetComponent<Static_Hive>().TakeDamage(40);
                 }
 
             }

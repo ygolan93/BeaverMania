@@ -57,7 +57,7 @@ public class NPC_Basic : MonoBehaviour
         PlayerHealth = PlayerTarget.GetComponent<Behavior>();
         HitEffect.SetActive(false);
         RandoMovement();
-        NPC.velocity = Distance;
+        NPC.velocity = Vector3.forward;
     }
 
     // Update is called once per frame

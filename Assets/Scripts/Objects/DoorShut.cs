@@ -6,7 +6,7 @@ public class DoorShut : MonoBehaviour
 {
     public GameObject Shutters;
     public Behavior Player;
-    [SerializeField] int GobletNum;
+    public int GobletNum;
     private void Start()
     {
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();

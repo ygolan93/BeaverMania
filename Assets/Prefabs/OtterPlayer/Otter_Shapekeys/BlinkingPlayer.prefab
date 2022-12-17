@@ -11523,11 +11523,11 @@ MonoBehaviour:
   rotGoal: {x: 0, y: 0, z: 0, w: 0}
   speed: 5
   steer: 0.9
-  JumpForce: 5
+  JumpForce: 6
   Walk: 3
   Run: 12
   neutralAndMoving: 0
-  JumpNum: 2
+  JumpNum: 3
   Root: {fileID: 0}
   Otter: {fileID: 8568589699339183529}
   grounded: 0
@@ -11632,8 +11632,8 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3877109475308234638}
   serializedVersion: 2
-  m_Mass: 1.2
-  m_Drag: 0
+  m_Mass: 2
+  m_Drag: 0.1
   m_AngularDrag: 0
   m_UseGravity: 1
   m_IsKinematic: 0

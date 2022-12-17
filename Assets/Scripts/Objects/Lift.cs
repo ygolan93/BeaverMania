@@ -6,76 +6,50 @@ public class Lift : MonoBehaviour
 {
     [SerializeField] Rigidbody Beams;
     [SerializeField] float LiftSpeed;
-    [SerializeField] float CurrentPos;
-    [Header("Height factor limits")]
-    public float HighLimit = 18;
-    public float LowLimit = 18;
-    public float HeightStart;
-    [Header("World Height limits")]
-    public float MaxHeight;
-    public float MinHeight;
-    float NormalSpeed;
-    [Header("Rest timer")]
-    [SerializeField] float StopTimer = 3f;
-    float InitialTimer;
-    bool Up;
-    bool Stop;
-
-    private void Start()
-    {
-        HeightStart = Beams.transform.position.y;
-        NormalSpeed = LiftSpeed;
-        InitialTimer = StopTimer;
-         MaxHeight = HeightStart + HighLimit;
-         MinHeight = HeightStart - LowLimit;
-    }
+    [SerializeField] Transform BottomPoint;
+    [SerializeField] Transform UpperPoint;
+    [SerializeField] GameObject Stage;
+    bool OnBoard;
 
 
 
     // Update is called once per frame
     void FixedUpdate()
     {
-        CurrentPos = Beams.transform.position.y;
-        if (Up==true&&Stop==false)
-        {
-            Beams.velocity = new Vector3(0, LiftSpeed, 0);
-        }
-        if (Up == false && Stop == false)
-        {
-            Beams.velocity = new Vector3(0, -LiftSpeed, 0);
-        }
 
-        if (CurrentPos<MaxHeight&&CurrentPos>MinHeight)
+        if (OnBoard == true)
         {
-            StopTimer = InitialTimer;
+            if (Stage.transform.position.y < UpperPoint.transform.position.y)
+                Beams.velocity = new Vector3(0, LiftSpeed, 0);
+            else
+                Beams.velocity = new Vector3(0, 0, 0);
         }
-        if (CurrentPos>= MaxHeight)
+        if (OnBoard == false)
         {
-            StopLift();
-            Up = false;
+            if (Stage.transform.position.y > BottomPoint.transform.position.y)
+                Beams.velocity = new Vector3(0, -LiftSpeed, 0);
+            else
+                Beams.velocity = new Vector3(0, 0, 0);
         }
-        if (CurrentPos<=MinHeight)
-        {
-            StopLift();
-            Up = true;
-        }
-
-
 
     }
 
-    void StopLift()
+
+     void OnTriggerStay(Collider OBJ)
     {
-        Stop = true;
-        if (StopTimer > 0 && Stop==true)
+        if (OBJ.gameObject.CompareTag("Player"))
         {
-            Beams.velocity = new Vector3(0, 0, 0);
-            StopTimer -= Time.deltaTime;
+            OnBoard = true;
         }
-        if (StopTimer<=0)
+    }
+
+      void OnTriggerExit(Collider OBJ)
+    {
+        if (OBJ.gameObject.CompareTag("Player"))
         {
-            Stop = false;
+            OnBoard = false;
         }
     }
 
 }
+

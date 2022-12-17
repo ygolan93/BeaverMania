@@ -6,14 +6,14 @@ public class DoorShut : MonoBehaviour
 {
     public GameObject Shutters;
     public Behavior Player;
-
+    [SerializeField] int GobletNum;
     private void Start()
     {
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
     }
     private void Update()
     {
-        if (Player.GobletPickup == 2)
+        if (Player.GobletPickup == GobletNum)
         {
             Destroy(Shutters);
         }

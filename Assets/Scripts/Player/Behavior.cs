@@ -70,7 +70,9 @@ public class Behavior : MonoBehaviour
     [Header("Chat")]
     public string Plattering;
     [Header("Audio & Effects")]
+    bool isPlaying = false;
     public AudioScript Sound;
+    [SerializeField] GameObject MusicOP;
     float HealQue = 3;
     [SerializeField] ParticleSystem SlideEffect;
     [SerializeField] ParticleSystem HealEffect;
@@ -207,7 +209,13 @@ public class Behavior : MonoBehaviour
             OnPlatform = false;
         }
     }
-
+    public void OnTriggerEnter(Collider OBJ)
+    {
+        if (OBJ.gameObject.CompareTag("Music"))
+        {
+            MusicOP.SetActive(true);
+        }
+    }
     public void Attack()
     {
         if (grounded == true)

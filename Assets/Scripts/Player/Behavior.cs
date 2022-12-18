@@ -70,7 +70,6 @@ public class Behavior : MonoBehaviour
     [Header("Chat")]
     public string Plattering;
     [Header("Audio & Effects")]
-    bool isPlaying = false;
     public AudioScript Sound;
     [SerializeField] GameObject MusicOP;
     float HealQue = 3;
@@ -216,6 +215,29 @@ public class Behavior : MonoBehaviour
             MusicOP.SetActive(true);
         }
     }
+
+    public void OnTriggerStay(Collider OBJ)
+    {
+        if (OBJ.gameObject.CompareTag("Trader"))
+        {
+            ShowCursor();            
+            FreeLook.m_Orbits[2].m_Radius = 6;
+            FreeLook.m_XAxis.m_MaxSpeed = 0;
+            FreeLook.m_YAxis.m_MaxSpeed = 0;
+            FreeLook.m_LookAt = OBJ.transform;
+        }
+    }
+    public void OnTriggerExit(Collider OBJ)
+    {
+        if (OBJ.gameObject.CompareTag("Trader"))
+        {
+            HideCursor();
+            FreeLook.m_Orbits[2].m_Radius = 4.7F;
+            FreeLook.m_XAxis.m_MaxSpeed = 300;
+            FreeLook.m_YAxis.m_MaxSpeed = 2;
+            FreeLook.m_LookAt = Root;
+        }
+    }
     public void Attack()
     {
         if (grounded == true)
@@ -354,6 +376,7 @@ public class Behavior : MonoBehaviour
     }
     public void Start()
     {
+        HideCursor();
         AimIcon.SetActive(false);
         Player = GetComponent<Rigidbody>();
         GM = GameObject.FindGameObjectWithTag("GM").GetComponent<GameMaster>();
@@ -369,7 +392,6 @@ public class Behavior : MonoBehaviour
     }
     public void Update()
     {
-        HideCursor();
         //Update UI text
         if (Plattering != "")
         {

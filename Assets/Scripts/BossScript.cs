@@ -14,8 +14,7 @@ public class BossScript : MonoBehaviour
     public GameObject Explosion;
     public AudioSource Sound;
     GameObject Player;
-    Behavior PlayerHealth;
-    Vector3 SpawnPos;
+    public Behavior PlayerHealth;
     Vector3 Distance;
     public Quaternion rotGoal;
     public float StrideClock = 7f;
@@ -23,73 +22,41 @@ public class BossScript : MonoBehaviour
     float InitialBeat;
     public float a;
     public float b;
-    bool Hit=false;
-    [SerializeField]float speed;
-    [SerializeField]float time;
-    [SerializeField]float distance;
+    bool Charge = false;
     private void Start()
     {
         Boss = GetComponent<Rigidbody>();
         Player = GameObject.FindGameObjectWithTag("Player");
         PlayerHealth = Player.GetComponent<Behavior>();
-        SpawnPos = Boss.position;
         CurrentHealth = MaxHealth;
         InitialBeat = BeatClock;
     }
     private void FixedUpdate()
     {
-        if (Hit==true|| Distance.magnitude<100)
+        if (Charge == true)
         {
-            AttackPlayer(speed,time,distance);
-            StrideClock -= Time.deltaTime;
-            if (StrideClock<=0)
-            {
-                Hit = false;
-            }
+            Distance = Player.transform.position - Boss.transform.position;
+            AttackPlayer();
         }
-        if (Hit == false)
-        {
-            RandoMovement();
-            Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
-            Distance = Player.transform.position - Boss.position;
-        }
-        
-
 
         if (CurrentHealth <= 0)
         {
             Death();
         }
 
-        if (!Input.GetKey(KeyCode.Mouse0) || Distance.magnitude > 3)
+        if (!Input.GetKey(KeyCode.Mouse0) || Charge == false)
         {
             HitEffect.SetActive(false);
+            RandoMovement();
         }
     }
 
-    private void AttackPlayer(float AttackSpeed, float AttackTime, float AttackDistance)
+    private void AttackPlayer()
     {
+        Boss.velocity = new Vector3(Distance.x, Boss.velocity.y, Distance.z);
         Scorpion.SetBool("Walk", true);
-        if (Distance.magnitude <= AttackDistance || Hit == true)
-        {
-            rotGoal = Quaternion.LookRotation(new Vector3(Distance.x, 0, Distance.z));
-            Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.5f);
-            BeatClock -= Time.deltaTime;
-            if (BeatClock <= AttackTime)
-            {
-                Boss.velocity = new Vector3(Distance.x, 0, Distance.z).normalized*AttackSpeed+ new Vector3(0,Boss.velocity.y,0);
-            }
-            else
-            {
-                Scorpion.SetBool("Walk", false);
-                Boss.velocity = new Vector3(0, Boss.velocity.y, 0);
-            }
-        }
-        else
-        {
-            rotGoal = Quaternion.LookRotation(new Vector3(Boss.velocity.x, 0, Boss.velocity.z));
-            RandoMovement();
-        }
+        rotGoal = Quaternion.LookRotation(Distance);
+        Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
     }
 
     private void RandoMovement()
@@ -102,16 +69,14 @@ public class BossScript : MonoBehaviour
             b = Random.Range(-1, 2) * Random.value;
             StrideClock = 7f;
         }
-        //speed = 1f;
-        //Scorpion.speed = 0.4f;
         Scorpion.SetBool("Walk", true);
         Boss.velocity = new Vector3(a, 0, b).normalized * 3 + new Vector3(a, Boss.velocity.y, b);
+        rotGoal = Quaternion.LookRotation(Boss.velocity);
+        Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
+
     }
     public void TakeDamage(int Damage)
     {
-        Hit = true;
-        speed += 0.04f;
-        Scorpion.speed += 0.01f;
         transform.rotation = rotGoal;
         HitEffect.SetActive(true);
         CurrentHealth -= Damage;
@@ -124,20 +89,28 @@ public class BossScript : MonoBehaviour
         Instantiate(Explosion, transform.position + new Vector3(0, 1, 0), transform.rotation);
         GameObject.Destroy(gameObject);
     }
-    private void OnCollisionStay(Collision OBJ)
+
+    private void OnTriggerStay(Collider OBJ)
     {
-        if (OBJ.gameObject==Player && Boss.velocity.magnitude>10)
+        if (OBJ.gameObject.CompareTag("Player"))
         {
-            PlayerHealth.TakeDamage(Boss.velocity.magnitude*5);
-            //Hit = false;
-            BeatClock = InitialBeat;
+            Charge = true;
         }
+
+    }
+    private void OnTriggerExit(Collider OBJ)
+    {
+        if (OBJ.gameObject.CompareTag("Player"))
+        {
+            Charge = false;
+        }
+
     }
     private void OnCollisionEnter(Collision OBJ)
     {
         if (OBJ.gameObject.CompareTag("Damage"))
         {
-            Hit = true;
+            TakeDamage(5);
         }
     }
 

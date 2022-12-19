@@ -11,23 +11,28 @@ public class Trader : MonoBehaviour
     public GameObject TradeText;
     public GameObject DialoguePanel;
     public Vector3 PlayerDistance;
+    [SerializeField] bool Rotate;
     Quaternion FormalLook;
     // Start is called before the first frame update
     void Start()
     {
-        FormalLook=transform.rotation;
+        FormalLook = transform.rotation;
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
         PlayerRoot = GameObject.FindGameObjectWithTag("PlayerRoot").GetComponent<Transform>();
     }
 
     // Update is called once per frame
-   public void Update()
+    public void Update()
     {
+
         PlayerDistance = Player.transform.position - Merchant.transform.position;
-        if (PlayerDistance.magnitude<8)
+        if (PlayerDistance.magnitude < 8)
         {
-            Player.rotGoal = Quaternion.LookRotation(Player.transform.position - Merchant.transform.position);
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(PlayerDistance), 0.1f);
+            if (Rotate == true)
+            {
+                Player.rotGoal = Quaternion.LookRotation(Player.transform.position - Merchant.transform.position);
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(PlayerDistance), 0.1f);
+            }
             TradeText.SetActive(true);
             DialoguePanel.SetActive(true);
         }
@@ -39,5 +44,6 @@ public class Trader : MonoBehaviour
             DialoguePanel.SetActive(false);
         }
     }
-
 }
+
+

@@ -9,7 +9,8 @@ public class NPC_Basic : MonoBehaviour
     public Rigidbody NPC;
     [SerializeField] Animator Wasp;
 
-    [Header("Movement")] 
+    [Header("Movement")]
+    [SerializeField] bool Move = true;
     GameObject PlayerTarget;
     Behavior PlayerHealth;
     GameObject AnotherWasp;
@@ -36,7 +37,7 @@ public class NPC_Basic : MonoBehaviour
     public GameObject HitEffect;
     public GameObject Explosion;
 
-    
+
     [Header("Sound")]
     public NPC_Audio Sound;
 
@@ -56,6 +57,7 @@ public class NPC_Basic : MonoBehaviour
         PlayerHealth = PlayerTarget.GetComponent<Behavior>();
         HitEffect.SetActive(false);
         RandoMovement();
+        if (Move==true)
         NPC.velocity = Vector3.forward;
     }
 
@@ -66,35 +68,51 @@ public class NPC_Basic : MonoBehaviour
         AnotherWasp = GameObject.FindGameObjectWithTag("NPC");
         Vector3 Distance = PlayerTarget.transform.position - transform.position;
         PlayerDistance = Distance.magnitude;
+
         ChangeNav -= Time.deltaTime;
-        if (combo<3)
+        if (combo < 3)
         {
-            rotGoal = Quaternion.LookRotation(NPC.velocity);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            if (Move == true)
+            {
+                rotGoal = Quaternion.LookRotation(NPC.velocity);
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            }
             if (Distance.magnitude >= 50)
             {
                 if (ChangeNav <= 0)
                 {
                     Wasp.SetBool("Sting", false);
-                    RandoMovement();
+                    if (Move == true)
+                    {
+                        RandoMovement();
+                    }
                 }
-                TurnBack();
+                if (Move == true)
+                {
+                    TurnBack();
+                }
             }
+
             if (PlayerDistance < 50)
             {
                 if (Contact == false)
                 {
                     ChargeClock = 0.7f;
                     Physics.IgnoreCollision(AnotherWasp.GetComponent<Collider>(), GetComponent<Collider>());
-                    NPC.velocity =(Distance.normalized*50f);
+                    if (Move==true)
+                    NPC.velocity = (Distance.normalized * 50f);
+
                     Wasp.SetBool("Sting", true);
                     ChangeNav = 0;
-                    
+
                 }
-                if (Contact==true)
+                if (Contact == true)
                 {
-                    NPC.AddForce(new Vector3(-Distance.x, 0.01f , -Distance.z).normalized * 0.1f);
-                    transform.rotation=(Quaternion.LookRotation(Distance));
+                    if (Move == true)
+                    {
+                        NPC.AddForce(new Vector3(-Distance.x, 0.01f, -Distance.z).normalized * 0.1f);
+                        transform.rotation = (Quaternion.LookRotation(Distance));
+                    }
                     ChargeClock -= Time.deltaTime;
                     if (ChargeClock <= 0)
                         Contact = false;
@@ -102,10 +120,6 @@ public class NPC_Basic : MonoBehaviour
             }
 
 
-            if (Input.GetKey(KeyCode.Mouse1) && PlayerDistance < 20)
-            {
-                NPC.velocity = Distance.normalized;
-            }
         }
         else
         {
@@ -123,7 +137,10 @@ public class NPC_Basic : MonoBehaviour
             HitEffect.SetActive(false);
         }
 
-
+        if (Move==false)
+        {
+            transform.position = SpawnPos;
+        }
     }
     private void LateUpdate()
     {
@@ -159,7 +176,7 @@ public class NPC_Basic : MonoBehaviour
     {
         if (OBJ.gameObject == PlayerTarget)
         {
-            if (combo<3)
+            if (combo < 3)
             {
                 Sting();
             }
@@ -168,6 +185,11 @@ public class NPC_Basic : MonoBehaviour
         if (OBJ.gameObject.CompareTag("Strike"))
         {
             Death();
+        }
+        if (OBJ.gameObject.CompareTag("Danagge"))
+        {
+            Wasp.SetBool("Beat", true);
+            TakeDamage(1);
         }
     }
 

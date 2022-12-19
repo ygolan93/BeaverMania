@@ -8,6 +8,7 @@ public class WaspSpawner : MonoBehaviour
     public GameObject Hive;
     public Behavior Player;
     public Vector3 Distance;
+    [SerializeField] float SpawnDistance;
     public int WaspCounter=3;
     int Counter;
     public float SpawnClock=15f;
@@ -23,7 +24,7 @@ public class WaspSpawner : MonoBehaviour
     {
          Distance = Player.transform.position - transform.position;
 
-        if (Mathf.Abs(Distance.magnitude) < 100 )
+        if (Mathf.Abs(Distance.magnitude) < SpawnDistance )
         {
             if (Counter > 0)
             {

@@ -13,7 +13,7 @@ public class BossScript : MonoBehaviour
     public GameObject HitEffect;
     public GameObject Explosion;
     public AudioSource Sound;
-    GameObject Player;
+    public GameObject Player;
     public Behavior PlayerHealth;
     Vector3 Distance;
     public Quaternion rotGoal;

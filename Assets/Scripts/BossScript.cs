@@ -13,8 +13,7 @@ public class BossScript : MonoBehaviour
     public GameObject HitEffect;
     public GameObject Explosion;
     public AudioSource Sound;
-    public GameObject Player;
-    public Behavior PlayerHealth;
+    public Behavior Player;
     Vector3 Distance;
     public Quaternion rotGoal;
     public float StrideClock = 7f;
@@ -26,8 +25,7 @@ public class BossScript : MonoBehaviour
     private void Start()
     {
         Boss = GetComponent<Rigidbody>();
-        Player = GameObject.FindGameObjectWithTag("Player");
-        PlayerHealth = Player.GetComponent<Behavior>();
+        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
         CurrentHealth = MaxHealth;
         InitialBeat = BeatClock;
     }
@@ -55,7 +53,7 @@ public class BossScript : MonoBehaviour
     {
         Boss.velocity = new Vector3(Distance.x, Boss.velocity.y, Distance.z);
         Scorpion.SetBool("Walk", true);
-        rotGoal = Quaternion.LookRotation(Distance);
+        rotGoal = Quaternion.LookRotation(new Vector3(Distance.x, 0, Distance.z));
         Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
     }
 
@@ -69,10 +67,14 @@ public class BossScript : MonoBehaviour
             b = Random.Range(-1, 2) * Random.value;
             StrideClock = 7f;
         }
-        Scorpion.SetBool("Walk", true);
-        Boss.velocity = new Vector3(a, 0, b).normalized * 3 + new Vector3(a, Boss.velocity.y, b);
-        rotGoal = Quaternion.LookRotation(Boss.velocity);
-        Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
+        Vector3 Wander = new Vector3(a, 0, b);
+        if (Wander.magnitude > 0)
+            Scorpion.SetBool("Walk", true);
+        else
+            Scorpion.SetBool("Walk", false);
+        Boss.velocity = Wander.normalized * 10 + new Vector3(0, Boss.velocity.y, 0);
+        rotGoal = Quaternion.LookRotation(Wander);
+        Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.1f);
 
     }
     public void TakeDamage(int Damage)
@@ -112,6 +114,10 @@ public class BossScript : MonoBehaviour
         {
             TakeDamage(5);
         }
+    }
+    private void OnCollisionStay(Collision OBJ)
+    {
+        RandoMovement();
     }
 
 }

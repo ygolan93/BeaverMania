@@ -81,7 +81,7 @@ public class Behavior : MonoBehaviour
     [SerializeField] Light HurtLight;
     DoorShut Door;
     [Header("UI")]
-    public GameObject PauseMenu;
+    public bool isAtTrader = false;
     public string LogCount;
     public string DebugText;
     public string HealingText;
@@ -94,7 +94,6 @@ public class Behavior : MonoBehaviour
     bool IsCursorOn;
     public CinemachineFreeLook FreeLook;
     public float ChangeSpeech = 1F;
-    public bool ActivePause = false;
     public void OnCollisionEnter(Collision OBJ)
     {
     
@@ -222,7 +221,8 @@ public class Behavior : MonoBehaviour
     {
         if (OBJ.gameObject.CompareTag("Trader"))
         {
-            ShowCursor();            
+            ShowCursor();
+            isAtTrader = true;
             FreeLook.m_Orbits[2].m_Radius = 6;
             FreeLook.m_XAxis.m_MaxSpeed = 0;
             FreeLook.m_YAxis.m_MaxSpeed = 0;
@@ -233,7 +233,7 @@ public class Behavior : MonoBehaviour
     {
         if (OBJ.gameObject.CompareTag("Trader"))
         {
-            HideCursor();
+            isAtTrader = false;
             FreeLook.m_Orbits[2].m_Radius = 4.7F;
             FreeLook.m_XAxis.m_MaxSpeed = 300;
             FreeLook.m_YAxis.m_MaxSpeed = 2;
@@ -403,7 +403,6 @@ public class Behavior : MonoBehaviour
                 Plattering = "";
             }
         }
-        Pause();
         HealthPercent = System.Math.Round((CurrentHealth / MaxHealth) * 100f, 1);
         DebugText = HealthPercent + "%";
         Wallet = Currency + " Coins";
@@ -455,35 +454,19 @@ public class Behavior : MonoBehaviour
         //Reload scene on death
         if (CurrentHealth <= 0)
         {
-            transform.position = GM.lastCheckPointPos;
-            Lives--;
-            if (Lives == 0)
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            RestartCheckpoint();
         }
 
     }
-    public void Pause()
+
+    public void RestartCheckpoint()
     {
-
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            ActivePause = !ActivePause;
-        }
-
-        if (ActivePause==true)
-        {
-            PauseMenu.SetActive(true);
-            Time.timeScale = 0;
-        }
-
-
-        if (ActivePause == false)
-        {
-            PauseMenu.SetActive(false);
-            Time.timeScale = 1f;
-
-        }
+        transform.position = GM.lastCheckPointPos;
+        Lives--;
+        if (Lives == 0)
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
+
 
     [System.Obsolete]
     public void FixedUpdate()

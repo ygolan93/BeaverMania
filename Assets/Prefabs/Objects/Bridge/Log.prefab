@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 6386273591469312065}
   - component: {fileID: 3878550662962660327}
   - component: {fileID: 1264892297037668391}
-  - component: {fileID: 178303096510984171}
   - component: {fileID: 5113599283708557397}
   - component: {fileID: 955908766269730134}
   m_Layer: 0
@@ -102,21 +101,6 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &178303096510984171
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2403880353969387516}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6e5dd7532124334b805b1267652a3b5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Log: {fileID: 5113599283708557397}
-  Click: 0
-  DrawnEffect: {fileID: 8799408695101435805}
 --- !u!54 &5113599283708557397
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -202,15 +186,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: DrawnEffect
       objectReference: {fileID: 0}
+    - target: {fileID: 6230735508686078763, guid: 31eeb47d63642f641a5ae492c7d3c428, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 31eeb47d63642f641a5ae492c7d3c428, type: 3}
 --- !u!4 &8799408695101435804 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6230735508686078756, guid: 31eeb47d63642f641a5ae492c7d3c428, type: 3}
-  m_PrefabInstance: {fileID: 3199178033393347768}
-  m_PrefabAsset: {fileID: 0}
---- !u!198 &8799408695101435805 stripped
-ParticleSystem:
-  m_CorrespondingSourceObject: {fileID: 6230735508686078757, guid: 31eeb47d63642f641a5ae492c7d3c428, type: 3}
   m_PrefabInstance: {fileID: 3199178033393347768}
   m_PrefabAsset: {fileID: 0}

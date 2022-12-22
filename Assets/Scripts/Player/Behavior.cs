@@ -31,6 +31,7 @@ public class Behavior : MonoBehaviour
     public bool grounded;
     public bool OnPlatform = false;
     [Header("Health")]
+    float StopHurt = 0;
     public float MaxHealth = 1000;
     public float CurrentHealth;
     public Health_Bar_Script HealthBar;
@@ -96,7 +97,7 @@ public class Behavior : MonoBehaviour
     public float ChangeSpeech = 1F;
     public void OnCollisionEnter(Collision OBJ)
     {
-    
+
         if (OBJ.gameObject.CompareTag("Part") || OBJ.gameObject.CompareTag("Seed"))
         {
             Otter.Play("Crouch");
@@ -143,7 +144,7 @@ public class Behavior : MonoBehaviour
             var OBJVelocity = OBJ.transform.GetComponent<Rigidbody>();
             PlatformVelocity = OBJVelocity.velocity;
             OnPlatform = true;
-            
+
         }
         if (OBJ.gameObject.CompareTag("Weapon"))
         {
@@ -372,7 +373,7 @@ public class Behavior : MonoBehaviour
     {
         //Lock and hide mouse icon
         IsCursorOn = false;
-        FreeLook.m_LookAt=Root;
+        FreeLook.m_LookAt = Root;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
@@ -403,11 +404,15 @@ public class Behavior : MonoBehaviour
                 Plattering = "";
             }
         }
+
+
+
+
         HealthPercent = System.Math.Round((CurrentHealth / MaxHealth) * 100f, 1);
         DebugText = HealthPercent + "%";
         Wallet = Currency + " Coins";
         SeedText = NutCount + " Nuts";
-        GobletText = GobletPickup + "/"+Door.GobletNum +" Goblets";
+        GobletText = GobletPickup + "/" + Door.GobletNum + " Goblets";
         if (Lives == 3)
         {
             ICON_1.SetActive(true);
@@ -432,11 +437,10 @@ public class Behavior : MonoBehaviour
             GroundAttack = 450;
         }
 
-
         //Jump action
         if (Input.GetKeyDown(KeyCode.Space) && JumpNum > 0)
         {
-            if (Player.transform.parent!=null)
+            if (Player.transform.parent != null)
             {
                 Player.transform.parent = null;
             }
@@ -489,11 +493,36 @@ public class Behavior : MonoBehaviour
 
         Otter.SetBool("midair", false);
 
+        //Switch Hurt effect off automaticly
+        if (CurrentHealth < MaxHealth)
+        {
+            StopHurt += Time.deltaTime;
+            if (StopHurt >= 0.15f)
+            {
+                hurt = false;
+                if (StopHurt >= 2f)
+                {
+                    TakeDamage(-0.2f);
+                }
+            }
+
+        }
+        else
+        {
+            StopHurt = 0;
+        }
+
+        if (CurrentHealth>=MaxHealth)
+        {
+            heal = false;
+        }
+
+
         //Basic movement setup
         if (!Input.GetKey(KeyCode.LeftControl)) //Crouch action stops all movement on ground
         {
             HealQue = 3;
-            heal = false;
+            //heal = false;
             if (Input.GetKey(KeyCode.W))
             {
                 PlayerMove(XZForward);
@@ -527,31 +556,17 @@ public class Behavior : MonoBehaviour
                 PlayerMove(XZBack + XZLeft);
             }
         }
-        //Crouch action
+        //Crouch action - Place Logs
         if (Input.GetKey(KeyCode.LeftControl) && grounded == true)
         {
-            if (StandOnIsle == true && Load.i == 0 && Input.GetKey(KeyCode.Mouse0))
-            {
-                StoneHeld = true;
-                Stone.SetActive(true);
-            }
+            //if (StandOnIsle == true && Load.i == 0 && Input.GetKey(KeyCode.Mouse0))
+            //{
+            //    StoneHeld = true;
+            //    Stone.SetActive(true);
+            //}
             speed = 0;
             Otter.SetBool("crouch", true);
-            if (Input.GetKey(KeyCode.H) && CurrentHealth < MaxHealth)
-            {
-                var HealTime = System.Math.Round((HealQue));
-                HealingText = "Healing in: " + HealTime;
-                HealQue -= Time.deltaTime;
-                if (HealQue <= 0)
-                {
-                    HealingText = "";
-                    TakeDamage(-0.2f);
-                }
-            }
-            else
-            {
-                heal = false;
-            }
+
         }
         else
         {
@@ -601,7 +616,7 @@ public class Behavior : MonoBehaviour
 
         if (neutralAndMoving == true)
         {
-            rotGoal = Quaternion.LookRotation(new Vector3(Player.velocity.x,0,Player.velocity.z));
+            rotGoal = Quaternion.LookRotation(new Vector3(Player.velocity.x, 0, Player.velocity.z));
             transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.5f);
             Otter.SetBool("moving", true);
             SlideEffect.enableEmission = true;
@@ -615,7 +630,7 @@ public class Behavior : MonoBehaviour
         //Heal and hurt effects conditioning
         if (heal == true)
         {
-            Sound.Heal();
+            //Sound.Heal();
             HealShape.radius = 5;
             HealShape.radiusSpeed = 1;
             HealEffect.emissionRate = 30f;
@@ -653,7 +668,7 @@ public class Behavior : MonoBehaviour
         }
 
         //Melee action
-        if (Input.GetKey(KeyCode.Mouse0) && StoneHeld == false && IsCursorOn==false)
+        if (Input.GetKey(KeyCode.Mouse1)/* && StoneHeld == false && IsCursorOn==false*/)
         {
             Otter.SetBool("fight", true); //Airkick leveitation
             if (grounded == false)
@@ -700,10 +715,11 @@ public class Behavior : MonoBehaviour
         }
 
         //Stoning action
-        if (Input.GetKey(KeyCode.Mouse0) && StoneHeld == true)
+        if (Input.GetKey(KeyCode.Mouse0))
         {
             Otter.SetBool("fight", false);
-            Otter.SetBool("crouch", false);
+            //Otter.SetBool("crouch", true);
+            //Player.velocity = new Vector3(0, Player.velocity.y, 0);
             AimIcon.SetActive(true);
             if (!Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
             {
@@ -711,23 +727,24 @@ public class Behavior : MonoBehaviour
                 transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
             }
         }
-        if (Input.GetKeyUp(KeyCode.Mouse0) && StoneHeld == true)
+        if (Input.GetKeyUp(KeyCode.Mouse0))
         {
             Otter.Play("Throw");
+            //Otter.SetBool("crouch", false);
             Instantiate(Ball, AttackPoint.position, Quaternion.identity);
             Stone.SetActive(false);
             StoneHeld = false;
             AimIcon.SetActive(false);
         }
-        //Draw logs action
-        if (Input.GetKey(KeyCode.Mouse1) && !Input.GetKey(KeyCode.LeftControl))
-        {
-            TakeDamage(10);
-        }
-        if (!Input.GetKey(KeyCode.Mouse1))
-        {
-            hurt = false;
-        }
+        ////Draw logs action
+        //if (Input.GetKey(KeyCode.Mouse1) && !Input.GetKey(KeyCode.LeftControl))
+        //{
+        //    TakeDamage(10);
+        //}
+        //if (!Input.GetKey(KeyCode.Mouse1))
+        //{
+        //    hurt = false;
+        //}
 
         //Plant Seed action
         if (Input.GetKeyDown(KeyCode.R) && NutCount > 0)

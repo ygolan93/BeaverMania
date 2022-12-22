@@ -59,7 +59,6 @@ public class Behavior : MonoBehaviour
     float FallClock;
     [SerializeField] float InitialFall = 0.2f;
     public int GroundAttack = 30;
-    bool StoneHeld = false;
     bool HammerHeld = false;
     [SerializeField] GameObject RightHandWeapon;
     [SerializeField] GameObject LeftHandWeapon;
@@ -162,15 +161,15 @@ public class Behavior : MonoBehaviour
         }
         if (OBJ.gameObject.tag == "Life")
         {
-            if (CurrentHealth < MaxHealth)
-            {
+            //if (CurrentHealth < MaxHealth)
+            //{
                 Plattering = ("Shroom!");
                 ChangeSpeech = 1;
-            }
+            //}
             HealingText = "Checkpoint saved";
             if (CurrentHealth < MaxHealth)
             {
-                TakeDamage(-10);
+                TakeDamage(-2);
                 TouchShroom = true;
             }
             if (CurrentHealth >= MaxHealth)
@@ -183,7 +182,6 @@ public class Behavior : MonoBehaviour
         }
         if (OBJ.gameObject.tag == "Strike")
         {
-            HealingText = "You Can't Swim!";
             transform.position = GM.lastCheckPointPos;
             Lives--;
             if (Lives == 0)
@@ -200,8 +198,6 @@ public class Behavior : MonoBehaviour
         }
         if (OBJ.gameObject.tag == "Life")
         {
-            //Plattering = ("That's what i'm talking about");
-            //ChangeSpeech = 1;
             TouchShroom = false;
         }
         if (OBJ.gameObject.tag == "Tile")
@@ -405,9 +401,6 @@ public class Behavior : MonoBehaviour
             }
         }
 
-
-
-
         HealthPercent = System.Math.Round((CurrentHealth / MaxHealth) * 100f, 1);
         DebugText = HealthPercent + "%";
         Wallet = Currency + " Coins";
@@ -500,16 +493,11 @@ public class Behavior : MonoBehaviour
             if (StopHurt >= 0.15f)
             {
                 hurt = false;
-                if (StopHurt >= 2f)
-                {
-                    TakeDamage(-0.2f);
-                }
+                //if (StopHurt >= 2f)
+                //{
+                //    TakeDamage(-0.2f);
+                //}
             }
-
-        }
-        else
-        {
-            StopHurt = 0;
         }
 
         if (CurrentHealth>=MaxHealth)
@@ -559,11 +547,6 @@ public class Behavior : MonoBehaviour
         //Crouch action - Place Logs
         if (Input.GetKey(KeyCode.LeftControl) && grounded == true)
         {
-            //if (StandOnIsle == true && Load.i == 0 && Input.GetKey(KeyCode.Mouse0))
-            //{
-            //    StoneHeld = true;
-            //    Stone.SetActive(true);
-            //}
             speed = 0;
             Otter.SetBool("crouch", true);
 
@@ -668,13 +651,11 @@ public class Behavior : MonoBehaviour
         }
 
         //Melee action
-        if (Input.GetKey(KeyCode.Mouse1)/* && StoneHeld == false && IsCursorOn==false*/)
+        if (Input.GetKey(KeyCode.Mouse1))
         {
             Otter.SetBool("fight", true); //Airkick leveitation
             if (grounded == false)
             {
-                //Plattering = "Copter time!";
-                //ChangeSpeech = 1f;
                 BeatAir -= Time.deltaTime;
                 if (BeatAir <= 0)
                 {
@@ -714,49 +695,43 @@ public class Behavior : MonoBehaviour
             Otter.speed = 1;
         }
 
-        //Stoning action
-        if (Input.GetKey(KeyCode.Mouse0))
+        if (isAtTrader == false)
         {
-            Otter.SetBool("fight", false);
-            //Otter.SetBool("crouch", true);
-            //Player.velocity = new Vector3(0, Player.velocity.y, 0);
-            AimIcon.SetActive(true);
-            if (!Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
+            //Stoning action
+            if (Input.GetKey(KeyCode.Mouse0))
             {
-                rotGoal = Quaternion.LookRotation(XZForward);
-                transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+                Otter.SetBool("fight", false);
+                //Otter.SetBool("crouch", true);
+                //Player.velocity = new Vector3(0, Player.velocity.y, 0);
+                Stone.SetActive(true);
+                AimIcon.SetActive(true);
+                if (!Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
+                {
+                    rotGoal = Quaternion.LookRotation(XZForward);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+                }
+            }
+            if (Input.GetKeyUp(KeyCode.Mouse0))
+            {
+                Otter.Play("Throw");
+                //Otter.SetBool("crouch", false);
+                Instantiate(Ball, AttackPoint.position, Quaternion.identity);
+                Stone.SetActive(false);
+                AimIcon.SetActive(false);
+            }
+            //Plant Seed action
+            if (Input.GetKeyDown(KeyCode.R) && NutCount > 0)
+            {
+                Otter.Play("Crouch");
+                Instantiate(Seed, AttackPoint.position, Quaternion.identity);
+                NutCount--;
+            }
+            if (Input.GetKeyUp(KeyCode.R))
+            {
+                Otter.SetBool("Crouch", false);
             }
         }
-        if (Input.GetKeyUp(KeyCode.Mouse0))
-        {
-            Otter.Play("Throw");
-            //Otter.SetBool("crouch", false);
-            Instantiate(Ball, AttackPoint.position, Quaternion.identity);
-            Stone.SetActive(false);
-            StoneHeld = false;
-            AimIcon.SetActive(false);
-        }
-        ////Draw logs action
-        //if (Input.GetKey(KeyCode.Mouse1) && !Input.GetKey(KeyCode.LeftControl))
-        //{
-        //    TakeDamage(10);
-        //}
-        //if (!Input.GetKey(KeyCode.Mouse1))
-        //{
-        //    hurt = false;
-        //}
 
-        //Plant Seed action
-        if (Input.GetKeyDown(KeyCode.R) && NutCount > 0)
-        {
-            Otter.Play("Crouch");
-            Instantiate(Seed, AttackPoint.position, Quaternion.identity);
-            NutCount--;
-        }
-        if (Input.GetKeyUp(KeyCode.R))
-        {
-            Otter.SetBool("Crouch", false);
-        }
     }
 
 }

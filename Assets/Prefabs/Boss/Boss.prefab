@@ -9,9 +9,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7221962116445586549}
+  - component: {fileID: 1709668244760705969}
   m_Layer: 0
   m_Name: Jaw_Left.001
-  m_TagString: Untagged
+  m_TagString: ScorpionDamage
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -32,6 +33,20 @@ Transform:
   m_Father: {fileID: 6595403219858492160}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!136 &1709668244760705969
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 12716976200991197}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  m_Radius: 0.01
+  m_Height: 0.047514457
+  m_Direction: 1
+  m_Center: {x: 0.00000004834781, y: 0.021242771, z: 0.00000002195832}
 --- !u!1 &20260267455138545
 GameObject:
   m_ObjectHideFlags: 0
@@ -233,9 +248,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6420181389333837954}
+  - component: {fileID: 498677459127316211}
   m_Layer: 0
   m_Name: Jaw_Right.001
-  m_TagString: Untagged
+  m_TagString: ScorpionDamage
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -256,6 +272,20 @@ Transform:
   m_Father: {fileID: 4024611039992652767}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!136 &498677459127316211
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 865521075022576117}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  m_Radius: 0.01
+  m_Height: 0.047514457
+  m_Direction: 1
+  m_Center: {x: 0.00000004834781, y: 0.021242771, z: 0.00000002195832}
 --- !u!1 &903213685238982207
 GameObject:
   m_ObjectHideFlags: 0
@@ -6646,7 +6676,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7959440913770424981}
-  - component: {fileID: 934568510716435678}
+  - component: {fileID: 6663160618867107361}
   m_Layer: 0
   m_Name: Jaw_Left.002_end
   m_TagString: ScorpionDamage
@@ -6669,7 +6699,7 @@ Transform:
   m_Father: {fileID: 5000009278411394080}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!136 &934568510716435678
+--- !u!136 &6663160618867107361
 CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -6679,10 +6709,10 @@ CapsuleCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 1
   m_Enabled: 1
-  m_Radius: 0.012
-  m_Height: 0.05
+  m_Radius: 0.01
+  m_Height: 0.052222945
   m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Center: {x: -0.000000053769128, y: 0.018888496, z: -0.0000000014372014}
 --- !u!1 &7362507285090502101
 GameObject:
   m_ObjectHideFlags: 0
@@ -6692,7 +6722,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5157891481538556650}
-  - component: {fileID: 1472705682872927389}
+  - component: {fileID: 1437700162302122624}
   m_Layer: 0
   m_Name: Jaw_Right.002_end
   m_TagString: ScorpionDamage
@@ -6715,7 +6745,7 @@ Transform:
   m_Father: {fileID: 2643472859729538974}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!136 &1472705682872927389
+--- !u!136 &1437700162302122624
 CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -6725,10 +6755,10 @@ CapsuleCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 1
   m_Enabled: 1
-  m_Radius: 0.012
-  m_Height: 0.05
+  m_Radius: 0.01
+  m_Height: 0.058211345
   m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Center: {x: 0.000000006057076, y: 0.015894337, z: 0.0000000093005585}
 --- !u!1 &7464700301929258772
 GameObject:
   m_ObjectHideFlags: 0
@@ -7112,10 +7142,10 @@ CapsuleCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  m_Radius: 1.9266877
+  m_Radius: 1.9087586
   m_Height: 6.5450335
   m_Direction: 2
-  m_Center: {x: 0, y: 1.8733125, z: -0.6300001}
+  m_Center: {x: 0, y: 1.8912416, z: -0.6300001}
 --- !u!1 &8297129681908374909
 GameObject:
   m_ObjectHideFlags: 0

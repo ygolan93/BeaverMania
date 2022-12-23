@@ -37,9 +37,13 @@ public class BossScript : MonoBehaviour
         {
             ChargeTowardsPlayer(Distance);
         }
-        if (DistanceScalar<9)
+        if (DistanceScalar<9&& DistanceScalar>8)
         {
             StopAndAttack(Distance);
+        }
+        if (DistanceScalar<8)
+        {
+            Reverse(Distance);
         }
         //else
             //RandoMovement();
@@ -47,8 +51,10 @@ public class BossScript : MonoBehaviour
 
     private void ChargeTowardsPlayer(Vector3 Distance)
     {
-        Boss.velocity = new Vector3(Distance.x, 0, Distance.z).normalized*5+new Vector3(0,Boss.velocity.y,0);
+        Boss.velocity = new Vector3(Distance.x, 0, Distance.z).normalized*10+new Vector3(0,Boss.velocity.y,0);
         Scorpion.SetBool("Walk", true);
+        Scorpion.SetBool("Backwards", false);
+        Scorpion.SetBool("Attack", false);
         rotGoal = Quaternion.LookRotation(new Vector3(Distance.x, 0, Distance.z));
         Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
     }
@@ -56,11 +62,23 @@ public class BossScript : MonoBehaviour
     private void StopAndAttack(Vector3 Distance)
     {
         Boss.velocity = new Vector3(0, Boss.velocity.y, 0);
+        Scorpion.SetBool("Walk", false);
+        Scorpion.SetBool("Backwards", false);
         Scorpion.SetBool("Attack", true);
         rotGoal = Quaternion.LookRotation(new Vector3(Distance.x, 0, Distance.z));
         Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
 
 
+    }
+
+    private void Reverse(Vector3 Distance)
+    {
+        Boss.velocity = new Vector3(-Distance.x, 0, -Distance.z).normalized * 5 + new Vector3(0, Boss.velocity.y, 0);
+        Scorpion.SetBool("Walk", false);
+        Scorpion.SetBool("Backwards", true);
+        Scorpion.SetBool("Attack", false);
+        rotGoal = Quaternion.LookRotation(new Vector3(Distance.x, 0, Distance.z));
+        Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
     }
 
     //private void RandoMovement()

@@ -33,30 +33,7 @@ public class Dialogue : MonoBehaviour
             textComponent.text = lines[index];
         }
     }
-    public void Buy()
-    {
-        if (Player.Currency > 0)
-        {
 
-            if (Player.Currency >= 3)
-            {
-                Player.NutCount++;
-                Player.Currency -= 3;
-            }
-        }
-    }
-
-    public void Sell()
-    {
-        if (Player.NutCount > 0)
-        {
-            if (Player.NutCount > 0)
-            {
-                Player.NutCount--;
-                Player.Currency += 3;
-            }
-        }
-    }
     void StartDialogue()
     {
         index = 0;

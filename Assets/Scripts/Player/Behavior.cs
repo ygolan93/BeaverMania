@@ -85,6 +85,8 @@ public class Behavior : MonoBehaviour
     public string LogCount;
     public string DebugText;
     public string HealingText;
+    public string AppleText;
+    public int Apple;
     public int Currency = 0;
     public int NutCount;
     public string SeedText;
@@ -97,7 +99,7 @@ public class Behavior : MonoBehaviour
     public void OnCollisionEnter(Collision OBJ)
     {
 
-        if (OBJ.gameObject.CompareTag("Part") || OBJ.gameObject.CompareTag("Seed"))
+        if (OBJ.gameObject.CompareTag("Part") || OBJ.gameObject.CompareTag("Seed")|| OBJ.gameObject.CompareTag("Apple"))
         {
             Otter.Play("Crouch");
             if (OBJ.gameObject.CompareTag("Seed"))
@@ -105,6 +107,12 @@ public class Behavior : MonoBehaviour
                 NutCount++;
                 Destroy(OBJ.gameObject);
             }
+            if (OBJ.gameObject.CompareTag("Apple"))
+            {
+                Apple++;
+                Destroy(OBJ.gameObject);
+            }
+
         }
 
         if (OBJ.gameObject.CompareTag("Life"))
@@ -224,6 +232,10 @@ public class Behavior : MonoBehaviour
             FreeLook.m_XAxis.m_MaxSpeed = 0;
             FreeLook.m_YAxis.m_MaxSpeed = 0;
             FreeLook.m_LookAt = OBJ.transform;
+        }
+        if (OBJ.gameObject.CompareTag("What Is this?"))
+        {
+            Plattering = "Ah shit. what happened here?";
         }
     }
     public void OnTriggerExit(Collider OBJ)
@@ -386,6 +398,7 @@ public class Behavior : MonoBehaviour
         RightHandWeapon.SetActive(false);
         LeftHandWeapon.SetActive(false);
         Lives = 3;
+        Apple = 0;
         JumpLimit = JumpNum;
         FallClock = InitialFall;
     }
@@ -405,6 +418,7 @@ public class Behavior : MonoBehaviour
         DebugText = HealthPercent + "%";
         Wallet = Currency + " Coins";
         SeedText = NutCount + " Nuts";
+        AppleText = Apple + " Apples";
         GobletText = GobletPickup + "/" + Door.GobletNum + " Goblets";
         if (Lives == 3)
         {
@@ -483,20 +497,16 @@ public class Behavior : MonoBehaviour
 
         Otter.SetBool("walk", false);
         Otter.SetBool("run", false);
-
         Otter.SetBool("midair", false);
 
-        //Switch Hurt effect off automaticly
-        if (CurrentHealth < MaxHealth)
+        //Switch off hurt and heal effects automaticly
+        if (hurt==true|| heal==true)
         {
             StopHurt += Time.deltaTime;
             if (StopHurt >= 0.15f)
             {
                 hurt = false;
-                //if (StopHurt >= 2f)
-                //{
-                //    TakeDamage(-0.2f);
-                //}
+                heal = false;
             }
         }
 
@@ -504,7 +514,6 @@ public class Behavior : MonoBehaviour
         {
             heal = false;
         }
-
 
         //Basic movement setup
         if (!Input.GetKey(KeyCode.LeftControl)) //Crouch action stops all movement on ground
@@ -714,6 +723,7 @@ public class Behavior : MonoBehaviour
             if (Input.GetKeyUp(KeyCode.Mouse0))
             {
                 Otter.Play("Throw");
+                
                 //Otter.SetBool("crouch", false);
                 Instantiate(Ball, AttackPoint.position, Quaternion.identity);
                 Stone.SetActive(false);
@@ -729,6 +739,20 @@ public class Behavior : MonoBehaviour
             if (Input.GetKeyUp(KeyCode.R))
             {
                 Otter.SetBool("Crouch", false);
+            }
+
+            //Eat Apple
+            if (Input.GetKeyUp(KeyCode.T)&&Apple>0)
+            {
+                if (MaxHealth - CurrentHealth > 15)
+                {
+                    TakeDamage(-15);
+                }
+                else
+                {
+                    CurrentHealth = MaxHealth;
+                }
+                Apple--;
             }
         }
 

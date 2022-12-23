@@ -22,7 +22,6 @@ public class UIMenu : MonoBehaviour
     }
     public void Pause()
     {
-
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             ChangeBolean();
@@ -68,7 +67,6 @@ public class UIMenu : MonoBehaviour
     public void Volume()
     {
         AudioListener.volume = volumeSlider.value;
-
     }
 
     // Update is called once per frame

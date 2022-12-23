@@ -28,7 +28,7 @@ public class Projectile : MonoBehaviour
         if (OBJ.gameObject != Player)
         {
             RockSound.PlayOneShot(RockSound.clip);
-            RockSound.volume = 0.4f;
+            RockSound.volume = 0.2f;
             RockSound.pitch = 0.8f;
         }
         if (OBJ.gameObject.CompareTag("NPC"))

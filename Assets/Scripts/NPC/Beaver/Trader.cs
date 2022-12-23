@@ -10,6 +10,7 @@ public class Trader : MonoBehaviour
     public Behavior Player;
     public GameObject TradeText;
     public GameObject DialoguePanel;
+    public GameObject Shop;
     public Vector3 PlayerDistance;
     [SerializeField] bool Rotate;
     Quaternion FormalLook;
@@ -42,6 +43,7 @@ public class Trader : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, FormalLook, 0.1f);
             TradeText.SetActive(false);
             DialoguePanel.SetActive(false);
+            Shop.SetActive(false);
         }
     }
 }

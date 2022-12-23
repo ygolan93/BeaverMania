@@ -744,9 +744,9 @@ public class Behavior : MonoBehaviour
             //Eat Apple
             if (Input.GetKeyUp(KeyCode.T)&&Apple>0)
             {
-                if (MaxHealth - CurrentHealth > 15)
+                if (MaxHealth - CurrentHealth > 500)
                 {
-                    TakeDamage(-15);
+                    TakeDamage(-500);
                 }
                 else
                 {

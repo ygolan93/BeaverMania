@@ -21,7 +21,7 @@ public class BossScript : MonoBehaviour
     float InitialBeat;
     public float a;
     public float b;
-    bool Charge = false;
+    public bool Charge = false;
     private void Start()
     {
         Boss = GetComponent<Rigidbody>();
@@ -29,56 +29,63 @@ public class BossScript : MonoBehaviour
         CurrentHealth = MaxHealth;
         InitialBeat = BeatClock;
     }
-    private void FixedUpdate()
+    public void Update()
     {
-        if (Charge == true)
+        Distance = Player.transform.position- Boss.position;
+        var DistanceScalar = Mathf.Abs(Distance.magnitude);
+        if (DistanceScalar < 70 && DistanceScalar>9)
         {
-            Distance = Player.transform.position - Boss.transform.position;
-            AttackPlayer();
+            ChargeTowardsPlayer(Distance);
         }
-
-        if (CurrentHealth <= 0)
+        if (DistanceScalar<9)
         {
-            Death();
+            StopAndAttack(Distance);
         }
-
-        if (!Input.GetKey(KeyCode.Mouse0) || Charge == false)
-        {
-            HitEffect.SetActive(false);
-            RandoMovement();
-        }
+        //else
+            //RandoMovement();
     }
 
-    private void AttackPlayer()
+    private void ChargeTowardsPlayer(Vector3 Distance)
     {
-        Boss.velocity = new Vector3(Distance.x, Boss.velocity.y, Distance.z);
+        Boss.velocity = new Vector3(Distance.x, 0, Distance.z).normalized*5+new Vector3(0,Boss.velocity.y,0);
         Scorpion.SetBool("Walk", true);
         rotGoal = Quaternion.LookRotation(new Vector3(Distance.x, 0, Distance.z));
         Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
     }
 
-    private void RandoMovement()
+    private void StopAndAttack(Vector3 Distance)
     {
-        StrideClock -= Time.deltaTime;
+        Boss.velocity = new Vector3(0, Boss.velocity.y, 0);
+        Scorpion.SetBool("Attack", true);
+        rotGoal = Quaternion.LookRotation(new Vector3(Distance.x, 0, Distance.z));
+        Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
 
-        if (StrideClock <= 0)
-        {
-            a = Random.Range(-1, 2) * Random.value;
-            b = Random.Range(-1, 2) * Random.value;
-            StrideClock = 7f;
-        }
-        Vector3 Wander = new Vector3(a, 0, b);
-        if (Wander.magnitude > 0)
-            Scorpion.SetBool("Walk", true);
-        else
-            Scorpion.SetBool("Walk", false);
-        Boss.velocity = Wander.normalized * 10 + new Vector3(0, Boss.velocity.y, 0);
-        rotGoal = Quaternion.LookRotation(Wander);
-        Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.1f);
 
     }
+
+    //private void RandoMovement()
+    //{
+    //    StrideClock -= Time.deltaTime;
+
+    //    if (StrideClock <= 0)
+    //    {
+    //        a = Random.Range(-1, 2) * Random.value;
+    //        b = Random.Range(-1, 2) * Random.value;
+    //        StrideClock = 7f;
+    //    }
+    //    Vector3 Wander = new Vector3(a, 0, b);
+    //    if (Wander.magnitude > 0)
+    //        Scorpion.SetBool("Walk", true);
+    //    else
+    //        Scorpion.SetBool("Walk", false);
+    //    Boss.velocity = Wander.normalized * 10 + new Vector3(0, Boss.velocity.y, 0);
+    //    rotGoal = Quaternion.LookRotation(Wander);
+    //    Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.1f);
+
+    //}
     public void TakeDamage(int Damage)
     {
+        Charge = true;
         transform.rotation = rotGoal;
         HitEffect.SetActive(true);
         CurrentHealth -= Damage;
@@ -115,10 +122,10 @@ public class BossScript : MonoBehaviour
             TakeDamage(5);
         }
     }
-    private void OnCollisionStay(Collision OBJ)
-    {
-        RandoMovement();
-    }
+    //private void OnCollisionStay(Collision OBJ)
+    //{
+    //    RandoMovement();
+    //}
 
 }
 

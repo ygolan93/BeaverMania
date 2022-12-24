@@ -16,7 +16,7 @@ public class LogSpawner : MonoBehaviour
     {
         if (OBJ.gameObject.tag=="Player")
         {
-            if (Input.GetKey(KeyCode.Mouse1))
+            if (Input.GetKey(KeyCode.Mouse0))
             {
                 Instantiate(Log1, SpawnPoint.position, Quaternion.identity);
                 Instantiate(Log2, SpawnPoint.position, Quaternion.identity);

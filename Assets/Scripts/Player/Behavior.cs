@@ -659,55 +659,56 @@ public class Behavior : MonoBehaviour
             HealLight.enabled = true;
         }
 
-        //Melee action
-        if (Input.GetKey(KeyCode.Mouse1))
-        {
-            Otter.SetBool("fight", true); //Airkick leveitation
-            if (grounded == false)
-            {
-                BeatAir -= Time.deltaTime;
-                if (BeatAir <= 0)
-                {
-                    Attack();
-                }
-                InitiateAir -= Time.deltaTime;
-                if (InitiateAir <= 0)
-                {
-                    if (Otter.speed > 0.4)
-                    {
-                        Player.AddForce(0, levitation, 0);
-                        levitation -= 0.05f;
-                        Otter.speed -= 0.005f;
-                    }
-                    else
-                    {
-                        Otter.SetBool("fight", false);
-                    }
-                }
-            }
-            if (grounded == true)
-            {
-                BeatGrounded -= Time.deltaTime;
-                if (BeatGrounded <= 0)
-                {
-                    Attack();
-                }
-            }
-
-        }
-        else
-        {
-            Otter.SetBool("fight", false);
-            InitiateAir = 0.5f;
-            GroundAttack = 30;
-            Beat = 0;
-            Otter.speed = 1;
-        }
+      
 
         if (isAtTrader == false)
         {
-            //Stoning action
+            //Melee action
             if (Input.GetKey(KeyCode.Mouse0))
+            {
+                Otter.SetBool("fight", true); //Airkick leveitation
+                if (grounded == false)
+                {
+                    BeatAir -= Time.deltaTime;
+                    if (BeatAir <= 0)
+                    {
+                        Attack();
+                    }
+                    InitiateAir -= Time.deltaTime;
+                    if (InitiateAir <= 0)
+                    {
+                        if (Otter.speed > 0.4)
+                        {
+                            Player.AddForce(0, levitation, 0);
+                            levitation -= 0.05f;
+                            Otter.speed -= 0.005f;
+                        }
+                        else
+                        {
+                            Otter.SetBool("fight", false);
+                        }
+                    }
+                }
+                if (grounded == true)
+                {
+                    BeatGrounded -= Time.deltaTime;
+                    if (BeatGrounded <= 0)
+                    {
+                        Attack();
+                    }
+                }
+
+            }
+            else
+            {
+                Otter.SetBool("fight", false);
+                InitiateAir = 0.5f;
+                GroundAttack = 30;
+                Beat = 0;
+                Otter.speed = 1;
+            }
+            //Stoning action
+            if (Input.GetKey(KeyCode.Mouse1))
             {
                 Otter.SetBool("fight", false);
                 //Otter.SetBool("crouch", true);
@@ -720,10 +721,9 @@ public class Behavior : MonoBehaviour
                     transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
                 }
             }
-            if (Input.GetKeyUp(KeyCode.Mouse0))
+            if (Input.GetKeyUp(KeyCode.Mouse1))
             {
                 Otter.Play("Throw");
-                
                 //Otter.SetBool("crouch", false);
                 Instantiate(Ball, AttackPoint.position, Quaternion.identity);
                 Stone.SetActive(false);

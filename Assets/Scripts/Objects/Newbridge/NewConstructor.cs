@@ -12,6 +12,7 @@ public class NewConstructor : MonoBehaviour
     public Material Synthi;
     MeshRenderer Ramp;
     public string BridgeUI;
+    bool isLocked = false;
 
     //public string BridgeUI;
     float X;
@@ -21,7 +22,7 @@ public class NewConstructor : MonoBehaviour
         Ramp.material = Cel;
         Bridge = GetComponent<Rigidbody>();
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
-
+        isLocked = false;
     }
 
     public void OnTriggerStay(Collider OBJ)
@@ -31,6 +32,7 @@ public class NewConstructor : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.LeftControl))
             {
+                isLocked = true;
                 Bridge.isKinematic = true;
                 BridgeUI = "Locked";
                 Ramp.material = Synthi;
@@ -42,7 +44,7 @@ public class NewConstructor : MonoBehaviour
             }
         }
 
-        if (OBJ.gameObject.tag == "Part")
+        if (OBJ.gameObject.tag == "Part"&&isLocked==true)
         {
                 WoodKnock.Play();
                 if (Player.CurrentHealth < Player.MaxHealth)

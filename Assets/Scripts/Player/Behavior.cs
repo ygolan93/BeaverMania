@@ -349,7 +349,7 @@ public class Behavior : MonoBehaviour
                 Player.velocity = (Direction.normalized * speed) + new Vector3(0, Player.velocity.y, 0);
 
             }
-            if (grounded == false)
+            if (grounded == false|| Input.GetKey(KeyCode.LeftShift))
                 Player.AddForce(Direction.normalized * 5);
         }
         if (OnPlatform == true)

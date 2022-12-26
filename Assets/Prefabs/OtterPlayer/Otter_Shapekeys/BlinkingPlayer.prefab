@@ -11522,13 +11522,13 @@ MonoBehaviour:
   PlatformVelocity: {x: 0, y: 0, z: 0}
   Load: {fileID: 3877109475308234637}
   rotGoal: {x: 0, y: 0, z: 0, w: 0}
-  speed: 5
+  speed: 9
   steer: 0.9
   JumpForce: 5
-  Walk: 2
-  Run: 12
+  Walk: 3
+  Run: 9
   neutralAndMoving: 0
-  JumpNum: 2
+  JumpNum: 3
   Root: {fileID: 0}
   Otter: {fileID: 8568589699339183529}
   grounded: 0
@@ -11569,6 +11569,7 @@ MonoBehaviour:
   HealLight: {fileID: 4088442570600878449}
   HurtEffect: {fileID: 3943052838650205059}
   HurtLight: {fileID: 7960309377265724556}
+  LooseScreen: {fileID: 0}
   isAtTrader: 0
   LogCount: 
   DebugText: 
@@ -11654,7 +11655,7 @@ Rigidbody:
   m_GameObject: {fileID: 3877109475308234638}
   serializedVersion: 2
   m_Mass: 2
-  m_Drag: 0.3
+  m_Drag: 0.5
   m_AngularDrag: 0
   m_UseGravity: 1
   m_IsKinematic: 0

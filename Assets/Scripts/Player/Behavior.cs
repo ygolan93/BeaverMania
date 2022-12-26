@@ -745,14 +745,18 @@ public class Behavior : MonoBehaviour
                     transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
                 }
             }
-            if (Input.GetKeyUp(KeyCode.Mouse1))
+            if (Input.GetKeyUp(KeyCode.Mouse1)&&Stone.active)
             {
                 Otter.Play("Throw");
                 //Otter.SetBool("crouch", false);
                 Instantiate(Ball, AttackPoint.position, Quaternion.identity);
+            }
+            if (!Input.GetKey(KeyCode.Mouse1))
+            {
                 Stone.SetActive(false);
                 AimIcon.SetActive(false);
             }
+
             //Plant Seed action
             if (Input.GetKeyDown(KeyCode.R) && NutCount > 0)
             {

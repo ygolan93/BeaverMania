@@ -81,6 +81,7 @@ public class Behavior : MonoBehaviour
     [SerializeField] Light HurtLight;
     DoorShut Door;
     [Header("UI")]
+    public GameObject LooseScreen;
     public bool isAtTrader = false;
     public string LogCount;
     public string DebugText;
@@ -99,7 +100,7 @@ public class Behavior : MonoBehaviour
     public void OnCollisionEnter(Collision OBJ)
     {
 
-        if (OBJ.gameObject.CompareTag("Part") || OBJ.gameObject.CompareTag("Seed")|| OBJ.gameObject.CompareTag("Apple"))
+        if (OBJ.gameObject.CompareTag("Part") || OBJ.gameObject.CompareTag("Seed") || OBJ.gameObject.CompareTag("Apple"))
         {
             Otter.Play("Crouch");
             if (OBJ.gameObject.CompareTag("Seed"))
@@ -171,8 +172,8 @@ public class Behavior : MonoBehaviour
         {
             //if (CurrentHealth < MaxHealth)
             //{
-                Plattering = ("Shroom!");
-                ChangeSpeech = 1;
+            Plattering = ("Shroom!");
+            ChangeSpeech = 1;
             //}
             HealingText = "Checkpoint saved";
             if (CurrentHealth < MaxHealth)
@@ -190,11 +191,15 @@ public class Behavior : MonoBehaviour
         }
         if (OBJ.gameObject.tag == "Strike")
         {
-            transform.position = GM.lastCheckPointPos;
-            Lives--;
+            if (Lives > 0)
+            {
+                transform.position = GM.lastCheckPointPos;
+                Lives--;
+            }
             if (Lives == 0)
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-
+            {
+                ActivateLooseMenu();
+            }
         }
     }
     public void OnCollisionExit(Collision OBJ)
@@ -401,6 +406,7 @@ public class Behavior : MonoBehaviour
         Apple = 0;
         JumpLimit = JumpNum;
         FallClock = InitialFall;
+        LooseScreen.SetActive(false);
     }
     public void Update()
     {
@@ -462,20 +468,38 @@ public class Behavior : MonoBehaviour
         if (Input.GetKey(KeyCode.Space) || Input.GetKeyUp(KeyCode.Space))
             JumpNum = JumpNumPreserve;
 
-        //Reload scene on death
+        //Load Loose screen on death
         if (CurrentHealth <= 0)
         {
-            RestartCheckpoint();
+            ActivateLooseMenu();
         }
 
     }
-
+    public void ActivateLooseMenu()
+    {
+        MusicOP.SetActive(false);
+        Time.timeScale = 0;
+        ShowCursor();
+        LooseScreen.SetActive(true);
+    }
+    public void HideLooseMenu()
+    {
+        MusicOP.SetActive(true);
+        Time.timeScale = 1;
+        HideCursor();
+        LooseScreen.SetActive(false);
+    }
     public void RestartCheckpoint()
     {
-        transform.position = GM.lastCheckPointPos;
-        Lives--;
-        if (Lives == 0)
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        if (Lives > 1)
+        {
+            transform.position = GM.lastCheckPointPos;
+            Lives--;
+        }
+    }
+    public void RestartGame()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
 
@@ -500,7 +524,7 @@ public class Behavior : MonoBehaviour
         Otter.SetBool("midair", false);
 
         //Switch off hurt and heal effects automaticly
-        if (hurt==true|| heal==true)
+        if (hurt == true || heal == true)
         {
             StopHurt += Time.deltaTime;
             if (StopHurt >= 0.15f)
@@ -510,7 +534,7 @@ public class Behavior : MonoBehaviour
             }
         }
 
-        if (CurrentHealth>=MaxHealth)
+        if (CurrentHealth >= MaxHealth)
         {
             heal = false;
         }
@@ -659,7 +683,7 @@ public class Behavior : MonoBehaviour
             HealLight.enabled = true;
         }
 
-      
+
 
         if (isAtTrader == false)
         {
@@ -742,7 +766,7 @@ public class Behavior : MonoBehaviour
             }
 
             //Eat Apple
-            if (Input.GetKeyUp(KeyCode.T)&&Apple>0)
+            if (Input.GetKeyUp(KeyCode.T) && Apple > 0)
             {
                 if (MaxHealth - CurrentHealth > 500)
                 {

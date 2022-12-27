@@ -41,7 +41,7 @@ public class Projectile : MonoBehaviour
         if (OBJ.gameObject.CompareTag("Boss"))
         {
             OBJ.gameObject.GetComponent<BossScript>().TakeDamage((int)Ball.velocity.magnitude);
-            OBJ.gameObject.GetComponent<BossScript>().combo = 3;
+            OBJ.gameObject.GetComponent<BossScript>().combo+=1;
         }
         if (OBJ.gameObject.CompareTag("Hive"))
         {

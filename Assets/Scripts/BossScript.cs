@@ -12,12 +12,14 @@ public class BossScript : MonoBehaviour
     public int combo = 0;
     public GameObject HitEffect;
     public GameObject Explosion;
+    public GameObject StunEffect;
     public AudioSource Sound;
     public Behavior Player;
     Vector3 Distance;
     public Quaternion rotGoal;
     public float StrideClock = 7f;
     public float BeatClock = 10f;
+    public float StunnedClock = 10f;
     float InitialBeat;
     public float a;
     public float b;
@@ -28,25 +30,48 @@ public class BossScript : MonoBehaviour
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
         CurrentHealth = MaxHealth;
         InitialBeat = BeatClock;
+        combo = 0;
     }
-    public void Update()
+    public void FixedUpdate()
     {
         Distance = Player.transform.position- Boss.position;
         var DistanceScalar = Mathf.Abs(Distance.magnitude);
-        if (DistanceScalar < 70 && DistanceScalar>9)
+
+        if (combo < 5)
         {
-            ChargeTowardsPlayer(Distance);
-        }
-        if (DistanceScalar<9&& DistanceScalar>8)
-        {
-            StopAndAttack(Distance);
-        }
-        if (DistanceScalar<8)
-        {
-            Reverse(Distance);
+            if (DistanceScalar < 70 && DistanceScalar > 9)
+            {
+                ChargeTowardsPlayer(Distance);
+            }
+            if (DistanceScalar < 9 && DistanceScalar > 8)
+            {
+                StopAndAttack(Distance);
+            }
+            if (DistanceScalar < 8)
+            {
+                Reverse(Distance);
+            }
         }
         //else
-            //RandoMovement();
+        //RandoMovement();
+
+        if (!Input.GetKey(KeyCode.Mouse0) || !Input.GetKey(KeyCode.Mouse1))
+        {
+            HitEffect.SetActive(false);
+        }
+
+        if (combo>=5)
+        {
+            BossStunned();
+            StunnedClock -= Time.deltaTime;
+            if (StunnedClock <= 0)
+            {
+                BossRecovered();
+            }
+        }
+
+        if (CurrentHealth <= 0)
+            Death();
     }
 
     private void ChargeTowardsPlayer(Vector3 Distance)
@@ -108,7 +133,6 @@ public class BossScript : MonoBehaviour
         HitEffect.SetActive(true);
         CurrentHealth -= Damage;
         Sound.Play();
-        combo++;
         BossHealth.SetNPCHealth(CurrentHealth);
     }
     private void Death()
@@ -140,10 +164,23 @@ public class BossScript : MonoBehaviour
             TakeDamage(5);
         }
     }
-    //private void OnCollisionStay(Collision OBJ)
-    //{
-    //    RandoMovement();
-    //}
+
+    public void BossStunned()
+    {
+        Scorpion.SetBool("Backwards", false);
+        Scorpion.SetBool("Walk", false);
+        Scorpion.SetBool("Attack", false);
+        Scorpion.SetBool("Stunned",true);
+        StunEffect.SetActive(true);
+    }
+
+    public void BossRecovered()
+    {
+        Scorpion.SetBool("Stunned", false);
+        combo = 0;
+        StunnedClock = 10;
+        StunEffect.SetActive(false);
+    }
 
 }
 

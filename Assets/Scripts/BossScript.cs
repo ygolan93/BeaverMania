@@ -13,11 +13,11 @@ public class BossScript : MonoBehaviour
     public GameObject HitEffect;
     public GameObject Explosion;
     public GameObject StunEffect;
-    public AudioSource Sound;
+    public NPC_Audio Sound;
     public Behavior Player;
     Vector3 Distance;
     public Quaternion rotGoal;
-    public float StrideClock = 7f;
+    public float StrideClock = 20f;
     public float BeatClock = 10f;
     public float StunnedClock = 10f;
     float InitialBeat;
@@ -41,15 +41,26 @@ public class BossScript : MonoBehaviour
         {
             if (DistanceScalar < 70 && DistanceScalar > 9)
             {
-                ChargeTowardsPlayer(Distance);
+                StrideClock -= Time.deltaTime;
+                if (StrideClock > 5)
+                {
+                    ChargeTowardsPlayer();
+                }
+                if (StrideClock<=5)
+                {
+                    IdleStop();
+                }
+                if (StrideClock <= 0)
+                    StrideClock = 20;
+                
             }
             if (DistanceScalar < 9 && DistanceScalar > 8)
             {
-                StopAndAttack(Distance);
+                StopAndAttack();
             }
             if (DistanceScalar < 8)
             {
-                Reverse(Distance);
+                Reverse();
             }
         }
         //else
@@ -74,7 +85,7 @@ public class BossScript : MonoBehaviour
             Death();
     }
 
-    private void ChargeTowardsPlayer(Vector3 Distance)
+    private void ChargeTowardsPlayer()
     {
         Boss.velocity = new Vector3(Distance.x, 0, Distance.z).normalized*10+new Vector3(0,Boss.velocity.y,0);
         Scorpion.SetBool("Walk", true);
@@ -84,7 +95,17 @@ public class BossScript : MonoBehaviour
         Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
     }
 
-    private void StopAndAttack(Vector3 Distance)
+    private void IdleStop()
+    {
+        Scorpion.SetBool("Walk", false);
+        Scorpion.SetBool("Backwards", false);
+        Scorpion.SetBool("Attack", false);
+        Boss.velocity = new Vector3(0, Boss.velocity.y, 0);
+        rotGoal = Quaternion.LookRotation(new Vector3(Distance.x, 0, Distance.z));
+        Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
+
+    }
+    private void StopAndAttack()
     {
         Boss.velocity = new Vector3(0, Boss.velocity.y, 0);
         Scorpion.SetBool("Walk", false);
@@ -96,7 +117,7 @@ public class BossScript : MonoBehaviour
 
     }
 
-    private void Reverse(Vector3 Distance)
+    private void Reverse()
     {
         Boss.velocity = new Vector3(-Distance.x, 0, -Distance.z).normalized * 5 + new Vector3(0, Boss.velocity.y, 0);
         Scorpion.SetBool("Walk", false);
@@ -132,7 +153,8 @@ public class BossScript : MonoBehaviour
         transform.rotation = rotGoal;
         HitEffect.SetActive(true);
         CurrentHealth -= Damage;
-        Sound.Play();
+        Sound.Beat();
+
         BossHealth.SetNPCHealth(CurrentHealth);
     }
     private void Death()
@@ -141,22 +163,22 @@ public class BossScript : MonoBehaviour
         GameObject.Destroy(gameObject);
     }
 
-    private void OnTriggerStay(Collider OBJ)
-    {
-        if (OBJ.gameObject.CompareTag("Player"))
-        {
-            Charge = true;
-        }
+    //private void OnTriggerStay(Collider OBJ)
+    //{
+    //    if (OBJ.gameObject.CompareTag("Player"))
+    //    {
+    //        Charge = true;
+    //    }
 
-    }
-    private void OnTriggerExit(Collider OBJ)
-    {
-        if (OBJ.gameObject.CompareTag("Player"))
-        {
-            Charge = false;
-        }
+    //}
+    //private void OnTriggerExit(Collider OBJ)
+    //{
+    //    if (OBJ.gameObject.CompareTag("Player"))
+    //    {
+    //        Charge = false;
+    //    }
 
-    }
+    //}
     private void OnCollisionEnter(Collision OBJ)
     {
         if (OBJ.gameObject.CompareTag("Damage"))
@@ -165,7 +187,7 @@ public class BossScript : MonoBehaviour
         }
     }
 
-    public void BossStunned()
+    private void BossStunned()
     {
         Scorpion.SetBool("Backwards", false);
         Scorpion.SetBool("Walk", false);
@@ -174,7 +196,7 @@ public class BossScript : MonoBehaviour
         StunEffect.SetActive(true);
     }
 
-    public void BossRecovered()
+    private void BossRecovered()
     {
         Scorpion.SetBool("Stunned", false);
         combo = 0;

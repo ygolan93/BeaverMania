@@ -34,11 +34,14 @@ public class Behavior : MonoBehaviour
     float StopHurt = 0;
     public float MaxHealth = 1000;
     public float CurrentHealth;
+    public float MaxStamina = 100;
+    public float CurrentStamina;
     public Health_Bar_Script HealthBar;
     public bool heal;
     public bool TouchShroom;
     public bool hurt;
     double HealthPercent;
+    double StaminaPercent;
     public int Lives;
     public GameObject ICON_1;
     public GameObject ICON_2;
@@ -86,6 +89,7 @@ public class Behavior : MonoBehaviour
     public bool isAtTrader = false;
     public string LogCount;
     public string DebugText;
+    public string StaminaText;
     public string HealingText;
     public string AppleText;
     public int Apple;
@@ -312,17 +316,26 @@ public class Behavior : MonoBehaviour
 
     public void TakeDamage(float Damage)
     {
-        CurrentHealth -= Damage;
-        HealthBar.SetHealth(CurrentHealth);
-        if (Damage > 0)
+        if (isParried == false)
         {
-            hurt = true;
-            heal = false;
+            CurrentHealth -= Damage;
+            HealthBar.SetHealth(CurrentHealth);
+            if (Damage > 0)
+            {
+                hurt = true;
+                heal = false;
+            }
+            if (Damage < 0)
+            {
+                hurt = false;
+                heal = true;
+            }
         }
-        if (Damage < 0)
+        if (isParried==true)
         {
-            hurt = false;
-            heal = true;
+            CurrentStamina -= Damage;
+            HealthBar.SetStamina(CurrentStamina);
+
         }
     }
     public void PlayerMove(Vector3 Direction)
@@ -399,11 +412,12 @@ public class Behavior : MonoBehaviour
         GM = GameObject.FindGameObjectWithTag("GM").GetComponent<GameMaster>();
         CurrentHealth = MaxHealth;
         HealthBar.SetMaxHealth(CurrentHealth);
+        CurrentStamina = MaxStamina;
+        HealthBar.SetMaxStamina(CurrentStamina);
         HealShape = HealEffect.shape;
         RightHandWeapon.SetActive(false);
         LeftHandWeapon.SetActive(false);
-        ParryShield.SetActive(false);
-        isParried = false;
+        ParryOFF();
         Lives = 3;
         Apple = 0;
         JumpLimit = JumpNum;
@@ -422,8 +436,19 @@ public class Behavior : MonoBehaviour
             }
         }
 
+        if(isParried==false)
+        {
+            if (CurrentStamina < MaxStamina && !Input.GetKey(KeyCode.LeftControl))
+            {
+                CurrentStamina += 1;
+                HealthBar.SetStamina(CurrentStamina);
+            }
+        }
+
         HealthPercent = System.Math.Round((CurrentHealth / MaxHealth) * 100f, 1);
         DebugText = HealthPercent + "%";
+        StaminaPercent = System.Math.Round((CurrentStamina / MaxStamina) * 100f, 1);
+        StaminaText = StaminaPercent + "%";
         Wallet = Currency + " Coins";
         SeedText = NutCount + " Nuts";
         AppleText = Apple + " Apples";
@@ -483,6 +508,11 @@ public class Behavior : MonoBehaviour
             }
         }
 
+        if (CurrentStamina<=0)
+        {
+            ParryOFF();
+        }
+
     }
     public void ActivateLooseMenu()
     {
@@ -510,6 +540,18 @@ public class Behavior : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
+    public void ParryON()
+    {
+        Otter.SetBool("Parry", true);
+        ParryShield.SetActive(true);
+        isParried = true;
+    }
+    public void ParryOFF()
+    {
+        Otter.SetBool("Parry", false);
+        ParryShield.SetActive(false);
+        isParried = false;
+    }
 
     [System.Obsolete]
     public void FixedUpdate()
@@ -593,18 +635,17 @@ public class Behavior : MonoBehaviour
             Otter.SetBool("crouch", true);
             if (HammerHeld == true)
             {
-                Otter.SetBool("Parry", true);
-                isParried = true;
-                ParryShield.SetActive(true);
+                if (CurrentStamina>0)
+                ParryON();
+                if (CurrentStamina<=0)
+                    Otter.SetBool("crouch", true);
             }
 
         }
         else
         {
             Otter.SetBool("crouch", false);
-            Otter.SetBool("Parry", false);
-            ParryShield.SetActive(false);
-            isParried = false;
+            ParryOFF();
             HealingText = "";
         }
 

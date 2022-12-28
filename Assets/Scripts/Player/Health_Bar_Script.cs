@@ -5,15 +5,25 @@ using UnityEngine.UI;
 
 public class Health_Bar_Script : MonoBehaviour
 {
-    public Slider slider;
-
+    public Slider HealthSlider;
+    public Slider StaminaSlider;
     public void SetMaxHealth (float health)
     {
-        slider.maxValue = health;
-        slider.value = health;
+        HealthSlider.maxValue = health;
+        HealthSlider.value = health;
     }
     public void SetHealth (float health)
     {
-        slider.value = health;
+        HealthSlider.value = health;
+    }
+
+    public void SetMaxStamina(float stamina)
+    {
+        StaminaSlider.maxValue = stamina;
+        StaminaSlider.value = stamina;
+    }
+    public void SetStamina(float stamina)
+    {
+        StaminaSlider.value = stamina;
     }
 }

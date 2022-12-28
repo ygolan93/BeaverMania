@@ -228,6 +228,12 @@ public class NPC_Basic : MonoBehaviour
             PlayerHealth.TakeDamage(Damage2Player);
         }
         Wasp.SetBool("Sting", false);
+        if (PlayerHealth.isParried == true)
+        {
+            PlayerHealth.TakeDamage(Damage2Player);
+            TakeDamage(10);
+            combo = 3;
+        }
 
     }
 

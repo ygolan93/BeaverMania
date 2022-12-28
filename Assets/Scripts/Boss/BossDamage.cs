@@ -8,6 +8,16 @@ public class BossDamage : MonoBehaviour
     public float Sting;
     public Behavior Player;
     public NPC_Audio BossAudio;
+    public BossScript Boss;
+
+    private void Start()
+    {
+        Boss = GameObject.FindGameObjectWithTag("Boss").GetComponent<BossScript>();
+
+    }
+
+
+
     public void OnTriggerEnter(Collider OBJ)
     {
         if (OBJ.gameObject.CompareTag("ScorpionDamage"))
@@ -17,6 +27,11 @@ public class BossDamage : MonoBehaviour
                 Player.TakeDamage(JawClamp);
                 BossAudio.Sting();
             }
+            if (Player.isParried == true)
+            {
+                Boss.TakeDamage(10);
+            }
+
         }
         if (OBJ.gameObject.CompareTag("ScorpionSting"))
         {
@@ -24,6 +39,10 @@ public class BossDamage : MonoBehaviour
             {
                 Player.TakeDamage(Sting);
                 BossAudio.Sting();
+            }
+            if (Player.isParried == true)
+            {
+                Boss.TakeDamage(20);
             }
         }
     }

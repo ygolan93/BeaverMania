@@ -12,13 +12,19 @@ public class BossDamage : MonoBehaviour
     {
         if (OBJ.gameObject.CompareTag("ScorpionDamage"))
         {
-            Player.TakeDamage(JawClamp);
-            BossAudio.Sting();
+            if (Player.isParried == false)
+            {
+                Player.TakeDamage(JawClamp);
+                BossAudio.Sting();
+            }
         }
         if (OBJ.gameObject.CompareTag("ScorpionSting"))
         {
-            Player.TakeDamage(Sting);
-            BossAudio.Sting();
+            if (Player.isParried == false)
+            {
+                Player.TakeDamage(Sting);
+                BossAudio.Sting();
+            }
         }
     }
 }

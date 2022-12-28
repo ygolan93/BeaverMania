@@ -222,8 +222,11 @@ public class NPC_Basic : MonoBehaviour
     public void Sting()
     {
         Recovered();
-        Sound.Sting();
-        PlayerHealth.TakeDamage(Damage2Player);
+        if (PlayerHealth.isParried == false)
+        {
+            Sound.Sting();
+            PlayerHealth.TakeDamage(Damage2Player);
+        }
         Wasp.SetBool("Sting", false);
 
     }

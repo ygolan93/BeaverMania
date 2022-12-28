@@ -39,20 +39,28 @@ public class BossScript : MonoBehaviour
 
         if (combo < 5)
         {
-            if (DistanceScalar < 70 && DistanceScalar > 9)
+            if (Charge == true)
             {
-                StrideClock -= Time.deltaTime;
-                if (StrideClock > 5)
+                ChargeTowardsPlayer();
+            }
+            else
+            {
+                if (DistanceScalar < 70 && DistanceScalar > 9)
                 {
-                    ChargeTowardsPlayer();
+                    StrideClock -= Time.deltaTime;
+                    if (StrideClock > 5)
+                    {
+                        ChargeTowardsPlayer();
+                    }
+                    if (StrideClock <= 5)
+                    {
+                        IdleStop();
+                        Charge = false;
+                    }
+                    if (StrideClock <= 0)
+                        StrideClock = 10;
+
                 }
-                if (StrideClock<=5)
-                {
-                    IdleStop();
-                }
-                if (StrideClock <= 0)
-                    StrideClock = 20;
-                
             }
             if (DistanceScalar < 9 && DistanceScalar > 8)
             {
@@ -127,26 +135,11 @@ public class BossScript : MonoBehaviour
         Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
     }
 
-    //private void RandoMovement()
-    //{
-    //    StrideClock -= Time.deltaTime;
+    private void GettingAngry()
+    {
 
-    //    if (StrideClock <= 0)
-    //    {
-    //        a = Random.Range(-1, 2) * Random.value;
-    //        b = Random.Range(-1, 2) * Random.value;
-    //        StrideClock = 7f;
-    //    }
-    //    Vector3 Wander = new Vector3(a, 0, b);
-    //    if (Wander.magnitude > 0)
-    //        Scorpion.SetBool("Walk", true);
-    //    else
-    //        Scorpion.SetBool("Walk", false);
-    //    Boss.velocity = Wander.normalized * 10 + new Vector3(0, Boss.velocity.y, 0);
-    //    rotGoal = Quaternion.LookRotation(Wander);
-    //    Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.1f);
 
-    //}
+    }
     public void TakeDamage(int Damage)
     {
         Charge = true;
@@ -194,6 +187,7 @@ public class BossScript : MonoBehaviour
         Scorpion.SetBool("Attack", false);
         Scorpion.SetBool("Stunned",true);
         StunEffect.SetActive(true);
+        Charge = false;
     }
 
     private void BossRecovered()
@@ -202,6 +196,7 @@ public class BossScript : MonoBehaviour
         combo = 0;
         StunnedClock = 10;
         StunEffect.SetActive(false);
+        Charge = false;
     }
 
 }

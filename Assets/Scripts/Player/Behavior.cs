@@ -60,6 +60,8 @@ public class Behavior : MonoBehaviour
     [SerializeField] float InitialFall = 0.2f;
     public int GroundAttack = 30;
     bool HammerHeld = false;
+    public GameObject ParryShield;
+    public bool isParried;
     [SerializeField] GameObject RightHandWeapon;
     [SerializeField] GameObject LeftHandWeapon;
 
@@ -400,6 +402,8 @@ public class Behavior : MonoBehaviour
         HealShape = HealEffect.shape;
         RightHandWeapon.SetActive(false);
         LeftHandWeapon.SetActive(false);
+        ParryShield.SetActive(false);
+        isParried = false;
         Lives = 3;
         Apple = 0;
         JumpLimit = JumpNum;
@@ -585,12 +589,22 @@ public class Behavior : MonoBehaviour
         if (Input.GetKey(KeyCode.LeftControl) && grounded == true)
         {
             speed = 0;
+            if (HammerHeld==false)
             Otter.SetBool("crouch", true);
+            if (HammerHeld == true)
+            {
+                Otter.SetBool("Parry", true);
+                isParried = true;
+                ParryShield.SetActive(true);
+            }
 
         }
         else
         {
             Otter.SetBool("crouch", false);
+            Otter.SetBool("Parry", false);
+            ParryShield.SetActive(false);
+            isParried = false;
             HealingText = "";
         }
 

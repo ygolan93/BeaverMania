@@ -79,7 +79,6 @@ public class Behavior : MonoBehaviour
     [SerializeField] Light HealLight;
     [SerializeField] ParticleSystem HurtEffect;
     [SerializeField] Light HurtLight;
-    DoorShut Door;
     [Header("UI")]
     public GameObject LooseScreen;
     public bool isAtTrader = false;
@@ -396,7 +395,6 @@ public class Behavior : MonoBehaviour
         AimIcon.SetActive(false);
         Player = GetComponent<Rigidbody>();
         GM = GameObject.FindGameObjectWithTag("GM").GetComponent<GameMaster>();
-        Door = GameObject.FindGameObjectWithTag("Door").GetComponent<DoorShut>();
         CurrentHealth = MaxHealth;
         HealthBar.SetMaxHealth(CurrentHealth);
         HealShape = HealEffect.shape;
@@ -425,7 +423,7 @@ public class Behavior : MonoBehaviour
         Wallet = Currency + " Coins";
         SeedText = NutCount + " Nuts";
         AppleText = Apple + " Apples";
-        GobletText = GobletPickup + "/" + Door.GobletNum + " Goblets";
+        GobletText = GobletPickup + " Goblets";
         if (Lives == 3)
         {
             ICON_1.SetActive(true);

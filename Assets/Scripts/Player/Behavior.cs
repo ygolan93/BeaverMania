@@ -349,7 +349,7 @@ public class Behavior : MonoBehaviour
                 Player.velocity = (Direction.normalized * speed) + new Vector3(0, Player.velocity.y, 0);
 
             }
-            if (grounded == false|| Input.GetKey(KeyCode.LeftShift))
+            if (grounded == false || Input.GetKey(KeyCode.LeftShift))
                 Player.AddForce(Direction.normalized * 5);
         }
         if (OnPlatform == true)
@@ -471,7 +471,14 @@ public class Behavior : MonoBehaviour
         //Load Loose screen on death
         if (CurrentHealth <= 0)
         {
-            ActivateLooseMenu();
+            if (Lives > 0)
+            {
+                RestartCheckpoint();
+            }
+            if (Lives == 0)
+            {
+                ActivateLooseMenu();
+            }
         }
 
     }
@@ -491,11 +498,10 @@ public class Behavior : MonoBehaviour
     }
     public void RestartCheckpoint()
     {
-        if (Lives > 1)
-        {
-            transform.position = GM.lastCheckPointPos;
-            Lives--;
-        }
+        HealthBar.SetHealth(MaxHealth);
+        CurrentHealth = MaxHealth;
+        transform.position = GM.lastCheckPointPos;
+        Lives--;
     }
     public void RestartGame()
     {
@@ -745,7 +751,7 @@ public class Behavior : MonoBehaviour
                     transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
                 }
             }
-            if (Input.GetKeyUp(KeyCode.Mouse1)&&Stone.active)
+            if (Input.GetKeyUp(KeyCode.Mouse1) && Stone.active)
             {
                 Otter.Play("Throw");
                 //Otter.SetBool("crouch", false);
@@ -775,10 +781,12 @@ public class Behavior : MonoBehaviour
                 if (MaxHealth - CurrentHealth > 500)
                 {
                     TakeDamage(-500);
+                    HealthBar.SetHealth(CurrentHealth);
                 }
                 else
                 {
                     CurrentHealth = MaxHealth;
+                    HealthBar.SetMaxHealth(MaxHealth);
                 }
                 Apple--;
             }

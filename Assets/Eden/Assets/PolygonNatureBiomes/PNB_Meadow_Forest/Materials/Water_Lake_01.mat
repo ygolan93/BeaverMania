@@ -2,14 +2,15 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!21 &2100000
 Material:
-  serializedVersion: 6
+  serializedVersion: 8
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Water_Lake_01
   m_Shader: {fileID: 4800000, guid: 276a39a5a210b124885f0eff3e80f1f3, type: 3}
-  m_ShaderKeywords: 
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
   m_LightmapFlags: 0
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -131,6 +132,7 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    m_Ints: []
     m_Floats:
     - _BumpScale: 1
     - _CausticDepthFade: 11.22
@@ -150,6 +152,7 @@ Material:
     - _FoamDepth1: 0
     - _FoamFalloff: -56
     - _FoamFalloff1: 0
+    - _FoamGlowMultiplier: 1
     - _FoamShoreline: 1
     - _FoamSize: 5.32
     - _FoamSize1: 0.019
@@ -159,6 +162,8 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
+    - _GlowDepth: 0.1
+    - _GlowFalloff: 0.1
     - _Metallic: 0
     - _Mode: 0
     - _NormalScale: 0.201
@@ -244,9 +249,11 @@ Material:
     - _Color3: {r: 0.2924528, g: 0.2924528, b: 0.2924528, a: 0}
     - _Color4: {r: 0.2924528, g: 0.2924528, b: 0.2924528, a: 0}
     - _DeepColour: {r: 0.14117648, g: 0.3372549, b: 0.16470589, a: 0}
+    - _DepthGlowColour: {r: 0, g: 0, b: 0, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _FoamColor: {r: 0.28337973, g: 0.36862746, b: 0.21159217, a: 1}
     - _FoamColor1: {r: 0.5215687, g: 0.8980392, b: 0.8470588, a: 0}
+    - _FoamEmitColour: {r: 0, g: 0, b: 0, a: 0}
     - _ShallowColour: {r: 0.47450984, g: 0.5411765, b: 0.27450982, a: 0}
     - _VeryDeepColour: {r: 0.14901961, g: 0.20784315, b: 0.121568635, a: 0}
     - _WaterDeepColor: {r: 0.1254902, g: 0.34117648, b: 0.15583292, a: 0}
@@ -254,3 +261,4 @@ Material:
     - _WaterReallyDeepColor: {r: 0.1459713, g: 0.20784314, b: 0.11764706, a: 1}
     - _WaterShallowColor: {r: 0.47192374, g: 0.541, b: 0.26138204, a: 1}
     - _WaterShallowColor1: {r: 0.9607843, g: 0.7882353, b: 0.5764706, a: 0}
+  m_BuildTextureStacks: []

@@ -230,8 +230,8 @@ public class NPC_Basic : MonoBehaviour
         Wasp.SetBool("Sting", false);
         if (PlayerHealth.isParried == true)
         {
-            PlayerHealth.TakeDamage(Damage2Player);
-            TakeDamage(10);
+            PlayerHealth.TakeDamage(0.01f);
+            TakeDamage(1);
             combo = 3;
         }
 

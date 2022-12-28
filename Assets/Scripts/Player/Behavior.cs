@@ -36,6 +36,8 @@ public class Behavior : MonoBehaviour
     public float CurrentHealth;
     public float MaxStamina = 100;
     public float CurrentStamina;
+    float StaminaClockInitial = 3f;
+    float StaminaClock;
     public Health_Bar_Script HealthBar;
     public bool heal;
     public bool TouchShroom;
@@ -86,6 +88,7 @@ public class Behavior : MonoBehaviour
     [SerializeField] Light HurtLight;
     [Header("UI")]
     public GameObject LooseScreen;
+    public GameObject BossBar;
     public bool isAtTrader = false;
     public string LogCount;
     public string DebugText;
@@ -247,6 +250,14 @@ public class Behavior : MonoBehaviour
         {
             Plattering = "Ah shit. what happened here?";
         }
+
+        if (OBJ.gameObject.CompareTag("Boss"))
+        {
+            BossBar.SetActive(true);
+        }
+
+
+
     }
     public void OnTriggerExit(Collider OBJ)
     {
@@ -257,6 +268,10 @@ public class Behavior : MonoBehaviour
             FreeLook.m_XAxis.m_MaxSpeed = 300;
             FreeLook.m_YAxis.m_MaxSpeed = 2;
             FreeLook.m_LookAt = Root;
+        }
+        if (OBJ.gameObject.CompareTag("Boss"))
+        {
+            BossBar.SetActive(false);
         }
     }
     public void Attack()
@@ -310,6 +325,7 @@ public class Behavior : MonoBehaviour
             }
             BeatAir = AirBeat * Otter.speed;
         }
+
     }
 
     //Player Character talks nonesense
@@ -331,7 +347,7 @@ public class Behavior : MonoBehaviour
                 heal = true;
             }
         }
-        if (isParried==true)
+        if (isParried == true)
         {
             CurrentStamina -= Damage;
             HealthBar.SetStamina(CurrentStamina);
@@ -420,9 +436,11 @@ public class Behavior : MonoBehaviour
         ParryOFF();
         Lives = 3;
         Apple = 0;
+        StaminaClock = StaminaClockInitial;
         JumpLimit = JumpNum;
         FallClock = InitialFall;
         LooseScreen.SetActive(false);
+        BossBar.SetActive(false);
     }
     public void Update()
     {
@@ -436,13 +454,28 @@ public class Behavior : MonoBehaviour
             }
         }
 
-        if(isParried==false)
+        if (isParried == false)
         {
+            if (CurrentStamina > MaxStamina)
+                CurrentStamina = MaxStamina;
+
+
             if (CurrentStamina < MaxStamina && !Input.GetKey(KeyCode.LeftControl))
             {
-                CurrentStamina += 1;
-                HealthBar.SetStamina(CurrentStamina);
+                if (!Input.GetKey(KeyCode.Mouse1) && isParried == false && !Input.GetKey(KeyCode.Mouse0))
+                {
+                    StaminaClock -= Time.deltaTime;
+                    if (StaminaClock <= 0)
+                    {
+                        CurrentStamina += 1;
+                        HealthBar.SetStamina(CurrentStamina);
+                    }
+                }
+                else
+                    StaminaClock = StaminaClockInitial;
             }
+            else
+                StaminaClock = StaminaClockInitial;
         }
 
         HealthPercent = System.Math.Round((CurrentHealth / MaxHealth) * 100f, 1);
@@ -508,9 +541,10 @@ public class Behavior : MonoBehaviour
             }
         }
 
-        if (CurrentStamina<=0)
+        if (CurrentStamina <= 0)
         {
             ParryOFF();
+            CurrentStamina = 0;
         }
 
     }
@@ -631,14 +665,16 @@ public class Behavior : MonoBehaviour
         if (Input.GetKey(KeyCode.LeftControl) && grounded == true)
         {
             speed = 0;
-            if (HammerHeld==false)
-            Otter.SetBool("crouch", true);
+            if (HammerHeld == false)
+                Otter.SetBool("crouch", true);
             if (HammerHeld == true)
             {
-                if (CurrentStamina>0)
-                ParryON();
-                if (CurrentStamina<=0)
+                if (CurrentStamina > 0)
+                    ParryON();
+                if (CurrentStamina <= 0)
+                {
                     Otter.SetBool("crouch", true);
+                }
             }
 
         }
@@ -747,8 +783,10 @@ public class Behavior : MonoBehaviour
         if (isAtTrader == false)
         {
             //Melee action
-            if (Input.GetKey(KeyCode.Mouse0))
+            if (Input.GetKey(KeyCode.Mouse0) && CurrentStamina > 0)
             {
+                CurrentStamina -= 0.5f;
+                HealthBar.SetStamina(CurrentStamina);
                 Otter.SetBool("fight", true); //Airkick leveitation
                 if (grounded == false)
                 {
@@ -790,8 +828,13 @@ public class Behavior : MonoBehaviour
                 Beat = 0;
                 Otter.speed = 1;
             }
+
+
+
+
+
             //Stoning action
-            if (Input.GetKey(KeyCode.Mouse1))
+            if (Input.GetKey(KeyCode.Mouse1) && CurrentStamina > 0)
             {
                 Otter.SetBool("fight", false);
                 //Otter.SetBool("crouch", true);
@@ -804,11 +847,13 @@ public class Behavior : MonoBehaviour
                     transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
                 }
             }
-            if (Input.GetKeyUp(KeyCode.Mouse1) && Stone.active)
+            if (Input.GetKeyUp(KeyCode.Mouse1) && Stone.active && CurrentStamina > 0)
             {
                 Otter.Play("Throw");
                 //Otter.SetBool("crouch", false);
                 Instantiate(Ball, AttackPoint.position, Quaternion.identity);
+                CurrentStamina -= 20;
+                HealthBar.SetStamina(CurrentStamina);
             }
             if (!Input.GetKey(KeyCode.Mouse1))
             {

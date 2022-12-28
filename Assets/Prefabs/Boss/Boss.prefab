@@ -10363,9 +10363,9 @@ MonoBehaviour:
   m_HandleRect: {fileID: 0}
   m_Direction: 1
   m_MinValue: 0
-  m_MaxValue: 2000
+  m_MaxValue: 50000
   m_WholeNumbers: 1
-  m_Value: 2000
+  m_Value: 50000
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -11922,7 +11922,7 @@ MonoBehaviour:
   Scorpion: {fileID: 2329196835735946755}
   BossHealth: {fileID: 8158391154446295841}
   CurrentHealth: 0
-  MaxHealth: 2000
+  MaxHealth: 10000
   combo: 0
   HitEffect: {fileID: 1130138776244282238}
   Explosion: {fileID: 8441742525532789622, guid: 40e313c95bc0b6b44bfc43db170973fc, type: 3}
@@ -11936,6 +11936,12 @@ MonoBehaviour:
   a: 0
   b: 0
   Charge: 0
+  comboLimit: 10
+  Jaw1A: {fileID: 498677459127316211}
+  Jaw1B: {fileID: 1437700162302122624}
+  Jaw2A: {fileID: 1709668244760705969}
+  Jaw2B: {fileID: 6663160618867107361}
+  Sting: {fileID: 2897662707194975891}
 --- !u!114 &8158391154446295841
 MonoBehaviour:
   m_ObjectHideFlags: 0

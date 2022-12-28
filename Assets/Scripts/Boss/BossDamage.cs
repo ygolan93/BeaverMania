@@ -10,13 +10,6 @@ public class BossDamage : MonoBehaviour
     public NPC_Audio BossAudio;
     public BossScript Boss;
 
-    private void Start()
-    {
-        Boss = GameObject.FindGameObjectWithTag("Boss").GetComponent<BossScript>();
-
-    }
-
-
 
     public void OnTriggerEnter(Collider OBJ)
     {
@@ -29,7 +22,9 @@ public class BossDamage : MonoBehaviour
             }
             if (Player.isParried == true)
             {
+                Player.TakeDamage(0.1f);
                 Boss.TakeDamage(10);
+                Boss.combo++;
             }
 
         }
@@ -42,7 +37,9 @@ public class BossDamage : MonoBehaviour
             }
             if (Player.isParried == true)
             {
-                Boss.TakeDamage(20);
+                Player.TakeDamage(0.5f);
+                Boss.TakeDamage(10);
+                Boss.combo++;
             }
         }
     }

@@ -9,7 +9,6 @@ public class BossScript : MonoBehaviour
     public NPC_Health BossHealth;
     public int CurrentHealth;
     public int MaxHealth = 2000;
-    public int combo = 0;
     public GameObject HitEffect;
     public GameObject Explosion;
     public GameObject StunEffect;
@@ -24,6 +23,13 @@ public class BossScript : MonoBehaviour
     public float a;
     public float b;
     public bool Charge = false;
+    public int combo = 0;
+    public int comboLimit;
+    public Collider Jaw1A;
+    public Collider Jaw1B;
+    public Collider Jaw2A;
+    public Collider Jaw2B;
+    public Collider Sting;
     private void Start()
     {
         Boss = GetComponent<Rigidbody>();
@@ -37,7 +43,7 @@ public class BossScript : MonoBehaviour
         Distance = Player.transform.position- Boss.position;
         var DistanceScalar = Mathf.Abs(Distance.magnitude);
 
-        if (combo < 5)
+        if (combo < comboLimit)
         {
             if (Charge == true)
             {
@@ -79,7 +85,7 @@ public class BossScript : MonoBehaviour
             HitEffect.SetActive(false);
         }
 
-        if (combo>=5)
+        if (combo>= comboLimit)
         {
             BossStunned();
             StunnedClock -= Time.deltaTime;
@@ -188,6 +194,12 @@ public class BossScript : MonoBehaviour
         Scorpion.SetBool("Stunned",true);
         StunEffect.SetActive(true);
         Charge = false;
+        Jaw1A.enabled = false;
+        Jaw2A.enabled = false;
+        Jaw1B.enabled = false;
+        Jaw2B.enabled = false;
+        Sting.enabled = false;
+
     }
 
     private void BossRecovered()
@@ -197,6 +209,11 @@ public class BossScript : MonoBehaviour
         StunnedClock = 10;
         StunEffect.SetActive(false);
         Charge = false;
+        Jaw1A.enabled = true;
+        Jaw2A.enabled = true;
+        Jaw1B.enabled = true;
+        Jaw2B.enabled = true;
+        Sting.enabled = true;
     }
 
 }

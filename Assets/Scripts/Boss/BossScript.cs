@@ -20,8 +20,6 @@ public class BossScript : MonoBehaviour
     public float BeatClock = 10f;
     public float StunnedClock = 10f;
     float InitialBeat;
-    public float a;
-    public float b;
     public bool Charge = false;
     public int combo = 0;
     public int comboLimit;
@@ -40,46 +38,44 @@ public class BossScript : MonoBehaviour
     }
     public void FixedUpdate()
     {
-        Distance = Player.transform.position- Boss.position;
+        Distance = Player.transform.position - Boss.position;
         var DistanceScalar = Mathf.Abs(Distance.magnitude);
 
         if (combo < comboLimit)
         {
-            if (Charge == true)
-            {
-                ChargeTowardsPlayer();
-            }
-            else
-            {
-                if (DistanceScalar < 70 && DistanceScalar > 9)
-                {
-                    StrideClock -= Time.deltaTime;
-                    if (StrideClock > 5)
-                    {
-                        ChargeTowardsPlayer();
-                    }
-                    if (StrideClock <= 5)
-                    {
-                        IdleStop();
-                        Charge = false;
-                    }
-                    if (StrideClock <= 0)
-                        StrideClock = 10;
+            //if (Charge == true)
+            //{
+            //    ChargeTowardsPlayer();
+            //}
+            //else
+            //{
+            //    if (DistanceScalar < 70 && DistanceScalar > 9)
+            //    {
+            //        StrideClock -= Time.deltaTime;
+            //        if (StrideClock > 5)
+            //        {
+            //            ChargeTowardsPlayer();
+            //        }
+            //        if (StrideClock <= 5)
+            //        {
+            //            IdleStop();
+            //            Charge = false;
+            //        }
+            //        if (StrideClock <= 0)
+            //            StrideClock = 10;
 
-                }
-            }
-            if (DistanceScalar < 9 && DistanceScalar > 8)
-            {
-                StopAndAttack();
-            }
-            if (DistanceScalar < 8)
-            {
-                Reverse();
-            }
+            //    }
+            //}
+            //if (DistanceScalar < 9 && DistanceScalar > 8)
+            //{
+            //    StopAndAttack();
+            //}
+            //if (DistanceScalar < 8)
+            //{
+            //    Reverse();
+            //}
         }
-        //else
-        //RandoMovement();
-
+    
         if (!Input.GetKey(KeyCode.Mouse0) || !Input.GetKey(KeyCode.Mouse1))
         {
             HitEffect.SetActive(false);
@@ -141,15 +137,10 @@ public class BossScript : MonoBehaviour
         Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
     }
 
-    private void GettingAngry()
-    {
-
-
-    }
     public void TakeDamage(int Damage)
     {
-        Charge = true;
-        transform.rotation = rotGoal;
+        //Charge = true;
+        //transform.rotation = rotGoal;
         HitEffect.SetActive(true);
         CurrentHealth -= Damage;
         Sound.Beat();
@@ -162,22 +153,6 @@ public class BossScript : MonoBehaviour
         GameObject.Destroy(gameObject);
     }
 
-    //private void OnTriggerStay(Collider OBJ)
-    //{
-    //    if (OBJ.gameObject.CompareTag("Player"))
-    //    {
-    //        Charge = true;
-    //    }
-
-    //}
-    //private void OnTriggerExit(Collider OBJ)
-    //{
-    //    if (OBJ.gameObject.CompareTag("Player"))
-    //    {
-    //        Charge = false;
-    //    }
-
-    //}
     private void OnCollisionEnter(Collision OBJ)
     {
         if (OBJ.gameObject.CompareTag("Damage"))

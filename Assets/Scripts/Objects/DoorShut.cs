@@ -4,18 +4,12 @@ using UnityEngine;
 
 public class DoorShut : MonoBehaviour
 {
-    public GameObject Shutters;
-    public Behavior Player;
-    private void Start()
+    public GameObject Wall;
+    private void OnTriggerStay(Collider OBJ)
     {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
+        if (OBJ.gameObject.CompareTag("Gold"))
+        {
+            Destroy(Wall);
+        }
     }
-    private void Update()
-    {
-        //if (Player.GobletPickup == GobletNum)
-        //{
-        //    Destroy(Shutters);
-        //}
-    }
-
 }

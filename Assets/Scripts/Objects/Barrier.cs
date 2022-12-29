@@ -2,14 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WatchTowerBarrier : MonoBehaviour
+public class Barrier : MonoBehaviour
 {
-    public GameObject Barrier;
+    public GameObject Wall;
     private void OnTriggerStay(Collider OBJ)
     {
         if (OBJ.gameObject.CompareTag("Honey"))
         {
-           Destroy(Barrier);
+           Destroy(Wall);
         }
     }
 }

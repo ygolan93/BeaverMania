@@ -74,6 +74,9 @@ public class Behavior : MonoBehaviour
     public GameObject Seed;
     public GameObject HoneyJar;
     public GameObject PlacedJar;
+    public GameObject GoldBrick;
+    public GameObject PlacedGold;
+    public bool GoldPicked;
     public bool Honeypicked;
     public int GobletPickup = 0;
     public string GobletText;
@@ -179,11 +182,19 @@ public class Behavior : MonoBehaviour
                 ChangeSpeech = 5;
             }
         }
-        if (OBJ.gameObject.CompareTag("Honey") && Honeypicked==false)
+        if (OBJ.gameObject.CompareTag("Honey") && Honeypicked == false)
         {
             if (Input.GetKey(KeyCode.LeftControl))
             {
                 HoneyON();
+                Destroy(OBJ.gameObject);
+            }
+        }
+        if (OBJ.gameObject.CompareTag("Gold") && GoldPicked == false)
+        {
+            if (Input.GetKey(KeyCode.LeftControl))
+            {
+                GoldON();
                 Destroy(OBJ.gameObject);
             }
         }
@@ -262,7 +273,7 @@ public class Behavior : MonoBehaviour
             Plattering = "Ah shit. what happened here?";
         }
 
-        if (OBJ.gameObject.CompareTag("Boss"))
+        if (OBJ.gameObject.CompareTag("Arena"))
         {
             BossBar.SetActive(true);
         }
@@ -446,6 +457,7 @@ public class Behavior : MonoBehaviour
         LeftHandWeapon.SetActive(false);
         ParryOFF();
         HoneyOFF();
+        GoldOFF();
         Lives = 3;
         Apple = 0;
         StaminaClock = StaminaClockInitial;
@@ -607,6 +619,16 @@ public class Behavior : MonoBehaviour
         Honeypicked = false;
         HoneyJar.SetActive(false);
     }
+    public void GoldON()
+    {
+        GoldPicked = true;
+        GoldBrick.SetActive(true);
+    }
+    public void GoldOFF()
+    {
+        GoldPicked = false;
+        GoldBrick.SetActive(false);
+    }
 
     [System.Obsolete]
     public void FixedUpdate()
@@ -698,10 +720,15 @@ public class Behavior : MonoBehaviour
                     Otter.SetBool("crouch", true);
                 }
             }
-            if (Honeypicked==true)
+            if (Honeypicked == true)
             {
                 HoneyOFF();
-                Instantiate(PlacedJar, Sphere.position, Quaternion.identity);
+                Instantiate(PlacedJar, AttackPoint.position - new Vector3(0, 0.5f, 0.3f), Quaternion.identity);
+            }
+            if (GoldPicked==true)
+            {
+                GoldOFF();
+                Instantiate(PlacedGold, AttackPoint.position-new Vector3(0,0.5f,0.3f), Quaternion.identity);
             }
 
         }
@@ -810,10 +837,10 @@ public class Behavior : MonoBehaviour
         if (isAtTrader == false)
         {
             //Melee action
-            if (Input.GetKey(KeyCode.Mouse0) && CurrentStamina > 0)
+            if (Input.GetKey(KeyCode.Mouse0) /*&& CurrentStamina > 0*/)
             {
-                CurrentStamina -= 0.1f;
-                HealthBar.SetStamina(CurrentStamina);
+                //CurrentStamina -= 0.1f;
+                //HealthBar.SetStamina(CurrentStamina);
                 Otter.SetBool("fight", true); //Airkick leveitation
                 if (grounded == false)
                 {
@@ -856,67 +883,66 @@ public class Behavior : MonoBehaviour
                 Otter.speed = 1;
             }
 
-
-
-
-
-            //Stoning action
-            if (Input.GetKey(KeyCode.Mouse1) && CurrentStamina > 0)
-            {
-                Otter.SetBool("fight", false);
-                //Otter.SetBool("crouch", true);
-                //Player.velocity = new Vector3(0, Player.velocity.y, 0);
-                Stone.SetActive(true);
-                AimIcon.SetActive(true);
-                if (!Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
-                {
-                    rotGoal = Quaternion.LookRotation(XZForward);
-                    transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
-                }
-            }
-            if (Input.GetKeyUp(KeyCode.Mouse1) && Stone.active && CurrentStamina > 0)
-            {
-                Otter.Play("Throw");
-                //Otter.SetBool("crouch", false);
-                Instantiate(Ball, AttackPoint.position, Quaternion.identity);
-                CurrentStamina -= 20;
-                HealthBar.SetStamina(CurrentStamina);
-            }
-            if (!Input.GetKey(KeyCode.Mouse1))
-            {
-                Stone.SetActive(false);
-                AimIcon.SetActive(false);
-            }
-
-            //Plant Seed action
-            if (Input.GetKeyDown(KeyCode.R) && NutCount > 0)
-            {
-                Otter.Play("Crouch");
-                Instantiate(Seed, AttackPoint.position, Quaternion.identity);
-                NutCount--;
-            }
-            if (Input.GetKeyUp(KeyCode.R))
-            {
-                Otter.SetBool("Crouch", false);
-            }
-
-            //Eat Apple
-            if (Input.GetKeyUp(KeyCode.T) && Apple > 0)
-            {
-                if (MaxHealth - CurrentHealth > 500)
-                {
-                    TakeDamage(-500);
-                    HealthBar.SetHealth(CurrentHealth);
-                }
-                else
-                {
-                    CurrentHealth = MaxHealth;
-                    HealthBar.SetMaxHealth(MaxHealth);
-                }
-                Apple--;
-            }
         }
 
+
+
+        //Stoning action
+        if (Input.GetKey(KeyCode.Mouse1) && CurrentStamina > 0)
+        {
+            Otter.SetBool("fight", false);
+            //Otter.SetBool("crouch", true);
+            //Player.velocity = new Vector3(0, Player.velocity.y, 0);
+            Stone.SetActive(true);
+            AimIcon.SetActive(true);
+            if (!Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
+            {
+                rotGoal = Quaternion.LookRotation(XZForward);
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            }
+        }
+        if (Input.GetKeyUp(KeyCode.Mouse1) && Stone.active && CurrentStamina > 0)
+        {
+            Otter.Play("Throw");
+            //Otter.SetBool("crouch", false);
+            Instantiate(Ball, AttackPoint.position, Quaternion.identity);
+            CurrentStamina -= 20;
+            HealthBar.SetStamina(CurrentStamina);
+        }
+        if (!Input.GetKey(KeyCode.Mouse1))
+        {
+            Stone.SetActive(false);
+            AimIcon.SetActive(false);
+        }
+
+        //Plant Seed action
+        if (Input.GetKeyDown(KeyCode.R) && NutCount > 0)
+        {
+            Otter.Play("Crouch");
+            Instantiate(Seed, AttackPoint.position, Quaternion.identity);
+            NutCount--;
+        }
+        if (Input.GetKeyUp(KeyCode.R))
+        {
+            Otter.SetBool("Crouch", false);
+        }
+
+        //Eat Apple
+        if (Input.GetKeyUp(KeyCode.T) && Apple > 0)
+        {
+            if (MaxHealth - CurrentHealth > 500)
+            {
+                TakeDamage(-500);
+                HealthBar.SetHealth(CurrentHealth);
+            }
+            else
+            {
+                CurrentHealth = MaxHealth;
+                HealthBar.SetMaxHealth(MaxHealth);
+            }
+            Apple--;
+        }
     }
 
 }
+

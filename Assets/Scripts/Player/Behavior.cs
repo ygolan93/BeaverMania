@@ -376,7 +376,6 @@ public class Behavior : MonoBehaviour
         {
             CurrentStamina -= Damage;
             HealthBar.SetStamina(CurrentStamina);
-
         }
     }
     public void PlayerMove(Vector3 Direction)
@@ -864,8 +863,8 @@ public class Behavior : MonoBehaviour
             //Melee action
             if (Input.GetKey(KeyCode.Mouse0) /*&& CurrentStamina > 0*/)
             {
-                //CurrentStamina -= 0.1f;
-                //HealthBar.SetStamina(CurrentStamina);
+                CurrentStamina -= 0.1f;
+                HealthBar.SetStamina(CurrentStamina);
                 Otter.SetBool("fight", true); //Airkick leveitation
                 if (grounded == false)
                 {

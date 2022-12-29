@@ -11378,6 +11378,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5645334909777289592}
+  - component: {fileID: 7453076679477840316}
   m_Layer: 0
   m_Name: C_Right.004
   m_TagString: Untagged
@@ -11401,6 +11402,19 @@ Transform:
   m_Father: {fileID: 8312950231220287588}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!135 &7453076679477840316
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7085198242680116011}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.02
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &7121866517856042128
 GameObject:
   m_ObjectHideFlags: 0
@@ -11879,7 +11893,7 @@ GameObject:
   - component: {fileID: 8158391154446295840}
   - component: {fileID: 8158391154446295841}
   - component: {fileID: 8158391154446295846}
-  - component: {fileID: 8158391154446295847}
+  - component: {fileID: 3668679958924278388}
   m_Layer: 0
   m_Name: Boss
   m_TagString: Boss
@@ -11923,7 +11937,6 @@ MonoBehaviour:
   BossHealth: {fileID: 8158391154446295841}
   CurrentHealth: 0
   MaxHealth: 10000
-  combo: 0
   HitEffect: {fileID: 1130138776244282238}
   Explosion: {fileID: 8441742525532789622, guid: 40e313c95bc0b6b44bfc43db170973fc, type: 3}
   StunEffect: {fileID: 757293579695304304}
@@ -11936,6 +11949,7 @@ MonoBehaviour:
   a: 0
   b: 0
   Charge: 0
+  combo: 0
   comboLimit: 10
   Jaw1A: {fileID: 498677459127316211}
   Jaw1B: {fileID: 1437700162302122624}
@@ -11971,8 +11985,8 @@ Rigidbody:
   m_Interpolate: 1
   m_Constraints: 80
   m_CollisionDetection: 2
---- !u!136 &8158391154446295847
-CapsuleCollider:
+--- !u!135 &3668679958924278388
+SphereCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -11981,10 +11995,9 @@ CapsuleCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  m_Radius: 1.9087586
-  m_Height: 6.5450335
-  m_Direction: 2
-  m_Center: {x: 0, y: 1.8912416, z: -0.6300001}
+  serializedVersion: 2
+  m_Radius: 2.22081
+  m_Center: {x: 0, y: 1.986496, z: 0}
 --- !u!1 &8297129681908374909
 GameObject:
   m_ObjectHideFlags: 0

@@ -179,6 +179,14 @@ public class Behavior : MonoBehaviour
                 ChangeSpeech = 5;
             }
         }
+        if (OBJ.gameObject.CompareTag("Honey") && Honeypicked==false)
+        {
+            if (Input.GetKey(KeyCode.LeftControl))
+            {
+                HoneyON();
+                Destroy(OBJ.gameObject);
+            }
+        }
         if (OBJ.gameObject.tag == "Life")
         {
             //if (CurrentHealth < MaxHealth)
@@ -804,7 +812,7 @@ public class Behavior : MonoBehaviour
             //Melee action
             if (Input.GetKey(KeyCode.Mouse0) && CurrentStamina > 0)
             {
-                CurrentStamina -= 0.5f;
+                CurrentStamina -= 0.1f;
                 HealthBar.SetStamina(CurrentStamina);
                 Otter.SetBool("fight", true); //Airkick leveitation
                 if (grounded == false)

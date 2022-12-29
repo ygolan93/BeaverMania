@@ -7,9 +7,9 @@ public class WatchTowerBarrier : MonoBehaviour
     public GameObject Barrier;
     private void OnTriggerStay(Collider OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Player"))
+        if (OBJ.gameObject.CompareTag("Honey"))
         {
-            Destroy(Barrier);
+           Destroy(Barrier);
         }
     }
 }

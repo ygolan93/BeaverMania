@@ -79,6 +79,7 @@ public class Behavior : MonoBehaviour
     public bool GoldPicked;
     public bool Honeypicked;
     public int GobletPickup = 0;
+    public float GobletClock = 3f;
     public string GobletText;
     [Header("Chat")]
     public string Plattering;
@@ -88,6 +89,7 @@ public class Behavior : MonoBehaviour
     float HealQue = 3;
     [SerializeField] ParticleSystem SlideEffect;
     [SerializeField] ParticleSystem HealEffect;
+    [SerializeField] GameObject ElectricEffect;
     public ParticleSystem.ShapeModule HealShape;
     [SerializeField] Light HealLight;
     [SerializeField] ParticleSystem HurtEffect;
@@ -145,6 +147,7 @@ public class Behavior : MonoBehaviour
         }
         if (OBJ.gameObject.CompareTag("GobletKey"))
         {
+            if (Input.GetKey(KeyCode.LeftControl))
             Sound.Coin();
             GobletPickup++;
             Destroy(OBJ.gameObject);
@@ -458,6 +461,7 @@ public class Behavior : MonoBehaviour
         ParryOFF();
         HoneyOFF();
         GoldOFF();
+        ElectricEffect.SetActive(false);
         Lives = 3;
         Apple = 0;
         StaminaClock = StaminaClockInitial;
@@ -595,6 +599,29 @@ public class Behavior : MonoBehaviour
     public void RestartGame()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    public void GobletON()
+    {
+        GobletPickup--;
+        Otter.speed = 3;
+        Walk = 7;
+        Run = 18;
+        JumpLimit = 5;
+        GroundAttack = 180;
+
+        ElectricEffect.SetActive(true);     
+    }
+    public void GobletOFF()
+    {
+        Otter.speed = 1;
+        Walk = 4;
+        Run = 12;
+        GroundAttack = 30;
+        JumpLimit = 3;
+        ElectricEffect.SetActive(false);
+
+
     }
 
     public void ParryON()
@@ -832,8 +859,6 @@ public class Behavior : MonoBehaviour
             HealLight.enabled = true;
         }
 
-
-
         if (isAtTrader == false)
         {
             //Melee action
@@ -942,6 +967,20 @@ public class Behavior : MonoBehaviour
             }
             Apple--;
         }
+
+        //Use Goblet
+        if (Input.GetKeyUp(KeyCode.Y) && GobletPickup > 0)
+        {
+            GobletON();
+            GobletClock -= Time.deltaTime;
+            if (GobletClock <= 0)
+            {
+                GobletOFF();
+            }
+            //else
+            //    GobletClock = 3F;
+        }
+
     }
 
 }

@@ -12,9 +12,10 @@ GameObject:
   - component: {fileID: 3499047622897234272}
   - component: {fileID: 3505092797864872360}
   - component: {fileID: 834011700423526967}
+  - component: {fileID: 901255426293580787}
   m_Layer: 0
   m_Name: GobletKey
-  m_TagString: Untagged
+  m_TagString: GobletKey
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -100,6 +101,22 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: 4b25c80bb724e45499c0d93a672b1da2, type: 3}
+--- !u!54 &901255426293580787
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3526704139367780906}
+  serializedVersion: 2
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &5789626762897276992
 GameObject:
   m_ObjectHideFlags: 0

@@ -6,17 +6,16 @@ public class DoorShut : MonoBehaviour
 {
     public GameObject Shutters;
     public Behavior Player;
-    public int GobletNum;
     private void Start()
     {
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
     }
     private void Update()
     {
-        if (Player.GobletPickup == GobletNum)
-        {
-            Destroy(Shutters);
-        }
+        //if (Player.GobletPickup == GobletNum)
+        //{
+        //    Destroy(Shutters);
+        //}
     }
 
 }

@@ -72,6 +72,9 @@ public class Behavior : MonoBehaviour
 
     [Header("Other Objects")]
     public GameObject Seed;
+    public GameObject HoneyJar;
+    public GameObject PlacedJar;
+    public bool Honeypicked;
     public int GobletPickup = 0;
     public string GobletText;
     [Header("Chat")]
@@ -434,6 +437,7 @@ public class Behavior : MonoBehaviour
         RightHandWeapon.SetActive(false);
         LeftHandWeapon.SetActive(false);
         ParryOFF();
+        HoneyOFF();
         Lives = 3;
         Apple = 0;
         StaminaClock = StaminaClockInitial;
@@ -453,7 +457,6 @@ public class Behavior : MonoBehaviour
                 Plattering = "";
             }
         }
-
         if (isParried == false)
         {
             if (CurrentStamina > MaxStamina)
@@ -586,6 +589,16 @@ public class Behavior : MonoBehaviour
         ParryShield.SetActive(false);
         isParried = false;
     }
+    public void HoneyON()
+    {
+        Honeypicked = true;
+        HoneyJar.SetActive(true);
+    }
+    public void HoneyOFF()
+    {
+        Honeypicked = false;
+        HoneyJar.SetActive(false);
+    }
 
     [System.Obsolete]
     public void FixedUpdate()
@@ -622,6 +635,7 @@ public class Behavior : MonoBehaviour
         {
             heal = false;
         }
+
 
         //Basic movement setup
         if (!Input.GetKey(KeyCode.LeftControl)) //Crouch action stops all movement on ground
@@ -675,6 +689,11 @@ public class Behavior : MonoBehaviour
                 {
                     Otter.SetBool("crouch", true);
                 }
+            }
+            if (Honeypicked==true)
+            {
+                HoneyOFF();
+                Instantiate(PlacedJar, Sphere.position, Quaternion.identity);
             }
 
         }

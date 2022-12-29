@@ -46,6 +46,11 @@ public class Trader : MonoBehaviour
             Shop.SetActive(false);
         }
     }
+
+    public void Honey()
+    {
+        Player.HoneyON();
+    }
 }
 
 

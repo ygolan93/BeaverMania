@@ -43,37 +43,37 @@ public class BossScript : MonoBehaviour
 
         if (combo < comboLimit)
         {
-            //if (Charge == true)
-            //{
-            //    ChargeTowardsPlayer();
-            //}
-            //else
-            //{
-            //    if (DistanceScalar < 70 && DistanceScalar > 9)
-            //    {
-            //        StrideClock -= Time.deltaTime;
-            //        if (StrideClock > 5)
-            //        {
-            //            ChargeTowardsPlayer();
-            //        }
-            //        if (StrideClock <= 5)
-            //        {
-            //            IdleStop();
-            //            Charge = false;
-            //        }
-            //        if (StrideClock <= 0)
-            //            StrideClock = 10;
+            if (Charge == true)
+            {
+                ChargeTowardsPlayer();
+            }
+            else
+            {
+                if (DistanceScalar < 70 && DistanceScalar > 9)
+                {
+                    StrideClock -= Time.deltaTime;
+                    if (StrideClock > 5)
+                    {
+                        ChargeTowardsPlayer();
+                    }
+                    if (StrideClock <= 5)
+                    {
+                        IdleStop();
+                        Charge = false;
+                    }
+                    if (StrideClock <= 0)
+                        StrideClock = 10;
 
-            //    }
-            //}
-            //if (DistanceScalar < 9 && DistanceScalar > 8)
-            //{
-            //    StopAndAttack();
-            //}
-            //if (DistanceScalar < 8)
-            //{
-            //    Reverse();
-            //}
+                }
+            }
+            if (DistanceScalar < 9 && DistanceScalar > 8)
+            {
+                StopAndAttack();
+            }
+            if (DistanceScalar < 8)
+            {
+                Reverse();
+            }
         }
     
         if (!Input.GetKey(KeyCode.Mouse0) || !Input.GetKey(KeyCode.Mouse1))

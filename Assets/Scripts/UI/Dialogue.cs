@@ -5,7 +5,9 @@ using TMPro;
 public class Dialogue : MonoBehaviour
 {
     public Behavior Player;
+    public ObjectiveUI PlayerObjective;
     public TextMeshProUGUI textComponent;
+    public GameObject ContinueButton;
     public string[] lines;
     public float textSpeed;
 
@@ -15,6 +17,7 @@ public class Dialogue : MonoBehaviour
     void Start()
     {
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
+        PlayerObjective = GameObject.FindGameObjectWithTag("Player").GetComponent<ObjectiveUI>();
         textComponent.text = string.Empty;
         StartDialogue();
     }
@@ -58,8 +61,8 @@ public class Dialogue : MonoBehaviour
         }
         else
         {
-            index = 0;
-            //gameObject.SetActive(false);
+            PlayerObjective.UpdateObjective();
+            Destroy(ContinueButton);
         }
     }
 }

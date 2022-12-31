@@ -49,7 +49,7 @@ public class BossScript : MonoBehaviour
             }
             else
             {
-                if (/*DistanceScalar < 120 &&*/ DistanceScalar > 9)
+                if (DistanceScalar < 100 && DistanceScalar > 9)
                 {
                     StrideClock -= Time.deltaTime;
                     if (StrideClock > 5)

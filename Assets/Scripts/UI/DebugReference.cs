@@ -6,8 +6,9 @@ using UnityEngine.UI;
 public class DebugReference : MonoBehaviour
 {
     public Behavior Player;
+    public ObjectiveUI PlayerObjective;
 
-
+    public TextMeshProUGUI ObjectiveText;
     public TextMeshProUGUI DisplayText;
     public TextMeshProUGUI StaminaText;
     public TextMeshProUGUI LogCountText;
@@ -19,10 +20,12 @@ public class DebugReference : MonoBehaviour
     private void Start()
     {
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
+        PlayerObjective = GameObject.FindGameObjectWithTag("Player").GetComponent<ObjectiveUI>();
     }
 
     void Update()
     {
+        ObjectiveText.text = PlayerObjective.Instruction;
         DisplayText.text = Player.DebugText;
         StaminaText.text = Player.StaminaText;
         LogCountText.text = Player.LogCount;

@@ -16562,6 +16562,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3877109475308234355}
+  - component: {fileID: 2617381628296643001}
   - component: {fileID: 3877109475308234636}
   - component: {fileID: 3877109475308234637}
   - component: {fileID: 3877109475308234634}
@@ -16606,6 +16607,43 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2617381628296643001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3877109475308234638}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11c575b9dcaa7e64cab36d8ee5f8295c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Player: {fileID: 3877109475308234636}
+  Objective:
+  - 
+  - Talk to the trader
+  - Construct the bridge in order to get into the town
+  - First, Lock it with Left Control
+  - Second, Cut Logs from trees and place them on the bridge platform
+  - Ride the elevator upward
+  - Speak with the Elder Beaver
+  - Go to the sacred garden
+  - Look for the Shady Trader
+  - Deliver the package to the Warden at the Watchtower. Construct a bridge
+  - Construct a Bridge in order to get to the Remote Farm
+  - Take one of the gold bricks
+  - Deliver the Gold to the Guard at the garden
+  - Get into the elevator
+  - Equip yourself as much as you can with apples and goblets, then get into the
+    other side
+  - Speak with the wounded soldier
+  - Take the hammers
+  - Smash your way into the arena
+  - Beat the Scorpion king
+  - Free your friend
+  i: 0
+  Instruction: 
 --- !u!114 &3877109475308234636
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -23082,7 +23120,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.7789232, y: 1}
+    m_SensorSize: {x: 1.9762641, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -23258,7 +23296,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.7789232, y: 1}
+    m_SensorSize: {x: 1.9762641, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -23622,7 +23660,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.7789232, y: 1}
+    m_SensorSize: {x: 1.9762641, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -23727,7 +23765,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.7789232, y: 1}
+    m_SensorSize: {x: 1.9762641, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0

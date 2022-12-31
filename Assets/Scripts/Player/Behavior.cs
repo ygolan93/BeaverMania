@@ -10,7 +10,6 @@ public class Behavior : MonoBehaviour
 {
     [Header("Movement and animation")]
     public Rigidbody Player;
-    Rigidbody Ground;
     public Vector3 PlatformVelocity;
     public Carry Load;
     public Quaternion rotGoal;
@@ -19,9 +18,11 @@ public class Behavior : MonoBehaviour
     public float JumpForce = 3;
     public float Walk = 4;
     public float Run = 12;
+    float InsertWalk;
+    float InsertRun;
     float levitation = 10f;
     float InitiateAir = 0.5f;
-    bool StandOnIsle;
+    float AnimSpeed = 1;
     public bool neutralAndMoving;
     [SerializeField] int JumpNum;
     int JumpLimit;
@@ -64,6 +65,7 @@ public class Behavior : MonoBehaviour
     float FallClock;
     [SerializeField] float InitialFall = 0.2f;
     public int GroundAttack = 30;
+    int insertGroundAttack;
     bool HammerHeld = false;
     public GameObject ParryShield;
     public bool isParried;
@@ -78,14 +80,15 @@ public class Behavior : MonoBehaviour
     public GameObject PlacedGold;
     public bool GoldPicked;
     public bool Honeypicked;
+    public bool GobletPicked;
     public int GobletPickup = 0;
-    public float GobletClock = 3f;
+    public float GobletClock = 10f;
     public string GobletText;
     [Header("Chat")]
     public string Plattering;
     [Header("Audio & Effects")]
     public AudioScript Sound;
-    [SerializeField] GameObject MusicOP;
+    [SerializeField] MusicPlaylist MusicOP;
     float HealQue = 3;
     [SerializeField] ParticleSystem SlideEffect;
     [SerializeField] ParticleSystem HealEffect;
@@ -160,10 +163,6 @@ public class Behavior : MonoBehaviour
         {
             grounded = true;
         }
-        if (OBJ.gameObject.CompareTag("Isle"))
-        {
-            StandOnIsle = true;
-        }
         if (OBJ.gameObject.tag == "Tile")
         {
             var OBJVelocity = OBJ.transform.GetComponent<Rigidbody>();
@@ -181,6 +180,7 @@ public class Behavior : MonoBehaviour
                 LeftHandWeapon.SetActive(true);
                 HammerHeld = true;
                 Destroy(OBJ.gameObject);
+                MusicOP.BeatNuts();
                 Plattering = ("Why do I hear boss music?");
                 ChangeSpeech = 5;
             }
@@ -240,7 +240,6 @@ public class Behavior : MonoBehaviour
         if (OBJ.gameObject.CompareTag("Isle") || OBJ.gameObject.CompareTag("Bridge"))
         {
             grounded = false;
-            StandOnIsle = false;
         }
         if (OBJ.gameObject.tag == "Life")
         {
@@ -250,13 +249,6 @@ public class Behavior : MonoBehaviour
         {
             grounded = false;
             OnPlatform = false;
-        }
-    }
-    public void OnTriggerEnter(Collider OBJ)
-    {
-        if (OBJ.gameObject.CompareTag("Music"))
-        {
-            MusicOP.SetActive(true);
         }
     }
 
@@ -323,7 +315,7 @@ public class Behavior : MonoBehaviour
                     enemy.GetComponent<Static_Hive>().TakeDamage(GroundAttack);
                 }
             }
-            BeatGrounded = GroundBeat;
+            BeatGrounded = GroundBeat*Otter.speed;
         }
         if (grounded == false)
         {
@@ -466,6 +458,9 @@ public class Behavior : MonoBehaviour
         StaminaClock = StaminaClockInitial;
         JumpLimit = JumpNum;
         FallClock = InitialFall;
+        InsertWalk = Walk;
+        InsertRun = Run;
+        insertGroundAttack = GroundAttack;
         LooseScreen.SetActive(false);
         BossBar.SetActive(false);
     }
@@ -547,7 +542,7 @@ public class Behavior : MonoBehaviour
             Player.velocity = new Vector3(Player.velocity.x, JumpForce, Player.velocity.z);
             Sound.Jump();
             levitation = 10;
-            Otter.speed = 1;
+            Otter.speed = AnimSpeed;
             JumpNum--;
             JumpNumPreserve = JumpNum;
         }
@@ -576,14 +571,14 @@ public class Behavior : MonoBehaviour
     }
     public void ActivateLooseMenu()
     {
-        MusicOP.SetActive(false);
+        MusicOP.StopMusic();
         Time.timeScale = 0;
         ShowCursor();
         LooseScreen.SetActive(true);
     }
     public void HideLooseMenu()
     {
-        MusicOP.SetActive(true);
+        MusicOP.ResumeMusic();
         Time.timeScale = 1;
         HideCursor();
         LooseScreen.SetActive(false);
@@ -602,24 +597,29 @@ public class Behavior : MonoBehaviour
 
     public void GobletON()
     {
+        GobletPicked = true;
         GobletPickup--;
-        Otter.speed = 3;
+        AnimSpeed = 3;
         Walk = 7;
         Run = 18;
         JumpLimit = 5;
         GroundAttack = 180;
-
+        GroundBeat = GroundBeat/5;
+        AirBeat =  AirBeat/5;
         ElectricEffect.SetActive(true);     
     }
     public void GobletOFF()
     {
-        Otter.speed = 1;
-        Walk = 4;
-        Run = 12;
-        GroundAttack = 30;
+        GobletPicked = false;
+        AnimSpeed = 1;
+        Walk = InsertWalk;
+        Run = InsertRun;
+        GroundAttack = insertGroundAttack;
         JumpLimit = 3;
+        GroundBeat = 5 * GroundBeat;
+        AirBeat = 5 * AirBeat;
         ElectricEffect.SetActive(false);
-
+        GobletClock = 10F;
 
     }
 
@@ -788,7 +788,7 @@ public class Behavior : MonoBehaviour
             JumpNum = JumpLimit;
             Otter.SetBool("midair", false);
             levitation = 10;
-            Otter.speed = 1;
+            Otter.speed = AnimSpeed;
             if (!Input.anyKey && Player.velocity.magnitude >= 6)
             {
                 neutralAndMoving = true;
@@ -861,7 +861,7 @@ public class Behavior : MonoBehaviour
         if (isAtTrader == false)
         {
             //Melee action
-            if (Input.GetKey(KeyCode.Mouse0) /*&& CurrentStamina > 0*/)
+            if (Input.GetKey(KeyCode.Mouse0) && CurrentStamina > 0)
             {
                 CurrentStamina -= 0.1f;
                 HealthBar.SetStamina(CurrentStamina);
@@ -904,7 +904,7 @@ public class Behavior : MonoBehaviour
                 InitiateAir = 0.5f;
                 GroundAttack = 30;
                 Beat = 0;
-                Otter.speed = 1;
+                Otter.speed = AnimSpeed;
             }
 
         }
@@ -971,13 +971,14 @@ public class Behavior : MonoBehaviour
         if (Input.GetKeyUp(KeyCode.Y) && GobletPickup > 0)
         {
             GobletON();
+        }
+        if (GobletPicked==true)
+        {
+            CurrentStamina = MaxStamina;
             GobletClock -= Time.deltaTime;
+            HealingText = "Boost time: " + Math.Round(GobletClock);
             if (GobletClock <= 0)
-            {
                 GobletOFF();
-            }
-            //else
-            //    GobletClock = 3F;
         }
 
     }

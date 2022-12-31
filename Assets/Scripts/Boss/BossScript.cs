@@ -49,7 +49,7 @@ public class BossScript : MonoBehaviour
             }
             else
             {
-                if (DistanceScalar < 70 && DistanceScalar > 9)
+                if (/*DistanceScalar < 120 &&*/ DistanceScalar > 9)
                 {
                     StrideClock -= Time.deltaTime;
                     if (StrideClock > 5)
@@ -183,7 +183,7 @@ public class BossScript : MonoBehaviour
         combo = 0;
         StunnedClock = 10;
         StunEffect.SetActive(false);
-        Charge = false;
+        Charge = true;
         Jaw1A.enabled = true;
         Jaw2A.enabled = true;
         Jaw1B.enabled = true;

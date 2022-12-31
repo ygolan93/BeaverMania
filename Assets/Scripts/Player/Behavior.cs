@@ -504,9 +504,9 @@ public class Behavior : MonoBehaviour
         StaminaPercent = System.Math.Round((CurrentStamina / MaxStamina) * 100f, 1);
         StaminaText = StaminaPercent + "%";
         Wallet = Currency + " Coins";
-        SeedText = NutCount + " Nuts";
-        AppleText = Apple + " Apples";
-        GobletText = GobletPickup + " Goblets";
+        SeedText = NutCount + " Nuts (R)";
+        AppleText = Apple + " Apples (T)";
+        GobletText = GobletPickup + " Goblets (Y)";
         if (Lives == 3)
         {
             ICON_1.SetActive(true);

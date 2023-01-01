@@ -148,7 +148,6 @@ public class BossScript : MonoBehaviour
     {
         //Charge = true;
         //transform.rotation = rotGoal;
-        BossHPBar.SetActive(false);
         HitEffect.SetActive(true);
         CurrentHealth -= Damage;
         Sound.Beat();
@@ -157,6 +156,7 @@ public class BossScript : MonoBehaviour
     }
     private void Death()
     {
+        BossHPBar.SetActive(false);
         Explosion.SetActive(true);
         Explosion.transform.parent = null;
         GameObject.Destroy(gameObject);

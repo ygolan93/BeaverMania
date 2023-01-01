@@ -153,7 +153,7 @@ public class Behavior : MonoBehaviour
         if (OBJ.gameObject.CompareTag("GobletKey"))
         {
             if (Input.GetKey(KeyCode.LeftControl))
-            Sound.Coin();
+                Sound.Coin();
             GobletPickup++;
             Destroy(OBJ.gameObject);
         }
@@ -189,19 +189,15 @@ public class Behavior : MonoBehaviour
         }
         if (OBJ.gameObject.CompareTag("Honey") && Honeypicked == false)
         {
-            if (Input.GetKey(KeyCode.LeftControl))
-            {
-                HoneyON();
-                Destroy(OBJ.gameObject);
-            }
+            Otter.Play("Crouch");
+            HoneyON();
+            Destroy(OBJ.gameObject);
         }
         if (OBJ.gameObject.CompareTag("Gold") && GoldPicked == false)
         {
-            if (Input.GetKey(KeyCode.LeftControl))
-            {
-                GoldON();
-                Destroy(OBJ.gameObject);
-            }
+            Otter.Play("Crouch");
+            GoldON();
+            Destroy(OBJ.gameObject);
         }
 
         if (OBJ.gameObject.CompareTag("NPC"))
@@ -348,7 +344,7 @@ public class Behavior : MonoBehaviour
                     enemy.GetComponent<Static_Hive>().TakeDamage(GroundAttack);
                 }
             }
-            BeatGrounded = GroundBeat*Otter.speed;
+            BeatGrounded = GroundBeat * Otter.speed;
         }
         if (grounded == false)
         {
@@ -635,9 +631,9 @@ public class Behavior : MonoBehaviour
         Run = 18;
         JumpLimit = 5;
         GroundAttack = 180;
-        GroundBeat = GroundBeat/5;
-        AirBeat =  AirBeat/5;
-        ElectricEffect.SetActive(true);     
+        GroundBeat = GroundBeat / 5;
+        AirBeat = AirBeat / 5;
+        ElectricEffect.SetActive(true);
     }
     public void GobletOFF()
     {
@@ -782,10 +778,10 @@ public class Behavior : MonoBehaviour
                 HoneyOFF();
                 Instantiate(PlacedJar, AttackPoint.position - new Vector3(0, 0.5f, 0.3f), Quaternion.identity);
             }
-            if (GoldPicked==true)
+            if (GoldPicked == true)
             {
                 GoldOFF();
-                Instantiate(PlacedGold, AttackPoint.position-new Vector3(0,0.5f,0.3f), Quaternion.identity);
+                Instantiate(PlacedGold, AttackPoint.position - new Vector3(0, 0.5f, 0.3f), Quaternion.identity);
             }
 
         }
@@ -1003,7 +999,7 @@ public class Behavior : MonoBehaviour
         {
             GobletON();
         }
-        if (GobletPicked==true)
+        if (GobletPicked == true)
         {
             CurrentStamina = MaxStamina;
             GobletClock -= Time.deltaTime;

@@ -12,18 +12,23 @@ public class LogSpawner : MonoBehaviour
     //[SerializeField] Transform Log4;
 
 
-    private void OnTriggerStay(Collider OBJ)
+    public void OnTriggerStay(Collider OBJ)
     {
         if (OBJ.gameObject.tag=="Player")
         {
             if (Input.GetKey(KeyCode.Mouse0))
             {
-                foreach (var item in Prefab)
-                {
-                    Instantiate(item, SpawnPoint.position, Quaternion.identity);
-                }
-                Destroy(gameObject);
+                DestroyTree();
             }
         }
+    }
+
+    public void DestroyTree()
+    {
+        foreach (var item in Prefab)
+        {
+            Instantiate(item, SpawnPoint.position, Quaternion.identity);
+        }
+        Destroy(gameObject);
     }
 }

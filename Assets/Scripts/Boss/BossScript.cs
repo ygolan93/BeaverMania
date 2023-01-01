@@ -9,6 +9,7 @@ public class BossScript : MonoBehaviour
     public NPC_Health BossHealth;
     public int CurrentHealth;
     public int MaxHealth = 2000;
+    public GameObject BossHPBar;
     public GameObject HitEffect;
     public GameObject Explosion;
     public GameObject StunEffect;
@@ -36,12 +37,12 @@ public class BossScript : MonoBehaviour
         CurrentHealth = MaxHealth;
         InitialBeat = BeatClock;
         combo = 0;
+        Explosion.SetActive(false);
     }
     public void FixedUpdate()
     {
         Distance = Player.transform.position - Boss.position;
         var DistanceScalar = Mathf.Abs(Distance.magnitude);
-
         if (Charge==true)
         {
             if (combo < comboLimit)
@@ -96,7 +97,9 @@ public class BossScript : MonoBehaviour
         }
 
         if (CurrentHealth <= 0)
+        {
             Death();
+        }
     }
 
     private void ChargeTowardsPlayer()
@@ -145,6 +148,7 @@ public class BossScript : MonoBehaviour
     {
         //Charge = true;
         //transform.rotation = rotGoal;
+        BossHPBar.SetActive(false);
         HitEffect.SetActive(true);
         CurrentHealth -= Damage;
         Sound.Beat();
@@ -153,7 +157,8 @@ public class BossScript : MonoBehaviour
     }
     private void Death()
     {
-        Instantiate(Explosion, transform.position + new Vector3(0, 1, 0), transform.rotation);
+        Explosion.SetActive(true);
+        Explosion.transform.parent = null;
         GameObject.Destroy(gameObject);
     }
 
@@ -165,7 +170,8 @@ public class BossScript : MonoBehaviour
         }
         if (OBJ.gameObject.CompareTag("Bridge"))
         {
-            Destroy(OBJ.gameObject);
+            var Tree = OBJ.gameObject.GetComponent<LogSpawner>();
+            Tree.DestroyTree();
             TakeDamage(10);
             combo = 10;
         }

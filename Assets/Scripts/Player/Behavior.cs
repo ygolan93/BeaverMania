@@ -203,22 +203,7 @@ public class Behavior : MonoBehaviour
                 Destroy(OBJ.gameObject);
             }
         }
-        if (OBJ.gameObject.tag == "Life")
-        {
-            //if (CurrentHealth < MaxHealth)
-            //{
-            Plattering = ("Shroom!");
-            ChangeSpeech = 1;
-            //}
-            HealingText = "Checkpoint saved";
-            if (CurrentHealth < MaxHealth)
-            {
-                TakeDamage(-2);
-                TouchShroom = true;
-            }
-            if (CurrentHealth >= MaxHealth)
-                TouchShroom = false;
-        }
+
         if (OBJ.gameObject.CompareTag("NPC"))
         {
             Plattering = "Get off me ya nasty bastards!";
@@ -262,6 +247,19 @@ public class Behavior : MonoBehaviour
     }
     public void OnTriggerStay(Collider OBJ)
     {
+        if (OBJ.gameObject.tag == "Life")
+        {
+            Plattering = ("Shroom!");
+            ChangeSpeech = 1;
+            HealingText = "Checkpoint saved";
+            if (CurrentHealth < MaxHealth)
+            {
+                TakeDamage(-2);
+                TouchShroom = true;
+            }
+            if (CurrentHealth >= MaxHealth)
+                TouchShroom = false;
+        }
         if (OBJ.gameObject.CompareTag("Trader"))
         {
             ShowCursor();
@@ -309,6 +307,10 @@ public class Behavior : MonoBehaviour
     }
     public void OnTriggerExit(Collider OBJ)
     {
+        if (OBJ.gameObject.CompareTag("Life"))
+        {
+            TouchShroom = false;
+        }
         if (OBJ.gameObject.CompareTag("Trader"))
         {
             isAtTrader = false;

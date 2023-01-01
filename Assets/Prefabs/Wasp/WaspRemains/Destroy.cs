@@ -9,6 +9,7 @@ public class Destroy : MonoBehaviour
     void Start()
     {
          Clock = 5f;
+        Physics.IgnoreLayerCollision(0, 7);
     }
 
     // Update is called once per frame

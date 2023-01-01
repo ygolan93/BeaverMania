@@ -15,7 +15,7 @@ public class Static_Hive : MonoBehaviour
     public Transform Log4;
     public Transform Log5;
     public Transform Log6;
-    public ParticleSystem NpcDeath;
+    public GameObject Explosion;
     public AudioSource Sound;
     public GameObject HitEffect;
 
@@ -23,6 +23,7 @@ public class Static_Hive : MonoBehaviour
     public void Start()
     {
         CurrentHealth = MaxHealth;
+        Explosion.SetActive(false);
     }
     private void LateUpdate()
     {
@@ -35,7 +36,8 @@ public class Static_Hive : MonoBehaviour
 
     public void Death()
     {
-        Instantiate(NpcDeath, transform.position, Quaternion.identity);
+        Explosion.SetActive(true);
+        Explosion.transform.parent = null;
         Instantiate(Log1, gameObject.transform.position, Quaternion.identity);
         Instantiate(Log2, gameObject.transform.position, Quaternion.identity);
         Instantiate(Log3, gameObject.transform.position, Quaternion.identity);

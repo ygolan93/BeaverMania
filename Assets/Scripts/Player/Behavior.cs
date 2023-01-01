@@ -251,7 +251,13 @@ public class Behavior : MonoBehaviour
             OnPlatform = false;
         }
     }
-
+    public void OnTriggerEnter(Collider OBJ)
+    {
+        if (OBJ.gameObject.CompareTag("Outro"))
+        {
+            MusicOP.OutroSong();
+        }
+    }
     public void OnTriggerStay(Collider OBJ)
     {
         if (OBJ.gameObject.CompareTag("Trader"))

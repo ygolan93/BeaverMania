@@ -99,7 +99,10 @@ public class Behavior : MonoBehaviour
     [SerializeField] Light HurtLight;
     [Header("UI")]
     public GameObject LooseScreen;
+    public BossScript Boss;
     public GameObject BossBar;
+    public GameObject BossPanel;
+    public GameObject BossContinueButton;
     public bool isAtTrader = false;
     public string LogCount;
     public string DebugText;
@@ -113,7 +116,6 @@ public class Behavior : MonoBehaviour
     public string Wallet;
     public GameMaster GM;
     public GameObject AimIcon;
-    bool IsCursorOn;
     public CinemachineFreeLook FreeLook;
     public float ChangeSpeech = 1F;
     public void OnCollisionEnter(Collision OBJ)
@@ -276,7 +278,30 @@ public class Behavior : MonoBehaviour
 
         if (OBJ.gameObject.CompareTag("Arena"))
         {
-            BossBar.SetActive(true);
+            if (BossContinueButton != null)
+            {
+                ShowCursor();
+                isAtTrader = true;
+                Boss.Charge = false;
+                BossPanel.SetActive(true);
+                FreeLook.m_Orbits[2].m_Radius = 6;
+                FreeLook.m_XAxis.m_MaxSpeed = 0;
+                FreeLook.m_YAxis.m_MaxSpeed = 0;
+                FreeLook.m_LookAt = Boss.transform;
+            }
+
+            if (BossContinueButton == null)
+            {
+                isAtTrader = false;
+                HideCursor();
+                BossPanel.SetActive(false);
+                Boss.Charge = true;
+                BossBar.SetActive(true);
+                FreeLook.m_Orbits[2].m_Radius = 4.7F;
+                FreeLook.m_XAxis.m_MaxSpeed = 300;
+                FreeLook.m_YAxis.m_MaxSpeed = 2;
+                FreeLook.m_LookAt = Root;
+            }
         }
 
 
@@ -430,14 +455,12 @@ public class Behavior : MonoBehaviour
     public void ShowCursor()
     {
         //show mouse icon
-        IsCursorOn = true;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
     public void HideCursor()
     {
         //Lock and hide mouse icon
-        IsCursorOn = false;
         FreeLook.m_LookAt = Root;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;

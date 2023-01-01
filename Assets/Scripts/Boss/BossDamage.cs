@@ -15,31 +15,37 @@ public class BossDamage : MonoBehaviour
     {
         if (OBJ.gameObject.CompareTag("ScorpionDamage"))
         {
-            if (Player.isParried == false)
+            if (Boss.combo < Boss.comboLimit)
             {
-                Player.TakeDamage(JawClamp);
-                BossAudio.Sting();
-            }
-            if (Player.isParried == true)
-            {
-                Player.TakeDamage(0.1f);
-                Boss.TakeDamage(10);
-                Boss.combo++;
+                if (Player.isParried == false)
+                {
+                    Player.TakeDamage(JawClamp);
+                    BossAudio.Sting();
+                }
+                if (Player.isParried == true)
+                {
+                    Player.TakeDamage(0.1f);
+                    Boss.TakeDamage(10);
+                    Boss.combo++;
+                }
             }
 
         }
         if (OBJ.gameObject.CompareTag("ScorpionSting"))
         {
-            if (Player.isParried == false)
+            if (Boss.combo < Boss.comboLimit)
             {
-                Player.TakeDamage(Sting);
-                BossAudio.Sting();
-            }
-            if (Player.isParried == true)
-            {
-                Player.TakeDamage(0.5f);
-                Boss.TakeDamage(10);
-                Boss.combo++;
+                if (Player.isParried == false)
+                {
+                    Player.TakeDamage(Sting);
+                    BossAudio.Sting();
+                }
+                if (Player.isParried == true)
+                {
+                    Player.TakeDamage(0.5f);
+                    Boss.TakeDamage(10);
+                    Boss.combo++;
+                }
             }
         }
     }

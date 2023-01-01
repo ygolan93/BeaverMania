@@ -28,9 +28,10 @@ public class BossScript : MonoBehaviour
     public Collider Jaw2A;
     public Collider Jaw2B;
     public Collider Sting;
+
     private void Start()
     {
-        Boss = GetComponent<Rigidbody>();
+        Boss = gameObject.GetComponent<Rigidbody>();
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
         CurrentHealth = MaxHealth;
         InitialBeat = BeatClock;
@@ -41,14 +42,12 @@ public class BossScript : MonoBehaviour
         Distance = Player.transform.position - Boss.position;
         var DistanceScalar = Mathf.Abs(Distance.magnitude);
 
-        if (combo < comboLimit)
+        if (Charge==true)
         {
-            if (Charge == true)
+            if (combo < comboLimit)
             {
                 ChargeTowardsPlayer();
-            }
-            else
-            {
+
                 if (DistanceScalar < 100 && DistanceScalar > 9)
                 {
                     StrideClock -= Time.deltaTime;
@@ -59,21 +58,26 @@ public class BossScript : MonoBehaviour
                     if (StrideClock <= 5)
                     {
                         IdleStop();
-                        Charge = false;
+                        //Charge = false;
                     }
                     if (StrideClock <= 0)
                         StrideClock = 10;
 
                 }
+
+                if (DistanceScalar < 9 && DistanceScalar > 8)
+                {
+                    StopAndAttack();
+                }
+                if (DistanceScalar < 8)
+                {
+                    Reverse();
+                }
             }
-            if (DistanceScalar < 9 && DistanceScalar > 8)
-            {
-                StopAndAttack();
-            }
-            if (DistanceScalar < 8)
-            {
-                Reverse();
-            }
+        }
+        if (Charge==false)
+        {
+            IdleStop();
         }
     
         if (!Input.GetKey(KeyCode.Mouse0) || !Input.GetKey(KeyCode.Mouse1))
@@ -159,6 +163,12 @@ public class BossScript : MonoBehaviour
         {
             TakeDamage(5);
         }
+        if (OBJ.gameObject.CompareTag("Bridge"))
+        {
+            Destroy(OBJ.gameObject);
+            TakeDamage(10);
+            combo = 10;
+        }
     }
 
     private void BossStunned()
@@ -169,12 +179,6 @@ public class BossScript : MonoBehaviour
         Scorpion.SetBool("Stunned",true);
         StunEffect.SetActive(true);
         Charge = false;
-        Jaw1A.enabled = false;
-        Jaw2A.enabled = false;
-        Jaw1B.enabled = false;
-        Jaw2B.enabled = false;
-        Sting.enabled = false;
-
     }
 
     private void BossRecovered()
@@ -184,11 +188,6 @@ public class BossScript : MonoBehaviour
         StunnedClock = 10;
         StunEffect.SetActive(false);
         Charge = true;
-        Jaw1A.enabled = true;
-        Jaw2A.enabled = true;
-        Jaw1B.enabled = true;
-        Jaw2B.enabled = true;
-        Sting.enabled = true;
     }
 
 }

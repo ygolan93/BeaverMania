@@ -8,7 +8,6 @@ public class MovingTile : MonoBehaviour
     [SerializeField] float TileSpeed;
     [SerializeField] float MovementTime = 10f;
     float InitialTimer;
-    bool Move = true;
     public Vector3 MoveTo;
     private void Start()
     {
@@ -20,8 +19,6 @@ public class MovingTile : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        if (Move == true)
-        {
             MovementTime -= Time.deltaTime;
             if (MovementTime > InitialTimer * 0.5f)
             {
@@ -35,25 +32,6 @@ public class MovingTile : MonoBehaviour
             {
                 MovementTime = InitialTimer;
             }
-        }
-        if (Move == false)
-        {
-            Tile.velocity = new Vector3(0, 0, 0);
-            MovementTime -= Time.deltaTime;
-            if (MovementTime <= 0)
-            {
-                MovementTime = InitialTimer;
-                Move = true;
-            }
-        }
-    }
-
-    private void OnCollisionEnter(Collision OBJ)
-    {
-        if (OBJ.gameObject.CompareTag("Damage"))
-        {
-            Move = false;
-        }
     }
 
     private void OnTriggerStay(Collider OBJ)

@@ -8,6 +8,7 @@ public class Dialogue : MonoBehaviour
     public ObjectiveUI PlayerObjective;
     public TextMeshProUGUI textComponent;
     public GameObject ContinueButton;
+    public GameObject SkipButton;
     public string[] lines;
     public float textSpeed;
 
@@ -61,8 +62,14 @@ public class Dialogue : MonoBehaviour
         }
         else
         {
-            PlayerObjective.UpdateObjective();
-            Destroy(ContinueButton);
+            EndConversation();
         }
+    }
+
+    public void EndConversation()
+    {
+        PlayerObjective.UpdateObjective();
+        Destroy(ContinueButton);
+        Destroy(SkipButton);
     }
 }

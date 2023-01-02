@@ -24,7 +24,7 @@ public class BossDamage : MonoBehaviour
                 }
                 if (Player.isParried == true)
                 {
-                    Player.TakeDamage(3);
+                    Player.TakeDamage(6);
                     Boss.TakeDamage(10);
                     Boss.combo++;
                 }
@@ -42,7 +42,7 @@ public class BossDamage : MonoBehaviour
                 }
                 if (Player.isParried == true)
                 {
-                    Player.TakeDamage(3f);
+                    Player.TakeDamage(6f);
                     Boss.TakeDamage(10);
                     Boss.combo++;
                 }

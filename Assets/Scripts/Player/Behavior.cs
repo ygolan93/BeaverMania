@@ -88,7 +88,7 @@ public class Behavior : MonoBehaviour
     public string Plattering;
     [Header("Audio & Effects")]
     public AudioScript Sound;
-    [SerializeField] MusicPlaylist MusicOP;
+    //public MusicPlaylist MusicOP;
     float HealQue = 3;
     [SerializeField] ParticleSystem SlideEffect;
     [SerializeField] ParticleSystem HealEffect;
@@ -178,12 +178,11 @@ public class Behavior : MonoBehaviour
             ChangeSpeech = 1;
             if (Input.GetKey(KeyCode.LeftControl))
             {
+                Plattering = ("Why do I hear Boss music?");
                 RightHandWeapon.SetActive(true);
                 LeftHandWeapon.SetActive(true);
                 HammerHeld = true;
                 Destroy(OBJ.gameObject);
-                MusicOP.BeatNuts();
-                Plattering = ("Why do I hear boss music?");
                 ChangeSpeech = 5;
             }
         }
@@ -234,13 +233,7 @@ public class Behavior : MonoBehaviour
             OnPlatform = false;
         }
     }
-    public void OnTriggerEnter(Collider OBJ)
-    {
-        if (OBJ.gameObject.CompareTag("Outro"))
-        {
-            MusicOP.OutroSong();
-        }
-    }
+
     public void OnTriggerStay(Collider OBJ)
     {
         if (OBJ.gameObject.tag == "Life")
@@ -598,14 +591,14 @@ public class Behavior : MonoBehaviour
     }
     public void ActivateLooseMenu()
     {
-        MusicOP.StopMusic();
+        //MusicOP.StopMusic();
         Time.timeScale = 0;
         ShowCursor();
         LooseScreen.SetActive(true);
     }
     public void HideLooseMenu()
     {
-        MusicOP.ResumeMusic();
+        //MusicOP.ResumeMusic();
         Time.timeScale = 1;
         HideCursor();
         LooseScreen.SetActive(false);

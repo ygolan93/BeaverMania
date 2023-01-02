@@ -6,17 +6,24 @@ public class MusicPlaylist : MonoBehaviour
 {
     public AudioSource MusicSource;
     [SerializeField] AudioClip[] MusicClip;
+    float TrackTimer = 0;
+    int Song = 0;
+    private void Start()
+    {
+        MusicSource = GetComponent<AudioSource>();
+        StartCoroutine(Playlist());
+    }
 
-    public void OutroSong()
+    IEnumerator Playlist()
     {
-        MusicSource.clip = MusicClip[0];
-        MusicSource.PlayOneShot(MusicClip[0]);
+        for (int i = 0; i < MusicClip.Length; i++)
+        {
+            MusicSource.clip = MusicClip[i];
+            MusicSource.Play();
+            yield return new WaitForSeconds(MusicSource.clip.length);
+        }
     }
-    public void BeatNuts()
-    {
-        MusicSource.clip = MusicClip[1];
-        MusicSource.PlayOneShot(MusicClip[1]);
-    }
+
     public void StopMusic()
     {
 

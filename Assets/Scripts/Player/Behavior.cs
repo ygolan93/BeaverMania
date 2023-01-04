@@ -37,7 +37,7 @@ public class Behavior : MonoBehaviour
     public float CurrentHealth;
     public float MaxStamina = 100;
     public float CurrentStamina;
-    float StaminaClockInitial = 3f;
+    float StaminaClockInitial = 0.5f;
     float StaminaClock;
     public Health_Bar_Script HealthBar;
     public bool heal;
@@ -81,7 +81,6 @@ public class Behavior : MonoBehaviour
     public bool GoldPicked;
     public bool Honeypicked;
     public bool GobletPicked;
-    public int GobletPickup = 0;
     public float GobletClock = 10f;
     public string GobletText;
     [Header("Chat")]
@@ -109,6 +108,7 @@ public class Behavior : MonoBehaviour
     public string StaminaText;
     public string HealingText;
     public string AppleText;
+    public int GobletPickup = 0;
     public int Apple;
     public int Currency = 0;
     public int NutCount;

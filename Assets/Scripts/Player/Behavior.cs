@@ -96,6 +96,7 @@ public class Behavior : MonoBehaviour
     [SerializeField] Light HealLight;
     [SerializeField] ParticleSystem HurtEffect;
     [SerializeField] Light HurtLight;
+    [SerializeField] GameObject PopUpEffect;
     [Header("UI")]
     public GameObject LooseScreen;
     public BossScript Boss;
@@ -131,16 +132,13 @@ public class Behavior : MonoBehaviour
             }
             if (OBJ.gameObject.CompareTag("Apple"))
             {
+                Sound.PickUp2();
                 Apple++;
                 Destroy(OBJ.gameObject);
             }
 
         }
 
-        if (OBJ.gameObject.CompareTag("Life"))
-        {
-            GM.lastCheckPointPos = transform.position;
-        }
 
         if (OBJ.gameObject.tag == "Isle" || OBJ.gameObject.CompareTag("Bridge"))
         {
@@ -152,9 +150,9 @@ public class Behavior : MonoBehaviour
         }
         if (OBJ.gameObject.CompareTag("GobletKey"))
         {
-            if (Input.GetKey(KeyCode.LeftControl))
-                Sound.Coin();
+            Sound.PickUp2();
             GobletPickup++;
+            Otter.Play("Crouch");
             Destroy(OBJ.gameObject);
         }
 
@@ -208,7 +206,8 @@ public class Behavior : MonoBehaviour
         {
             if (Lives > 0)
             {
-                transform.position = GM.lastCheckPointPos;
+                transform.position = GM.lastCheckPointPos+new Vector3(1,1,1);
+                Instantiate(PopUpEffect, transform.position, Quaternion.identity);
                 Lives--;
             }
             if (Lives == 0)
@@ -238,6 +237,7 @@ public class Behavior : MonoBehaviour
     {
         if (OBJ.gameObject.tag == "Life")
         {
+            GM.lastCheckPointPos = OBJ.transform.position;
             Plattering = ("Shroom!");
             ChangeSpeech = 1;
             HealingText = "Checkpoint saved";
@@ -608,6 +608,7 @@ public class Behavior : MonoBehaviour
         HealthBar.SetHealth(MaxHealth);
         CurrentHealth = MaxHealth;
         transform.position = GM.lastCheckPointPos;
+        Instantiate(PopUpEffect, transform.position, Quaternion.identity);
         Lives--;
     }
     public void RestartGame()
@@ -974,6 +975,7 @@ public class Behavior : MonoBehaviour
         //Eat Apple
         if (Input.GetKeyUp(KeyCode.T) && Apple > 0)
         {
+            Otter.SetBool("Consume", true);
             if (MaxHealth - CurrentHealth > 500)
             {
                 TakeDamage(-500);
@@ -990,6 +992,7 @@ public class Behavior : MonoBehaviour
         //Use Goblet
         if (Input.GetKeyUp(KeyCode.Y) && GobletPickup > 0)
         {
+            Otter.SetBool("Consume",true);
             GobletON();
         }
         if (GobletPicked == true)

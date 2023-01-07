@@ -97,6 +97,10 @@ public class Behavior : MonoBehaviour
     [SerializeField] ParticleSystem HurtEffect;
     [SerializeField] Light HurtLight;
     [SerializeField] GameObject PopUpEffect;
+    [SerializeField] GameObject PickUpEffect;
+    [SerializeField] GameObject KickWind;
+    [SerializeField] GameObject BoxWind;
+    [SerializeField] Transform KickEffectPos;
     [Header("UI")]
     public GameObject LooseScreen;
     public BossScript Boss;
@@ -122,7 +126,7 @@ public class Behavior : MonoBehaviour
     public void OnCollisionEnter(Collision OBJ)
     {
 
-        if (OBJ.gameObject.CompareTag("Part") || OBJ.gameObject.CompareTag("Seed") || OBJ.gameObject.CompareTag("Apple"))
+        if (OBJ.gameObject.CompareTag("Part") || OBJ.gameObject.CompareTag("Seed") || OBJ.gameObject.CompareTag("Apple") || OBJ.gameObject.CompareTag("GobletKey"))
         {
             Otter.Play("Crouch");
             if (OBJ.gameObject.CompareTag("Seed"))
@@ -132,29 +136,30 @@ public class Behavior : MonoBehaviour
             }
             if (OBJ.gameObject.CompareTag("Apple"))
             {
+                Instantiate(PickUpEffect, Root.position, Quaternion.identity);
                 Sound.PickUp2();
                 Apple++;
                 Destroy(OBJ.gameObject);
             }
+            if (OBJ.gameObject.CompareTag("GobletKey"))
+            {
+                Sound.PickUp2();
+                GobletPickup++;
+                Instantiate(PickUpEffect, Root.position, Quaternion.identity);
+                Destroy(OBJ.gameObject);
+            }
 
         }
-
-
         if (OBJ.gameObject.tag == "Isle" || OBJ.gameObject.CompareTag("Bridge"))
         {
             FallClock = InitialFall;
         }
         if (OBJ.gameObject.CompareTag("Coin"))
         {
+            Instantiate(PickUpEffect, Root.position, Quaternion.identity);
             Sound.Coin();
         }
-        if (OBJ.gameObject.CompareTag("GobletKey"))
-        {
-            Sound.PickUp2();
-            GobletPickup++;
-            Otter.Play("Crouch");
-            Destroy(OBJ.gameObject);
-        }
+
 
     }
     public void OnCollisionStay(Collision OBJ)
@@ -458,6 +463,7 @@ public class Behavior : MonoBehaviour
     }
     public void Start()
     {
+        Instantiate(PopUpEffect, Root.position, Quaternion.identity);
         HideCursor();
         AimIcon.SetActive(false);
         Player = GetComponent<Rigidbody>();
@@ -889,6 +895,11 @@ public class Behavior : MonoBehaviour
                 Otter.SetBool("fight", true); //Airkick leveitation
                 if (grounded == false)
                 {
+                    if (Otter.GetCurrentAnimatorStateInfo(0).IsName("Air Kick"))
+                    {
+                        var WindTrail = Instantiate(KickWind, KickEffectPos.position, Quaternion.Euler(-90, UnityEngine.Random.Range(0f, 360f), 0));
+                        WindTrail.transform.parent = KickEffectPos;
+                    }
                     BeatAir -= Time.deltaTime;
                     if (BeatAir <= 0)
                     {
@@ -911,6 +922,22 @@ public class Behavior : MonoBehaviour
                 }
                 if (grounded == true)
                 {
+                    if (Otter.GetCurrentAnimatorStateInfo(1).IsName("AttackA"))
+                    {
+                        if (Root.childCount == 0)
+                        {
+                            var RightWind = Instantiate(BoxWind, Root.position - new Vector3(0, 0.3f, 0), rotGoal * Quaternion.Euler(-90, 90, 0));
+                            RightWind.transform.parent = Root;
+                        }
+                    }
+                    if (Otter.GetCurrentAnimatorStateInfo(1).IsName("AttackB"))
+                    {
+                        if (Root.childCount == 0)
+                        {
+                            var LeftWind = Instantiate(BoxWind, Root.position - new Vector3(0, 0.3f, 0), rotGoal * Quaternion.Euler(90, 90, 0));
+                            LeftWind.transform.parent = Root;
+                        }
+                    }
                     BeatGrounded -= Time.deltaTime;
                     if (BeatGrounded <= 0)
                     {

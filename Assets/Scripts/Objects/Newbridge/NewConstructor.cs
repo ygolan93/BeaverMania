@@ -1,5 +1,6 @@
 using UnityEngine;
-
+using UnityEngine.UI;
+using TMPro;
 public class NewConstructor : MonoBehaviour
 {
     public Behavior Player;
@@ -11,7 +12,8 @@ public class NewConstructor : MonoBehaviour
     public Material Cel;
     public Material Synthi;
     MeshRenderer Ramp;
-    public string BridgeUI;
+    public Text BridgeUI;
+    string BridgeText;
     bool isLocked = false;
 
     //public string BridgeUI;
@@ -23,6 +25,8 @@ public class NewConstructor : MonoBehaviour
         Bridge = GetComponent<Rigidbody>();
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
         isLocked = false;
+       BridgeText  = "press left ctrl for bridge lock and construction";
+        BridgeUI.text = BridgeText;
     }
 
     public void OnTriggerStay(Collider OBJ)
@@ -34,9 +38,9 @@ public class NewConstructor : MonoBehaviour
             {
                 isLocked = true;
                 Bridge.isKinematic = true;
-                BridgeUI = "Locked";
                 Ramp.material = Synthi;
-
+                BridgeText = "Locked";
+                BridgeUI.text = BridgeText;
             }
             if (Input.GetKeyDown(KeyCode.Delete))
             {
@@ -53,7 +57,7 @@ public class NewConstructor : MonoBehaviour
                     Player.HealthBar.SetHealth(Player.CurrentHealth);
                 }
             PartCount++;
-            X = 4.5f;
+            X = 4.45f;
           var newPart = Instantiate(BridgePart, Bridge.transform.position + Bridge.transform.up * -X * PartCount + Bridge.transform.forward*-0.5f, Bridge.transform.rotation);
             newPart.transform.parent = Bridge.transform;
 

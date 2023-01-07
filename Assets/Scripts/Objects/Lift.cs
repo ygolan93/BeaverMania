@@ -10,7 +10,13 @@ public class Lift : MonoBehaviour
     [SerializeField] Transform UpperPoint;
     [SerializeField] GameObject Stage;
     bool OnBoard;
+    [SerializeField] float Clock;
+    float InitialClock;
 
+    private void Start()
+    {
+        InitialClock = Clock;
+    }
 
 
     // Update is called once per frame
@@ -19,13 +25,18 @@ public class Lift : MonoBehaviour
 
         if (OnBoard == true)
         {
-            if (Stage.transform.position.y < UpperPoint.transform.position.y)
-                Beams.velocity = new Vector3(0, LiftSpeed, 0);
-            else
-                Beams.velocity = new Vector3(0, 0, 0);
+            Clock -= Time.deltaTime;
+            if (Clock <= 0)
+            {
+                if (Stage.transform.position.y < UpperPoint.transform.position.y)
+                    Beams.velocity = new Vector3(0, LiftSpeed, 0);
+                else
+                    Beams.velocity = new Vector3(0, 0, 0);
+            }
         }
         if (OnBoard == false)
         {
+            Clock = InitialClock;
             if (Stage.transform.position.y > BottomPoint.transform.position.y)
                 Beams.velocity = new Vector3(0, -LiftSpeed, 0);
             else

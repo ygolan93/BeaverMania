@@ -5,6 +5,7 @@ using UnityEngine;
 public class Destroy : MonoBehaviour
 {
     float Clock;
+    public GameObject effect;
     // Start is called before the first frame update
     void Start()
     {
@@ -18,6 +19,7 @@ public class Destroy : MonoBehaviour
         Clock -= Time.deltaTime;
         if (Clock <= 0)
         {
+            Instantiate(effect, gameObject.transform.position, Quaternion.identity);
             Destroy(gameObject);
         }
     }

@@ -13,6 +13,7 @@ public class Trader : MonoBehaviour
     public GameObject Shop;
     public Vector3 PlayerDistance;
     [SerializeField] bool Rotate;
+    [SerializeField] float PanelPopUp;
     Quaternion FormalLook;
     // Start is called before the first frame update
     void Start()
@@ -27,7 +28,8 @@ public class Trader : MonoBehaviour
     {
 
         PlayerDistance = Player.transform.position - Merchant.transform.position;
-        if (PlayerDistance.magnitude < 8)
+        var Distance = Mathf.Abs(PlayerDistance.magnitude);
+        if (Distance<PanelPopUp)
         {
             if (Rotate == true)
             {
@@ -36,6 +38,7 @@ public class Trader : MonoBehaviour
             }
             TradeText.SetActive(true);
             DialoguePanel.SetActive(true);
+
         }
 
         else

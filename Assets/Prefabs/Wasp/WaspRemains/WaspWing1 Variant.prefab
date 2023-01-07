@@ -111,7 +111,7 @@ SphereCollider:
   m_GameObject: {fileID: 8956572691331247483}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 0
+  m_Enabled: 1
   serializedVersion: 2
   m_Radius: 0.12
   m_Center: {x: -1.28, y: 1.1, z: -0.41}
@@ -124,7 +124,7 @@ CapsuleCollider:
   m_GameObject: {fileID: 8956572691331247483}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 0
+  m_Enabled: 1
   m_Radius: 0.11
   m_Height: 0.34
   m_Direction: 2
@@ -141,3 +141,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb320059d2209204aac1872dd9ba6cea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  effect: {fileID: 1750940742320366, guid: de5d32243f9b5214ab5bcdeecb5b5ecb, type: 3}

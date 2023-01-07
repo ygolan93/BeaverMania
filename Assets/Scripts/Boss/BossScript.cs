@@ -10,6 +10,7 @@ public class BossScript : MonoBehaviour
     public int CurrentHealth;
     public int MaxHealth = 2000;
     public GameObject BossHPBar;
+    public GameObject BossPanel;
     public GameObject HitEffect;
     public GameObject Explosion;
     public GameObject StunEffect;

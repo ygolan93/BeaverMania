@@ -1264,8 +1264,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7826532604834995518}
-  m_LocalRotation: {x: -0, y: 0.9305707, z: -0, w: 0.36611235}
-  m_LocalPosition: {x: 1300.8453, y: 36.04, z: 149.53677}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.27406397, y: 0.27406386, z: 0.27406397}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1273,7 +1273,7 @@ Transform:
   - {fileID: 1699894552942442121}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 137.048, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &6943429390401082428
 Animator:
   serializedVersion: 4
@@ -1323,10 +1323,13 @@ MonoBehaviour:
   Merchant: {fileID: 7826532604834995518}
   PlayerRoot: {fileID: 0}
   Player: {fileID: 0}
-  ConversationFocus: {fileID: 0}
   TradeText: {fileID: 0}
   DialoguePanel: {fileID: 0}
+  Shop: {fileID: 0}
+  TraderCam: {fileID: 0}
   PlayerDistance: {x: 0, y: 0, z: 0}
+  Rotate: 0
+  PanelPopUp: 0
 --- !u!65 &5016395860630945298
 BoxCollider:
   m_ObjectHideFlags: 0

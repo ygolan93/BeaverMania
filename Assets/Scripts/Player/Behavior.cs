@@ -66,7 +66,7 @@ public class Behavior : MonoBehaviour
     [SerializeField] float InitialFall = 0.2f;
     public int GroundAttack = 30;
     int insertGroundAttack;
-    bool HammerHeld = false;
+    public bool HammerHeld;
     public GameObject ParryShield;
     public bool isParried;
     [SerializeField] GameObject RightHandWeapon;
@@ -122,6 +122,8 @@ public class Behavior : MonoBehaviour
     public GameMaster GM;
     public GameObject AimIcon;
     public CinemachineFreeLook FreeLook;
+    public CinemachineFreeLook CamForTraders;
+    public CinemachineFreeLook InHouseCam;
     public float ChangeSpeech = 1F;
     public void OnCollisionEnter(Collision OBJ)
     {
@@ -136,7 +138,7 @@ public class Behavior : MonoBehaviour
             }
             if (OBJ.gameObject.CompareTag("Apple"))
             {
-                Instantiate(PickUpEffect, Root.position, Quaternion.identity);
+                Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
                 Sound.PickUp2();
                 Apple++;
                 Destroy(OBJ.gameObject);
@@ -145,7 +147,7 @@ public class Behavior : MonoBehaviour
             {
                 Sound.PickUp2();
                 GobletPickup++;
-                Instantiate(PickUpEffect, Root.position, Quaternion.identity);
+                Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
                 Destroy(OBJ.gameObject);
             }
 
@@ -156,7 +158,7 @@ public class Behavior : MonoBehaviour
         }
         if (OBJ.gameObject.CompareTag("Coin"))
         {
-            Instantiate(PickUpEffect, Root.position, Quaternion.identity);
+            Instantiate(PickUpEffect, OBJ.transform.position+new Vector3(0,0.3f,0), Quaternion.identity);
             Sound.Coin();
         }
 
@@ -164,7 +166,7 @@ public class Behavior : MonoBehaviour
     }
     public void OnCollisionStay(Collision OBJ)
     {
-        if (OBJ.gameObject.tag == "Isle" || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("Tile"))
+        if (OBJ.gameObject.tag == "Isle" || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("Tile") || OBJ.gameObject.CompareTag("House"))
         {
             grounded = true;
         }
@@ -223,7 +225,7 @@ public class Behavior : MonoBehaviour
     }
     public void OnCollisionExit(Collision OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Isle") || OBJ.gameObject.CompareTag("Bridge"))
+        if (OBJ.gameObject.CompareTag("Isle") || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("House"))
         {
             grounded = false;
         }
@@ -258,10 +260,20 @@ public class Behavior : MonoBehaviour
         {
             ShowCursor();
             isAtTrader = true;
-            FreeLook.m_Orbits[2].m_Radius = 6;
-            FreeLook.m_XAxis.m_MaxSpeed = 0;
-            FreeLook.m_YAxis.m_MaxSpeed = 0;
-            FreeLook.m_LookAt = OBJ.transform;
+            FreeLook.enabled = false;
+            CamForTraders.enabled = true;
+            CamForTraders.m_Orbits[1].m_Radius = 6;
+            CamForTraders.m_XAxis.m_MaxSpeed = 0.1f;
+            CamForTraders.m_YAxis.m_MaxSpeed = 0.1f;
+            CamForTraders.m_LookAt = OBJ.transform;
+            
+        }
+
+        if (OBJ.gameObject.CompareTag("House"))
+        {
+            FreeLook.enabled = false;
+            InHouseCam.enabled = true;
+
         }
         if (OBJ.gameObject.CompareTag("What Is this?"))
         {
@@ -276,7 +288,7 @@ public class Behavior : MonoBehaviour
                 isAtTrader = true;
                 Boss.Charge = false;
                 BossPanel.SetActive(true);
-                FreeLook.m_Orbits[2].m_Radius = 6;
+                FreeLook.m_Orbits[1].m_Radius = 15;
                 FreeLook.m_XAxis.m_MaxSpeed = 0;
                 FreeLook.m_YAxis.m_MaxSpeed = 0;
                 FreeLook.m_LookAt = Boss.transform;
@@ -289,7 +301,7 @@ public class Behavior : MonoBehaviour
                 BossPanel.SetActive(false);
                 Boss.Charge = true;
                 BossBar.SetActive(true);
-                FreeLook.m_Orbits[2].m_Radius = 4.7F;
+                FreeLook.m_Orbits[1].m_Radius = 6;
                 FreeLook.m_XAxis.m_MaxSpeed = 300;
                 FreeLook.m_YAxis.m_MaxSpeed = 2;
                 FreeLook.m_LookAt = Root;
@@ -308,14 +320,20 @@ public class Behavior : MonoBehaviour
         if (OBJ.gameObject.CompareTag("Trader"))
         {
             isAtTrader = false;
-            FreeLook.m_Orbits[2].m_Radius = 4.7F;
-            FreeLook.m_XAxis.m_MaxSpeed = 300;
-            FreeLook.m_YAxis.m_MaxSpeed = 2;
-            FreeLook.m_LookAt = Root;
+            CamForTraders.enabled = false;
+            CamForTraders.m_LookAt = null;
+            FreeLook.enabled = true;
+            FreeLook.m_LookAt.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Root.position), 0.5f);
         }
         if (OBJ.gameObject.CompareTag("Boss"))
         {
             BossBar.SetActive(false);
+        }
+        if (OBJ.gameObject.CompareTag("House"))
+        {
+            InHouseCam.enabled = false;
+            FreeLook.enabled = true;
+
         }
     }
     public void Attack()
@@ -463,6 +481,8 @@ public class Behavior : MonoBehaviour
     }
     public void Start()
     {
+        CamForTraders.enabled = false;
+        InHouseCam.enabled = false;
         Instantiate(PopUpEffect, Root.position, Quaternion.identity);
         HideCursor();
         AimIcon.SetActive(false);
@@ -473,8 +493,8 @@ public class Behavior : MonoBehaviour
         CurrentStamina = MaxStamina;
         HealthBar.SetMaxStamina(CurrentStamina);
         HealShape = HealEffect.shape;
-        RightHandWeapon.SetActive(false);
-        LeftHandWeapon.SetActive(false);
+        //RightHandWeapon.SetActive(false);
+        //LeftHandWeapon.SetActive(false);
         ParryOFF();
         HoneyOFF();
         GoldOFF();

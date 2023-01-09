@@ -650,8 +650,7 @@ public class Behavior : MonoBehaviour
         Walk = 7;
         Run = 18;
         JumpLimit = 5;
-        GroundAttack = 180;
-        GroundBeat = GroundBeat / 5;
+        BeatGrounded = BeatGrounded / 5;
         AirBeat = AirBeat / 5;
         ElectricEffect.SetActive(true);
     }
@@ -661,9 +660,8 @@ public class Behavior : MonoBehaviour
         AnimSpeed = 1;
         Walk = InsertWalk;
         Run = InsertRun;
-        GroundAttack = insertGroundAttack;
         JumpLimit = 3;
-        GroundBeat = 5 * GroundBeat;
+        BeatGrounded = 5 * BeatGrounded;
         AirBeat = 5 * AirBeat;
         ElectricEffect.SetActive(false);
         GobletClock = 10F;

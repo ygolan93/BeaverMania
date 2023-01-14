@@ -12,15 +12,23 @@ public class Destroy : MonoBehaviour
          Clock = 5f;
         Physics.IgnoreLayerCollision(0, 7);
     }
-
+    public void DestroySelf()
+    {
+        Instantiate(effect, gameObject.transform.position, Quaternion.identity);
+        Destroy(gameObject);
+    }
+    private void OnCollisionEnter(Collision OBJ)
+    {
+        if (OBJ.gameObject.CompareTag("Player"))
+            DestroySelf();
+    }
     // Update is called once per frame
     void Update()
     {
         Clock -= Time.deltaTime;
         if (Clock <= 0)
         {
-            Instantiate(effect, gameObject.transform.position, Quaternion.identity);
-            Destroy(gameObject);
+            DestroySelf();
         }
     }
 }

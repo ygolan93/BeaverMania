@@ -125,6 +125,7 @@ public class Behavior : MonoBehaviour
     public CinemachineFreeLook CamForTraders;
     public CinemachineFreeLook InHouseCam;
     public float ChangeSpeech = 1F;
+
     public void OnCollisionEnter(Collision OBJ)
     {
 
@@ -239,7 +240,6 @@ public class Behavior : MonoBehaviour
             OnPlatform = false;
         }
     }
-
     public void OnTriggerStay(Collider OBJ)
     {
         if (OBJ.gameObject.tag == "Life")
@@ -307,9 +307,6 @@ public class Behavior : MonoBehaviour
                 FreeLook.m_LookAt = Root;
             }
         }
-
-
-
     }
     public void OnTriggerExit(Collider OBJ)
     {
@@ -336,6 +333,7 @@ public class Behavior : MonoBehaviour
 
         }
     }
+
     public void Attack()
     {
         if (grounded == true)
@@ -389,9 +387,6 @@ public class Behavior : MonoBehaviour
         }
 
     }
-
-    //Player Character talks nonesense
-
     public void TakeDamage(float Damage)
     {
         if (isParried == false)
@@ -479,6 +474,90 @@ public class Behavior : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
+    public void ActivateLooseMenu()
+    {
+        //MusicOP.StopMusic();
+        Time.timeScale = 0;
+        ShowCursor();
+        LooseScreen.SetActive(true);
+    }
+    public void HideLooseMenu()
+    {
+        //MusicOP.ResumeMusic();
+        Time.timeScale = 1;
+        HideCursor();
+        LooseScreen.SetActive(false);
+    }
+    public void RestartCheckpoint()
+    {
+        HealthBar.SetHealth(MaxHealth);
+        CurrentHealth = MaxHealth;
+        transform.position = GM.lastCheckPointPos;
+        Instantiate(PopUpEffect, transform.position, Quaternion.identity);
+        Lives--;
+    }
+    public void RestartGame()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+    public void GobletON()
+    {
+        GobletPicked = true;
+        GobletPickup--;
+        AnimSpeed = 3;
+        Walk = 7;
+        Run = 18;
+        JumpLimit = 5;
+        BeatGrounded = BeatGrounded / 5;
+        AirBeat = AirBeat / 5;
+        ElectricEffect.SetActive(true);
+    }
+    public void GobletOFF()
+    {
+        GobletPicked = false;
+        AnimSpeed = 1;
+        Walk = InsertWalk;
+        Run = InsertRun;
+        JumpLimit = 3;
+        BeatGrounded = 5 * BeatGrounded;
+        AirBeat = 5 * AirBeat;
+        ElectricEffect.SetActive(false);
+        GobletClock = 10F;
+
+    }
+    public void ParryON()
+    {
+        Otter.SetBool("Parry", true);
+        ParryShield.SetActive(true);
+        isParried = true;
+    }
+    public void ParryOFF()
+    {
+        Otter.SetBool("Parry", false);
+        ParryShield.SetActive(false);
+        isParried = false;
+    }
+    public void HoneyON()
+    {
+        Honeypicked = true;
+        HoneyJar.SetActive(true);
+    }
+    public void HoneyOFF()
+    {
+        Honeypicked = false;
+        HoneyJar.SetActive(false);
+    }
+    public void GoldON()
+    {
+        GoldPicked = true;
+        GoldBrick.SetActive(true);
+    }
+    public void GoldOFF()
+    {
+        GoldPicked = false;
+        GoldBrick.SetActive(false);
+    }
+
     public void Start()
     {
         CamForTraders.enabled = false;
@@ -510,6 +589,7 @@ public class Behavior : MonoBehaviour
         LooseScreen.SetActive(false);
         BossBar.SetActive(false);
     }
+    [System.Obsolete]
     public void Update()
     {
         //Update UI text
@@ -613,92 +693,78 @@ public class Behavior : MonoBehaviour
             ParryOFF();
             CurrentStamina = 0;
         }
+        //Stoning action
+        if (Input.GetKey(KeyCode.Mouse1) && CurrentStamina > 0)
+        {
+            Otter.SetBool("fight", false);
+            //Otter.SetBool("crouch", true);
+            //Player.velocity = new Vector3(0, Player.velocity.y, 0);
+            Stone.SetActive(true);
+            AimIcon.SetActive(true);
+            if (!Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
+            {
+                rotGoal = Quaternion.LookRotation(Camera.main.transform.TransformDirection(Vector3.forward));
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            }
+        }
+        if (Input.GetKeyUp(KeyCode.Mouse1) && Stone.active && CurrentStamina > 0)
+        {
+            Otter.Play("Throw");
+            Instantiate(Ball, AttackPoint.position, Quaternion.identity);
+            CurrentStamina -= 20;
+            HealthBar.SetStamina(CurrentStamina);
+        }
+        if (!Input.GetKey(KeyCode.Mouse1))
+        {
+            Stone.SetActive(false);
+            AimIcon.SetActive(false);
+        }
 
-    }
-    public void ActivateLooseMenu()
-    {
-        //MusicOP.StopMusic();
-        Time.timeScale = 0;
-        ShowCursor();
-        LooseScreen.SetActive(true);
-    }
-    public void HideLooseMenu()
-    {
-        //MusicOP.ResumeMusic();
-        Time.timeScale = 1;
-        HideCursor();
-        LooseScreen.SetActive(false);
-    }
-    public void RestartCheckpoint()
-    {
-        HealthBar.SetHealth(MaxHealth);
-        CurrentHealth = MaxHealth;
-        transform.position = GM.lastCheckPointPos;
-        Instantiate(PopUpEffect, transform.position, Quaternion.identity);
-        Lives--;
-    }
-    public void RestartGame()
-    {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-    }
+        //Plant Seed action
+        if (Input.GetKeyDown(KeyCode.R) && NutCount > 0)
+        {
+            Otter.Play("Crouch");
+            Instantiate(Seed, AttackPoint.position, Quaternion.identity);
+            NutCount--;
+        }
+        if (Input.GetKeyUp(KeyCode.R))
+        {
+            Otter.SetBool("Crouch", false);
+        }
 
-    public void GobletON()
-    {
-        GobletPicked = true;
-        GobletPickup--;
-        AnimSpeed = 3;
-        Walk = 7;
-        Run = 18;
-        JumpLimit = 5;
-        BeatGrounded = BeatGrounded / 5;
-        AirBeat = AirBeat / 5;
-        ElectricEffect.SetActive(true);
-    }
-    public void GobletOFF()
-    {
-        GobletPicked = false;
-        AnimSpeed = 1;
-        Walk = InsertWalk;
-        Run = InsertRun;
-        JumpLimit = 3;
-        BeatGrounded = 5 * BeatGrounded;
-        AirBeat = 5 * AirBeat;
-        ElectricEffect.SetActive(false);
-        GobletClock = 10F;
+        //Eat Apple
+        if (Input.GetKeyUp(KeyCode.T) && Apple > 0)
+        {
+            Otter.SetBool("Consume", true);
+            if (MaxHealth - CurrentHealth > 500)
+            {
+                TakeDamage(-500);
+                HealthBar.SetHealth(CurrentHealth);
+            }
+            else
+            {
+                CurrentHealth = MaxHealth;
+                HealthBar.SetMaxHealth(MaxHealth);
+            }
+            Apple--;
+        }
 
-    }
+        //Use Goblet
+        if (Input.GetKeyUp(KeyCode.Y) && GobletPickup > 0)
+        {
+            Otter.SetBool("Consume", true);
+            GobletON();
+        }
+        if (GobletPicked == true)
+        {
+            CurrentStamina = MaxStamina;
+            GobletClock -= Time.deltaTime;
+            HealingText = "Boost time: " + Math.Round(GobletClock);
+            if (GobletClock <= 0)
+                GobletOFF();
+        }
 
-    public void ParryON()
-    {
-        Otter.SetBool("Parry", true);
-        ParryShield.SetActive(true);
-        isParried = true;
-    }
-    public void ParryOFF()
-    {
-        Otter.SetBool("Parry", false);
-        ParryShield.SetActive(false);
-        isParried = false;
-    }
-    public void HoneyON()
-    {
-        Honeypicked = true;
-        HoneyJar.SetActive(true);
-    }
-    public void HoneyOFF()
-    {
-        Honeypicked = false;
-        HoneyJar.SetActive(false);
-    }
-    public void GoldON()
-    {
-        GoldPicked = true;
-        GoldBrick.SetActive(true);
-    }
-    public void GoldOFF()
-    {
-        GoldPicked = false;
-        GoldBrick.SetActive(false);
+
     }
 
     [System.Obsolete]
@@ -973,80 +1039,6 @@ public class Behavior : MonoBehaviour
                 Otter.speed = AnimSpeed;
             }
 
-        }
-
-
-
-        //Stoning action
-        if (Input.GetKey(KeyCode.Mouse1) && CurrentStamina > 0)
-        {
-            Otter.SetBool("fight", false);
-            //Otter.SetBool("crouch", true);
-            //Player.velocity = new Vector3(0, Player.velocity.y, 0);
-            Stone.SetActive(true);
-            AimIcon.SetActive(true);
-            if (!Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
-            {
-                rotGoal = Quaternion.LookRotation(XZForward);
-                transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
-            }
-        }
-        if (Input.GetKeyUp(KeyCode.Mouse1) && Stone.active && CurrentStamina > 0)
-        {
-            Otter.Play("Throw");
-            //Otter.SetBool("crouch", false);
-            Instantiate(Ball, AttackPoint.position, Quaternion.identity);
-            CurrentStamina -= 20;
-            HealthBar.SetStamina(CurrentStamina);
-        }
-        if (!Input.GetKey(KeyCode.Mouse1))
-        {
-            Stone.SetActive(false);
-            AimIcon.SetActive(false);
-        }
-
-        //Plant Seed action
-        if (Input.GetKeyDown(KeyCode.R) && NutCount > 0)
-        {
-            Otter.Play("Crouch");
-            Instantiate(Seed, AttackPoint.position, Quaternion.identity);
-            NutCount--;
-        }
-        if (Input.GetKeyUp(KeyCode.R))
-        {
-            Otter.SetBool("Crouch", false);
-        }
-
-        //Eat Apple
-        if (Input.GetKeyUp(KeyCode.T) && Apple > 0)
-        {
-            Otter.SetBool("Consume", true);
-            if (MaxHealth - CurrentHealth > 500)
-            {
-                TakeDamage(-500);
-                HealthBar.SetHealth(CurrentHealth);
-            }
-            else
-            {
-                CurrentHealth = MaxHealth;
-                HealthBar.SetMaxHealth(MaxHealth);
-            }
-            Apple--;
-        }
-
-        //Use Goblet
-        if (Input.GetKeyUp(KeyCode.Y) && GobletPickup > 0)
-        {
-            Otter.SetBool("Consume",true);
-            GobletON();
-        }
-        if (GobletPicked == true)
-        {
-            CurrentStamina = MaxStamina;
-            GobletClock -= Time.deltaTime;
-            HealingText = "Boost time: " + Math.Round(GobletClock);
-            if (GobletClock <= 0)
-                GobletOFF();
         }
 
     }

@@ -582,6 +582,7 @@ public class Behavior : MonoBehaviour
 
     public void Start()
     {
+
         CamForTraders.enabled = false;
         InHouseCam.enabled = false;
         Instantiate(PopUpEffect, Root.position, Quaternion.identity);
@@ -594,8 +595,6 @@ public class Behavior : MonoBehaviour
         CurrentStamina = MaxStamina;
         HealthBar.SetMaxStamina(CurrentStamina);
         HealShape = HealEffect.shape;
-        //RightHandWeapon.SetActive(false);
-        //LeftHandWeapon.SetActive(false);
         ParryOFF();
         HoneyOFF();
         GoldOFF();
@@ -683,7 +682,7 @@ public class Behavior : MonoBehaviour
 
         //Jump action
         {
-            if (Input.GetKeyDown(KeyCode.Space) && JumpNum > 0 && !Input.GetKey(KeyCode.LeftControl))
+            if (Input.GetKeyDown(KeyCode.Space) && JumpNum > 0)
             {
                 Rolling = false;
                 Otter.SetBool("roll", false);

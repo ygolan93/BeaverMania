@@ -426,7 +426,7 @@ public class Behavior : MonoBehaviour
                 {
                     Otter.SetBool("run", true);
                     speed = Run;
-                    steer = 0.15f;
+                    steer = 0.12f;
                 }
                 else
                 {
@@ -447,7 +447,7 @@ public class Behavior : MonoBehaviour
                 {
                     Otter.SetBool("run", true);
                     speed = Run;
-                    steer = 0.15f;
+                    steer = 0.12f;
                 }
                 else
                 {
@@ -464,17 +464,17 @@ public class Behavior : MonoBehaviour
     public void PlayerRoll(Vector3 Direction)
     {
         rotGoal = Quaternion.LookRotation(new Vector3(Direction.x, 0, Direction.z));
-        transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+        transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.11f);
         //Evading Roll action
         {
-            if (Input.GetKey(KeyCode.LeftControl) && CurrentStamina > 0 && grounded == true)
+            if (Input.GetKey(KeyCode.LeftControl) && CurrentStamina > 0 && grounded == true && !Input.GetKey(KeyCode.Mouse0)&& !Input.GetKey(KeyCode.Mouse1))
             {
                 Rolling = true;
                 Otter.SetBool("roll", true);
                 CurrentStamina -= 0.01f;
                 speed = 7;
                 HealthBar.SetStamina(CurrentStamina);
-                Player.velocity = (Direction.normalized * 10) + new Vector3(0, Player.velocity.y, 0);
+                Player.velocity = (Direction.normalized * 6) + new Vector3(0, Player.velocity.y, 0);
             }
             else
             {
@@ -771,7 +771,9 @@ public class Behavior : MonoBehaviour
                 AimIcon.SetActive(true);
                 if (!Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
                 {
-                    rotGoal = Quaternion.LookRotation(Camera.main.transform.TransformDirection(Vector3.forward));
+                    var CamForward = Camera.main.transform.TransformDirection(Vector3.forward);
+                    var DirectionGoal = new Vector3(CamForward.x, 0, CamForward.z);
+                    rotGoal = Quaternion.LookRotation(DirectionGoal);
                     transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
                 }
             }

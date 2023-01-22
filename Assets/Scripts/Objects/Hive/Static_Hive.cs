@@ -15,6 +15,7 @@ public class Static_Hive : MonoBehaviour
     public Transform Log4;
     public Transform Log5;
     public Transform Log6;
+    public Transform Wasp;
     public GameObject Explosion;
     public AudioSource Sound;
     public GameObject HitEffect;
@@ -44,6 +45,10 @@ public class Static_Hive : MonoBehaviour
         Instantiate(Log4, gameObject.transform.position, Quaternion.identity);
         Instantiate(Log5, gameObject.transform.position, Quaternion.identity);
         Instantiate(Log6, gameObject.transform.position, Quaternion.identity);
+        for (int i = 0; i < 30; i++)
+        {
+            Instantiate(Wasp, gameObject.transform.position, Quaternion.identity);
+        }
         Destroy(Hive);
     }
 

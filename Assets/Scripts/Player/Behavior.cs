@@ -43,6 +43,7 @@ public class Behavior : MonoBehaviour
     public bool heal;
     public bool TouchShroom;
     public bool hurt;
+    public bool Rolling;
     double HealthPercent;
     double StaminaPercent;
     public int Lives;
@@ -159,7 +160,7 @@ public class Behavior : MonoBehaviour
         }
         if (OBJ.gameObject.CompareTag("Coin"))
         {
-            Instantiate(PickUpEffect, OBJ.transform.position+new Vector3(0,0.3f,0), Quaternion.identity);
+            Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
             Sound.Coin();
         }
 
@@ -214,7 +215,7 @@ public class Behavior : MonoBehaviour
         {
             if (Lives > 0)
             {
-                transform.position = GM.lastCheckPointPos+new Vector3(1,1,1);
+                transform.position = GM.lastCheckPointPos + new Vector3(1, 1, 1);
                 Instantiate(PopUpEffect, transform.position, Quaternion.identity);
                 Lives--;
             }
@@ -266,7 +267,7 @@ public class Behavior : MonoBehaviour
             CamForTraders.m_XAxis.m_MaxSpeed = 0.1f;
             CamForTraders.m_YAxis.m_MaxSpeed = 0.1f;
             CamForTraders.m_LookAt = OBJ.transform;
-            
+
         }
 
         if (OBJ.gameObject.CompareTag("House"))
@@ -414,7 +415,9 @@ public class Behavior : MonoBehaviour
     {
         rotGoal = Quaternion.LookRotation(new Vector3(Direction.x, 0, Direction.z));
         transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+
         Otter.SetBool("walk", true);
+        Rolling = false;
         if (OnPlatform == false)
         {
             if (grounded == true)
@@ -431,16 +434,14 @@ public class Behavior : MonoBehaviour
                     speed = Walk;
                     steer = 0.1f;
                 }
-
                 Player.velocity = (Direction.normalized * speed) + new Vector3(0, Player.velocity.y, 0);
 
             }
-            if (grounded == false || Input.GetKey(KeyCode.LeftShift))
+            if (grounded == false && Input.GetKey(KeyCode.LeftShift))
                 Player.AddForce(Direction.normalized * 5);
         }
         if (OnPlatform == true)
         {
-            //if (grounded == true)
             {
                 if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey)
                 {
@@ -457,8 +458,29 @@ public class Behavior : MonoBehaviour
                 Player.velocity = (Direction.normalized * speed) + PlatformVelocity;
 
             }
-            //if (grounded == false)
-            //    Player.AddForce(Direction.normalized * 5);
+        }
+
+    }
+    public void PlayerRoll(Vector3 Direction)
+    {
+        rotGoal = Quaternion.LookRotation(new Vector3(Direction.x, 0, Direction.z));
+        transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+        //Evading Roll action
+        {
+            if (Input.GetKey(KeyCode.LeftControl) && CurrentStamina > 0 && grounded == true)
+            {
+                Rolling = true;
+                Otter.SetBool("roll", true);
+                CurrentStamina -= 0.01f;
+                speed = 7;
+                HealthBar.SetStamina(CurrentStamina);
+                Player.velocity = (Direction.normalized * 10) + new Vector3(0, Player.velocity.y, 0);
+            }
+            else
+            {
+                Rolling = false;
+                Otter.SetBool("roll", false);
+            }
         }
     }
     public void ShowCursor()
@@ -601,15 +623,17 @@ public class Behavior : MonoBehaviour
                 Plattering = "";
             }
         }
+
+        //Reload Stamina Bar
         if (isParried == false)
         {
             if (CurrentStamina > MaxStamina)
+            {
                 CurrentStamina = MaxStamina;
-
-
+            }
             if (CurrentStamina < MaxStamina && !Input.GetKey(KeyCode.LeftControl))
             {
-                if (!Input.GetKey(KeyCode.Mouse1) && isParried == false && !Input.GetKey(KeyCode.Mouse0))
+                if (!Input.GetKey(KeyCode.Mouse1) && isParried == false && !Input.GetKey(KeyCode.Mouse0) && !Input.GetKey(KeyCode.F))
                 {
                     StaminaClock -= Time.deltaTime;
                     if (StaminaClock <= 0)
@@ -658,23 +682,27 @@ public class Behavior : MonoBehaviour
         }
 
         //Jump action
-        if (Input.GetKeyDown(KeyCode.Space) && JumpNum > 0)
         {
-            if (Player.transform.parent != null)
+            if (Input.GetKeyDown(KeyCode.Space) && JumpNum > 0 && !Input.GetKey(KeyCode.LeftControl))
             {
-                Player.transform.parent = null;
+                Rolling = false;
+                Otter.SetBool("roll", false);
+                if (Player.transform.parent != null)
+                {
+                    Player.transform.parent = null;
+                }
+                OnPlatform = false;
+                Player.velocity = new Vector3(Player.velocity.x, JumpForce, Player.velocity.z);
+                Sound.Jump();
+                levitation = 10;
+                Otter.speed = AnimSpeed;
+                JumpNum--;
+                JumpNumPreserve = JumpNum;
             }
-            OnPlatform = false;
-            Player.velocity = new Vector3(Player.velocity.x, JumpForce, Player.velocity.z);
-            Sound.Jump();
-            levitation = 10;
-            Otter.speed = AnimSpeed;
-            JumpNum--;
-            JumpNumPreserve = JumpNum;
+            //Decrease Jump num by 1 on jump action 
+            if (Input.GetKey(KeyCode.Space) || Input.GetKeyUp(KeyCode.Space))
+                JumpNum = JumpNumPreserve;
         }
-        if (Input.GetKey(KeyCode.Space) || Input.GetKeyUp(KeyCode.Space))
-            JumpNum = JumpNumPreserve;
-
         //Load Loose screen on death
         if (CurrentHealth <= 0)
         {
@@ -688,48 +716,92 @@ public class Behavior : MonoBehaviour
             }
         }
 
+        //Limit Stamina decrease down to 0 only
         if (CurrentStamina <= 0)
         {
             ParryOFF();
             CurrentStamina = 0;
         }
-        //Stoning action
-        if (Input.GetKey(KeyCode.Mouse1) && CurrentStamina > 0)
+
+        //Crouch action - Place Logs
         {
-            Otter.SetBool("fight", false);
-            //Otter.SetBool("crouch", true);
-            //Player.velocity = new Vector3(0, Player.velocity.y, 0);
-            Stone.SetActive(true);
-            AimIcon.SetActive(true);
-            if (!Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
+            if (Input.GetKey(KeyCode.LeftControl) && grounded == true && Rolling == false && !Input.GetKey(KeyCode.Space))
             {
-                rotGoal = Quaternion.LookRotation(Camera.main.transform.TransformDirection(Vector3.forward));
-                transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+                speed = 0;
+                if (!Input.GetKey(KeyCode.W))
+                {
+                    if (HammerHeld == false)
+                        Otter.SetBool("crouch", true);
+                    if (HammerHeld == true)
+                    {
+                        if (CurrentStamina > 0)
+                            ParryON();
+                        if (CurrentStamina <= 0)
+                        {
+                            Otter.SetBool("crouch", true);
+                        }
+                    }
+                }
+                if (Honeypicked == true)
+                {
+                    HoneyOFF();
+                    Instantiate(PlacedJar, AttackPoint.position - new Vector3(0, 0.5f, 0.3f), Quaternion.identity);
+                }
+                if (GoldPicked == true)
+                {
+                    GoldOFF();
+                    Instantiate(PlacedGold, AttackPoint.position - new Vector3(0, 0.5f, 0.3f), Quaternion.identity);
+                }
+            }
+            else
+            {
+                Otter.SetBool("crouch", false);
+                ParryOFF();
+                HealingText = "";
             }
         }
-        if (Input.GetKeyUp(KeyCode.Mouse1) && Stone.active && CurrentStamina > 0)
+
+        //Stoning action
         {
-            Otter.Play("Throw");
-            Instantiate(Ball, AttackPoint.position, Quaternion.identity);
-            CurrentStamina -= 20;
-            HealthBar.SetStamina(CurrentStamina);
-        }
-        if (!Input.GetKey(KeyCode.Mouse1))
-        {
-            Stone.SetActive(false);
-            AimIcon.SetActive(false);
+            if (Input.GetKey(KeyCode.Mouse1) && CurrentStamina > 0)
+            {
+                Otter.SetBool("fight", false);
+                //Otter.SetBool("crouch", true);
+                //Player.velocity = new Vector3(0, Player.velocity.y, 0);
+                Stone.SetActive(true);
+                AimIcon.SetActive(true);
+                if (!Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
+                {
+                    rotGoal = Quaternion.LookRotation(Camera.main.transform.TransformDirection(Vector3.forward));
+                    transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+                }
+            }
+            if (Input.GetKeyUp(KeyCode.Mouse1) && Stone.active && CurrentStamina > 0)
+            {
+                Otter.Play("Throw");
+                Instantiate(Ball, AttackPoint.position, Quaternion.identity);
+                CurrentStamina -= 20;
+                HealthBar.SetStamina(CurrentStamina);
+            }
+            if (!Input.GetKey(KeyCode.Mouse1))
+            {
+                Stone.SetActive(false);
+                AimIcon.SetActive(false);
+            }
         }
 
         //Plant Seed action
-        if (Input.GetKeyDown(KeyCode.R) && NutCount > 0)
         {
-            Otter.Play("Crouch");
-            Instantiate(Seed, AttackPoint.position, Quaternion.identity);
-            NutCount--;
-        }
-        if (Input.GetKeyUp(KeyCode.R))
-        {
-            Otter.SetBool("Crouch", false);
+            if (Input.GetKeyDown(KeyCode.R) && NutCount > 0)
+            {
+                Otter.Play("Crouch");
+                Instantiate(Seed, AttackPoint.position, Quaternion.identity);
+                NutCount--;
+            }
+            if (Input.GetKeyUp(KeyCode.R))
+            {
+                Otter.SetBool("Crouch", false);
+            }
         }
 
         //Eat Apple
@@ -750,21 +822,94 @@ public class Behavior : MonoBehaviour
         }
 
         //Use Goblet
-        if (Input.GetKeyUp(KeyCode.Y) && GobletPickup > 0)
         {
-            Otter.SetBool("Consume", true);
-            GobletON();
-        }
-        if (GobletPicked == true)
-        {
-            CurrentStamina = MaxStamina;
-            GobletClock -= Time.deltaTime;
-            HealingText = "Boost time: " + Math.Round(GobletClock);
-            if (GobletClock <= 0)
-                GobletOFF();
+            if (Input.GetKeyUp(KeyCode.Y) && GobletPickup > 0)
+            {
+                Otter.SetBool("Consume", true);
+                GobletON();
+            }
+            if (GobletPicked == true)
+            {
+                CurrentStamina = MaxStamina;
+                GobletClock -= Time.deltaTime;
+                HealingText = "Boost time: " + Math.Round(GobletClock);
+                if (GobletClock <= 0)
+                    GobletOFF();
+            }
         }
 
+        if (isAtTrader == false)
+        {
+            //Melee action
+            {
+                if (Input.GetKey(KeyCode.Mouse0) && CurrentStamina > 0)
+                {
+                    CurrentStamina -= 0.1f;
+                    HealthBar.SetStamina(CurrentStamina);
+                    Otter.SetBool("fight", true); //Airkick leveitation
+                    if (grounded == false)
+                    {
+                        if (Otter.GetCurrentAnimatorStateInfo(0).IsName("Air Kick"))
+                        {
+                            var WindTrail = Instantiate(KickWind, KickEffectPos.position, Quaternion.Euler(-90, UnityEngine.Random.Range(0f, 360f), 0));
+                            WindTrail.transform.parent = KickEffectPos;
+                        }
+                        BeatAir -= Time.deltaTime;
+                        if (BeatAir <= 0)
+                        {
+                            Attack();
+                        }
+                        InitiateAir -= Time.deltaTime;
+                        if (InitiateAir <= 0)
+                        {
+                            if (Otter.speed > 0.4)
+                            {
+                                Player.AddForce(0, levitation, 0);
+                                levitation -= 0.05f;
+                                Otter.speed -= 0.005f;
+                            }
+                            else
+                            {
+                                Otter.SetBool("fight", false);
+                            }
+                        }
+                    }
+                    if (grounded == true)
+                    {
+                        if (Otter.GetCurrentAnimatorStateInfo(1).IsName("AttackA"))
+                        {
+                            if (Root.childCount == 0)
+                            {
+                                var RightWind = Instantiate(BoxWind, Root.position - new Vector3(0, 0.3f, 0), rotGoal * Quaternion.Euler(-90, 90, 0));
+                                RightWind.transform.parent = Root;
+                            }
+                        }
+                        if (Otter.GetCurrentAnimatorStateInfo(1).IsName("AttackB"))
+                        {
+                            if (Root.childCount == 0)
+                            {
+                                var LeftWind = Instantiate(BoxWind, Root.position - new Vector3(0, 0.3f, 0), rotGoal * Quaternion.Euler(90, 90, 0));
+                                LeftWind.transform.parent = Root;
+                            }
+                        }
+                        BeatGrounded -= Time.deltaTime;
+                        if (BeatGrounded <= 0)
+                        {
+                            Attack();
+                        }
+                    }
 
+                }
+                else
+                {
+                    Otter.SetBool("fight", false);
+                    InitiateAir = 0.5f;
+                    GroundAttack = 30;
+                    Beat = 0;
+                    Otter.speed = AnimSpeed;
+                }
+            }
+        }
     }
 
     [System.Obsolete]
@@ -786,94 +931,101 @@ public class Behavior : MonoBehaviour
         Otter.SetBool("walk", false);
         Otter.SetBool("run", false);
         Otter.SetBool("midair", false);
-
+        Otter.SetBool("roll", false);
+        Rolling = false;
         //Switch off hurt and heal effects automaticly
-        if (hurt == true || heal == true)
         {
-            StopHurt += Time.deltaTime;
-            if (StopHurt >= 0.15f)
+            if (hurt == true || heal == true)
             {
-                hurt = false;
+                StopHurt += Time.deltaTime;
+                if (StopHurt >= 0.15f)
+                {
+                    hurt = false;
+                    heal = false;
+                }
+            }
+            if (CurrentHealth >= MaxHealth)
+            {
                 heal = false;
             }
         }
 
-        if (CurrentHealth >= MaxHealth)
-        {
-            heal = false;
-        }
-
-
         //Basic movement setup
-        if (!Input.GetKey(KeyCode.LeftControl)) //Crouch action stops all movement on ground
         {
-            HealQue = 3;
-            //heal = false;
-            if (Input.GetKey(KeyCode.W))
+            //No Crouch = Regular Movement
+            if (!Input.GetKey(KeyCode.LeftControl))
             {
-                PlayerMove(XZForward);
-            }
-            if (Input.GetKey(KeyCode.S))
-            {
-                PlayerMove(XZBack);
-            }
-            if (Input.GetKey(KeyCode.D))
-            {
-                PlayerMove(XZRight);
-            }
-            if (Input.GetKey(KeyCode.A))
-            {
-                PlayerMove(XZLeft);
-            }
-            if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.D))
-            {
-                PlayerMove(XZForward + XZRight);
-            }
-            if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.A))
-            {
-                PlayerMove(XZForward + XZLeft);
-            }
-            if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.D))
-            {
-                PlayerMove(XZBack + XZRight);
-            }
-            if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.A))
-            {
-                PlayerMove(XZBack + XZLeft);
-            }
-        }
-        //Crouch action - Place Logs
-        if (Input.GetKey(KeyCode.LeftControl) && grounded == true)
-        {
-            speed = 0;
-            if (HammerHeld == false)
-                Otter.SetBool("crouch", true);
-            if (HammerHeld == true)
-            {
-                if (CurrentStamina > 0)
-                    ParryON();
-                if (CurrentStamina <= 0)
+                HealQue = 3;
+                if (Input.GetKey(KeyCode.W))
                 {
-                    Otter.SetBool("crouch", true);
+                    PlayerMove(XZForward);
+                }
+                if (Input.GetKey(KeyCode.S))
+                {
+                    PlayerMove(XZBack);
+                }
+                if (Input.GetKey(KeyCode.D))
+                {
+                    PlayerMove(XZRight);
+                }
+                if (Input.GetKey(KeyCode.A))
+                {
+                    PlayerMove(XZLeft);
+                }
+                if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.D))
+                {
+                    PlayerMove(XZForward + XZRight);
+                }
+                if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.A))
+                {
+                    PlayerMove(XZForward + XZLeft);
+                }
+                if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.D))
+                {
+                    PlayerMove(XZBack + XZRight);
+                }
+                if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.A))
+                {
+                    PlayerMove(XZBack + XZLeft);
                 }
             }
-            if (Honeypicked == true)
+            //Movement + Crouch = Roll & Evade
+            if (Input.GetKey(KeyCode.LeftControl))
             {
-                HoneyOFF();
-                Instantiate(PlacedJar, AttackPoint.position - new Vector3(0, 0.5f, 0.3f), Quaternion.identity);
+                HealQue = 3;
+                if (Input.GetKey(KeyCode.W))
+                {
+                    PlayerRoll(XZForward);
+                }
+                if (Input.GetKey(KeyCode.S))
+                {
+                    PlayerRoll(XZBack);
+                }
+                if (Input.GetKey(KeyCode.D))
+                {
+                    PlayerRoll(XZRight);
+                }
+                if (Input.GetKey(KeyCode.A))
+                {
+                    PlayerRoll(XZLeft);
+                }
+                if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.D))
+                {
+                    PlayerRoll(XZForward + XZRight);
+                }
+                if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.A))
+                {
+                    PlayerRoll(XZForward + XZLeft);
+                }
+                if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.D))
+                {
+                    PlayerRoll(XZBack + XZRight);
+                }
+                if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.A))
+                {
+                    PlayerRoll(XZBack + XZLeft);
+                }
             }
-            if (GoldPicked == true)
-            {
-                GoldOFF();
-                Instantiate(PlacedGold, AttackPoint.position - new Vector3(0, 0.5f, 0.3f), Quaternion.identity);
-            }
-
-        }
-        else
-        {
-            Otter.SetBool("crouch", false);
-            ParryOFF();
-            HealingText = "";
         }
 
         //Aurborne and landing sequence animations conditioning
@@ -969,77 +1121,6 @@ public class Behavior : MonoBehaviour
             HealLight.enabled = true;
         }
 
-        if (isAtTrader == false)
-        {
-            //Melee action
-            if (Input.GetKey(KeyCode.Mouse0) && CurrentStamina > 0)
-            {
-                CurrentStamina -= 0.1f;
-                HealthBar.SetStamina(CurrentStamina);
-                Otter.SetBool("fight", true); //Airkick leveitation
-                if (grounded == false)
-                {
-                    if (Otter.GetCurrentAnimatorStateInfo(0).IsName("Air Kick"))
-                    {
-                        var WindTrail = Instantiate(KickWind, KickEffectPos.position, Quaternion.Euler(-90, UnityEngine.Random.Range(0f, 360f), 0));
-                        WindTrail.transform.parent = KickEffectPos;
-                    }
-                    BeatAir -= Time.deltaTime;
-                    if (BeatAir <= 0)
-                    {
-                        Attack();
-                    }
-                    InitiateAir -= Time.deltaTime;
-                    if (InitiateAir <= 0)
-                    {
-                        if (Otter.speed > 0.4)
-                        {
-                            Player.AddForce(0, levitation, 0);
-                            levitation -= 0.05f;
-                            Otter.speed -= 0.005f;
-                        }
-                        else
-                        {
-                            Otter.SetBool("fight", false);
-                        }
-                    }
-                }
-                if (grounded == true)
-                {
-                    if (Otter.GetCurrentAnimatorStateInfo(1).IsName("AttackA"))
-                    {
-                        if (Root.childCount == 0)
-                        {
-                            var RightWind = Instantiate(BoxWind, Root.position - new Vector3(0, 0.3f, 0), rotGoal * Quaternion.Euler(-90, 90, 0));
-                            RightWind.transform.parent = Root;
-                        }
-                    }
-                    if (Otter.GetCurrentAnimatorStateInfo(1).IsName("AttackB"))
-                    {
-                        if (Root.childCount == 0)
-                        {
-                            var LeftWind = Instantiate(BoxWind, Root.position - new Vector3(0, 0.3f, 0), rotGoal * Quaternion.Euler(90, 90, 0));
-                            LeftWind.transform.parent = Root;
-                        }
-                    }
-                    BeatGrounded -= Time.deltaTime;
-                    if (BeatGrounded <= 0)
-                    {
-                        Attack();
-                    }
-                }
-
-            }
-            else
-            {
-                Otter.SetBool("fight", false);
-                InitiateAir = 0.5f;
-                GroundAttack = 30;
-                Beat = 0;
-                Otter.speed = AnimSpeed;
-            }
-
-        }
 
     }
 

@@ -353,7 +353,7 @@ GameObject:
   - component: {fileID: 5834629351513488892}
   m_Layer: 0
   m_Name: NewHive
-  m_TagString: NPC
+  m_TagString: Hive
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -458,12 +458,13 @@ MonoBehaviour:
   CurrentHealth: 0
   HiveBar: {fileID: 4619415292314880598}
   Hive: {fileID: 7115676670349774032}
-  Log1: {fileID: 3984402577127926059, guid: dd223c211faee8f47877592620b75861, type: 3}
-  Log2: {fileID: 3984402577127926059, guid: dd223c211faee8f47877592620b75861, type: 3}
-  Log3: {fileID: 3984402577127926059, guid: dd223c211faee8f47877592620b75861, type: 3}
+  Log1: {fileID: 2660045623926371721, guid: 06f9d786657c1ad4da503fca33b8ce6b, type: 3}
+  Log2: {fileID: 2660045623926371721, guid: 06f9d786657c1ad4da503fca33b8ce6b, type: 3}
+  Log3: {fileID: 2660045623926371721, guid: 06f9d786657c1ad4da503fca33b8ce6b, type: 3}
   Log4: {fileID: 7679416759401954528, guid: 9f5cfb054d2b7174882402aae5da7193, type: 3}
   Log5: {fileID: 7679416759401954528, guid: 9f5cfb054d2b7174882402aae5da7193, type: 3}
   Log6: {fileID: 7679416759401954528, guid: 9f5cfb054d2b7174882402aae5da7193, type: 3}
+  Wasp: {fileID: 2484960784144947122, guid: 6418a51a4bd5c1f46bb8507bd8627f51, type: 3}
   Explosion: {fileID: 5339181585990677648}
   Sound: {fileID: 5834629351513488892}
   HitEffect: {fileID: 7810621778169316528}
@@ -494,7 +495,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Wasp: {fileID: 2969994238874094856, guid: 6418a51a4bd5c1f46bb8507bd8627f51, type: 3}
   Hive: {fileID: 6443574327426712235}
-  Player: {fileID: 3877109475308234636, guid: b922004aea0ae754c917e6abedafb749, type: 3}
+  Player: {fileID: 0}
   Distance: {x: 0, y: 0, z: 0}
   SpawnDistance: 0
   WaspCounter: 3
@@ -513,7 +514,7 @@ AudioSource:
   m_audioClip: {fileID: 8300000, guid: 26006051b5c98c644964fe770338f09d, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 0.675
-  m_Pitch: 2.12
+  m_Pitch: 1
   Loop: 0
   Mute: 0
   Spatialize: 0

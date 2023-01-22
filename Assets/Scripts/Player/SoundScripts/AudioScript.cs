@@ -8,6 +8,13 @@ public class AudioScript : MonoBehaviour
 
 
     // Sound clips that are conditioned with animations
+    public void Roll()
+    {
+        audioSource.clip = audioClip[9];
+        audioSource.volume = 5f;
+        audioSource2.pitch = 0.8f;
+        audioSource.PlayOneShot(audioClip[9]);
+    }
     public void PickUp2()
     {
         audioSource.clip = audioClip[8];

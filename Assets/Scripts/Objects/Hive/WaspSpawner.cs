@@ -15,14 +15,16 @@ public class WaspSpawner : MonoBehaviour
    public float RealClock;
     
     private void Start()
-    {
+    { 
         Counter=WaspCounter;
         RealClock = SpawnClock;
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
     }
+
+
     public void Update()
     {
-         Distance = Player.transform.position - transform.position;
+         Distance = Player.transform.position - gameObject.transform.position;
 
         if (Mathf.Abs(Distance.magnitude) < SpawnDistance )
         {

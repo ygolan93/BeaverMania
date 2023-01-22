@@ -186,7 +186,7 @@ public class NPC_Basic : MonoBehaviour
         {
             Death();
         }
-        if (OBJ.gameObject.CompareTag("Danagge"))
+        if (OBJ.gameObject.CompareTag("Damage"))
         {
             Wasp.SetBool("Beat", true);
             TakeDamage(1);
@@ -222,7 +222,7 @@ public class NPC_Basic : MonoBehaviour
     public void Sting()
     {
         Recovered();
-        if (PlayerHealth.isParried == false)
+        if (PlayerHealth.isParried == false && PlayerHealth.Rolling == false)
         {
             Sound.Sting();
             PlayerHealth.TakeDamage(Damage2Player);

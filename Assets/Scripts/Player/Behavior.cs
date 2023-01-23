@@ -467,7 +467,7 @@ public class Behavior : MonoBehaviour
         transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.11f);
         //Evading Roll action
         {
-            if (Input.GetKey(KeyCode.LeftControl) && CurrentStamina > 0 && grounded == true && !Input.GetKey(KeyCode.Mouse0)&& !Input.GetKey(KeyCode.Mouse1))
+            if (Input.GetKey(KeyCode.LeftControl) && CurrentStamina > 0 && grounded == true)
             {
                 Rolling = true;
                 Otter.SetBool("roll", true);
@@ -476,7 +476,7 @@ public class Behavior : MonoBehaviour
                 HealthBar.SetStamina(CurrentStamina);
                 Player.velocity = (Direction.normalized * 6) + new Vector3(0, Player.velocity.y, 0);
             }
-            else
+            if(!Input.GetKey(KeyCode.LeftControl)|| CurrentStamina <= 0 || grounded==false)
             {
                 Rolling = false;
                 Otter.SetBool("roll", false);
@@ -722,13 +722,15 @@ public class Behavior : MonoBehaviour
             CurrentStamina = 0;
         }
 
+
+
         //Crouch action - Place Logs
         {
             if (Input.GetKey(KeyCode.LeftControl) && grounded == true && Rolling == false && !Input.GetKey(KeyCode.Space))
             {
-                speed = 0;
-                if (!Input.GetKey(KeyCode.W))
+                if (!Input.GetKey(KeyCode.W)|| !Input.GetKey(KeyCode.Mouse0))
                 {
+                    speed = 0;
                     if (HammerHeld == false)
                         Otter.SetBool("crouch", true);
                     if (HammerHeld == true)

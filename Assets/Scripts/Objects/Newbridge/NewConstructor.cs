@@ -15,8 +15,7 @@ public class NewConstructor : MonoBehaviour
     public Text BridgeUI;
     string BridgeText;
     bool isLocked = false;
-
-    //public string BridgeUI;
+     //public string BridgeUI;
     float X;
     private void Awake()
     {
@@ -25,13 +24,12 @@ public class NewConstructor : MonoBehaviour
         Bridge = GetComponent<Rigidbody>();
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
         isLocked = false;
-       BridgeText  = "press left ctrl for bridge lock and construction";
+        BridgeText = "press left ctrl for bridge lock and construction";
         BridgeUI.text = BridgeText;
     }
 
     public void OnTriggerStay(Collider OBJ)
     {
-
         if (OBJ.gameObject.tag == "Player")
         {
             if (Input.GetKeyDown(KeyCode.LeftControl))
@@ -48,26 +46,25 @@ public class NewConstructor : MonoBehaviour
             }
         }
 
-        if (OBJ.gameObject.tag == "Part"&&isLocked==true)
+        if (OBJ.gameObject.tag == "Part" && isLocked == true)
         {
-                WoodKnock.Play();
-                if (Player.CurrentHealth < Player.MaxHealth)
-                {
-                    Player.CurrentHealth += 50;
-                    Player.HealthBar.SetHealth(Player.CurrentHealth);
-                }
+            WoodKnock.Play();
+            if (Player.CurrentHealth < Player.MaxHealth)
+            {
+                Player.CurrentHealth += 50;
+                Player.HealthBar.SetHealth(Player.CurrentHealth);
+            }
             PartCount++;
             X = 4.45f;
-          var newPart = Instantiate(BridgePart, Bridge.transform.position + Bridge.transform.up * -X * PartCount + Bridge.transform.forward*-0.5f, Bridge.transform.rotation);
+            var newPart = Instantiate(BridgePart, Bridge.transform.position + Bridge.transform.up * -X * PartCount + Bridge.transform.forward * -0.5f, Bridge.transform.rotation);
             newPart.transform.parent = Bridge.transform;
 
             Destroy(OBJ.gameObject);
-            }
         }
-
     }
+}
 
 
 
-   
- 
+
+

@@ -549,13 +549,13 @@ public class Behavior : MonoBehaviour
     }
     public void ParryON()
     {
-        Otter.SetBool("Parry", true);
+        //Otter.SetBool("Parry", true);
         ParryShield.SetActive(true);
         isParried = true;
     }
     public void ParryOFF()
     {
-        Otter.SetBool("Parry", false);
+        //Otter.SetBool("Parry", false);
         ParryShield.SetActive(false);
         isParried = false;
     }
@@ -722,8 +722,6 @@ public class Behavior : MonoBehaviour
             CurrentStamina = 0;
         }
 
-
-
         //Crouch action - Place Logs
         {
             if (Input.GetKey(KeyCode.LeftControl) && grounded == true && Rolling == false && !Input.GetKey(KeyCode.Space))
@@ -731,17 +729,7 @@ public class Behavior : MonoBehaviour
                 if (!Input.GetKey(KeyCode.W)|| !Input.GetKey(KeyCode.Mouse0))
                 {
                     speed = 0;
-                    if (HammerHeld == false)
                         Otter.SetBool("crouch", true);
-                    if (HammerHeld == true)
-                    {
-                        if (CurrentStamina > 0)
-                            ParryON();
-                        if (CurrentStamina <= 0)
-                        {
-                            Otter.SetBool("crouch", true);
-                        }
-                    }
                 }
                 if (Honeypicked == true)
                 {
@@ -764,7 +752,7 @@ public class Behavior : MonoBehaviour
 
         //Stoning action
         {
-            if (Input.GetKey(KeyCode.Mouse1) && CurrentStamina > 0)
+            if (Input.GetKey(KeyCode.Mouse1) && CurrentStamina > 0 && !Input.GetKey(KeyCode.LeftControl))
             {
                 Otter.SetBool("fight", false);
                 //Otter.SetBool("crouch", true);
@@ -828,16 +816,20 @@ public class Behavior : MonoBehaviour
         {
             if (Input.GetKeyUp(KeyCode.Y) && GobletPickup > 0)
             {
-                Otter.SetBool("Consume", true);
+                //Otter.SetBool("Consume", true);
                 GobletON();
             }
             if (GobletPicked == true)
             {
+                ParryON();
                 CurrentStamina = MaxStamina;
                 GobletClock -= Time.deltaTime;
                 HealingText = "Boost time: " + Math.Round(GobletClock);
                 if (GobletClock <= 0)
+                {
                     GobletOFF();
+                    ParryOFF();
+                }
             }
         }
 

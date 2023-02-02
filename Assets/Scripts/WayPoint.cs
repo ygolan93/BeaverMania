@@ -6,43 +6,26 @@ using UnityEngine.UI;
 public class WayPoint : MonoBehaviour
 {
     public Image Mark;
-    public Transform target;
-    public Transform Position1;
-    public Transform Position2;
-    public Transform Position3;
-    public Transform Position4;
-    public Transform Position5;
+    Transform target;
+    //public Transform Position1;
+    //public Transform Position2;
+    //public Transform Position3;
+    //public Transform Position4;
+    //public Transform Position5;
+    public Transform[] Locations;
     public int i;
+
+
     // Update is called once per frame
-    private void Start()
+    public void Start()
     {
         i = 0;
     }
+
     void Update()
     {
-        switch (i)
-        {
-            case 0:
-                target = Position1;
-                break;
+        target = Locations[i];
 
-            case 1:
-                target = Position2;
-                break;
-
-            case 2:
-                target = Position3;
-                break;
-
-            case 3:
-                target = Position4;
-                break;
-
-            case 4:
-                target = Position5;
-                break;
-
-        }
 
         float minX = Mark.GetPixelAdjustedRect().width / 2;
         float maxX = Screen.width - minX;

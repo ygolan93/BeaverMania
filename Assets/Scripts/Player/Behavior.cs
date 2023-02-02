@@ -613,6 +613,9 @@ public class Behavior : MonoBehaviour
     [System.Obsolete]
     public void Update()
     {
+        //if (!Input.anyKey)
+        //    Player.velocity = new Vector3(0, Player.velocity.y, 0);
+
         //Update UI text
         if (Plattering != "")
         {

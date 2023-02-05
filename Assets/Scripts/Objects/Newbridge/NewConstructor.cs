@@ -5,7 +5,7 @@ public class NewConstructor : MonoBehaviour
 {
     public Behavior Player;
     public int PartCount = 0;
-    public int BridgeLimit = 20;
+    public int BridgeLimit = 8;
     [SerializeField] GameObject BridgePart;
     public AudioSource WoodKnock;
     public Rigidbody Bridge;
@@ -45,16 +45,21 @@ public class NewConstructor : MonoBehaviour
                 Destroy(gameObject);
             }
         }
-
-        if (OBJ.gameObject.tag == "Part" && isLocked == true)
+        if (OBJ.gameObject.tag == "Seed" && isLocked == true)
         {
+            Destroy(OBJ.gameObject);
+            BridgeLimit += BridgeLimit;
+        }
+
+        if (OBJ.gameObject.tag == "Part" && isLocked == true && PartCount<BridgeLimit)
+        {
+            PartCount++;
             WoodKnock.Play();
             if (Player.CurrentHealth < Player.MaxHealth)
             {
                 Player.CurrentHealth += 50;
                 Player.HealthBar.SetHealth(Player.CurrentHealth);
             }
-            PartCount++;
             X = 4.45f;
             var newPart = Instantiate(BridgePart, Bridge.transform.position + Bridge.transform.up * -X * PartCount + Bridge.transform.forward * -0.5f, Bridge.transform.rotation);
             newPart.transform.parent = Bridge.transform;

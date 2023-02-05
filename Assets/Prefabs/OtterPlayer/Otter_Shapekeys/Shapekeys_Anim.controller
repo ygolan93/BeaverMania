@@ -317,7 +317,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 4781951162920444690, guid: 139924044865a7d448ccd09b3c4f50a1, type: 3}
+  m_Motion: {fileID: 4781951162920444690, guid: c22719fb10b5be045a8048e9c9fab577, type: 3}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
@@ -574,6 +574,12 @@ AnimatorStateTransition:
   - m_ConditionMode: 2
     m_ConditionEvent: midair
     m_EventTreshold: 0
+  - m_ConditionMode: 2
+    m_ConditionEvent: walk
+    m_EventTreshold: 0
+  - m_ConditionMode: 2
+    m_ConditionEvent: run
+    m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: -8080297093858831725}
   m_Solo: 0
@@ -667,9 +673,9 @@ AnimatorStateTransition:
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0.25
+  m_TransitionDuration: 0.035022687
   m_TransitionOffset: 0
-  m_ExitTime: 0
+  m_ExitTime: 0.000000005156457
   m_HasExitTime: 0
   m_HasFixedDuration: 1
   m_InterruptionSource: 0
@@ -1296,7 +1302,7 @@ AnimatorStateMachine:
     m_Position: {x: 940, y: 70, z: 0}
   - serializedVersion: 1
     m_StateMachine: {fileID: 8045686219121868572}
-    m_Position: {x: 940, y: 180, z: 0}
+    m_Position: {x: 930, y: 180, z: 0}
   m_AnyStateTransitions: []
   m_EntryTransitions: []
   m_StateMachineTransitions:
@@ -3626,7 +3632,7 @@ AnimatorStateMachine:
     m_Position: {x: 330, y: 90, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -8080297093858831725}
-    m_Position: {x: 320, y: -90, z: 0}
+    m_Position: {x: 320, y: -100, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -6808294536806055530}
     m_Position: {x: 330, y: -10, z: 0}
@@ -3841,7 +3847,7 @@ AnimatorState:
   m_MirrorParameterActive: 0
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
-  m_Motion: {fileID: 4781951162920444690, guid: 139924044865a7d448ccd09b3c4f50a1, type: 3}
+  m_Motion: {fileID: 4781951162920444690, guid: c22719fb10b5be045a8048e9c9fab577, type: 3}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 
@@ -3938,15 +3944,18 @@ AnimatorStateTransition:
   - m_ConditionMode: 2
     m_ConditionEvent: fight
     m_EventTreshold: 0
+  - m_ConditionMode: 2
+    m_ConditionEvent: roll
+    m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: -3793934653649379559}
   m_Solo: 0
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0.027546931
+  m_TransitionDuration: 0.03276336
   m_TransitionOffset: 0
-  m_ExitTime: 0.0000000057755805
+  m_ExitTime: 0.0000000041111434
   m_HasExitTime: 0
   m_HasFixedDuration: 1
   m_InterruptionSource: 0

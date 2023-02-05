@@ -52,7 +52,7 @@ public class WayPoint : MonoBehaviour
         //Mark.transform.position = target.position;
     }
 
-    private void OnCollisionEnter(Collision OBJ)
+    private void OnTriggerEnter(Collider OBJ)
     {
         if (OBJ.gameObject.CompareTag("WayPoint"))
         {

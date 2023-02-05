@@ -65,8 +65,7 @@ public class Behavior : MonoBehaviour
     float BeatAir = 0.2f;
     float FallClock;
     [SerializeField] float InitialFall = 0.2f;
-    public int GroundAttack = 30;
-    int insertGroundAttack;
+    public int GroundAttack = 50;
     public bool HammerHeld;
     public GameObject ParryShield;
     public bool isParried;
@@ -337,54 +336,57 @@ public class Behavior : MonoBehaviour
 
     public void Attack()
     {
-        if (grounded == true)
+        //if (isParried == false)
         {
-            Collider[] hitEnemies = Physics.OverlapSphere(AttackPoint.position, attackRange, enemyLayers);
-
-            foreach (Collider enemy in hitEnemies)
+            if (grounded == true)
             {
-                if (enemy.CompareTag("NPC"))
-                {
-                    Debug.Log("Hit " + enemy.name);
-                    enemy.GetComponent<NPC_Basic>().TakeDamage(GroundAttack);
-                }
-                if (enemy.CompareTag("Boss"))
-                {
-                    Debug.Log("Hit " + enemy.name);
-                    enemy.GetComponent<BossScript>().TakeDamage(GroundAttack);
-                }
-                if (enemy.CompareTag("Hive"))
-                {
-                    Debug.Log("Hit " + enemy.name);
-                    enemy.GetComponent<Static_Hive>().TakeDamage(GroundAttack);
-                }
-            }
-            BeatGrounded = GroundBeat * Otter.speed;
-        }
-        if (grounded == false)
-        {
-            Collider[] hitEnemies = Physics.OverlapSphere(Sphere.position, attackRange, enemyLayers);
+                Collider[] hitEnemies = Physics.OverlapSphere(AttackPoint.position, attackRange, enemyLayers);
 
-            foreach (Collider enemy in hitEnemies)
+                foreach (Collider enemy in hitEnemies)
+                {
+                    if (enemy.CompareTag("NPC"))
+                    {
+                        Debug.Log("Hit " + enemy.name);
+                        enemy.GetComponent<NPC_Basic>().TakeDamage(GroundAttack);
+                    }
+                    if (enemy.CompareTag("Boss"))
+                    {
+                        Debug.Log("Hit " + enemy.name);
+                        enemy.GetComponent<BossScript>().TakeDamage(GroundAttack);
+                    }
+                    if (enemy.CompareTag("Hive"))
+                    {
+                        Debug.Log("Hit " + enemy.name);
+                        enemy.GetComponent<Static_Hive>().TakeDamage(GroundAttack);
+                    }
+                }
+                BeatGrounded = GroundBeat * Otter.speed;
+            }
+            if (grounded == false)
             {
-                if (enemy.CompareTag("NPC"))
-                {
-                    Debug.Log("Hit " + enemy.name);
-                    enemy.GetComponent<NPC_Basic>().TakeDamage(40);
-                }
-                if (enemy.CompareTag("Boss"))
-                {
-                    Debug.Log("Hit " + enemy.name);
-                    enemy.GetComponent<BossScript>().TakeDamage(40);
-                }
-                if (enemy.CompareTag("Hive"))
-                {
-                    Debug.Log("Hit " + enemy.name);
-                    enemy.GetComponent<Static_Hive>().TakeDamage(40);
-                }
+                Collider[] hitEnemies = Physics.OverlapSphere(Sphere.position, attackRange, enemyLayers);
 
+                foreach (Collider enemy in hitEnemies)
+                {
+                    if (enemy.CompareTag("NPC"))
+                    {
+                        Debug.Log("Hit " + enemy.name);
+                        enemy.GetComponent<NPC_Basic>().TakeDamage(40);
+                    }
+                    if (enemy.CompareTag("Boss"))
+                    {
+                        Debug.Log("Hit " + enemy.name);
+                        enemy.GetComponent<BossScript>().TakeDamage(40);
+                    }
+                    if (enemy.CompareTag("Hive"))
+                    {
+                        Debug.Log("Hit " + enemy.name);
+                        enemy.GetComponent<Static_Hive>().TakeDamage(40);
+                    }
+
+                }
+                BeatAir = AirBeat * Otter.speed;
             }
-            BeatAir = AirBeat * Otter.speed;
         }
 
     }
@@ -417,12 +419,11 @@ public class Behavior : MonoBehaviour
         transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
 
         Otter.SetBool("walk", true);
-        Rolling = false;
         if (OnPlatform == false)
         {
             if (grounded == true)
             {
-                if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey)
+                if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey && Rolling==false)
                 {
                     Otter.SetBool("run", true);
                     speed = Run;
@@ -469,9 +470,10 @@ public class Behavior : MonoBehaviour
         {
             if (Input.GetKey(KeyCode.LeftControl) && CurrentStamina > 0 && grounded == true)
             {
+                GroundAttack = 300;
                 Rolling = true;
                 Otter.SetBool("roll", true);
-                CurrentStamina -= 0.01f;
+                CurrentStamina -= 0.1f;
                 speed = 7;
                 HealthBar.SetStamina(CurrentStamina);
                 Player.velocity = (Direction.normalized * 6) + new Vector3(0, Player.velocity.y, 0);
@@ -549,13 +551,13 @@ public class Behavior : MonoBehaviour
     }
     public void ParryON()
     {
-        //Otter.SetBool("Parry", true);
+        Otter.SetBool("Parry", true);
         ParryShield.SetActive(true);
         isParried = true;
     }
     public void ParryOFF()
     {
-        //Otter.SetBool("Parry", false);
+        Otter.SetBool("Parry", false);
         ParryShield.SetActive(false);
         isParried = false;
     }
@@ -606,7 +608,6 @@ public class Behavior : MonoBehaviour
         FallClock = InitialFall;
         InsertWalk = Walk;
         InsertRun = Run;
-        insertGroundAttack = GroundAttack;
         LooseScreen.SetActive(false);
         BossBar.SetActive(false);
     }
@@ -650,6 +651,11 @@ public class Behavior : MonoBehaviour
             else
                 StaminaClock = StaminaClockInitial;
         }
+        else
+        {
+            CurrentStamina -= 0.05f;
+        }
+
 
         HealthPercent = System.Math.Round((CurrentHealth / MaxHealth) * 100f, 1);
         DebugText = HealthPercent + "%";
@@ -824,19 +830,17 @@ public class Behavior : MonoBehaviour
             }
             if (GobletPicked == true)
             {
-                ParryON();
                 CurrentStamina = MaxStamina;
                 GobletClock -= Time.deltaTime;
                 HealingText = "Boost time: " + Math.Round(GobletClock);
                 if (GobletClock <= 0)
                 {
                     GobletOFF();
-                    ParryOFF();
                 }
             }
         }
 
-        if (isAtTrader == false)
+        if (isAtTrader == false && ParryShield.active==false)
         {
             //Melee action
             {
@@ -902,10 +906,17 @@ public class Behavior : MonoBehaviour
                 {
                     Otter.SetBool("fight", false);
                     InitiateAir = 0.5f;
-                    GroundAttack = 30;
+                    GroundAttack = 50;
                     Beat = 0;
                     Otter.speed = AnimSpeed;
                 }
+            }
+            //Parry Action
+            {
+                if (Input.GetKey(KeyCode.F) && CurrentStamina>0)
+                    ParryON();
+                else
+                    ParryOFF();
             }
         }
     }
@@ -988,7 +999,7 @@ public class Behavior : MonoBehaviour
                 }
             }
             //Movement + Crouch = Roll & Evade
-            if (Input.GetKey(KeyCode.LeftControl))
+            if (Input.GetKey(KeyCode.LeftControl) && CurrentStamina>0)
             {
                 HealQue = 3;
                 if (Input.GetKey(KeyCode.W))

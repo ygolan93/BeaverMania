@@ -67,7 +67,10 @@ public class Behavior : MonoBehaviour
     [SerializeField] float InitialFall = 0.2f;
     public int GroundAttack = 50;
     public bool HammerHeld;
-    public GameObject ParryShield;
+    public bool Defend = false;
+    public float DefendAnim = 0.3f;
+    bool WhichAttack = false;
+    //public GameObject ParryShield;
     public bool isParried;
     [SerializeField] GameObject RightHandWeapon;
     [SerializeField] GameObject LeftHandWeapon;
@@ -162,7 +165,11 @@ public class Behavior : MonoBehaviour
             Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
             Sound.Coin();
         }
-
+        if (OBJ.gameObject.CompareTag("NPC")&& isParried==true)
+        {
+            var ParryDirection = new Vector3((OBJ.transform.position - transform.position).x, 0, (OBJ.transform.position - transform.position).z);
+            transform.rotation = Quaternion.LookRotation(ParryDirection);
+        }
 
     }
     public void OnCollisionStay(Collision OBJ)
@@ -360,7 +367,7 @@ public class Behavior : MonoBehaviour
                         enemy.GetComponent<Static_Hive>().TakeDamage(GroundAttack);
                     }
                 }
-                BeatGrounded = GroundBeat * Otter.speed;
+                BeatGrounded = GroundBeat / Otter.speed;
             }
             if (grounded == false)
             {
@@ -409,6 +416,9 @@ public class Behavior : MonoBehaviour
         }
         if (isParried == true)
         {
+            WhichAttack = !WhichAttack;
+            DefendAnim = 0.3f;
+            Defend = true;
             CurrentStamina -= Damage;
             HealthBar.SetStamina(CurrentStamina);
         }
@@ -423,7 +433,7 @@ public class Behavior : MonoBehaviour
         {
             if (grounded == true)
             {
-                if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey && Rolling==false)
+                if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey && Rolling == false)
                 {
                     Otter.SetBool("run", true);
                     speed = Run;
@@ -478,7 +488,7 @@ public class Behavior : MonoBehaviour
                 HealthBar.SetStamina(CurrentStamina);
                 Player.velocity = (Direction.normalized * 6) + new Vector3(0, Player.velocity.y, 0);
             }
-            if(!Input.GetKey(KeyCode.LeftControl)|| CurrentStamina <= 0 || grounded==false)
+            if (!Input.GetKey(KeyCode.LeftControl) || CurrentStamina <= 0 || grounded == false)
             {
                 Rolling = false;
                 Otter.SetBool("roll", false);
@@ -532,7 +542,7 @@ public class Behavior : MonoBehaviour
         Walk = 7;
         Run = 18;
         JumpLimit = 5;
-        BeatGrounded = BeatGrounded / 5;
+        //BeatGrounded = BeatGrounded / 5;
         AirBeat = AirBeat / 5;
         ElectricEffect.SetActive(true);
     }
@@ -543,7 +553,7 @@ public class Behavior : MonoBehaviour
         Walk = InsertWalk;
         Run = InsertRun;
         JumpLimit = 3;
-        BeatGrounded = 5 * BeatGrounded;
+        //BeatGrounded = 5 * BeatGrounded;
         AirBeat = 5 * AirBeat;
         ElectricEffect.SetActive(false);
         GobletClock = 10F;
@@ -551,14 +561,33 @@ public class Behavior : MonoBehaviour
     }
     public void ParryON()
     {
-        Otter.SetBool("Parry", true);
-        ParryShield.SetActive(true);
+        if (Defend == false)
+        {
+            if (HammerHeld == false)
+            {
+                Otter.SetBool("Parry", true);
+                Otter.SetBool("HammerParry", false);
+
+            }
+            else
+            {
+                Otter.SetBool("Parry", false);
+                Otter.SetBool("HammerParry", true);
+            }
+        }
+        //else
+        //{
+        //    Otter.SetBool("Parry", false);
+        //    Otter.SetBool("HammerParry", false);
+        //}
+        //ParryShield.SetActive(true);
         isParried = true;
     }
     public void ParryOFF()
     {
         Otter.SetBool("Parry", false);
-        ParryShield.SetActive(false);
+        Otter.SetBool("HammerParry", false);
+        //ParryShield.SetActive(false);
         isParried = false;
     }
     public void HoneyON()
@@ -614,6 +643,25 @@ public class Behavior : MonoBehaviour
     [System.Obsolete]
     public void Update()
     {
+
+        if (Defend == true)
+        {
+            DefendAnim -= Time.deltaTime;
+            if (DefendAnim > 0)
+            {
+                if (WhichAttack == true)
+                    Otter.Play("AttackA");
+                if (WhichAttack == false)
+                    Otter.Play("AttackB");
+            }
+            else
+            {
+                Defend = false;
+                Otter.StopPlayback();
+            }
+
+        }
+
         //if (!Input.anyKey)
         //    Player.velocity = new Vector3(0, Player.velocity.y, 0);
 
@@ -735,10 +783,10 @@ public class Behavior : MonoBehaviour
         {
             if (Input.GetKey(KeyCode.LeftControl) && grounded == true && Rolling == false && !Input.GetKey(KeyCode.Space))
             {
-                if (!Input.GetKey(KeyCode.W)|| !Input.GetKey(KeyCode.Mouse0))
+                if (!Input.GetKey(KeyCode.W) || !Input.GetKey(KeyCode.Mouse0))
                 {
                     speed = 0;
-                        Otter.SetBool("crouch", true);
+                    Otter.SetBool("crouch", true);
                 }
                 if (Honeypicked == true)
                 {
@@ -840,7 +888,7 @@ public class Behavior : MonoBehaviour
             }
         }
 
-        if (isAtTrader == false && ParryShield.active==false)
+        if (isAtTrader == false /*&& ParryShield.active == false*/)
         {
             //Melee action
             {
@@ -913,7 +961,7 @@ public class Behavior : MonoBehaviour
             }
             //Parry Action
             {
-                if (Input.GetKey(KeyCode.F) && CurrentStamina>0)
+                if (Input.GetKey(KeyCode.F) && CurrentStamina > 0)
                     ParryON();
                 else
                     ParryOFF();
@@ -941,6 +989,7 @@ public class Behavior : MonoBehaviour
         Otter.SetBool("run", false);
         Otter.SetBool("midair", false);
         Otter.SetBool("roll", false);
+        //Otter.SetBool("Defend", false);
         Rolling = false;
         //Switch off hurt and heal effects automaticly
         {
@@ -999,7 +1048,7 @@ public class Behavior : MonoBehaviour
                 }
             }
             //Movement + Crouch = Roll & Evade
-            if (Input.GetKey(KeyCode.LeftControl) && CurrentStamina>0)
+            if (Input.GetKey(KeyCode.LeftControl) && CurrentStamina > 0)
             {
                 HealQue = 3;
                 if (Input.GetKey(KeyCode.W))

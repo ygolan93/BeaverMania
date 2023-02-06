@@ -12597,7 +12597,8 @@ MonoBehaviour:
   InitialFall: 0.2
   GroundAttack: 30
   HammerHeld: 0
-  ParryShield: {fileID: 7447779648892156983}
+  Defend: 0
+  DefendAnim: 0.3
   isParried: 0
   RightHandWeapon: {fileID: 5751011702066553336}
   LeftHandWeapon: {fileID: 5751011701076017101}
@@ -19043,7 +19044,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BindingMode: 0
-  m_FollowOffset: {x: 0, y: 0.32739717, z: -5.3060718}
+  m_FollowOffset: {x: 0, y: 1.29, z: -6}
   m_XDamping: 5
   m_YDamping: 5
   m_ZDamping: 3
@@ -19170,7 +19171,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BindingMode: 0
-  m_FollowOffset: {x: 0, y: 0.32739717, z: -5.3060718}
+  m_FollowOffset: {x: 0, y: 1.29, z: -6}
   m_XDamping: 1
   m_YDamping: 1
   m_ZDamping: 1
@@ -19262,7 +19263,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5751011701941759928}
-  m_LocalRotation: {x: -0.055725656, y: 0.0013422499, z: 0.00007491424, w: 0.9984453}
+  m_LocalRotation: {x: 0.02801061, y: 0.0011895132, z: -0.0000333321, w: 0.99960697}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -19438,7 +19439,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5751011702082929160}
-  m_LocalRotation: {x: -0.037555214, y: 0.001343378, z: 0.00005048651, w: 0.9992937}
+  m_LocalRotation: {x: 0.046188325, y: 0.0011887104, z: -0.000054963242, w: 0.99893206}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -19679,7 +19680,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BindingMode: 0
-  m_FollowOffset: {x: 0, y: 0.32739717, z: -5.3060718}
+  m_FollowOffset: {x: 0, y: 1.29, z: -6}
   m_XDamping: 1
   m_YDamping: 1
   m_ZDamping: 1
@@ -19802,7 +19803,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5751011702544441608}
-  m_LocalRotation: {x: -0.07382973, y: 0.0013406744, z: 0.00009925258, w: 0.99727}
+  m_LocalRotation: {x: 0.0098716775, y: 0.0011899049, z: -0.000011746935, w: 0.9999506}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -19912,7 +19913,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5751011703071789121}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.32739717, z: -5.3060718}
+  m_LocalPosition: {x: 0, y: 1.29, z: -6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -19961,7 +19962,7 @@ MonoBehaviour:
         m_Calls: []
   m_LegacyBlendHint: 0
   m_YAxis:
-    Value: 0.1
+    Value: 0.5
     m_SpeedMode: 0
     m_MaxSpeed: 0
     m_AccelTime: 0.5
@@ -20013,13 +20014,13 @@ MonoBehaviour:
     m_LegacyHeadingDefinition: -1
     m_LegacyVelocityFilterStrength: -1
   m_BindingMode: 0
-  m_SplineCurvature: 0.175
+  m_SplineCurvature: 0.249
   m_Orbits:
   - m_Height: 3.57
     m_Radius: 4
   - m_Height: 1.29
     m_Radius: 6
-  - m_Height: 0.25
+  - m_Height: 0.86
     m_Radius: 5
   m_LegacyHeadingBias: 3.4028235e+38
   m_Rigs:
@@ -20645,7 +20646,7 @@ SkinnedMeshRenderer:
   - {fileID: 2100000, guid: e4c9818954eb7084d845799a0d877ce9, type: 2}
   - {fileID: 2100000, guid: be7c8925315f83c44acd3ffb232c5def, type: 2}
   - {fileID: 2100000, guid: caefdef50772a6e488e5e210657d304d, type: 2}
-  - {fileID: -234099852091621820, guid: d49a26fadbee3d34ba8722eafdaf215a, type: 3}
+  - {fileID: 2100000, guid: 1f3a4a7bbbb86fe438f28cec285b9ba2, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

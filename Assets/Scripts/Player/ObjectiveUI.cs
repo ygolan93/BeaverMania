@@ -7,18 +7,24 @@ public class ObjectiveUI: MonoBehaviour
     public Behavior Player;
     public string[] Objective; 
     public int i = 0;
-    public string Instruction;
+   public string Instruction;
     public void Update()
     {
         Instruction = Objective[i];
     }
 
-    public void OnTriggerEnter(Collider GameObjective)
+    public void OnTriggerStay(Collider GameObjective)
     {
         if (GameObjective.CompareTag("Objective"))
         {
-            i++;
-            Destroy(GameObjective);
+            i = GameObjective.GetComponent<ChangeOBJ>().ObjectiveNum;
+        }
+    }
+    public void OnTriggerExit(Collider GameObjective)
+    {
+        if (GameObjective.CompareTag("Objective"))
+        {
+            i = 0;
         }
     }
     public void UpdateObjective()

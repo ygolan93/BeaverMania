@@ -30,7 +30,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 701757154447555572}
-  m_LocalRotation: {x: -0.62425554, y: -0.332122, z: -0.332122, w: 0.62425554}
+  m_LocalRotation: {x: -0.53932226, y: -0.457309, z: -0.457309, w: 0.53932226}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 70, y: 70, z: 70}
   m_ConstrainProportionsScale: 0
@@ -38,7 +38,7 @@ Transform:
   - {fileID: 8408562593796629502}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 180}
+  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 90}
 --- !u!33 &3844155778282827499
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -103,8 +103,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Player: {fileID: 7016787653037946412, guid: b922004aea0ae754c917e6abedafb749, type: 3}
   PartCount: 0
-  BridgeLimit: 20
+  BridgeLimit: 9
   BridgePart: {fileID: 8832268069726459598, guid: b36e4c1fb9d033047b688575a8d28c63, type: 3}
+  BridgeLink: {fileID: 126446434862124809, guid: 135aaf95b65475646b514cbe930bd37d, type: 3}
+  Log: {fileID: 2403880353969387516, guid: dd223c211faee8f47877592620b75861, type: 3}
   WoodKnock: {fileID: 701757154447555574}
   Bridge: {fileID: 701757154447555575}
   Cel: {fileID: 2100000, guid: dfa34f41a62d09f4faf92543c9274204, type: 2}

@@ -76,6 +76,7 @@ public class Behavior : MonoBehaviour
     [SerializeField] GameObject LeftHandWeapon;
 
     [Header("Other Objects")]
+    public GameObject HologramedBridge;
     public GameObject Seed;
     public GameObject HoneyJar;
     public GameObject PlacedJar;
@@ -639,6 +640,8 @@ public class Behavior : MonoBehaviour
         InsertRun = Run;
         LooseScreen.SetActive(false);
         BossBar.SetActive(false);
+        HologramedBridge.SetActive(false);
+
     }
     [System.Obsolete]
     public void Update()
@@ -783,6 +786,8 @@ public class Behavior : MonoBehaviour
         {
             if (Input.GetKey(KeyCode.LeftControl) && grounded == true && Rolling == false && !Input.GetKey(KeyCode.Space))
             {
+                if (Load.i==9)
+                HologramedBridge.SetActive(true);
                 if (!Input.GetKey(KeyCode.W) || !Input.GetKey(KeyCode.Mouse0))
                 {
                     speed = 0;
@@ -801,6 +806,7 @@ public class Behavior : MonoBehaviour
             }
             else
             {
+                HologramedBridge.SetActive(false);
                 Otter.SetBool("crouch", false);
                 ParryOFF();
                 HealingText = "";

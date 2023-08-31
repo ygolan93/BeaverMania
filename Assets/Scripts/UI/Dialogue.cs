@@ -69,6 +69,12 @@ public class Dialogue : MonoBehaviour
     public void EndConversation()
     {
         PlayerObjective.UpdateObjective();
+        //Destroy(ContinueButton);
+        //Destroy(SkipButton);
+    }
+    public void EndBossConversation()
+    {
+        PlayerObjective.UpdateObjective();
         Destroy(ContinueButton);
         Destroy(SkipButton);
     }

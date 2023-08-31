@@ -7,11 +7,6 @@ public class WayPoint : MonoBehaviour
 {
     public Image Mark;
     Transform target;
-    //public Transform Position1;
-    //public Transform Position2;
-    //public Transform Position3;
-    //public Transform Position4;
-    //public Transform Position5;
     public Transform[] Locations;
     public int i;
 
@@ -25,7 +20,6 @@ public class WayPoint : MonoBehaviour
     void Update()
     {
         target = Locations[i];
-
 
         float minX = Mark.GetPixelAdjustedRect().width / 2;
         float maxX = Screen.width - minX;
@@ -56,8 +50,9 @@ public class WayPoint : MonoBehaviour
     {
         if (OBJ.gameObject.CompareTag("WayPoint"))
         {
+            OBJ.gameObject.SetActive(false);
             i++;
-            Destroy(OBJ.gameObject);
+            Locations[i].gameObject.SetActive(true);
         }
     }
 

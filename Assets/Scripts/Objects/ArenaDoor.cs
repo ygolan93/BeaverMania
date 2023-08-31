@@ -11,7 +11,7 @@ public class ArenaDoor : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Boss = GameObject.FindGameObjectWithTag("Boss").GetComponent<BossScript>();
+        //Boss = GameObject.FindGameObjectWithTag("Boss").GetComponent<BossScript>();
         InitialHeight = transform.position.y;
     }
 

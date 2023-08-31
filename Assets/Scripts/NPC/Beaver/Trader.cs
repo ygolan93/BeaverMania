@@ -12,6 +12,7 @@ public class Trader : MonoBehaviour
     public GameObject DialoguePanel;
     public GameObject Shop;
     public Vector3 PlayerDistance;
+    public bool skipPressed = false;
     [SerializeField] bool Rotate;
     [SerializeField] float PanelPopUp;
     Quaternion FormalLook;
@@ -29,16 +30,15 @@ public class Trader : MonoBehaviour
 
         PlayerDistance = Player.transform.position - Merchant.transform.position;
         var Distance = Mathf.Abs(PlayerDistance.magnitude);
-        if (Distance<PanelPopUp)
+        if (Distance<PanelPopUp&&skipPressed==false)
         {
+            TradeText.SetActive(true);
+            DialoguePanel.SetActive(true);
             if (Rotate == true)
             {
                 Player.rotGoal = Quaternion.LookRotation(Player.transform.position - Merchant.transform.position);
                 transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(PlayerDistance), 0.1f);
             }
-            TradeText.SetActive(true);
-            DialoguePanel.SetActive(true);
-
         }
 
         else
@@ -48,6 +48,15 @@ public class Trader : MonoBehaviour
             DialoguePanel.SetActive(false);
             Shop.SetActive(false);
         }
+
+        if (Distance > PanelPopUp)
+        {
+            skipPressed = false;
+        }
+    }
+    public void activateSkip()
+    {
+        skipPressed = true;
     }
 
     public void Honey()

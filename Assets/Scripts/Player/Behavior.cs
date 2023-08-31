@@ -266,15 +266,26 @@ public class Behavior : MonoBehaviour
         }
         if (OBJ.gameObject.CompareTag("Trader"))
         {
-            ShowCursor();
-            isAtTrader = true;
-            FreeLook.enabled = false;
-            CamForTraders.enabled = true;
-            CamForTraders.m_Orbits[1].m_Radius = 6;
-            CamForTraders.m_XAxis.m_MaxSpeed = 0.1f;
-            CamForTraders.m_YAxis.m_MaxSpeed = 0.1f;
-            CamForTraders.m_LookAt = OBJ.transform;
-
+            var skip = OBJ.gameObject.GetComponent<Trader>().skipPressed;
+            if (skip ==false)
+            {
+                ShowCursor();
+                isAtTrader = true;
+                FreeLook.enabled = false;
+                CamForTraders.enabled = true;
+                CamForTraders.m_Orbits[1].m_Radius = 6;
+                CamForTraders.m_XAxis.m_MaxSpeed = 0.1f;
+                CamForTraders.m_YAxis.m_MaxSpeed = 0.1f;
+                CamForTraders.m_LookAt = OBJ.transform;
+            }
+            if (skip ==true)
+            {
+                isAtTrader = false;
+                CamForTraders.enabled = false;
+                CamForTraders.m_LookAt = null;
+                FreeLook.enabled = true;
+                FreeLook.m_LookAt.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Root.position), 0.5f);
+            }
         }
 
         if (OBJ.gameObject.CompareTag("House"))

@@ -6,6 +6,7 @@ public class Destroy : MonoBehaviour
 {
     float Clock;
     public GameObject effect;
+    public bool saveAfterKill;
     // Start is called before the first frame update
     void Start()
     {
@@ -15,7 +16,15 @@ public class Destroy : MonoBehaviour
     public void DestroySelf()
     {
         Instantiate(effect, gameObject.transform.position, Quaternion.identity);
-        Destroy(gameObject);
+        if (saveAfterKill == false)
+        {
+            Destroy(gameObject);
+        }
+        if (saveAfterKill == true)
+        {
+            gameObject.SetActive(false);
+        }
+
     }
     private void OnCollisionEnter(Collision OBJ)
     {

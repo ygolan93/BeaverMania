@@ -14,12 +14,23 @@ public class WayPoint : MonoBehaviour
     // Update is called once per frame
     public void Start()
     {
-        i = 0;
+        for (int index=0; index<Locations.Length; index++)
+        {
+            if (index!=i)
+            {
+                Locations[index].gameObject.SetActive(false);
+            }
+        }
+        Locations[i].gameObject.SetActive(true);
     }
 
     void Update()
     {
         target = Locations[i];
+        if (target==null)
+        {
+            i++;
+        }
 
         float minX = Mark.GetPixelAdjustedRect().width / 2;
         float maxX = Screen.width - minX;

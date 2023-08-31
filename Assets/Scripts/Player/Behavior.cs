@@ -365,7 +365,10 @@ public class Behavior : MonoBehaviour
                 {
                     if (enemy.CompareTag("NPC"))
                     {
-                        Debug.Log("Hit " + enemy.name);
+                        if (enemy.name!=null)
+                        {
+                            Debug.Log("Hit " + enemy.name);
+                        }
                         enemy.GetComponent<NPC_Basic>().TakeDamage(GroundAttack);
                     }
                     if (enemy.CompareTag("Boss"))

@@ -94,6 +94,7 @@ namespace UnityStandardAssets.ImageEffects
             return isSupported;
         }
 
+        [Obsolete]
         public void OnRenderImage (RenderTexture source, RenderTexture destination)
         {
             if (CheckResources()==false)

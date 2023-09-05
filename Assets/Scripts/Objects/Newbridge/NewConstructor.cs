@@ -16,7 +16,7 @@ public class NewConstructor : MonoBehaviour
     MeshRenderer Ramp;
     public Text BridgeUI;
     string BridgeText;
-    bool isLocked = false;
+    public bool isLocked = false;
      //public string BridgeUI;
     float X;
     private void Awake()
@@ -35,7 +35,7 @@ public class NewConstructor : MonoBehaviour
         if (OBJ.gameObject.tag == "Part" && isLocked == true && PartCount < BridgeLimit)
         {
             PartCount++;
-            X = 4.45f;
+            X = 4.15f;
             var newPart = Instantiate(BridgePart, Bridge.transform.position + Bridge.transform.up * -X * PartCount + Bridge.transform.forward * -0.5f, Bridge.transform.rotation);
             newPart.transform.parent = Bridge.transform;
             Destroy(OBJ.gameObject);

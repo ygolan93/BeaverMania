@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 701757154447555575}
   - component: {fileID: 701757154447555568}
   - component: {fileID: 4572260664629150172}
-  m_Layer: 3
+  m_Layer: 9
   m_Name: NewBridge
   m_TagString: Bridge
   m_Icon: {fileID: 0}
@@ -30,7 +30,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 701757154447555572}
-  m_LocalRotation: {x: -0.15704596, y: 0.68944657, z: 0.68944657, w: 0.15704596}
+  m_LocalRotation: {x: -0.052126963, y: 0.7051828, z: 0.7051828, w: 0.052126963}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 70, y: 70, z: 70}
   m_ConstrainProportionsScale: 0
@@ -112,6 +112,7 @@ MonoBehaviour:
   Cel: {fileID: 2100000, guid: dfa34f41a62d09f4faf92543c9274204, type: 2}
   Synthi: {fileID: 2100000, guid: 0cd55ae30042baa479acf0e32b188313, type: 2}
   BridgeUI: {fileID: 291349758162624979}
+  isLocked: 0
 --- !u!82 &701757154447555574
 AudioSource:
   m_ObjectHideFlags: 0
@@ -263,7 +264,7 @@ GameObject:
   - component: {fileID: 553540862901993107}
   - component: {fileID: 1736855883987038359}
   - component: {fileID: 1501470287862260842}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Canvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -364,7 +365,7 @@ GameObject:
   - component: {fileID: 8489214349322695281}
   - component: {fileID: 291349758162624979}
   - component: {fileID: 3463749459428318465}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}

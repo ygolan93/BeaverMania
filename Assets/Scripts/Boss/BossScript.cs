@@ -160,8 +160,8 @@ public class BossScript : MonoBehaviour
         BossHPBar.SetActive(false);
         Explosion.SetActive(true);
         Explosion.transform.parent = null;
-        //Destroy(gameObject);
-        gameObject.SetActive(false);
+        Destroy(gameObject);
+        //gameObject.SetActive(false);
     }
 
     private void OnCollisionEnter(Collision OBJ)

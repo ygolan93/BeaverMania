@@ -16,7 +16,7 @@ public class WayPoint : MonoBehaviour
     {
         for (int index=0; index<Locations.Length; index++)
         {
-            if (index!=i)
+            if (index!=i && index!=21 && index!=22)
             {
                 Locations[index].gameObject.SetActive(false);
             }

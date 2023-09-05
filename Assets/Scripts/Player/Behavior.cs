@@ -10,14 +10,18 @@ public class Behavior : MonoBehaviour
 {
     [Header("Movement and animation")]
     public Rigidbody Player;
+    public bool grounded;
     public Vector3 PlatformVelocity;
     public Carry Load;
     public Quaternion rotGoal;
+    public RayTraceGround obsticle;
+    bool step;
     public float speed = 5;
     public float steer = 0.12f;
     public float JumpForce = 3;
     public float Walk = 4;
     public float Run = 12;
+    public float rayCastHeightOffSet = 0.26f;
     float InsertWalk;
     float InsertRun;
     float levitation = 10f;
@@ -29,7 +33,6 @@ public class Behavior : MonoBehaviour
     int JumpNumPreserve;
     public Transform Root;
     public Animator Otter;
-    public bool grounded;
     public bool OnPlatform = false;
     [Header("Health")]
     float StopHurt = 0;
@@ -107,10 +110,6 @@ public class Behavior : MonoBehaviour
     [SerializeField] Transform KickEffectPos;
     [Header("UI")]
     public GameObject LooseScreen;
-    public BossScript Boss;
-    public GameObject BossBar;
-    public GameObject BossPanel;
-    public GameObject BossContinueButton;
     public bool isAtTrader = false;
     public string LogCount;
     public string DebugText;
@@ -298,34 +297,6 @@ public class Behavior : MonoBehaviour
         {
             Plattering = "Ah shit. what happened here?";
         }
-
-        if (OBJ.gameObject.CompareTag("Arena"))
-        {
-            if (BossContinueButton != null)
-            {
-                ShowCursor();
-                isAtTrader = true;
-                Boss.Charge = false;
-                BossPanel.SetActive(true);
-                FreeLook.m_Orbits[1].m_Radius = 15;
-                FreeLook.m_XAxis.m_MaxSpeed = 0;
-                FreeLook.m_YAxis.m_MaxSpeed = 0;
-                FreeLook.m_LookAt = Boss.transform;
-            }
-
-            if (BossContinueButton == null)
-            {
-                isAtTrader = false;
-                HideCursor();
-                BossPanel.SetActive(false);
-                Boss.Charge = true;
-                BossBar.SetActive(true);
-                FreeLook.m_Orbits[1].m_Radius = 6;
-                FreeLook.m_XAxis.m_MaxSpeed = 300;
-                FreeLook.m_YAxis.m_MaxSpeed = 2;
-                FreeLook.m_LookAt = Root;
-            }
-        }
     }
     public void OnTriggerExit(Collider OBJ)
     {
@@ -341,10 +312,7 @@ public class Behavior : MonoBehaviour
             FreeLook.enabled = true;
             FreeLook.m_LookAt.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Root.position), 0.5f);
         }
-        if (OBJ.gameObject.CompareTag("Boss"))
-        {
-            BossBar.SetActive(false);
-        }
+
         if (OBJ.gameObject.CompareTag("House"))
         {
             InHouseCam.enabled = false;
@@ -461,6 +429,11 @@ public class Behavior : MonoBehaviour
                     steer = 0.1f;
                 }
                 Player.velocity = (Direction.normalized * speed) + new Vector3(0, Player.velocity.y, 0);
+                //Player.AddForce(Direction.normalized *8*speed);
+                //if (Player.velocity.magnitude > speed)
+                //{
+                //    Player.AddForce(-Direction.normalized*0.1f);
+                //}
 
             }
             if (grounded == false && Input.GetKey(KeyCode.LeftShift))
@@ -628,7 +601,6 @@ public class Behavior : MonoBehaviour
 
     public void Start()
     {
-
         CamForTraders.enabled = false;
         InHouseCam.enabled = false;
         Instantiate(PopUpEffect, Root.position, Quaternion.identity);
@@ -653,15 +625,25 @@ public class Behavior : MonoBehaviour
         InsertWalk = Walk;
         InsertRun = Run;
         LooseScreen.SetActive(false);
-        BossBar.SetActive(false);
         HologramedBridge.SetActive(false);
 
     }
     [System.Obsolete]
     public void Update()
     {
+        //Climb on stairs/obsticle
+        step = obsticle.step;
+        if (step==true)
+        {
+            Otter.SetBool("climb", true);
+        }
+        if (step == false)
+        {
+            Otter.SetBool("climb", false);
+        }
 
-        if (Defend == true)
+
+            if (Defend == true)
         {
             DefendAnim -= Time.deltaTime;
             if (DefendAnim > 0)
@@ -866,10 +848,10 @@ public class Behavior : MonoBehaviour
                 Instantiate(Seed, AttackPoint.position, Quaternion.identity);
                 NutCount--;
             }
-            if (Input.GetKeyUp(KeyCode.R))
-            {
-                Otter.SetBool("Crouch", false);
-            }
+            //if (Input.GetKeyUp(KeyCode.R))
+            //{
+            //    Otter.SetBool("Crouch", false);
+            //}
         }
 
         //Eat Apple
@@ -1003,7 +985,6 @@ public class Behavior : MonoBehaviour
         Vector3 XZBack = new Vector3(cameraRelativeBack.x, 0, cameraRelativeBack.z);
         Vector3 XZRight = new Vector3(cameraRelativeRight.x, 0, cameraRelativeRight.z);
         Vector3 XZLeft = new Vector3(cameraRelativeLeft.x, 0, cameraRelativeLeft.z);
-
 
         Otter.SetBool("walk", false);
         Otter.SetBool("run", false);

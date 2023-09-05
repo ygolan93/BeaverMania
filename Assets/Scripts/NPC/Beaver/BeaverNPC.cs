@@ -81,7 +81,7 @@ public class BeaverNPC : MonoBehaviour
 
         rotGoal = Quaternion.LookRotation(new Vector3(Wander.x, 0, Wander.z));
         transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
-        Beaver.velocity = Wander * speed;
+        Beaver.velocity = Wander.normalized * speed;
     }
 
     // Update is called once per frame

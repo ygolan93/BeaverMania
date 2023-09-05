@@ -16,11 +16,6 @@ public class IKFootPlacement : MonoBehaviour
         anim = GetComponent<Animator>();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
 
     private void OnAnimatorIK(int layerIndex)
     {

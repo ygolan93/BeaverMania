@@ -636,10 +636,20 @@ public class Behavior : MonoBehaviour
         if (step==true)
         {
             Otter.SetBool("climb", true);
+            if (Input.GetKey(KeyCode.LeftShift))
+            {
+                Otter.speed = Run;
+            }
+            else
+            {
+                Otter.speed = AnimSpeed;
+            }
+            
         }
         if (step == false)
         {
             Otter.SetBool("climb", false);
+            Otter.speed = AnimSpeed;
         }
 
 

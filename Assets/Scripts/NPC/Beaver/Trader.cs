@@ -20,7 +20,7 @@ public class Trader : MonoBehaviour
     void Start()
     {
         FormalLook = transform.rotation;
-        Player = GameObject.Find("Player").GetComponent<Behavior>();
+        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
         PlayerRoot = GameObject.FindGameObjectWithTag("PlayerRoot").GetComponent<Transform>();
     }
 

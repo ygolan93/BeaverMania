@@ -481,6 +481,7 @@ public class Behavior : MonoBehaviour
                 Rolling = false;
                 Otter.SetBool("roll", false);
             }
+
         }
     }
     public void ShowCursor()
@@ -563,19 +564,12 @@ public class Behavior : MonoBehaviour
                 Otter.SetBool("HammerParry", true);
             }
         }
-        //else
-        //{
-        //    Otter.SetBool("Parry", false);
-        //    Otter.SetBool("HammerParry", false);
-        //}
-        //ParryShield.SetActive(true);
         isParried = true;
     }
     public void ParryOFF()
     {
         Otter.SetBool("Parry", false);
         Otter.SetBool("HammerParry", false);
-        //ParryShield.SetActive(false);
         isParried = false;
     }
     public void HoneyON()
@@ -671,8 +665,6 @@ public class Behavior : MonoBehaviour
 
         }
 
-        //if (!Input.anyKey)
-        //    Player.velocity = new Vector3(0, Player.velocity.y, 0);
 
         //Update UI text
         if (Plattering != "")

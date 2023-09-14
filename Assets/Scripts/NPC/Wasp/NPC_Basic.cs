@@ -10,7 +10,6 @@ public class NPC_Basic : MonoBehaviour
     [SerializeField] Animator Wasp;
 
     [Header("Movement")]
-    [SerializeField] bool Move = true;
     GameObject PlayerTarget;
     Behavior PlayerHealth;
     GameObject AnotherWasp;
@@ -26,8 +25,13 @@ public class NPC_Basic : MonoBehaviour
     float a;
     float b;
     float c;
+    //public WaspCourse course;
     Vector3 SpawnPos;
-
+    public Vector3 currentPos;
+    public bool floating;
+    public float floatSpeed = 1.0f;
+    public float floatDistance = 1.0f;
+    public float maxTiltAngle = 10.0f;
     [Header("Health and damage")]
     public int combo = 0;
     public int Damage2Player = 1;
@@ -57,7 +61,6 @@ public class NPC_Basic : MonoBehaviour
         PlayerHealth = PlayerTarget.GetComponent<Behavior>();
         HitEffect.SetActive(false);
         RandoMovement();
-        if (Move==true)
         NPC.velocity = Vector3.forward;
     }
 
@@ -68,57 +71,54 @@ public class NPC_Basic : MonoBehaviour
         AnotherWasp = GameObject.FindGameObjectWithTag("NPC");
         Vector3 Distance = PlayerTarget.transform.position - transform.position;
         PlayerDistance = Distance.magnitude;
-
         ChangeNav -= Time.deltaTime;
         if (combo < 3)
         {
-            if (Move == true)
+            if (floating == true)
+            {
+                Wasp.SetBool("Sting", false);
+                currentPos = transform.position;
+                floatOnAir(currentPos);
+            }
+            else
             {
                 rotGoal = Quaternion.LookRotation(NPC.velocity);
                 transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
-            }
-            if (Distance.magnitude >= 50)
-            {
-                if (ChangeNav <= 0)
+                if (Distance.magnitude >= 50)
                 {
-                    Wasp.SetBool("Sting", false);
-                    if (Move == true)
+                    if (ChangeNav <= 0)
                     {
+                        Wasp.SetBool("Sting", false);
                         RandoMovement();
                     }
-                }
-                if (Move == true)
-                {
-                    TurnBack();
-                }
-            }
-
-            if (PlayerDistance < 50)
-            {
-                if (Contact == false)
-                {
-                    ChargeClock = 0.7f;
-                    Physics.IgnoreCollision(AnotherWasp.GetComponent<Collider>(), GetComponent<Collider>());
-                    if (Move==true)
-                    NPC.velocity = (Distance.normalized * 50f);
-
-                    Wasp.SetBool("Sting", true);
-                    ChangeNav = 0;
-
-                }
-                if (Contact == true)
-                {
-                    if (Move == true)
+                    else
                     {
+                        TurnBack();
+                    }
+                }
+
+                if (PlayerDistance < 50)
+                {
+                    if (Contact == false)
+                    {
+                        ChargeClock = 0.7f;
+                        Physics.IgnoreCollision(AnotherWasp.GetComponent<Collider>(), transform.GetComponent<Collider>());
+                        NPC.velocity = (Distance.normalized * 50f);
+                        Wasp.SetBool("Sting", true);
+                        ChangeNav = 0;
+                    }
+                    if (Contact == true)
+                    {
+                        Wasp.SetBool("Sting", false);
                         NPC.AddForce(new Vector3(-Distance.x, 0.01f, -Distance.z).normalized * 0.1f);
                         transform.rotation = (Quaternion.LookRotation(Distance));
+                        ChargeClock -= Time.deltaTime;
+                        if (ChargeClock <= 0)
+                            Contact = false;
                     }
-                    ChargeClock -= Time.deltaTime;
-                    if (ChargeClock <= 0)
-                        Contact = false;
+                    
                 }
             }
-
 
         }
         else
@@ -135,11 +135,6 @@ public class NPC_Basic : MonoBehaviour
         if (!Input.GetKey(KeyCode.Mouse0) || PlayerDistance > 3)
         {
             HitEffect.SetActive(false);
-        }
-
-        if (Move==false)
-        {
-            transform.position = SpawnPos;
         }
     }
     private void LateUpdate()
@@ -191,20 +186,47 @@ public class NPC_Basic : MonoBehaviour
             Wasp.SetBool("Beat", true);
             TakeDamage(1);
         }
+        if (OBJ.gameObject.CompareTag("Isle"))
+        {
+            Contact = true;
+            NPC.velocity += new Vector3(Random.Range(-1, 1), 1, Random.Range(-1,1));
+        }
     }
-
-
-    void TurnBack()
+    public void TurnBack()
     {
+        Wasp.SetBool("Sting", false);
         if ((transform.position - SpawnPos).magnitude > 30)
         {
             NPC.velocity = (SpawnPos - transform.position).normalized * 10;
         }
     }
 
-    void Stunned()
+
+    void floatOnAir(Vector3 initialPosition)
+    {
+        StartCoroutine(FloatObject(initialPosition));
+    }
+    private IEnumerator FloatObject(Vector3 initialPosition)
+    {
+        float direction = -1.0f;
+        while (true)
+        {
+            float newY = initialPosition.y + Mathf.Sin(Time.time * floatSpeed) * floatDistance+1;
+            transform.position = new Vector3(transform.position.x, newY, transform.position.z);
+            float tiltAngle = direction * maxTiltAngle * Mathf.Sin(Time.time * floatSpeed);
+            transform.rotation = Quaternion.Euler(tiltAngle, transform.rotation.eulerAngles.y, 0);
+            if (newY >= initialPosition.y + floatDistance || newY <= initialPosition.y - floatDistance)
+            {
+                direction *= 1.0f;
+            }
+
+            yield return null;
+        }
+    }
+   public void Stunned()
     {
         //Sound.StopBuzzing();
+        floating = false;
         NPC.constraints = RigidbodyConstraints.None;
         NPC.useGravity = true;
         Wasp.SetBool("Stunned", true);
@@ -214,6 +236,7 @@ public class NPC_Basic : MonoBehaviour
     void Recovered()
     {
         //Sound.Buzz();
+        floating = false;
         Wasp.SetBool("Stunned", false);
         Recovery = 10f;
         NPC.constraints = RigidbodyConstraints.FreezeRotation;
@@ -221,6 +244,7 @@ public class NPC_Basic : MonoBehaviour
     }
     public void Sting()
     {
+        floating = false;
         Recovered();
         if (PlayerHealth.isParried == false && PlayerHealth.Rolling == false)
         {
@@ -237,8 +261,9 @@ public class NPC_Basic : MonoBehaviour
 
     }
 
-    private void RandoMovement()
+    public void RandoMovement()
     {
+        //floating = true;
         if ((SpawnPos - transform.position).magnitude < 20)
         {
             Recovered();
@@ -248,7 +273,7 @@ public class NPC_Basic : MonoBehaviour
             NPC.velocity = new Vector3(a, b, c);
             ChangeNav = 5f;
         }
-        else
+        else 
             NPC.velocity = (SpawnPos - transform.position).normalized * 5;
     }
 

@@ -6,7 +6,7 @@ public class BossDamage : MonoBehaviour
 {
     public float JawClamp;
     public float Sting;
-    public Behavior Player;
+    public Behaviour Player;
     public NPC_Audio BossAudio;
     public BossScript Boss;
 

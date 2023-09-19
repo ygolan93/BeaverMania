@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class CurrencySpin : MonoBehaviour
 {
-     Behavior Player;
+     Behaviour Player;
     private void Start()
     {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
+        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
     }
     // Update is called once per frame
     private void Update()

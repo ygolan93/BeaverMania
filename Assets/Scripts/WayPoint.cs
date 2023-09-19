@@ -36,16 +36,17 @@ public class WayPoint : MonoBehaviour
         float maxX = Screen.width - minX;
         float minY = Mark.GetPixelAdjustedRect().width / 2;
         float maxY = Screen.width - minY;
-        Vector2 Pos = Camera.main.WorldToScreenPoint(target.position+new Vector3(0,3,0));
-        
+        Vector2 Pos = Camera.main.WorldToScreenPoint(target.position+new Vector3(0,2,0));
+
 
         if (Vector3.Dot((target.position - transform.position), transform.forward) < 0)
         {
-            //Target is behind the player
-            if (Pos.x < Screen.width / 2)
-                Pos.x = maxX;
-            else
-                Pos.x = minX;
+            //Target is behind player
+            Mark.enabled = false;
+        }
+        else
+        {
+            Mark.enabled = true;
         }
 
         Pos.x = Mathf.Clamp(Pos.x, minX, maxX);

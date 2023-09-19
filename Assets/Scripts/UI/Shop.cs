@@ -4,11 +4,11 @@ using UnityEngine;
 
 public class Shop : MonoBehaviour
 {
-    public Behavior Player;
+    public Behaviour Player;
     // Start is called before the first frame update
     void Start()
     {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
+        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
     }
 
     // Update is called once per frame

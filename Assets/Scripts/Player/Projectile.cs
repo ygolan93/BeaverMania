@@ -5,13 +5,13 @@ using UnityEngine;
 public class Projectile : MonoBehaviour
 {
    public Rigidbody Ball;
-    Behavior Player;
+    Behaviour Player;
     [SerializeField] AudioSource RockSound;
     float clock = 2f;
     // Start is called before the first frame update
     void Start()
     {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
+        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
         Ball.velocity = Camera.main.transform.TransformDirection(Vector3.forward)*65+Vector3.up*12;
     }
     private void Update()

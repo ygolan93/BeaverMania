@@ -13,10 +13,10 @@ public class BlinkScript : MonoBehaviour
     [SerializeField] float BlinkBreak;
     float WaitClock;
     bool BlinkSwitch;
-    Behavior Player;
+    Behaviour Player;
     private void Start()
     {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
+        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
         WaitBetweenBlinks = 0.3f;
         WaitClock = 0;
         BlinkCount = 0;

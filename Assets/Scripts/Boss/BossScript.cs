@@ -15,7 +15,7 @@ public class BossScript : MonoBehaviour
     public GameObject Explosion;
     public GameObject StunEffect;
     public NPC_Audio Sound;
-    public Behavior Player;
+    public Behaviour Player;
     Vector3 Distance;
     public Quaternion rotGoal;
     public float StrideClock = 20f;
@@ -34,7 +34,7 @@ public class BossScript : MonoBehaviour
     private void Start()
     {
         Boss = gameObject.GetComponent<Rigidbody>();
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
+        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
         CurrentHealth = MaxHealth;
         InitialBeat = BeatClock;
         combo = 0;

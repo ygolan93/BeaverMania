@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class BossHandler : MonoBehaviour
 {
-    public Behavior player;
+    public Behaviour player;
     public BossScript Boss;
     public GameObject BossBar;
     public GameObject BossPanel;

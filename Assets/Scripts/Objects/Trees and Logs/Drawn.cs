@@ -22,7 +22,7 @@ public class Drawn : MonoBehaviour
     {
         if (OBJ.gameObject.tag == "Player")
         {
-            var Player = OBJ.GetComponent<Behavior>();
+            var Player = OBJ.GetComponent<Behaviour>();
             var PlayerLoad = OBJ.GetComponent<Carry>();
             //Check if the log is close enough to be drawn + player's health above minimum **         
             if (Input.GetKey(KeyCode.Mouse1) && !Input.GetKey(KeyCode.LeftControl))

@@ -8,6 +8,20 @@ public class AudioScript : MonoBehaviour
 
 
     // Sound clips that are conditioned with animations
+    public void Drink()
+    {
+        audioSource2.clip = audioClip[11];
+        audioSource2.volume = 6f;
+        audioSource2.pitch = 1f;
+        audioSource2.PlayOneShot(audioClip[11]);
+    }
+    public void Eat()
+    {
+        audioSource2.clip = audioClip[10];
+        audioSource2.volume = 5f;
+        audioSource2.pitch = 1f;
+        audioSource2.PlayOneShot(audioClip[10]);
+    }
     public void Roll()
     {
         audioSource.clip = audioClip[9];
@@ -38,10 +52,10 @@ public class AudioScript : MonoBehaviour
     }
     public void Heal()
     {
-        audioSource2.clip = audioClip[5];
-        audioSource2.volume = 1f;
-        audioSource2.pitch = 1f;
-        audioSource2.PlayOneShot(audioClip[5]);
+        audioSource.clip = audioClip[5];
+        audioSource.volume = 1f;
+        audioSource.pitch = 1f;
+        audioSource.PlayOneShot(audioClip[5]);
     }
     private void Slide()
     {
@@ -67,7 +81,7 @@ public class AudioScript : MonoBehaviour
     private void Step()
     {
         audioSource.clip = audioClip[1];
-        audioSource.volume = 0.1f;
+        audioSource.volume = 0.4f;
         audioSource.pitch = 0.8f;
         audioSource.PlayOneShot(audioClip[1]);
     }

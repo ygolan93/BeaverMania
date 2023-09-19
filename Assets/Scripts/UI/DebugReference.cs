@@ -5,7 +5,7 @@ using TMPro;
 using UnityEngine.UI;
 public class DebugReference : MonoBehaviour
 {
-    public Behavior Player;
+    public Behaviour Player;
     public ObjectiveUI PlayerObjective;
 
     public TextMeshProUGUI ObjectiveText;
@@ -19,7 +19,7 @@ public class DebugReference : MonoBehaviour
     public TextMeshProUGUI AppleCount;
     private void Start()
     {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
+        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
         PlayerObjective = GameObject.FindGameObjectWithTag("Player").GetComponent<ObjectiveUI>();
     }
 

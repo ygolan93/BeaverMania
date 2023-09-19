@@ -5,7 +5,7 @@ using TMPro;
 using UnityEngine.UI;
 public class UpdatePlattering : MonoBehaviour
 {
-    public Behavior Player;
+    public Behaviour Player;
     public TextMeshProUGUI PlatetringText;
 
     // Update is called once per frame

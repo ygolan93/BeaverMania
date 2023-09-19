@@ -11,7 +11,7 @@ public class NPC_Basic : MonoBehaviour
 
     [Header("Movement")]
     GameObject PlayerTarget;
-    Behavior PlayerHealth;
+    Behaviour PlayerHealth;
     GameObject AnotherWasp;
     public Vector3 Distance;
     public Quaternion rotGoal;
@@ -58,7 +58,7 @@ public class NPC_Basic : MonoBehaviour
         Wasp = GetComponent<Animator>();
         CurrentHealth = MaxHealth;
         PlayerTarget = GameObject.FindGameObjectWithTag("Player");
-        PlayerHealth = PlayerTarget.GetComponent<Behavior>();
+        PlayerHealth = PlayerTarget.GetComponent<Behaviour>();
         HitEffect.SetActive(false);
         RandoMovement();
         NPC.velocity = Vector3.forward;

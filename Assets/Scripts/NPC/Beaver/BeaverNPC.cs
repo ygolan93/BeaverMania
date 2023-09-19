@@ -7,7 +7,7 @@ public class BeaverNPC : MonoBehaviour
     // Start is called before the first frame update
     Rigidbody Beaver;
     Animator BeaverAnimator;
-    Behavior Player;
+    Behaviour Player;
     bool isHIT = false;
     public float steer = 0.1f;
     public float speed = 3;
@@ -23,7 +23,7 @@ public class BeaverNPC : MonoBehaviour
     {
         Beaver = GetComponent<Rigidbody>();
          BeaverAnimator = GetComponent<Animator>();
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
+        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
         Movement();
     }
     private void OnCollisionEnter(Collision OBJ)

@@ -4,7 +4,7 @@ using UnityEngine;
 using TMPro;
 public class Dialogue : MonoBehaviour
 {
-    public Behavior Player;
+    public Behaviour Player;
     public ObjectiveUI PlayerObjective;
     public TextMeshProUGUI textComponent;
     public GameObject ContinueButton;
@@ -17,7 +17,7 @@ public class Dialogue : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
+        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
         PlayerObjective = GameObject.FindGameObjectWithTag("Player").GetComponent<ObjectiveUI>();
         textComponent.text = string.Empty;
         StartDialogue();

@@ -5,7 +5,7 @@ using UnityEngine;
 public class SeedPlant : MonoBehaviour
 {
     public GameObject GrowingTree;
-    public Behavior Player;
+    public Behaviour Player;
     [SerializeField] Rigidbody Seed;
     public bool grounded;
     public bool planted;
@@ -13,7 +13,7 @@ public class SeedPlant : MonoBehaviour
     public string GrowDisplay;
     private void Start()
     {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
+        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
     }
     private void OnCollisionStay(Collision OBJ)
     {
@@ -34,12 +34,12 @@ public class SeedPlant : MonoBehaviour
 
     private void Update()
     {
-        if ((Player.transform.position-Seed.position).magnitude<3)
+        if ((Player.transform.position-Seed.position).magnitude<6)
         {
             planted = true;
         }
 
-        if (planted==true)
+        if (planted==true && grounded==true)
         {
             GrowTimer -= Time.deltaTime;
             GrowDisplay = Mathf.Round(GrowTimer) + "";

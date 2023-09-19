@@ -2,49 +2,58 @@ using UnityEngine;
 using UnityEngine.UI;
 public class NewConstructor : MonoBehaviour
 {
-    public Behavior Player;
+    public Behaviour Player;
     public int PartCount = 0;
     public int BridgeLimit = 8;
     [SerializeField] GameObject BridgePart;
     [SerializeField] GameObject BridgeLink;
     [SerializeField] GameObject Log;
-    [SerializeField] GameObject Step;
+    //[SerializeField] GameObject Step;
     public AudioSource WoodKnock;
     public Rigidbody Bridge;
+    [SerializeField] BoxCollider movingCollider;
+    [SerializeField] MeshCollider staticCollider;
+    [SerializeField] Transform PartsParent;
     public Material Cel;
     public Material Synthi;
-    MeshRenderer Ramp;
+    [SerializeField] MeshRenderer[] Ramps;
     public Text BridgeUI;
     string BridgeText;
     public bool isLocked = false;
     //public string BridgeUI;
     float X;
     public BoxCollider[] partsColliders;
+    bool invokeLock = false;
+    Vector3 lockPos;
     private void Awake()
     {
-        Ramp = GetComponent<MeshRenderer>();
-        Ramp.material = Cel;
+        //Ramp = GetComponent<MeshRenderer>();
+        movingCollider.enabled = true;
+        staticCollider.enabled = false;
+        for (int i = 0; i < Ramps.Length; i++)
+        {
+            Ramps[i].material = Cel;
+        }
         Bridge = GetComponent<Rigidbody>();
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
+        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
         isLocked = false;
         BridgeText = "press left ctrl for bridge lock and construction";
         BridgeUI.text = BridgeText;
-        Step.SetActive(false);
     }
 
+    [System.Obsolete]
     public void OnCollisionEnter(Collision OBJ)
     {
         if (OBJ.gameObject.tag == "Part" && isLocked == true && PartCount < BridgeLimit)
         {
+            BridgeText = "";
             PartCount++;
-            X = 4.4331f;
-            Step.SetActive(true);
-            var newPart = Instantiate(BridgePart, Bridge.transform.position + Bridge.transform.up * -X * PartCount + Bridge.transform.forward * -0.5f, Bridge.transform.rotation);
-            newPart.transform.parent = Bridge.transform;
+            X = 2.53f;
+            var newPart = Instantiate(BridgePart, PartsParent.transform.position - PartCount * X * PartsParent.transform.forward, Bridge.transform.rotation*Quaternion.Euler(-90,180,0));
+            newPart.transform.parent = PartsParent;
             Destroy(OBJ.gameObject);
             WoodKnock.Play();
-            partsColliders = GetComponentsInChildren<BoxCollider>();
-            //BoxCollider partCol = newPart.GetComponent<BoxCollider>();
+            partsColliders = PartsParent.GetComponentsInChildren<BoxCollider>();
             MergeColliders(partsColliders);
             
             if (Player.CurrentHealth < Player.MaxHealth)
@@ -52,17 +61,14 @@ public class NewConstructor : MonoBehaviour
                 Player.CurrentHealth += 50;
                 Player.HealthBar.SetHealth(Player.CurrentHealth);
             }
-
         }
 
         if (OBJ.gameObject.tag == "Seed" && isLocked == true && PartCount >= 9)
         {
             Destroy(OBJ.gameObject);
             BridgeLimit += 9;
-            var newPart = Instantiate(BridgeLink, Bridge.transform.position + Bridge.transform.up * -X * PartCount + Bridge.transform.forward * -0.5f, Bridge.transform.rotation);
-            newPart.transform.parent = Bridge.transform;
-            //BoxCollider partCol = newPart.GetComponent<BoxCollider>();
-            //MergeColliders(partCol);
+            var newPart = Instantiate(BridgeLink, PartsParent.transform.position - PartCount * X * PartsParent.transform.forward, Bridge.transform.rotation * Quaternion.Euler(-90, 0, 0));
+            newPart.transform.parent = PartsParent;
         }
     }
     public void OnTriggerStay(Collider OBJ)
@@ -71,17 +77,29 @@ public class NewConstructor : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.LeftControl))
             {
+                if (invokeLock==false)
+                {
+                    lockPos = transform.position - new Vector3(0, 0.05f, 0);
+                    transform.position = lockPos;
+                    invokeLock = true;
+                }
                 isLocked = true;
+                movingCollider.enabled = false;
+                staticCollider.enabled = true;
+                Bridge.gameObject.layer = 9;
                 Bridge.isKinematic = true;
-                Ramp.material = Synthi;
-                BridgeText = "Locked";
+                for (int i = 0; i < Ramps.Length; i++)
+                {
+                    Ramps[i].material = Synthi;
+                }
+                BridgeUI.enabled = false;
                 BridgeUI.text = BridgeText;
             }
             if (Input.GetKeyDown(KeyCode.Delete) && PartCount == 0)
             {
                 for (int i = 0; i < 9; i++)
                 {
-                    Instantiate(Log, Bridge.transform.position + new Vector3(0, i, 0), Bridge.transform.rotation);
+                    Instantiate(Log, Bridge.transform.position + new Vector3(0, 2*i, 0), Bridge.transform.rotation);
                 }
                 Destroy(gameObject);
             }
@@ -91,26 +109,23 @@ public class NewConstructor : MonoBehaviour
 
     void MergeColliders(BoxCollider[] bridgeParts)
     {
-        for (int i = 0; i < bridgeParts.Length; i++)
+        float partY= BridgePart.GetComponent<BoxCollider>().size.y;
+        bridgeParts[0].enabled = true;
+        if (PartCount>1)
         {
-            if (i>1)
-            {
-                bridgeParts[i].enabled = false;
-            }
-        }
-        if (bridgeParts.Length>2)
-        {
-            bridgeParts[1].size += new Vector3(0, 4.4331f, 0);
-            bridgeParts[1].center -= new Vector3(0, 4.4331f / 2, 0);
+            bridgeParts[0].size += new Vector3(0, partY, 0);
+            bridgeParts[0].center -= new Vector3(0, partY / 2, 0);
         }
 
-
-        //Bounds bounds1 = bridgeParts[1].bounds;
-        //Bounds bounds2 = bridgeParts[bridgeParts.Length].bounds;
-        //Bounds combinedBounds = new Bounds(Vector3.Lerp(bounds1.min, bounds2.min, 0.21f), Vector3.Lerp(bounds1.max, bounds2.max, 0.21f));
-        //bridgeParts[1].size = combinedBounds.size;
-        //bridgeParts[1].center = combinedBounds.center;
-
+        for (int i = 1; i < bridgeParts.Length; i++)
+        {
+            bridgeParts[i].enabled = false;
+        }
+        if (bridgeParts.Length==8)
+        {
+            Debug.Log("Reached bridge limit! Use a nut to extend");
+        }
+        
     }
 }
 

@@ -6,13 +6,13 @@ public class DisappearOnAway : MonoBehaviour
 {
     [SerializeField] GameObject Item;
 
-    public Behavior Player;
+    public Behaviour Player;
     public Vector3 DistanceVec;
     [SerializeField] float ActualDistance;
     [SerializeField] float PopUpDistance;
     private void Start()
     {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
+        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
     }
     private void Update()
     {

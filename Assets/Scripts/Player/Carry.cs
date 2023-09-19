@@ -10,7 +10,7 @@ public class Carry : MonoBehaviour
     public Rigidbody Log;
     public Transform BridgeDrop;
     public Transform LogDrop;
-    public Behavior Goal;
+    public Behaviour Goal;
 
     [Header("Movement affect factors")]
     public int i = 0;
@@ -53,7 +53,7 @@ public class Carry : MonoBehaviour
                 Goal.Walk += WalkFactor;
                 Goal.Run += RunFactor;
                 Goal.Otter.speed += SlowAnim;
-                Instantiate(Log, new Vector3(SpawnPos.x, SpawnPos.y, SpawnPos.z), Quaternion.identity);
+                Instantiate(Log, SpawnPos, Quaternion.identity);
                 CarryPoint[i].SetActive(false);
             }
 
@@ -66,7 +66,7 @@ public class Carry : MonoBehaviour
                 LogDrop.transform.localRotation = Quaternion.Slerp(transform.rotation, Quaternion.identity, 0);
                 SpawnPos = new Vector3(LogDrop.transform.position.x, LogDrop.position.y - 0.5f, LogDrop.position.z);
                 Bridge.transform.rotation = Goal.rotGoal * Quaternion.Euler(-90, 0, 0);
-                Instantiate(Bridge, BridgeDrop.position, Bridge.transform.rotation);
+                Instantiate(Bridge, BridgeDrop.position + new Vector3(0,0.5f,0), Goal.transform.rotation*Quaternion.Euler(0,180,0));
                 i = 0;
                 for (int x = 0; x < 9; x++)
                 {

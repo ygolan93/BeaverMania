@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class ObjectiveUI: MonoBehaviour
 {
-    public Behavior Player;
+    public Behaviour Player;
     public string[] Objective;
     public int i;
     public WayPoint currentPoint;

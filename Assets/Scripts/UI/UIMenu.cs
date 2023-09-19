@@ -8,14 +8,14 @@ public class UIMenu : MonoBehaviour
 {
     public GameObject PauseMenu;
     public GameObject Question;
-    public Behavior Player;
+    public Behaviour Player;
     public bool ActivePause = false;
     [SerializeField] Slider volumeSlider;
 
     // Start is called before the first frame update
     private void Start()
     {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
+        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
         Player.HideCursor();
         PauseMenu.SetActive(false);
         Question.SetActive(false);

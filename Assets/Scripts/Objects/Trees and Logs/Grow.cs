@@ -14,8 +14,8 @@ public class Grow : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Clock = 12f;
-        scaleChange = new Vector3(0.003f, 0.002f, 0.003f);
+        Clock = 0.83f;
+        scaleChange = new Vector3(0.01f, 0.014f, 0.01f);
     }
 
 
@@ -23,7 +23,7 @@ public class Grow : MonoBehaviour
     void Update()
     {
         gameObject.transform.localScale += scaleChange;
-        transform.Rotate(Vector3.up * 0.8f, Space.World);
+        transform.Rotate(Vector3.up * 20f, Space.World);
         Clock -= Time.deltaTime;
         if (Clock <= 0)
         {

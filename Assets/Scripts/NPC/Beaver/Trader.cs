@@ -7,7 +7,7 @@ public class Trader : MonoBehaviour
 {
     public GameObject Merchant;
     public Transform PlayerRoot;
-    public Behavior Player;
+    public Behaviour Player;
     public GameObject TradeText;
     public GameObject DialoguePanel;
     public GameObject Shop;
@@ -20,7 +20,7 @@ public class Trader : MonoBehaviour
     void Start()
     {
         FormalLook = transform.rotation;
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
+        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
         PlayerRoot = GameObject.FindGameObjectWithTag("PlayerRoot").GetComponent<Transform>();
     }
 

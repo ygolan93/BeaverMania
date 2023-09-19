@@ -6,7 +6,7 @@ public class WaspSpawner : MonoBehaviour
 {
     public GameObject Wasp;
     public GameObject Hive;
-    public Behavior Player;
+    public Behaviour Player;
     public Vector3 Distance;
     [SerializeField] float SpawnDistance;
     public int WaspCounter=3;
@@ -18,7 +18,7 @@ public class WaspSpawner : MonoBehaviour
     { 
         Counter=WaspCounter;
         RealClock = SpawnClock;
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behavior>();
+        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
     }
 
 

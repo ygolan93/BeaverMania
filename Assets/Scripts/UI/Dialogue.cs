@@ -9,6 +9,7 @@ public class Dialogue : MonoBehaviour
     public TextMeshProUGUI textComponent;
     public GameObject ContinueButton;
     public GameObject SkipButton;
+    public Transform panel;
     public string[] lines;
     public float textSpeed;
 
@@ -19,6 +20,7 @@ public class Dialogue : MonoBehaviour
     {
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
         PlayerObjective = GameObject.FindGameObjectWithTag("Player").GetComponent<ObjectiveUI>();
+        panel = gameObject.transform.parent.GetComponent<Transform>();
         textComponent.text = string.Empty;
         StartDialogue();
     }
@@ -69,13 +71,8 @@ public class Dialogue : MonoBehaviour
     public void EndConversation()
     {
         PlayerObjective.UpdateObjective();
+        panel.gameObject.SetActive(false);
         //Destroy(ContinueButton);
         //Destroy(SkipButton);
-    }
-    public void EndBossConversation()
-    {
-        PlayerObjective.UpdateObjective();
-        Destroy(ContinueButton);
-        Destroy(SkipButton);
     }
 }

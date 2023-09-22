@@ -59,6 +59,11 @@ public class Trader : MonoBehaviour
         skipPressed = true;
     }
 
+    public void CloseShop()
+    {
+        Shop.SetActive(false);
+    }
+
     public void Honey()
     {
         Player.HoneyON();

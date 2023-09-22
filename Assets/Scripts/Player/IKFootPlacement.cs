@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class IKFootPlacement : MonoBehaviour
 {
-    Animator anim;
+   [SerializeField] Animator anim;
     [Range(0, 1f)]
     public float DistanceToGround;
     [Range (0,1f)]
@@ -24,11 +24,10 @@ public class IKFootPlacement : MonoBehaviour
             //Left Foot
             anim.SetIKPositionWeight(AvatarIKGoal.LeftFoot, PositionWeight);
             anim.SetIKRotationWeight(AvatarIKGoal.LeftFoot, 1f);
-            RaycastHit hitL;
-            Ray rayL = new Ray(anim.GetIKPosition(AvatarIKGoal.LeftFoot) + Vector3.up, Vector3.down);
-            if (Physics.Raycast(rayL, out hitL, DistanceToGround+1f, layerMask))
+            Ray rayL = new(anim.GetIKPosition(AvatarIKGoal.LeftFoot) + Vector3.up, Vector3.down);
+            if (Physics.Raycast(rayL, out RaycastHit hitL, DistanceToGround + 1f, layerMask))
             {
-                if (hitL.transform.tag=="Isle")
+                if (hitL.transform.CompareTag("Isle"))
                 {
                     Vector3 footPosition = hitL.point;
                     footPosition.y += DistanceToGround;
@@ -39,11 +38,10 @@ public class IKFootPlacement : MonoBehaviour
             //Right Foot
             anim.SetIKPositionWeight(AvatarIKGoal.RightFoot, PositionWeight);
             anim.SetIKRotationWeight(AvatarIKGoal.RightFoot, 1f);
-            RaycastHit hitR;
-            Ray rayR = new Ray(anim.GetIKPosition(AvatarIKGoal.RightFoot) + Vector3.up, Vector3.down);
-            if (Physics.Raycast(rayR, out hitR, DistanceToGround + 1f, layerMask))
+            Ray rayR = new(anim.GetIKPosition(AvatarIKGoal.RightFoot) + Vector3.up, Vector3.down);
+            if (Physics.Raycast(rayR, out RaycastHit hitR, DistanceToGround + 1f, layerMask))
             {
-                if (hitR.transform.tag == "Isle")
+                if (hitR.transform.CompareTag("Isle"))
                 {
                     Vector3 footPosition = hitR.point;
                     footPosition.y += DistanceToGround;

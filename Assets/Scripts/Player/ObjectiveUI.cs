@@ -11,6 +11,7 @@ public class ObjectiveUI: MonoBehaviour
    public string Instruction;
     public void Update()
     {
+        Player = transform.GetComponent<Behaviour>();
         i = currentPoint.GetComponent<WayPoint>().i;
         Instruction = Objective[i];
 

@@ -10,9 +10,17 @@ public class BossDamage : MonoBehaviour
     public NPC_Audio BossAudio;
     public BossScript Boss;
 
-
+    private void Awake()
+    {
+        BossAudio = GameObject.FindGameObjectWithTag("Boss").GetComponent<NPC_Audio>();
+        Player = transform.GetComponent<Behaviour>();
+    }
     public void OnTriggerEnter(Collider OBJ)
     {
+        if (OBJ.gameObject.CompareTag("Arena"))
+        {
+            Boss = GameObject.FindGameObjectWithTag("Boss").GetComponent<BossScript>();
+        }
         if (OBJ.gameObject.CompareTag("ScorpionDamage"))
         {
             if (Boss.combo < Boss.comboLimit)

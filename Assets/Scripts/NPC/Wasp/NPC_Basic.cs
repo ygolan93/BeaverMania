@@ -15,7 +15,7 @@ public class NPC_Basic : MonoBehaviour
     GameObject AnotherWasp;
     public Vector3 Distance;
     public Quaternion rotGoal;
-    float steer = 0.5f;
+    readonly float steer = 0.5f;
     public float AttackSpeed = 7f;
     public float PlayerDistance;
     float ChangeNav = 5f;
@@ -78,7 +78,7 @@ public class NPC_Basic : MonoBehaviour
             {
                 Wasp.SetBool("Sting", false);
                 currentPos = transform.position;
-                floatOnAir(currentPos);
+                FloatOnAir(currentPos);
             }
             else
             {
@@ -202,7 +202,7 @@ public class NPC_Basic : MonoBehaviour
     }
 
 
-    void floatOnAir(Vector3 initialPosition)
+    void FloatOnAir(Vector3 initialPosition)
     {
         StartCoroutine(FloatObject(initialPosition));
     }

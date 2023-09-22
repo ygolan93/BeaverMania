@@ -44,15 +44,15 @@ public class BeaverNPC : MonoBehaviour
     [System.Obsolete]
     private void OnCollisionStay(Collision OBJ)
     {
-        if (OBJ.gameObject.tag != "NPC" && OBJ.gameObject.tag != "Damage" && OBJ.gameObject.tag != "Isle")
+        if (OBJ.gameObject.tag is not "NPC" and not "Damage" and not "Isle")
         {
             Movement();
         }
-        if (OBJ.gameObject.tag=="Isle")
+        if (OBJ.gameObject.CompareTag("Isle"))
         {
             grounded = true;
         }
-        if (OBJ.gameObject.tag == "Player")
+        if (OBJ.gameObject.CompareTag("Player"))
         {
             if (Input.GetKeyDown(KeyCode.LeftControl))
             {
@@ -67,7 +67,7 @@ public class BeaverNPC : MonoBehaviour
     }
     private void OnCollisionExit(Collision OBJ)
     {
-        if (OBJ.gameObject.tag == "Isle")
+        if (OBJ.gameObject.CompareTag("Isle"))
         {
             grounded = false;
         }

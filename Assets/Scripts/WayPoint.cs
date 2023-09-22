@@ -8,12 +8,14 @@ public class WayPoint : MonoBehaviour
     public Image Mark;
     Transform target;
     public Transform[] Locations;
+    public Transform Arrow;
     public int i;
 
 
     // Update is called once per frame
     public void Start()
     {
+        Arrow.gameObject.SetActive(false);
         for (int index=0; index<Locations.Length; index++)
         {
             if (index!=i && index!=21 && index!=22)
@@ -26,7 +28,16 @@ public class WayPoint : MonoBehaviour
 
     void Update()
     {
+        if (Input.GetKey(KeyCode.Q))
+        {
+            Arrow.gameObject.SetActive(true);
+        }
+        else
+        {
+            Arrow.gameObject.SetActive(false);
+        }
         target = Locations[i];
+        Arrow.gameObject.transform.rotation = Quaternion.LookRotation(Locations[i].transform.position - transform.position);
         if (target==null)
         {
             i++;

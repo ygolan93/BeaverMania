@@ -26,11 +26,11 @@ public class LiftButton : MonoBehaviour
     {
         if (isPushed==true)
         {
-            pushButton();
+            PushButton();
         }
         if (isPushed == false)
         {
-            retractButton();
+            RetractButton();
         }
         if (elevator.isMoving==true)
         {
@@ -56,11 +56,11 @@ public class LiftButton : MonoBehaviour
             isPushed = false;
         }
     }
-    void pushButton()
+    void PushButton()
     {
             pressedButton.transform.position = Vector3.Lerp(pressedButton.transform.position, pushPos.position, pushSpeed);
     }
-    void retractButton()
+    void RetractButton()
     {
         pressedButton.transform.position = Vector3.Lerp(pressedButton.transform.position, initialPos.position, pushSpeed);
         

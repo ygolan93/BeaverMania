@@ -31,7 +31,7 @@ public class WaspSpawner : MonoBehaviour
             if (Counter > 0)
             {
                Quaternion RotWasp = Quaternion.LookRotation(Distance);
-               var NewWasp =Instantiate(Wasp, Hive.transform.position, RotWasp);
+               Instantiate(Wasp, Hive.transform.position, RotWasp);
                 Counter--;
             }
             if (Counter <=0)

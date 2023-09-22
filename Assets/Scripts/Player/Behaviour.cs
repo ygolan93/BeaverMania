@@ -42,7 +42,7 @@ public class Behaviour : MonoBehaviour
     public float CurrentHealth;
     public float MaxStamina = 100;
     public float CurrentStamina;
-    float StaminaClockInitial = 0.5f;
+    readonly float StaminaClockInitial = 0.5f;
     float StaminaClock;
     public Health_Bar_Script HealthBar;
     public bool heal;
@@ -159,12 +159,12 @@ public class Behaviour : MonoBehaviour
             }
 
         }
-        if (OBJ.gameObject.tag == "Isle" || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.tag == "stairs")
+        if (OBJ.gameObject.CompareTag("Isle") || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("stairs"))
         {
             FallClock = InitialFall;
             if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.D))
             {
-                if (OBJ.gameObject.tag == "stairs")
+                if (OBJ.gameObject.CompareTag("stairs"))
                 {
                     Player.velocity += new Vector3(0, 1, 0);
                 }
@@ -192,11 +192,11 @@ public class Behaviour : MonoBehaviour
         //}
 
 
-        if (OBJ.gameObject.tag == "Isle" || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("Tile") || OBJ.gameObject.CompareTag("House") || OBJ.gameObject.tag == "stairs")
+        if (OBJ.gameObject.CompareTag("Isle") || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("Tile") || OBJ.gameObject.CompareTag("House") || OBJ.gameObject.CompareTag("stairs"))
         {
             grounded = true;
         }
-        if (OBJ.gameObject.tag == "Tile")
+        if (OBJ.gameObject.CompareTag("Tile"))
         {
             var OBJVelocity = OBJ.transform.GetComponent<Rigidbody>();
             PlatformVelocity = OBJVelocity.velocity;
@@ -235,7 +235,7 @@ public class Behaviour : MonoBehaviour
             Plattering = "Get off me ya nasty bastards!";
             ChangeSpeech = 3;
         }
-        if (OBJ.gameObject.tag == "Strike")
+        if (OBJ.gameObject.CompareTag("Strike"))
         {
             if (Lives > 0)
             {
@@ -251,15 +251,15 @@ public class Behaviour : MonoBehaviour
     }
     public void OnCollisionExit(Collision OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Isle") || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("House") || OBJ.gameObject.tag == "stairs")
+        if (OBJ.gameObject.CompareTag("Isle") || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("House") || OBJ.gameObject.CompareTag("stairs"))
         {
             grounded = false;
         }
-        if (OBJ.gameObject.tag == "Life")
+        if (OBJ.gameObject.CompareTag("Life"))
         {
             TouchShroom = false;
         }
-        if (OBJ.gameObject.tag == "Tile")
+        if (OBJ.gameObject.CompareTag("Tile"))
         {
             grounded = false;
             OnPlatform = false;
@@ -268,18 +268,18 @@ public class Behaviour : MonoBehaviour
 
     public void OnTriggerEnter(Collider OBJ)
     {
-        if (OBJ.gameObject.tag == "Life")
+        if (OBJ.gameObject.CompareTag("Life"))
         {
             HealingText = "Checkpoint saved";
         }
-        if (OBJ.gameObject.tag == "Bridge")
+        if (OBJ.gameObject.CompareTag("Bridge"))
         {
             Player.velocity += new Vector3(0, 1, 0);
         }
     }
     public void OnTriggerStay(Collider OBJ)
     {
-        if (OBJ.gameObject.tag == "Life")
+        if (OBJ.gameObject.CompareTag("Life"))
         {
             GM.lastCheckPointPos = OBJ.transform.position;
             Plattering = ("Shroom!");
@@ -562,7 +562,7 @@ public class Behaviour : MonoBehaviour
         Run = 18;
         JumpLimit = 5;
         //BeatGrounded = BeatGrounded / 5;
-        AirBeat = AirBeat / 5;
+        AirBeat /= 5;
         ElectricEffect.SetActive(true);
     }
     public void GobletOFF()
@@ -1020,10 +1020,10 @@ public class Behaviour : MonoBehaviour
         Vector3 cameraRelativeLeft = Camera.main.transform.TransformDirection(Vector3.left);
 
         //Horizontal camera vectors
-        Vector3 XZForward = new Vector3(cameraRelativeForward.x, 0, cameraRelativeForward.z);
-        Vector3 XZBack = new Vector3(cameraRelativeBack.x, 0, cameraRelativeBack.z);
-        Vector3 XZRight = new Vector3(cameraRelativeRight.x, 0, cameraRelativeRight.z);
-        Vector3 XZLeft = new Vector3(cameraRelativeLeft.x, 0, cameraRelativeLeft.z);
+        Vector3 XZForward = new(cameraRelativeForward.x, 0, cameraRelativeForward.z);
+        Vector3 XZBack = new(cameraRelativeBack.x, 0, cameraRelativeBack.z);
+        Vector3 XZRight = new(cameraRelativeRight.x, 0, cameraRelativeRight.z);
+        Vector3 XZLeft = new(cameraRelativeLeft.x, 0, cameraRelativeLeft.z);
 
         Otter.SetBool("walk", false);
         Otter.SetBool("run", false);
@@ -1036,11 +1036,15 @@ public class Behaviour : MonoBehaviour
             if (hurt == true || heal == true)
             {
                 StopHurt += Time.deltaTime;
-                if (StopHurt >= 0.15f)
+                if (StopHurt >= 0.2f)
                 {
                     hurt = false;
                     heal = false;
                 }
+            }
+            else
+            {
+                StopHurt = 0;
             }
             if (CurrentHealth >= MaxHealth)
             {

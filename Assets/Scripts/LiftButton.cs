@@ -43,7 +43,15 @@ public class LiftButton : MonoBehaviour
     }
     private void OnTriggerEnter(Collider OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Player")|| OBJ.gameObject.CompareTag("Damage"))
+        if (OBJ.gameObject.CompareTag("Player"))
+        {
+            click.Play();
+            isPushed = true;
+        }
+    }
+    private void OnCollisionEnter(Collision OBJ)
+    {
+        if (OBJ.gameObject.CompareTag("Damage"))
         {
             click.Play();
             isPushed = true;
@@ -51,11 +59,20 @@ public class LiftButton : MonoBehaviour
     }
     private void OnTriggerExit(Collider OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Player") || OBJ.gameObject.CompareTag("Damage"))
+        if (OBJ.gameObject.CompareTag("Player"))
         {
             isPushed = false;
         }
     }
+    private void OnCollisionExit(Collision OBJ)
+    {
+        if (OBJ.gameObject.CompareTag("Damage"))
+        {
+            isPushed = false;
+        }
+    }
+
+
     void PushButton()
     {
             pressedButton.transform.position = Vector3.Lerp(pressedButton.transform.position, pushPos.position, pushSpeed);

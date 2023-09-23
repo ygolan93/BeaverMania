@@ -47,10 +47,10 @@ public class Shop : MonoBehaviour
     }
     public void BuyAccesory()
     {
-        if (Player.Currency >= 10)
+        if (Player.Currency >= 60)
         {
             Player.GobletPickup++;
-            Player.Currency -= 10;
+            Player.Currency -= 60;
         }
     }
     public void SellAccesory()
@@ -58,7 +58,7 @@ public class Shop : MonoBehaviour
         if (Player.GobletPickup > 0)
         {
             Player.GobletPickup--;
-            Player.Currency += 10;
+            Player.Currency += 60;
         }
     }
 }

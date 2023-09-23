@@ -29,22 +29,6 @@ public class ElevatorController : MonoBehaviour
             }
         }
     }
-
-    private void OnTriggerStay(Collider OBJ)
-    {
-        if (OBJ.gameObject.CompareTag("Player"))
-        {
-            OBJ.gameObject.transform.parent = transform;
-        }
-    }
-    private void OnTriggerExit(Collider OBJ)
-    {
-        if (OBJ.gameObject.CompareTag("Player"))
-        {
-            OBJ.gameObject.transform.parent = null;
-        }
-    }
-
     private IEnumerator MoveElevator(Vector3 targetPosition)
     {
         isMoving = true;

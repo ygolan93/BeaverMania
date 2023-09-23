@@ -11,6 +11,7 @@ public class Behaviour : MonoBehaviour
     [Header("Movement and animation")]
     public Rigidbody Player;
     public bool grounded;
+    bool disableGround = false;
     public Vector3 PlatformVelocity;
     public Carry Load;
     public Quaternion rotGoal;
@@ -32,6 +33,7 @@ public class Behaviour : MonoBehaviour
    //public bool isOverlapping;
     [SerializeField] int JumpNum;
     int JumpLimit;
+    int GobletJumpLimit;
     int JumpNumPreserve;
     public Transform Root;
     public Animator Otter;
@@ -159,7 +161,7 @@ public class Behaviour : MonoBehaviour
             }
 
         }
-        if (OBJ.gameObject.CompareTag("Isle") || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("stairs"))
+        if (OBJ.gameObject.CompareTag("Isle") || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("stairs") || OBJ.gameObject.CompareTag("Tile"))
         {
             FallClock = InitialFall;
             if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.D))
@@ -184,25 +186,14 @@ public class Behaviour : MonoBehaviour
     }
     public void OnCollisionStay(Collision OBJ)
     {
-        ////Prevent getting stuck inside bridge colliders by accident
-        //BoxCollider otherCol = OBJ.gameObject.GetComponent<BoxCollider>();
-        //if (otherCol!=null)
-        //{
-        //    isOverlapping = Physics.OverlapCapsule(playerCollider.center, otherCol.center, playerCollider.radius, otherCol.gameObject.layer).Length > 0;
-        //}
-
-
-        if (OBJ.gameObject.CompareTag("Isle") || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("Tile") || OBJ.gameObject.CompareTag("House") || OBJ.gameObject.CompareTag("stairs"))
+        if (OBJ.gameObject.CompareTag("Isle") || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("Tile") || OBJ.gameObject.CompareTag("House") || OBJ.gameObject.CompareTag("stairs") || OBJ.gameObject.CompareTag("Tile"))
         {
-            grounded = true;
+            if (disableGround==false)
+            {
+                grounded = true;
+            }
         }
-        if (OBJ.gameObject.CompareTag("Tile"))
-        {
-            var OBJVelocity = OBJ.transform.GetComponent<Rigidbody>();
-            PlatformVelocity = OBJVelocity.velocity;
-            OnPlatform = true;
 
-        }
         if (OBJ.gameObject.CompareTag("Weapon"))
         {
             Plattering = ("Hm, What's this?");
@@ -251,18 +242,13 @@ public class Behaviour : MonoBehaviour
     }
     public void OnCollisionExit(Collision OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Isle") || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("House") || OBJ.gameObject.CompareTag("stairs"))
+        if (OBJ.gameObject.CompareTag("Isle") || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("House") || OBJ.gameObject.CompareTag("stairs") || OBJ.gameObject.CompareTag("Tile"))
         {
             grounded = false;
         }
         if (OBJ.gameObject.CompareTag("Life"))
         {
             TouchShroom = false;
-        }
-        if (OBJ.gameObject.CompareTag("Tile"))
-        {
-            grounded = false;
-            OnPlatform = false;
         }
     }
 
@@ -276,10 +262,22 @@ public class Behaviour : MonoBehaviour
         {
             Player.velocity += new Vector3(0, 1, 0);
         }
+
+        if (OBJ.gameObject.CompareTag("Tile"))
+        {   
+            Player.transform.SetParent(OBJ.gameObject.transform, true);
+
+            Player.transform.localScale = new(0.15f,2,0.18f);
+            OnPlatform = true;
+        }
     }
     public void OnTriggerStay(Collider OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Life"))
+        if (OBJ.gameObject.CompareTag("DisableGround"))
+        {
+            disableGround = true;
+        }
+            if (OBJ.gameObject.CompareTag("Life"))
         {
             GM.lastCheckPointPos = OBJ.transform.position;
             Plattering = ("Shroom!");
@@ -301,9 +299,9 @@ public class Behaviour : MonoBehaviour
                 isAtTrader = true;
                 FreeLook.enabled = false;
                 CamForTraders.enabled = true;
-                CamForTraders.m_Orbits[1].m_Radius = 6;
-                CamForTraders.m_XAxis.m_MaxSpeed = 0.1f;
-                CamForTraders.m_YAxis.m_MaxSpeed = 0.1f;
+                //CamForTraders.m_Orbits[1].m_Radius = 6;
+                //CamForTraders.m_XAxis.m_MaxSpeed = 0.1f;
+                //CamForTraders.m_YAxis.m_MaxSpeed = 0.1f;
                 CamForTraders.m_LookAt = OBJ.transform;
             }
             if (skip ==true)
@@ -329,6 +327,18 @@ public class Behaviour : MonoBehaviour
     }
     public void OnTriggerExit(Collider OBJ)
     {
+        if (OBJ.gameObject.CompareTag("DisableGround"))
+        {
+            disableGround = false;
+        }
+        if (OBJ.gameObject.CompareTag("Tile"))
+        {
+            grounded = false;
+            OnPlatform = false;
+            Player.transform.parent = null;
+            Player.transform.localScale = new(1, 1, 1);
+        }
+
         if (OBJ.gameObject.CompareTag("Life"))
         {
             TouchShroom = false;
@@ -441,8 +451,8 @@ public class Behaviour : MonoBehaviour
         transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
 
         Otter.SetBool("walk", true);
-        if (OnPlatform == false)
-        {
+        //if (OnPlatform == false)
+        //{
             if (grounded == true)
             {
                 if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey && Rolling == false)
@@ -458,35 +468,29 @@ public class Behaviour : MonoBehaviour
                     steer = 0.1f;
                 }
                 Player.velocity = (Direction.normalized * speed) + new Vector3(0, Player.velocity.y, 0);
-                //Player.AddForce(Direction.normalized *8*speed);
-                //if (Player.velocity.magnitude > speed)
-                //{
-                //    Player.AddForce(-Direction.normalized*0.1f);
-                //}
-
             }
             if (grounded == false && Input.GetKey(KeyCode.LeftShift))
                 Player.AddForce(Direction.normalized * 5);
-        }
-        if (OnPlatform == true)
-        {
-            {
-                if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey)
-                {
-                    Otter.SetBool("run", true);
-                    speed = Run;
-                    steer = 0.12f;
-                }
-                else
-                {
-                    Otter.SetBool("run", false);
-                    speed = Walk;
-                    steer = 0.1f;
-                }
-                Player.velocity = (Direction.normalized * speed) + PlatformVelocity;
+        //}
+        //if (OnPlatform == true)
+        //{
+            
+        //    if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey)
+        //    {
+        //        Otter.SetBool("run", true);
+        //        speed = Run;
+        //        steer = 0.12f;
+        //    }
+        //    else
+        //    {
+        //        Otter.SetBool("run", false);
+        //        speed = Walk;
+        //        steer = 0.1f;
+        //    }
+        //    Player.velocity = (Direction.normalized * speed) + new Vector3(0, Player.velocity.y, 0)+ PlatformVelocity;
+         
 
-            }
-        }
+        //}
 
     }
     public void PlayerRoll(Vector3 Direction)
@@ -556,14 +560,15 @@ public class Behaviour : MonoBehaviour
     {
         gobletOBJ.SetActive(true);
         GobletPicked = true;
-        GobletPickup--;
         AnimSpeed = 3;
         Walk = 7;
         Run = 18;
-        JumpLimit = 5;
+        JumpLimit = GobletJumpLimit;
         //BeatGrounded = BeatGrounded / 5;
         AirBeat /= 5;
         ElectricEffect.SetActive(true);
+        GobletClock = 10f;
+        GobletPickup--;
     }
     public void GobletOFF()
     {
@@ -571,7 +576,7 @@ public class Behaviour : MonoBehaviour
         AnimSpeed = 1;
         Walk = InsertWalk;
         Run = InsertRun;
-        JumpLimit = 3;
+        JumpLimit = GobletJumpLimit-2;
         //BeatGrounded = 5 * BeatGrounded;
         AirBeat = 5 * AirBeat;
         ElectricEffect.SetActive(false);
@@ -616,11 +621,13 @@ public class Behaviour : MonoBehaviour
     {
         GoldPicked = true;
         GoldBrick.SetActive(true);
+        //Physics.IgnoreLayerCollision(gameObject.layer, 7, true);
     }
     public void GoldOFF()
     {
         GoldPicked = false;
         GoldBrick.SetActive(false);
+        //Physics.IgnoreLayerCollision(gameObject.layer, 7, false);
     }
 
     public void Start()
@@ -645,6 +652,7 @@ public class Behaviour : MonoBehaviour
         Lives = 3;
         StaminaClock = StaminaClockInitial;
         JumpLimit = JumpNum;
+        GobletJumpLimit = JumpNum + 2;
         FallClock = InitialFall;
         InsertWalk = Walk;
         InsertRun = Run;
@@ -1030,6 +1038,14 @@ public class Behaviour : MonoBehaviour
         Otter.SetBool("midair", false);
         Otter.SetBool("roll", false);
         //Otter.SetBool("Defend", false);
+
+        //if (OnPlatform==true)
+        //{
+        //    Player.velocity += new Vector3(0, PlatformVelocity.y, 0);
+        //}
+        
+
+
         Rolling = false;
         //Switch off hurt and heal effects automaticly
         {

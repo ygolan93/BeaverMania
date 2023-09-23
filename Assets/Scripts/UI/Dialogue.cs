@@ -71,6 +71,7 @@ public class Dialogue : MonoBehaviour
     public void EndConversation()
     {
         PlayerObjective.UpdateObjective();
+        //Player.isAtTrader = false;
         panel.gameObject.SetActive(false);
         //Destroy(ContinueButton);
         //Destroy(SkipButton);

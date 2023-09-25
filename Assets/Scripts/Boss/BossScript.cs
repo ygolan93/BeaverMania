@@ -103,6 +103,11 @@ public class BossScript : MonoBehaviour
         }
     }
 
+    public void InitiateCharge()
+    {
+        Charge = true;
+        BossHPBar.SetActive(true);
+    }
     private void ChargeTowardsPlayer()
     {
         Boss.velocity = new Vector3(Distance.x, 0, Distance.z).normalized*10+new Vector3(0,Boss.velocity.y,0);
@@ -129,6 +134,7 @@ public class BossScript : MonoBehaviour
         Scorpion.SetBool("Walk", false);
         Scorpion.SetBool("Backwards", false);
         Scorpion.SetBool("Attack", true);
+        //Sound.Sting();
         rotGoal = Quaternion.LookRotation(new Vector3(Distance.x, 0, Distance.z));
         Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
 
@@ -141,6 +147,7 @@ public class BossScript : MonoBehaviour
         Scorpion.SetBool("Walk", false);
         Scorpion.SetBool("Backwards", true);
         Scorpion.SetBool("Attack", false);
+        //Sound.Sting();
         rotGoal = Quaternion.LookRotation(new Vector3(Distance.x, 0, Distance.z));
         Boss.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
     }
@@ -160,8 +167,8 @@ public class BossScript : MonoBehaviour
         BossHPBar.SetActive(false);
         Explosion.SetActive(true);
         Explosion.transform.parent = null;
-        //Destroy(gameObject);
-        gameObject.SetActive(false);
+        Destroy(gameObject);
+        //gameObject.SetActive(false);
     }
 
     private void OnCollisionEnter(Collision OBJ)

@@ -150,7 +150,6 @@ public class NPC_Basic : MonoBehaviour
     {
         PlayerHealth.Plattering = ("HA! gotcha");
         PlayerHealth.ChangeSpeech = 1;
-        Sound.Ahh();
         Instantiate(Explosion, transform.position + new Vector3(0, 1, 0), transform.rotation);
         Instantiate(Body, transform.position + new Vector3(0, 1, 0), transform.rotation);
         Instantiate(Head, transform.position + new Vector3(0, 1, 0), transform.rotation);

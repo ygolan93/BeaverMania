@@ -61,4 +61,22 @@ public class Shop : MonoBehaviour
             Player.Currency += 60;
         }
     }
+    public void BuyGoldBrick()
+    {
+        if (Player.GoldPicked == false)
+        {
+            Player.GoldON();
+            Player.Currency -= 150;
+        }
+    }
+    public void SellGoldBrick()
+    {
+        if (Player.GoldPicked==true)
+        {
+            Player.GoldOFF();
+            Player.Currency += 150;
+        }
+    }
+       
+
 }

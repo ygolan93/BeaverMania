@@ -57,6 +57,9 @@ public class Trader : MonoBehaviour
     public void activateSkip()
     {
         skipPressed = true;
+        TradeText.SetActive(false);
+        DialoguePanel.SetActive(false);
+        Shop.SetActive(false);
     }
 
     public void CloseShop()

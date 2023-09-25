@@ -5,6 +5,7 @@ using UnityEngine;
 public class DoorShut : MonoBehaviour
 {
     public GameObject Wall;
+    [SerializeField] Trader Guard;
     bool Open = false;
     float Clock=7f;
 
@@ -25,7 +26,10 @@ public class DoorShut : MonoBehaviour
     {
         if (OBJ.gameObject.CompareTag("Gold"))
         {
+            Guard.activateSkip();
+            Guard.enabled = false;
             Open = true;
+            Destroy(OBJ.gameObject);
         }
     }
 }

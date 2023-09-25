@@ -28,6 +28,7 @@ public class WayPoint : MonoBehaviour
 
     void Update()
     {
+        //Arrow Compass
         if (Input.GetKey(KeyCode.Q))
         {
             Arrow.gameObject.SetActive(true);
@@ -43,30 +44,32 @@ public class WayPoint : MonoBehaviour
             i++;
         }
 
-        float minX = Mark.GetPixelAdjustedRect().width / 2;
-        float maxX = Screen.width - minX;
-        float minY = Mark.GetPixelAdjustedRect().width / 2;
-        float maxY = Screen.width - minY;
-        Vector2 Pos = Camera.main.WorldToScreenPoint(target.position+new Vector3(0,2,0));
-
-
-        if (Vector3.Dot((target.position - transform.position), transform.forward) < 0)
+        //Waypoint Mark
         {
-            //Target is behind player
-            Mark.enabled = false;
+            float minX = Mark.GetPixelAdjustedRect().width / 2;
+            float maxX = Screen.width - minX;
+            float minY = Mark.GetPixelAdjustedRect().width / 2;
+            float maxY = Screen.width - minY;
+            Vector2 Pos = Camera.main.WorldToScreenPoint(target.position + new Vector3(0, 2, 0));
+
+
+            if (Vector3.Dot((target.position - transform.position), transform.forward) < 0)
+            {
+                //Target is behind player
+                Mark.enabled = false;
+            }
+            else
+            {
+                Mark.enabled = true;
+            }
+
+            Pos.x = Mathf.Clamp(Pos.x, minX, maxX);
+            Pos.y = Mathf.Clamp(Pos.y, minY, maxY);
+
+
+
+            Mark.transform.position = Pos;
         }
-        else
-        {
-            Mark.enabled = true;
-        }
-
-        Pos.x = Mathf.Clamp(Pos.x, minX, maxX);
-        Pos.y = Mathf.Clamp(Pos.y, minY, maxY);
-
-
-
-        Mark.transform.position = Pos;
-        //Mark.transform.position = target.position;
     }
 
     private void OnTriggerEnter(Collider OBJ)

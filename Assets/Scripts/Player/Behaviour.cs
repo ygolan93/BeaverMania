@@ -115,6 +115,7 @@ public class Behaviour : MonoBehaviour
     [SerializeField] GameObject BoxWind;
     [SerializeField] Transform KickEffectPos;
     [Header("UI")]
+    public float moveSpeed = 5.0f;
     public GameObject LooseScreen;
     public bool isAtTrader = false;
     public string LogCount;
@@ -132,7 +133,6 @@ public class Behaviour : MonoBehaviour
     public GameObject AimIcon;
     public CinemachineFreeLook FreeLook;
     public CinemachineFreeLook CamForTraders;
-    public CinemachineFreeLook InHouseCam;
     public float ChangeSpeech = 1F;
 
     public void OnCollisionEnter(Collision OBJ)
@@ -316,9 +316,9 @@ public class Behaviour : MonoBehaviour
 
         if (OBJ.gameObject.CompareTag("House"))
         {
-            FreeLook.enabled = false;
-            InHouseCam.enabled = true;
-
+            FreeLook.m_Orbits[0].m_Radius = 0.5f;
+            FreeLook.m_Orbits[1].m_Radius = 0.5f;
+            FreeLook.m_Orbits[2].m_Radius = 0.5f;
         }
         if (OBJ.gameObject.CompareTag("What Is this?"))
         {
@@ -351,12 +351,11 @@ public class Behaviour : MonoBehaviour
             FreeLook.enabled = true;
             FreeLook.m_LookAt.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Root.position), 0.5f);
         }
-
         if (OBJ.gameObject.CompareTag("House"))
         {
-            InHouseCam.enabled = false;
-            FreeLook.enabled = true;
-
+            FreeLook.m_Orbits[0].m_Radius = 4;
+            FreeLook.m_Orbits[1].m_Radius = 6;
+            FreeLook.m_Orbits[2].m_Radius = 5;
         }
     }
 
@@ -634,7 +633,7 @@ public class Behaviour : MonoBehaviour
     {
         //playerCollider = GetComponent<CapsuleCollider>();
         CamForTraders.enabled = false;
-        InHouseCam.enabled = false;
+        //InHouseCam.enabled = false;
         Instantiate(PopUpEffect, Root.position, Quaternion.identity);
         HideCursor();
         AimIcon.SetActive(false);
@@ -675,8 +674,8 @@ public class Behaviour : MonoBehaviour
             Otter.SetBool("climb", false);
         }
 
-
-            if (Defend == true)
+        //Parry animations
+        if (Defend == true)
         {
             DefendAnim -= Time.deltaTime;
             if (DefendAnim > 0)
@@ -693,7 +692,6 @@ public class Behaviour : MonoBehaviour
             }
 
         }
-
 
         //Update UI text
         if (Plattering != "")
@@ -733,7 +731,6 @@ public class Behaviour : MonoBehaviour
         {
             CurrentStamina -= 0.05f;
         }
-
 
         HealthPercent = System.Math.Round((CurrentHealth / MaxHealth) * 100f, 1);
         DebugText = HealthPercent + "%";
@@ -860,7 +857,7 @@ public class Behaviour : MonoBehaviour
             if (Input.GetKeyUp(KeyCode.Mouse1) && Stone.active && CurrentStamina > 0)
             {
                 Otter.Play("Throw");
-                Instantiate(Ball, AttackPoint.position+new Vector3(0,0.5f,0), Quaternion.identity);
+                Instantiate(Ball, AttackPoint.position /*+ new Vector3(0, 0.5f, 0)*/, Quaternion.identity);
                 CurrentStamina -= 20;
                 HealthBar.SetStamina(CurrentStamina);
             }
@@ -879,35 +876,32 @@ public class Behaviour : MonoBehaviour
                 Instantiate(Seed, AttackPoint.position, Quaternion.identity);
                 NutCount--;
             }
-            //if (Input.GetKeyUp(KeyCode.R))
-            //{
-            //    Otter.SetBool("Crouch", false);
-            //}
         }
 
         //Eat Apple
-        if (Input.GetKeyDown(KeyCode.T) && Apple > 0)
         {
-            appleOBJ.SetActive(true);
-            Otter.Play("Consume");
-            Sound.Eat();
-            if (MaxHealth - CurrentHealth > 500)
+            if (Input.GetKeyDown(KeyCode.T) && Apple > 0)
             {
-                TakeDamage(-500);
-                HealthBar.SetHealth(CurrentHealth);
+                appleOBJ.SetActive(true);
+                Otter.Play("Consume");
+                Sound.Eat();
+                if (MaxHealth - CurrentHealth > 500)
+                {
+                    TakeDamage(-500);
+                    HealthBar.SetHealth(CurrentHealth);
+                }
+                else
+                {
+                    CurrentHealth = MaxHealth;
+                    HealthBar.SetMaxHealth(MaxHealth);
+                }
+                Apple--;
             }
-            else
+            if (Input.GetKeyUp(KeyCode.T))
             {
-                CurrentHealth = MaxHealth;
-                HealthBar.SetMaxHealth(MaxHealth);
+                appleOBJ.SetActive(false);
             }
-            Apple--;
         }
-        if (Input.GetKeyUp(KeyCode.T))
-        {
-            appleOBJ.SetActive(false);
-        }
-
         //Use Goblet
         {
             if (Input.GetKeyDown(KeyCode.Y) && GobletPickup > 0)
@@ -1017,10 +1011,6 @@ public class Behaviour : MonoBehaviour
     [System.Obsolete]
     public void FixedUpdate()
     {
-        //if (isOverlapping)
-        //{
-        //    transform.position += new Vector3(0, 0.5f, 0);
-        //}
         //Camera vectors setup
         Vector3 cameraRelativeForward = Camera.main.transform.TransformDirection(Vector3.forward);
         Vector3 cameraRelativeBack = Camera.main.transform.TransformDirection(Vector3.back);
@@ -1033,20 +1023,15 @@ public class Behaviour : MonoBehaviour
         Vector3 XZRight = new(cameraRelativeRight.x, 0, cameraRelativeRight.z);
         Vector3 XZLeft = new(cameraRelativeLeft.x, 0, cameraRelativeLeft.z);
 
+        //Vector3 movement = new Vector3(horizontalInput, 0, verticalInput) * moveSpeed * Time.deltaTime;
+        //transform.Translate(movement);
+
         Otter.SetBool("walk", false);
         Otter.SetBool("run", false);
         Otter.SetBool("midair", false);
         Otter.SetBool("roll", false);
-        //Otter.SetBool("Defend", false);
-
-        //if (OnPlatform==true)
-        //{
-        //    Player.velocity += new Vector3(0, PlatformVelocity.y, 0);
-        //}
-        
-
-
         Rolling = false;
+
         //Switch off hurt and heal effects automaticly
         {
             if (hurt == true || heal == true)
@@ -1068,7 +1053,7 @@ public class Behaviour : MonoBehaviour
             }
         }
 
-        if (grounded==false || speed==Run)
+        if (grounded == false || speed == Run)
         {
             Player.drag = 0;
         }
@@ -1076,6 +1061,7 @@ public class Behaviour : MonoBehaviour
         {
             Player.drag = 0.8f;
         }
+
         //Basic movement setup
         {
             //No Crouch = Regular Movement

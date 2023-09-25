@@ -8,10 +8,10 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: WoodLog 1
-  m_Shader: {fileID: 4800000, guid: a1ea0d9a2710ee54c9acd5cdfd83b2e7, type: 3}
-  m_ValidKeywords:
-  - LOD_FADE_CROSSFADE
+  m_Shader: {fileID: 4800000, guid: 9e0b78a84584ffb4b9d963b4c6f26436, type: 3}
+  m_ValidKeywords: []
   m_InvalidKeywords:
+  - LOD_FADE_CROSSFADE
   - _EMISSION
   - _NORMALMAP
   - _PARALLAXMAP
@@ -94,28 +94,28 @@ Material:
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
-    - _FresnelBrightness: 0
-    - _FresnelPower: 0
-    - _FresnelShadowDropoff: 0
+    - _FresnelBrightness: 0.084
+    - _FresnelPower: 0.368
+    - _FresnelShadowDropoff: 0.11
     - _GlossMapScale: 1
     - _Glossiness: 0.571
     - _GlossyReflections: 1
     - _HighIntensity: 10
     - _LOD_FADE_CROSSFADE_in: 1
     - _LOD_FADE_CROSSFADE_out: 1
-    - _LightScalar: 1.73
-    - _LowIntensity: 1.58
-    - _Metallic: -7.79
+    - _LightScalar: 10
+    - _LowIntensity: 5.63
+    - _Metallic: -0.71
     - _Mode: 0
-    - _NormalAmount: 1.09
+    - _NormalAmount: 1.31
     - _OcclusionStrength: 0.262
-    - _OutlineSize: 13.99
+    - _OutlineSize: 0
     - _Parallax: 0.0499
-    - _RampLevels: 6
-    - _RimAlpha: 0.081
+    - _RampLevels: 14
+    - _RimAlpha: 0
     - _RimDropOff: 0
     - _RimPower: 0
-    - _Smoothness: -1.17
+    - _Smoothness: -1.06
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
@@ -123,8 +123,8 @@ Material:
     - _ZWrite: 1
     - __dirty: 1
     m_Colors:
-    - _AlbedoColour: {r: 0.8679245, g: 0.8220719, b: 0.8220719, a: 0}
-    - _Color: {r: 1, g: 0.718239, b: 0.5509434, a: 1}
+    - _AlbedoColour: {r: 1, g: 0.9519815, b: 0.91886795, a: 0}
+    - _Color: {r: 1, g: 0.87320757, b: 0.7962264, a: 1}
     - _EmissionColor: {r: 0.05660379, g: 0.019846924, b: 0.012495551, a: 1}
     - _FresnelColor: {r: 0.4528302, g: 0.29257387, b: 0.15977216, a: 1}
     - _HighColor: {r: 1, g: 1, b: 1, a: 1}

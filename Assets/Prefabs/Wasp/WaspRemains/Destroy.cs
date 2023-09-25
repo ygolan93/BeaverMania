@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Destroy : MonoBehaviour
 {
-    float Clock;
+    [SerializeField] float Clock;
     public GameObject effect;
     public bool saveAfterKill;
     // Start is called before the first frame update

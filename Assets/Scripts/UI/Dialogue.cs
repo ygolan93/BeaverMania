@@ -12,7 +12,6 @@ public class Dialogue : MonoBehaviour
     public Transform panel;
     public string[] lines;
     public float textSpeed;
-
     private int index;
 
     // Start is called before the first frame update
@@ -23,6 +22,7 @@ public class Dialogue : MonoBehaviour
         panel = gameObject.transform.parent.GetComponent<Transform>();
         textComponent.text = string.Empty;
         StartDialogue();
+        index = 0;
     }
 
     // Update is called once per frame
@@ -42,7 +42,7 @@ public class Dialogue : MonoBehaviour
 
     void StartDialogue()
     {
-        index = 0;
+        //index = 0;
         StartCoroutine(TypeLine());
     }
     IEnumerator TypeLine()
@@ -71,7 +71,7 @@ public class Dialogue : MonoBehaviour
     public void EndConversation()
     {
         PlayerObjective.UpdateObjective();
-        //Player.isAtTrader = false;
+        Player.isAtTrader = false;
         panel.gameObject.SetActive(false);
         //Destroy(ContinueButton);
         //Destroy(SkipButton);

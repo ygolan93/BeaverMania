@@ -20,7 +20,14 @@ public class NPC_Audio : MonoBehaviour
         ActionSource.pitch = 1f;
         ActionSource.PlayOneShot(audioClip[1]);
     }
-    public void Ahh()
+    public void Breath()
+    {
+        ActionSource.clip = audioClip[2];
+        ActionSource.volume = 0.7f;
+        ActionSource.pitch = 1f;
+        ActionSource.PlayOneShot(audioClip[2]);
+    }
+    public void Crawling()
     {
         ActionSource.clip = audioClip[3];
         ActionSource.volume = 0.7f;

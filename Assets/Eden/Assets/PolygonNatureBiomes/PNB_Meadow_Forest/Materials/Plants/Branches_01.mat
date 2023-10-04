@@ -8,10 +8,10 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Branches_01
-  m_Shader: {fileID: 10511, guid: 0000000000000000f000000000000000, type: 0}
-  m_ValidKeywords: []
-  m_InvalidKeywords:
+  m_Shader: {fileID: 4800000, guid: 6697e1f185bc8b840a2f02567abf15b5, type: 3}
+  m_ValidKeywords:
   - LOD_FADE_CROSSFADE
+  m_InvalidKeywords: []
   m_LightmapFlags: 0
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -78,7 +78,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _LeafNormalMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: e106bde9e5b122842a1083f64774cbd4, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _LeafTex:
@@ -168,18 +168,18 @@ Material:
     m_Ints: []
     m_Floats:
     - _AO: 0
-    - _BaseLight: 0.754
+    - _BaseLight: 1
     - _Big_Wave: 10
     - _Big_WindAmount: 1.22
     - _Big_Windspeed: 1.84
     - _BumpScale: 1
     - _ColourNoiseLargeScale: 0
     - _ColourNoiseScale: 0
-    - _ColourNoiseSmallScale: 0
-    - _Cutoff: 0.9
+    - _ColourNoiseSmallScale: 0.1
+    - _Cutoff: 0.63
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
-    - _EmissiveAmount: 0
+    - _EmissiveAmount: 0.28
     - _FlatColourSwitch: 0
     - _Float0: 0
     - _Float1: 0.05
@@ -189,11 +189,11 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _GustAmount: 0.214
+    - _GustAmount: 0.29
     - _GustFreq: 0.224
     - _GustLargeFreq: 0.266
     - _GustScale: 0.161
-    - _GustSmallFreq: 0.207
+    - _GustSmallFreq: 0.31
     - _JitterAmount: 0
     - _JitterFreq: 0.235
     - _LOD_FADE_CROSSFADE: 1
@@ -204,21 +204,21 @@ Material:
     - _LeafBigNoiseAmount: 0.129
     - _LeafBigNoiseScale: 1.75
     - _LeafFlatColourSwitch: 0
-    - _LeafMetallic: 0
+    - _LeafMetallic: 0.35
     - _LeafNoiseAmount: 0
     - _LeafNoiseScale: 1
-    - _LeafNormalAmount: 0.299
-    - _LeafSmoothness: 0.35
+    - _LeafNormalAmount: 0.92
+    - _LeafSmoothness: 0.37
     - _Metallic: 0.132
     - _Mode: 0
     - _NormalAmount: 0.5
-    - _Occlusion: 1.8
+    - _Occlusion: 2.5
     - _OcclusionStrength: 1
     - _PanningSpeed: 0.007
     - _PanningSpeed1: 0.127
     - _Parallax: 0.02
     - _ShadowStrength: 0.986
-    - _Shininess: 0.145
+    - _Shininess: 0.04
     - _Small_Wave: 2.1
     - _Smoothness: 0.2
     - _SmoothnessTextureChannel: 0
@@ -230,22 +230,22 @@ Material:
     - _SrcBlend: 1
     - _Tiling: 1
     - _Tint_Tiling: 0.5
-    - _TotalWindAmount: 0.397
+    - _TotalWindAmount: 0.87
     - _TranslucencyViewDependency: 0.939
     - _TrunkFlatColourSwitch: 0
     - _TrunkMetallic: 0
-    - _TrunkNormalAmount: 0.028
+    - _TrunkNormalAmount: 0.17
     - _TrunkSmoothness: 0
     - _UVSec: 0
     - _WindAmount: 1
-    - _WindBaseline: 2.36
-    - _WindDirection: 0.397
+    - _WindBaseline: 0
+    - _WindDirection: 0
     - _WindDirection1: 0
     - _WindNoiseScale: 0.018
     - _WindNoiseScale1: 14.76
     - _WindWorldScale: 0.08
     - _WindWorldScale1: 0.001
-    - _Y_multiplier: -0.79
+    - _Y_multiplier: -2
     - _ZWrite: 1
     - __dirty: 0
     - _leafNoiseScale: 1
@@ -259,14 +259,14 @@ Material:
     - _worldScale: 0.67
     m_Colors:
     - _BaseColour: {r: 0.07843138, g: 0.02015968, b: 0, a: 0}
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 0.9811321, g: 0.9811321, b: 0.9811321, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _Emissive2Colour: {r: 0, g: 0, b: 0, a: 0}
     - _EmissiveColour: {r: 0, g: 0, b: 0, a: 0}
     - _FrostingColour: {r: 1, g: 1, b: 1, a: 0}
     - _GustHighlight: {r: 0, g: 0, b: 0, a: 0}
     - _GustSmoothing: {r: 0.5, g: 0.5, b: 0.5, a: 0}
-    - _LeafBaseColour: {r: 0, g: 0, b: 0, a: 0}
+    - _LeafBaseColour: {r: 0.24528301, g: 0.24528301, b: 0.24528301, a: 0}
     - _LeafNoiseColour: {r: 0, g: 0, b: 0, a: 0}
     - _LeafNoiseLargeColour: {r: 0.07843138, g: 0.02015968, b: 0, a: 0}
     - _LeafTint: {r: 0.07843138, g: 0.02015968, b: 0, a: 0}

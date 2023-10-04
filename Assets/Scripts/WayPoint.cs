@@ -65,9 +65,6 @@ public class WayPoint : MonoBehaviour
 
             Pos.x = Mathf.Clamp(Pos.x, minX, maxX);
             Pos.y = Mathf.Clamp(Pos.y, minY, maxY);
-
-
-
             Mark.transform.position = Pos;
         }
     }

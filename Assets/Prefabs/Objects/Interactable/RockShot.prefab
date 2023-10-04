@@ -100,7 +100,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Ball: {fileID: -4409854831365679520}
+  isArrow: 0
   RockSound: {fileID: 8440659277245134393}
+  clock: 3
+  forwardVel: 70
+  upwardVel: 10
 --- !u!54 &-4409854831365679520
 Rigidbody:
   m_ObjectHideFlags: 0

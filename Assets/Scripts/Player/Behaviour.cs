@@ -60,6 +60,12 @@ public class Behaviour : MonoBehaviour
     [SerializeField] GameObject appleOBJ;
     [SerializeField] GameObject gobletOBJ;
     [Header("Combat")]
+    public bool bowEquipped;
+    public GameObject Arrow;
+    [SerializeField] GameObject arrowModel;
+    [SerializeField] LineRenderer stringLine;
+    public GameObject Bow;
+    public GameObject bowString;
     public GameObject Stone;
     public float Beat = 0;
     public Projectile Ball;
@@ -75,6 +81,7 @@ public class Behaviour : MonoBehaviour
     [SerializeField] float InitialFall = 0.2f;
     public int GroundAttack = 50;
     public bool HammerHeld;
+    bool hasHammer;
     public bool Defend = false;
     public float DefendAnim = 0.3f;
     bool WhichAttack = false;
@@ -101,7 +108,7 @@ public class Behaviour : MonoBehaviour
     [Header("Audio & Effects")]
     public AudioScript Sound;
     //public MusicPlaylist MusicOP;
-    float HealQue = 3;
+    public float HealQue = 3;
     [SerializeField] ParticleSystem SlideEffect;
     [SerializeField] ParticleSystem HealEffect;
     [SerializeField] GameObject ElectricEffect;
@@ -203,6 +210,8 @@ public class Behaviour : MonoBehaviour
                 Plattering = ("Why do I hear Boss music?");
                 RightHandWeapon.SetActive(true);
                 LeftHandWeapon.SetActive(true);
+                bowEquipped = false;
+                hasHammer = true;
                 HammerHeld = true;
                 Destroy(OBJ.gameObject);
                 ChangeSpeech = 5;
@@ -316,9 +325,10 @@ public class Behaviour : MonoBehaviour
 
         if (OBJ.gameObject.CompareTag("House"))
         {
-            FreeLook.m_Orbits[0].m_Radius = 0.5f;
-            FreeLook.m_Orbits[1].m_Radius = 0.5f;
-            FreeLook.m_Orbits[2].m_Radius = 0.5f;
+            FreeLook.m_Orbits[0].m_Radius = 1f;
+            FreeLook.m_Orbits[1].m_Radius = 2f;
+            FreeLook.m_Orbits[2].m_Radius =1f;
+            //FreeLook.m_Lens.FieldOfView = 80;
         }
         if (OBJ.gameObject.CompareTag("What Is this?"))
         {
@@ -356,6 +366,7 @@ public class Behaviour : MonoBehaviour
             FreeLook.m_Orbits[0].m_Radius = 4;
             FreeLook.m_Orbits[1].m_Radius = 6;
             FreeLook.m_Orbits[2].m_Radius = 5;
+            //FreeLook.m_Lens.FieldOfView = 25;
         }
     }
 
@@ -516,6 +527,14 @@ public class Behaviour : MonoBehaviour
 
         }
     }
+
+    public void RotateForward()
+    {
+        var CamForward = Camera.main.transform.TransformDirection(Vector3.forward);
+        var DirectionGoal = new Vector3(CamForward.x, CamForward.y, CamForward.z);
+        rotGoal = Quaternion.LookRotation(DirectionGoal);
+        transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+    }
     public void ShowCursor()
     {
         //show mouse icon
@@ -563,7 +582,6 @@ public class Behaviour : MonoBehaviour
         Walk = 7;
         Run = 18;
         JumpLimit = GobletJumpLimit;
-        //BeatGrounded = BeatGrounded / 5;
         AirBeat /= 5;
         ElectricEffect.SetActive(true);
         GobletClock = 10f;
@@ -592,7 +610,7 @@ public class Behaviour : MonoBehaviour
                 Otter.SetBool("HammerParry", false);
 
             }
-            else
+            if (HammerHeld == true)
             {
                 Otter.SetBool("Parry", false);
                 Otter.SetBool("HammerParry", true);
@@ -631,6 +649,7 @@ public class Behaviour : MonoBehaviour
 
     public void Start()
     {
+        arrowModel.SetActive(false);
         //playerCollider = GetComponent<CapsuleCollider>();
         CamForTraders.enabled = false;
         //InHouseCam.enabled = false;
@@ -659,6 +678,9 @@ public class Behaviour : MonoBehaviour
         HologramedBridge.SetActive(false);
         appleOBJ.SetActive(false);
         gobletOBJ.SetActive(false);
+        FreeLook.m_Orbits[0].m_Radius = 4;
+        FreeLook.m_Orbits[1].m_Radius = 6;
+        FreeLook.m_Orbits[2].m_Radius = 5;
     }
     [System.Obsolete]
     public void Update()
@@ -763,6 +785,10 @@ public class Behaviour : MonoBehaviour
         {
             GroundAttack = 450;
         }
+        else
+        {
+            GroundAttack = 50;
+        }
 
         //Jump action
         {
@@ -810,8 +836,8 @@ public class Behaviour : MonoBehaviour
         {
             if (Input.GetKey(KeyCode.LeftControl) && grounded == true && Rolling == false && !Input.GetKey(KeyCode.Space))
             {
-                if (Load.i==9)
-                HologramedBridge.SetActive(true);
+                if (Load.i == 9)
+                    HologramedBridge.SetActive(true);
                 if (!Input.GetKey(KeyCode.W) || !Input.GetKey(KeyCode.Mouse0))
                 {
                     speed = 0;
@@ -837,27 +863,98 @@ public class Behaviour : MonoBehaviour
             }
         }
 
-        //Stoning action
+        //BowDraw
         {
+            if (Input.GetKeyDown(KeyCode.C))
+            {
+                if (bowEquipped == false)
+                {
+                    bowString.SetActive(true);
+                    arrowModel.SetActive(false);
+                    stringLine.enabled = false;
+                    Otter.Play("BowEquip");
+
+                    HammerHeld = false;
+                    RightHandWeapon.SetActive(false);
+                    LeftHandWeapon.SetActive(false);
+                }
+                if (bowEquipped == true)
+                {
+                    Otter.Play("BowDisarm");
+                    if (hasHammer==true)
+                    {
+                        HammerHeld = true;
+                        RightHandWeapon.SetActive(true);
+                        LeftHandWeapon.SetActive(true);
+                    }
+                }
+            }
+            if (Input.GetKeyUp(KeyCode.C))
+            {
+                bowEquipped = !bowEquipped;
+            }
+            if (bowEquipped == true)
+            {
+                Bow.SetActive(true);
+            }
+            if (bowEquipped == false)
+            {
+                Otter.SetBool("draw", false);
+                Bow.SetActive(false);
+            }
+        }
+        //Bow action
+        if (bowEquipped==true)
+        {
+            if (Input.GetKeyDown(KeyCode.Mouse1))
+            {
+                Sound.ArrowDraw();
+            }
+
             if (Input.GetKey(KeyCode.Mouse1) && CurrentStamina > 0 && !Input.GetKey(KeyCode.LeftControl))
             {
-                Otter.SetBool("fight", false);
-                //Otter.SetBool("crouch", true);
-                //Player.velocity = new Vector3(0, Player.velocity.y, 0);
+                if (!Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
+                {
+                    AimIcon.SetActive(true);
+                    RotateForward();
+                }
+                arrowModel.SetActive(true);
+                bowString.SetActive(false);
+                Otter.SetBool("draw", true);
+                stringLine.enabled = true;
+                stringLine.useWorldSpace = false;
+            }
+            if (Input.GetKeyUp(KeyCode.Mouse1)&& CurrentStamina>0)
+            {
+                Sound.ArrowShoot();
+                var arrow = Instantiate(Arrow, AttackPoint.position + new Vector3(0, 0.6f, 0), rotGoal * Quaternion.Euler(90, 0, 0));
+                CurrentStamina -= 30;
+                HealthBar.SetStamina(CurrentStamina);
+                arrowModel.SetActive(false);
+                stringLine.enabled = false;
+                bowString.SetActive(true);
+                Otter.SetBool("draw", false);
+            }
+        }
+
+
+
+        //Stoning action
+        {
+            if (Input.GetKey(KeyCode.Mouse1) && CurrentStamina > 0 && !Input.GetKey(KeyCode.LeftControl) && bowEquipped == false)
+            {
                 Stone.SetActive(true);
                 AimIcon.SetActive(true);
                 if (!Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
                 {
-                    var CamForward = Camera.main.transform.TransformDirection(Vector3.forward);
-                    var DirectionGoal = new Vector3(CamForward.x, 0, CamForward.z);
-                    rotGoal = Quaternion.LookRotation(DirectionGoal);
-                    transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+                    RotateForward();
                 }
             }
             if (Input.GetKeyUp(KeyCode.Mouse1) && Stone.active && CurrentStamina > 0)
             {
+                Otter.SetBool("fight", false);
                 Otter.Play("Throw");
-                Instantiate(Ball, AttackPoint.position /*+ new Vector3(0, 0.5f, 0)*/, Quaternion.identity);
+                Instantiate(Ball, AttackPoint.position + new Vector3(0, 0.6f, 0), Quaternion.identity);
                 CurrentStamina -= 20;
                 HealthBar.SetStamina(CurrentStamina);
             }

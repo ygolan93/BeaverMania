@@ -6,7 +6,7 @@ public class BossHandler : MonoBehaviour
 {
     public Behaviour player;
     public BossScript Boss;
-    NPC_Audio bossSound;
+    //NPC_Audio bossSound;
     public GameObject ChatCollider;
     public GameObject BossBar;
     public GameObject BossPanel;
@@ -19,7 +19,7 @@ public class BossHandler : MonoBehaviour
     {
         player = gameObject.GetComponent<Behaviour>();
         Boss = GameObject.Find("Boss").GetComponent<BossScript>();
-        bossSound = Boss.GetComponent<NPC_Audio>();
+        //bossSound = Boss.GetComponent<NPC_Audio>();
         BossBar.SetActive(false);
     }
 

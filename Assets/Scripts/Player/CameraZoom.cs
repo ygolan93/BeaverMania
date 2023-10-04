@@ -19,6 +19,7 @@ public class CameraZoom : MonoBehaviour
     {
         // Find the Cinemachine FreeLook camera in the scene
         freeLookCamera = GetComponent<CinemachineFreeLook>();
+        freeLookCamera.m_Lens.FieldOfView = 40;
     }
 
     private void Update()
@@ -34,7 +35,7 @@ public class CameraZoom : MonoBehaviour
 
         //Aim Mark
         {
-            aim.transform.position = Camera.main.WorldToScreenPoint(aimPoint.position + new Vector3(0, 1.0f, 0));
+            aim.transform.position = Camera.main.WorldToScreenPoint(aimPoint.position + new Vector3(0, 0.65f, 0));
         }
     }
 }

@@ -9,7 +9,7 @@ public class NewConstructor : MonoBehaviour
     [SerializeField] GameObject BridgeLink;
     [SerializeField] GameObject Log;
     //[SerializeField] GameObject Step;
-    public AudioSource WoodKnock;
+    public AudioScript Construction;
     public Rigidbody Bridge;
     [SerializeField] BoxCollider movingCollider;
     [SerializeField] MeshCollider staticCollider;
@@ -44,36 +44,42 @@ public class NewConstructor : MonoBehaviour
     [System.Obsolete]
     public void OnCollisionEnter(Collision OBJ)
     {
-        if (OBJ.gameObject.tag == "Part" && isLocked == true && PartCount < BridgeLimit)
+        if (OBJ.gameObject.CompareTag("Part") && isLocked == true)
         {
-            BridgeText = "";
-            PartCount++;
-            X = 2.53f;
-            var newPart = Instantiate(BridgePart, PartsParent.transform.position - PartCount * X * PartsParent.transform.forward, Bridge.transform.rotation*Quaternion.Euler(-90,180,0));
-            newPart.transform.parent = PartsParent;
-            Destroy(OBJ.gameObject);
-            WoodKnock.Play();
-            partsColliders = PartsParent.GetComponentsInChildren<BoxCollider>();
-            MergeColliders(partsColliders);
-            
-            if (Player.CurrentHealth < Player.MaxHealth)
+            if (PartCount < BridgeLimit)
             {
-                Player.CurrentHealth += 50;
-                Player.HealthBar.SetHealth(Player.CurrentHealth);
+                BridgeText = "";
+                PartCount++;
+                X = 2.53f;
+                var newPart = Instantiate(BridgePart, PartsParent.transform.position - PartCount * X * PartsParent.transform.forward, Bridge.transform.rotation * Quaternion.Euler(-90, 180, 0));
+                newPart.transform.parent = PartsParent;
+                Destroy(OBJ.gameObject);
+                Construction.Jump();
+                partsColliders = PartsParent.GetComponentsInChildren<BoxCollider>();
+                MergeColliders(partsColliders);
+
+                if (Player.CurrentHealth < Player.MaxHealth)
+                {
+                    Player.CurrentHealth += 50;
+                    Player.HealthBar.SetHealth(Player.CurrentHealth);
+                }
             }
+
         }
 
-        if (OBJ.gameObject.tag == "Seed" && isLocked == true && PartCount >= 9)
+        if (OBJ.gameObject.CompareTag("Seed") && isLocked == true && PartCount >= 9)
         {
             Destroy(OBJ.gameObject);
             BridgeLimit += 9;
             var newPart = Instantiate(BridgeLink, PartsParent.transform.position - PartCount * X * PartsParent.transform.forward, Bridge.transform.rotation * Quaternion.Euler(-90, 0, 0));
             newPart.transform.parent = PartsParent;
+            Player.Plattering = "TADA!";
+            Player.ChangeSpeech = 2;
         }
     }
     public void OnTriggerStay(Collider OBJ)
     {
-        if (OBJ.gameObject.tag == "Player")
+        if (OBJ.gameObject.CompareTag("Player"))
         {
             if (Input.GetKeyDown(KeyCode.LeftControl))
             {
@@ -82,6 +88,9 @@ public class NewConstructor : MonoBehaviour
                     lockPos = transform.position - new Vector3(0, 0.05f, 0);
                     transform.position = lockPos;
                     invokeLock = true;
+                    Construction.Step();
+                    Player.Plattering = "Zing!";
+                    Player.ChangeSpeech = 2;
                 }
                 isLocked = true;
                 movingCollider.enabled = false;
@@ -94,15 +103,15 @@ public class NewConstructor : MonoBehaviour
                 }
                 BridgeUI.enabled = false;
                 BridgeUI.text = BridgeText;
+
             }
-            if (Input.GetKeyDown(KeyCode.Delete) && PartCount == 0)
-            {
-                for (int i = 0; i < 9; i++)
-                {
-                    Instantiate(Log, Bridge.transform.position + new Vector3(0, 2*i, 0), Bridge.transform.rotation);
-                }
-                Destroy(gameObject);
-            }
+ 
+        }
+
+        if (Input.GetKey(KeyCode.LeftControl) && PartCount >= BridgeLimit)
+        {
+            Player.Plattering = "Oh man! I need a nut";
+            Player.ChangeSpeech = 3;
         }
 
     }

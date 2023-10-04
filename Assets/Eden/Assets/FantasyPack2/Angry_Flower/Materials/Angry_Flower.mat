@@ -8,25 +8,29 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Angry_Flower
-  m_Shader: {fileID: 4800000, guid: adfffaa20b04c6a4d998b9304c796482, type: 3}
+  m_Shader: {fileID: 4800000, guid: a1ea0d9a2710ee54c9acd5cdfd83b2e7, type: 3}
   m_ValidKeywords:
+  - LOD_FADE_CROSSFADE
+  m_InvalidKeywords:
   - _ALPHATEST_ON
   - _EMISSION
-  - _NORMALMAP
-  m_InvalidKeywords:
   - _LIGHTMAPPING_REALTIME
+  - _NORMALMAP
   m_LightmapFlags: 1
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 2450
-  stringTagMap:
-    RenderType: TransparentCutout
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
   disabledShaderPasses: []
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
     - _AO:
         m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Albedo:
+        m_Texture: {fileID: 2800000, guid: cbf905b74425dd7459f48a341cd82af9, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BumpMap:
@@ -73,12 +77,20 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _LOD_DitheringMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 2800000, guid: cbf905b74425dd7459f48a341cd82af9, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
         m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NormalMap:
+        m_Texture: {fileID: 2800000, guid: 3adbc595b616194489df8bfeb970550e, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
@@ -133,6 +145,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _texcoord:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - _AO: 2.4
@@ -145,9 +161,12 @@ Material:
     - _EmissionScaleUI: 0
     - _Glossiness: 0.201
     - _HalfOverCutoff: 1
+    - _LOD_FADE_CROSSFADE_in: 1
+    - _LOD_FADE_CROSSFADE_out: 1
     - _Lightmapping: 1
-    - _Metallic: 0.31
+    - _Metallic: -0.22
     - _Mode: 1
+    - _NormalAmount: 0.1
     - _Occlusion: 7.5
     - _OcclusionStrength: 1
     - _Parallax: 0.02
@@ -156,13 +175,16 @@ Material:
     - _ShadowOffsetScale: 1
     - _ShadowStrength: 1
     - _Shininess: 0.5
+    - _Smoothness: 0
     - _SquashAmount: 1
     - _SrcBlend: 1
     - _TranslucencyViewDependency: 0.7
     - _UVSec: 0
     - _WindQuality: 0
     - _ZWrite: 1
+    - __dirty: 1
     m_Colors:
+    - _AlbedoColour: {r: 0.9716981, g: 0.9716981, b: 0.9716981, a: 0}
     - _Color: {r: 0.8, g: 0.8, b: 0.8, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 0}
     - _EmissionColorUI: {r: 1, g: 1, b: 1, a: 1}

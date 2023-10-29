@@ -15,15 +15,17 @@ public class Projectile : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        Physics.IgnoreLayerCollision(1, 3);
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
-        Ball.velocity = Camera.main.transform.TransformDirection(Vector3.forward)* forwardVel + Vector3.up* upwardVel;
+        //Ball.velocity = Camera.main.transform.TransformDirection(Vector3.forward)* forwardVel + Vector3.up* upwardVel;
+        Ball.velocity = Player.transform.TransformDirection(Vector3.forward)* forwardVel + Vector3.up * upwardVel;
         if (isArrow == true)
         {
-            ArrowDMG = 500;
+            ArrowDMG = 2000;
         }
         else
         {
-            ArrowDMG = 0;
+            ArrowDMG = 15;
         }
     }
     private void Update()
@@ -45,19 +47,19 @@ public class Projectile : MonoBehaviour
         }
         if (OBJ.gameObject.CompareTag("NPC"))
         {
-            OBJ.gameObject.GetComponent<NPC_Basic>().TakeDamage((int)Ball.velocity.magnitude+ArrowDMG);
-            OBJ.gameObject.GetComponent<NPC_Basic>().combo = 3;
+            OBJ.gameObject.GetComponent<NPC_Basic>().TakeDamage(ArrowDMG);
+            OBJ.gameObject.GetComponent<NPC_Basic>().combo += OBJ.gameObject.GetComponent<NPC_Basic>().hit2stun;
             Player.Plattering = "Bam! Take that";
             Player.ChangeSpeech = 1f;
         }
         if (OBJ.gameObject.CompareTag("Boss"))
         {
-            OBJ.gameObject.GetComponent<BossScript>().TakeDamage(1+ArrowDMG/10);
-            OBJ.gameObject.GetComponent<BossScript>().combo+=1;
+            OBJ.gameObject.GetComponent<BossScript>().TakeDamage(ArrowDMG);
+            OBJ.gameObject.GetComponent<BossScript>().combo+=3;
         }
         if (OBJ.gameObject.CompareTag("Hive"))
         {
-            OBJ.gameObject.GetComponent<Static_Hive>().TakeDamage((int)Ball.velocity.magnitude +ArrowDMG/5);
+            OBJ.gameObject.GetComponent<Static_Hive>().TakeDamage(ArrowDMG);
         }
     }
 }

@@ -29,8 +29,6 @@ public class Behaviour : MonoBehaviour
     float InitiateAir = 0.5f;
     float AnimSpeed = 1;
     public bool neutralAndMoving;
-   // CapsuleCollider playerCollider;
-   //public bool isOverlapping;
     [SerializeField] int JumpNum;
     int JumpLimit;
     int GobletJumpLimit;
@@ -60,11 +58,13 @@ public class Behaviour : MonoBehaviour
     [SerializeField] GameObject appleOBJ;
     [SerializeField] GameObject gobletOBJ;
     [Header("Combat")]
-    public bool bowEquipped;
+    public List<String> Arsenal;
+    public int arsenalBrowser = 0;
+    public int ArsenalCounter = 0;
     public GameObject Arrow;
     [SerializeField] GameObject arrowModel;
     [SerializeField] LineRenderer stringLine;
-    public GameObject Bow;
+    public GameObject[] Bow;
     public GameObject bowString;
     public GameObject Stone;
     public float Beat = 0;
@@ -74,14 +74,15 @@ public class Behaviour : MonoBehaviour
     public float attackRange = 0.5f;
     public LayerMask enemyLayers;
     public float GroundBeat = 0.3f;
-    float BeatGrounded = 0.4f;
+    //float BeatGrounded = 0.4f;
     public float AirBeat = 0.2f;
-    float BeatAir = 0.2f;
+    //float BeatAir = 0.2f;
     float FallClock;
     [SerializeField] float InitialFall = 0.2f;
     public int GroundAttack = 50;
+    public bool bowEquipped;
     public bool HammerHeld;
-    bool hasHammer;
+    public bool ArmorEquipped;
     public bool Defend = false;
     public float DefendAnim = 0.3f;
     bool WhichAttack = false;
@@ -89,6 +90,7 @@ public class Behaviour : MonoBehaviour
     public bool isParried;
     [SerializeField] GameObject RightHandWeapon;
     [SerializeField] GameObject LeftHandWeapon;
+    [SerializeField] GameObject[] ArmorSet;
 
     [Header("Other Objects")]
     public GameObject HologramedBridge;
@@ -119,6 +121,8 @@ public class Behaviour : MonoBehaviour
     [SerializeField] GameObject PopUpEffect;
     [SerializeField] GameObject PickUpEffect;
     [SerializeField] GameObject KickWind;
+    [SerializeField] GameObject SwordCopter;
+    [SerializeField] GameObject SwordPlainTrail;
     [SerializeField] GameObject BoxWind;
     [SerializeField] Transform KickEffectPos;
     [Header("UI")]
@@ -203,19 +207,33 @@ public class Behaviour : MonoBehaviour
 
         if (OBJ.gameObject.CompareTag("Weapon"))
         {
-            Plattering = ("Hm, What's this?");
+            Plattering = ("Hammers!");
             ChangeSpeech = 1;
-            if (Input.GetKey(KeyCode.LeftControl))
-            {
-                Plattering = ("Why do I hear Boss music?");
-                RightHandWeapon.SetActive(true);
-                LeftHandWeapon.SetActive(true);
-                bowEquipped = false;
-                hasHammer = true;
-                HammerHeld = true;
-                Destroy(OBJ.gameObject);
-                ChangeSpeech = 5;
-            }
+            Otter.Play("Crouch");
+            Arsenal.Add("Hammers");
+            ArsenalCounter++;
+            Sound.PickItem();
+            Destroy(OBJ.gameObject);
+        }
+        if (OBJ.gameObject.CompareTag("Bow"))
+        {
+            Plattering = ("Booya!");
+            ChangeSpeech = 1;
+            Otter.Play("Crouch");
+            Arsenal.Add("Bow");
+            ArsenalCounter++;
+            Sound.PickItem();
+            Destroy(OBJ.gameObject);
+        }
+        if (OBJ.gameObject.CompareTag("Armor"))
+        {
+            Plattering = ("Oh my!");
+            ChangeSpeech = 1;
+            Otter.Play("Crouch");
+            Arsenal.Add("ArmorSet");
+            ArsenalCounter++;
+            Sound.PickItem();
+            Destroy(OBJ.gameObject);
         }
         if (OBJ.gameObject.CompareTag("Honey") && Honeypicked == false)
         {
@@ -229,7 +247,6 @@ public class Behaviour : MonoBehaviour
             GoldON();
             Destroy(OBJ.gameObject);
         }
-
         if (OBJ.gameObject.CompareTag("NPC"))
         {
             Plattering = "Get off me ya nasty bastards!";
@@ -308,9 +325,6 @@ public class Behaviour : MonoBehaviour
                 isAtTrader = true;
                 FreeLook.enabled = false;
                 CamForTraders.enabled = true;
-                //CamForTraders.m_Orbits[1].m_Radius = 6;
-                //CamForTraders.m_XAxis.m_MaxSpeed = 0.1f;
-                //CamForTraders.m_YAxis.m_MaxSpeed = 0.1f;
                 CamForTraders.m_LookAt = OBJ.transform;
             }
             if (skip ==true)
@@ -328,7 +342,6 @@ public class Behaviour : MonoBehaviour
             FreeLook.m_Orbits[0].m_Radius = 1f;
             FreeLook.m_Orbits[1].m_Radius = 2f;
             FreeLook.m_Orbits[2].m_Radius =1f;
-            //FreeLook.m_Lens.FieldOfView = 80;
         }
         if (OBJ.gameObject.CompareTag("What Is this?"))
         {
@@ -370,65 +383,74 @@ public class Behaviour : MonoBehaviour
         }
     }
 
-    public void Attack()
-    {
-        //if (isParried == false)
-        {
-            if (grounded == true)
-            {
-                Collider[] hitEnemies = Physics.OverlapSphere(AttackPoint.position, attackRange, enemyLayers);
+    //public void Attack()
+    //{
+    //    //if (isParried == false)
+    //    {
 
-                foreach (Collider enemy in hitEnemies)
-                {
-                    if (enemy.CompareTag("NPC"))
-                    {
-                        if (enemy.name!=null)
-                        {
-                            Debug.Log("Hit " + enemy.name);
-                        }
-                        enemy.GetComponent<NPC_Basic>().TakeDamage(GroundAttack);
-                    }
-                    if (enemy.CompareTag("Boss"))
-                    {
-                        Debug.Log("Hit " + enemy.name);
-                        enemy.GetComponent<BossScript>().TakeDamage(GroundAttack);
-                    }
-                    if (enemy.CompareTag("Hive"))
-                    {
-                        Debug.Log("Hit " + enemy.name);
-                        enemy.GetComponent<Static_Hive>().TakeDamage(GroundAttack);
-                    }
-                }
-                BeatGrounded = GroundBeat / Otter.speed;
-            }
-            if (grounded == false)
-            {
-                Collider[] hitEnemies = Physics.OverlapSphere(Sphere.position, attackRange, enemyLayers);
+    //        //if (ArmorEquipped==true)
+    //        //{
+    //        //    Otter.SetBool("slash", true);
+    //        //}
+    //        //if (ArmorEquipped == false)
+    //        //{
+    //        //    Otter.SetBool("slash", false);
+    //        //}
+    //        if (grounded == true)
+    //        {
+    //            Collider[] hitEnemies = Physics.OverlapSphere(AttackPoint.position, attackRange, enemyLayers);
 
-                foreach (Collider enemy in hitEnemies)
-                {
-                    if (enemy.CompareTag("NPC"))
-                    {
-                        Debug.Log("Hit " + enemy.name);
-                        enemy.GetComponent<NPC_Basic>().TakeDamage(40);
-                    }
-                    if (enemy.CompareTag("Boss"))
-                    {
-                        Debug.Log("Hit " + enemy.name);
-                        enemy.GetComponent<BossScript>().TakeDamage(40);
-                    }
-                    if (enemy.CompareTag("Hive"))
-                    {
-                        Debug.Log("Hit " + enemy.name);
-                        enemy.GetComponent<Static_Hive>().TakeDamage(40);
-                    }
+    //            foreach (Collider enemy in hitEnemies)
+    //            {
+    //                if (enemy.CompareTag("NPC"))
+    //                {
+    //                    if (enemy.name!=null)
+    //                    {
+    //                        Debug.Log("Hit " + enemy.name);
+    //                    }
+    //                    enemy.GetComponent<NPC_Basic>().TakeDamage(GroundAttack);
+    //                }
+    //                if (enemy.CompareTag("Boss"))
+    //                {
+    //                    Debug.Log("Hit " + enemy.name);
+    //                    enemy.GetComponent<BossScript>().TakeDamage(GroundAttack);
+    //                }
+    //                if (enemy.CompareTag("Hive"))
+    //                {
+    //                    Debug.Log("Hit " + enemy.name);
+    //                    enemy.GetComponent<Static_Hive>().TakeDamage(GroundAttack);
+    //                }
+    //            }
+    //            BeatGrounded = GroundBeat / Otter.speed;
+    //        }
+    //        if (grounded == false)
+    //        {
+    //            Collider[] hitEnemies = Physics.OverlapSphere(Sphere.position, attackRange, enemyLayers);
 
-                }
-                BeatAir = AirBeat * Otter.speed;
-            }
-        }
+    //            foreach (Collider enemy in hitEnemies)
+    //            {
+    //                if (enemy.CompareTag("NPC"))
+    //                {
+    //                    Debug.Log("Hit " + enemy.name);
+    //                    enemy.GetComponent<NPC_Basic>().TakeDamage(40);
+    //                }
+    //                if (enemy.CompareTag("Boss"))
+    //                {
+    //                    Debug.Log("Hit " + enemy.name);
+    //                    enemy.GetComponent<BossScript>().TakeDamage(40);
+    //                }
+    //                if (enemy.CompareTag("Hive"))
+    //                {
+    //                    Debug.Log("Hit " + enemy.name);
+    //                    enemy.GetComponent<Static_Hive>().TakeDamage(40);
+    //                }
 
-    }
+    //            }
+    //            BeatAir = AirBeat * Otter.speed;
+    //        }
+    //    }
+
+    //}
     public void TakeDamage(float Damage)
     {
         if (isParried == false)
@@ -467,6 +489,14 @@ public class Behaviour : MonoBehaviour
             {
                 if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey && Rolling == false)
                 {
+                    if (ArmorEquipped==true)
+                    {
+                         Otter.SetBool("armor", true);
+                    }
+                    if (ArmorEquipped == false)
+                    {
+                        Otter.SetBool("armor", false);
+                    }
                     Otter.SetBool("run", true);
                     speed = Run;
                     steer = 0.12f;
@@ -481,26 +511,6 @@ public class Behaviour : MonoBehaviour
             }
             if (grounded == false && Input.GetKey(KeyCode.LeftShift))
                 Player.AddForce(Direction.normalized * 5);
-        //}
-        //if (OnPlatform == true)
-        //{
-            
-        //    if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey)
-        //    {
-        //        Otter.SetBool("run", true);
-        //        speed = Run;
-        //        steer = 0.12f;
-        //    }
-        //    else
-        //    {
-        //        Otter.SetBool("run", false);
-        //        speed = Walk;
-        //        steer = 0.1f;
-        //    }
-        //    Player.velocity = (Direction.normalized * speed) + new Vector3(0, Player.velocity.y, 0)+ PlatformVelocity;
-         
-
-        //}
 
     }
     public void PlayerRoll(Vector3 Direction)
@@ -511,7 +521,7 @@ public class Behaviour : MonoBehaviour
         {
             if (Input.GetKey(KeyCode.LeftControl) && CurrentStamina > 0 && grounded == true)
             {
-                GroundAttack = 300;
+                //GroundAttack = 300;
                 Rolling = true;
                 Otter.SetBool("roll", true);
                 CurrentStamina -= 0.1f;
@@ -527,7 +537,6 @@ public class Behaviour : MonoBehaviour
 
         }
     }
-
     public void RotateForward()
     {
         var CamForward = Camera.main.transform.TransformDirection(Vector3.forward);
@@ -678,6 +687,14 @@ public class Behaviour : MonoBehaviour
         HologramedBridge.SetActive(false);
         appleOBJ.SetActive(false);
         gobletOBJ.SetActive(false);
+        for (int i = 0; i < ArmorSet.Length; i++)
+        {
+            ArmorSet[i].SetActive(false);
+        }
+        for (int i = 0; i < Bow.Length; i++)
+        {
+            Bow[i].SetActive(false);
+        }
         FreeLook.m_Orbits[0].m_Radius = 4;
         FreeLook.m_Orbits[1].m_Radius = 6;
         FreeLook.m_Orbits[2].m_Radius = 5;
@@ -753,7 +770,6 @@ public class Behaviour : MonoBehaviour
         {
             CurrentStamina -= 0.05f;
         }
-
         HealthPercent = System.Math.Round((CurrentHealth / MaxHealth) * 100f, 1);
         DebugText = HealthPercent + "%";
         StaminaPercent = System.Math.Round((CurrentStamina / MaxStamina) * 100f, 1);
@@ -863,48 +879,142 @@ public class Behaviour : MonoBehaviour
             }
         }
 
-        //BowDraw
+
+
+        //Browse Arsenal
         {
             if (Input.GetKeyDown(KeyCode.C))
             {
-                if (bowEquipped == false)
+                if (ArsenalCounter==0)
                 {
-                    bowString.SetActive(true);
-                    arrowModel.SetActive(false);
-                    stringLine.enabled = false;
-                    Otter.Play("BowEquip");
-
-                    HammerHeld = false;
-                    RightHandWeapon.SetActive(false);
-                    LeftHandWeapon.SetActive(false);
+                    Sound.Error();
+                    Plattering = ("Damn, I don't have any arsenal yet.");
+                    ChangeSpeech = 1;
                 }
-                if (bowEquipped == true)
+                else
                 {
-                    Otter.Play("BowDisarm");
-                    if (hasHammer==true)
+                    Sound.SwitchItem();
+                    if (arsenalBrowser < ArsenalCounter)
                     {
-                        HammerHeld = true;
-                        RightHandWeapon.SetActive(true);
-                        LeftHandWeapon.SetActive(true);
+                        arsenalBrowser++;
                     }
+                    else
+                    {
+                        arsenalBrowser = 0;
+                    }
+
+                    switch (Arsenal[arsenalBrowser])
+                    {
+                        case "Bare Hands":
+                            {
+                                Otter.Play("Disarm");
+                                //Turn off Hammers
+                                HammerHeld = false;
+                                Otter.SetBool("armor", false);
+                                RightHandWeapon.SetActive(false);
+                                LeftHandWeapon.SetActive(false);
+
+                                //Turn off Bow Gear
+                                bowEquipped = false;
+                                for (int i = 0; i < Bow.Length; i++)
+                                {
+                                    Bow[i].SetActive(false);
+                                }
+
+                                //Turn off Armor Set
+                                ArmorEquipped = false;
+                                for (int item = 0; item < ArmorSet.Length; item++)
+                                {
+                                    ArmorSet[item].SetActive(false);
+                                }
+
+                                break;
+                            }
+
+                        case "Hammers":
+                            {
+                                Otter.Play("Equip");
+                                //Turn on Hammers
+                                HammerHeld = true;
+                                Otter.SetBool("armor", false);
+                                RightHandWeapon.SetActive(true);
+                                LeftHandWeapon.SetActive(true);
+
+                                //Turn off Bow
+                                bowEquipped = false;
+                                for (int i = 0; i < Bow.Length; i++)
+                                {
+                                    Bow[i].SetActive(false);
+                                }
+
+                                //Turn off Armor Set
+                                ArmorEquipped = false;
+                                for (int item = 0; item < ArmorSet.Length; item++)
+                                {
+                                    ArmorSet[item].SetActive(false);
+                                }
+
+                                break;
+                            }
+
+                        case "Bow":
+                            {
+                                Otter.Play("Equip");
+                                //Turn off Hammers
+                                HammerHeld = false;
+                                Otter.SetBool("armor", false);
+                                RightHandWeapon.SetActive(false);
+                                LeftHandWeapon.SetActive(false);
+
+                                //Turn on Bow
+                                bowEquipped = true;
+                                for (int i = 0; i < Bow.Length; i++)
+                                {
+                                    Bow[i].SetActive(true);
+                                }
+
+                                //Turn off Armor Set
+                                ArmorEquipped = false;
+                                for (int item = 0; item < ArmorSet.Length; item++)
+                                {
+                                    ArmorSet[item].SetActive(false);
+                                }
+
+                                break;
+                            }
+                        case "ArmorSet":
+                            {
+                                Otter.Play("Equip");
+                                //Turn off Hammers
+                                HammerHeld = false;
+                                Otter.SetBool("armor", false);
+                                RightHandWeapon.SetActive(false);
+                                LeftHandWeapon.SetActive(false);
+
+                                //Turn off Bow
+                                bowEquipped = false;
+                                for (int i = 0; i < Bow.Length; i++)
+                                {
+                                    Bow[i].SetActive(false);
+                                }
+
+                                //Turn on Armor Set
+                                ArmorEquipped = true;
+                                Otter.SetBool("armor", true);
+                                for (int item = 0; item < ArmorSet.Length; item++)
+                                {
+                                    ArmorSet[item].SetActive(true);
+                                }
+                                break;
+                            }
+
+                    }
+
                 }
-            }
-            if (Input.GetKeyUp(KeyCode.C))
-            {
-                bowEquipped = !bowEquipped;
-            }
-            if (bowEquipped == true)
-            {
-                Bow.SetActive(true);
-            }
-            if (bowEquipped == false)
-            {
-                Otter.SetBool("draw", false);
-                Bow.SetActive(false);
             }
         }
         //Bow action
-        if (bowEquipped==true)
+        if (bowEquipped == true)
         {
             if (Input.GetKeyDown(KeyCode.Mouse1))
             {
@@ -924,7 +1034,7 @@ public class Behaviour : MonoBehaviour
                 stringLine.enabled = true;
                 stringLine.useWorldSpace = false;
             }
-            if (Input.GetKeyUp(KeyCode.Mouse1)&& CurrentStamina>0)
+            if (Input.GetKeyUp(KeyCode.Mouse1) && CurrentStamina > 0)
             {
                 Sound.ArrowShoot();
                 var arrow = Instantiate(Arrow, AttackPoint.position + new Vector3(0, 0.6f, 0), rotGoal * Quaternion.Euler(90, 0, 0));
@@ -936,15 +1046,16 @@ public class Behaviour : MonoBehaviour
                 Otter.SetBool("draw", false);
             }
         }
-
-
-
         //Stoning action
         {
             if (Input.GetKey(KeyCode.Mouse1) && CurrentStamina > 0 && !Input.GetKey(KeyCode.LeftControl) && bowEquipped == false)
             {
                 Stone.SetActive(true);
                 AimIcon.SetActive(true);
+                if (Input.GetKeyDown(KeyCode.Mouse1))
+                {
+                    Otter.Play("Crouch");
+                }
                 if (!Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
                 {
                     RotateForward();
@@ -953,6 +1064,7 @@ public class Behaviour : MonoBehaviour
             if (Input.GetKeyUp(KeyCode.Mouse1) && Stone.active && CurrentStamina > 0)
             {
                 Otter.SetBool("fight", false);
+                Otter.SetBool("slash", false);
                 Otter.Play("Throw");
                 Instantiate(Ball, AttackPoint.position + new Vector3(0, 0.6f, 0), Quaternion.identity);
                 CurrentStamina -= 20;
@@ -964,7 +1076,6 @@ public class Behaviour : MonoBehaviour
                 AimIcon.SetActive(false);
             }
         }
-
         //Plant Seed action
         {
             if (Input.GetKeyDown(KeyCode.R) && NutCount > 0)
@@ -974,7 +1085,6 @@ public class Behaviour : MonoBehaviour
                 NutCount--;
             }
         }
-
         //Eat Apple
         {
             if (Input.GetKeyDown(KeyCode.T) && Apple > 0)
@@ -1030,9 +1140,37 @@ public class Behaviour : MonoBehaviour
             {
                 if (Input.GetKey(KeyCode.Mouse0) && CurrentStamina > 0)
                 {
-                    CurrentStamina -= 0.1f;
+                    if (ArmorEquipped==false && HammerHeld==false)
+                    {
+                        CurrentStamina -= 0.03f;
+                    }
+                    if (ArmorEquipped==true)
+                    {
+                        if (grounded==true)
+                        {
+                            CurrentStamina -= 0.2f;
+                        }
+                        if (grounded==false)
+                        {
+                            CurrentStamina -= 0.5f;
+                        }
+                    }
+                    if (HammerHeld==true)
+                    {
+                        CurrentStamina -= 0.1f;
+                    }
                     HealthBar.SetStamina(CurrentStamina);
-                    Otter.SetBool("fight", true); //Airkick leveitation
+                    if (ArmorEquipped==false)
+                    {
+                        Otter.SetBool("fight", true); //Airkick leveitation without sword
+                        Otter.SetBool("slash", false);
+                    }
+                    if (ArmorEquipped == true)
+                    {
+                        Otter.SetBool("fight", false); 
+                        Otter.SetBool("slash", true);//Airkick leveitation with sword
+                    }
+
                     if (grounded == false)
                     {
                         if (Otter.GetCurrentAnimatorStateInfo(0).IsName("Air Kick"))
@@ -1040,28 +1178,52 @@ public class Behaviour : MonoBehaviour
                             var WindTrail = Instantiate(KickWind, KickEffectPos.position, Quaternion.Euler(-90, UnityEngine.Random.Range(0f, 360f), 0));
                             WindTrail.transform.parent = KickEffectPos;
                         }
-                        BeatAir -= Time.deltaTime;
-                        if (BeatAir <= 0)
+                        if (Otter.GetCurrentAnimatorStateInfo(0).IsName("HuricaneSword"))
                         {
-                            Attack();
+                            var SwordTrail = Instantiate(SwordCopter, KickEffectPos.position +new Vector3(0,0.5f,0), Quaternion.Euler(-90, UnityEngine.Random.Range(0f, 360f), 0));
+                            SwordTrail.transform.parent = KickEffectPos;
                         }
+                        //BeatAir -= Time.deltaTime;
+                        //if (BeatAir <= 0)
+                        //{
+                        //    //Attack();
+                        //}
                         InitiateAir -= Time.deltaTime;
                         if (InitiateAir <= 0)
                         {
                             if (Otter.speed > 0.4)
                             {
-                                Player.AddForce(0, levitation, 0);
-                                levitation -= 0.05f;
-                                Otter.speed -= 0.005f;
+                                if (ArmorEquipped==false)
+                                {
+                                    levitation -= 0.05f;
+                                    Otter.speed -= 0.005f;
+                                    Player.AddForce(0, levitation, 0);
+                                }
+                                if (ArmorEquipped==true)
+                                {
+                                    Player.useGravity = false;
+                                }
+
                             }
                             else
                             {
+                                Player.useGravity = true;
                                 Otter.SetBool("fight", false);
                             }
                         }
                     }
                     if (grounded == true)
                     {
+                        if (ArmorEquipped == false)
+                        {
+                            Otter.SetBool("fight", true);
+                            Otter.SetBool("slash", false);
+                        }
+                        if (ArmorEquipped == true)
+                        {
+                            Otter.SetBool("fight", false);
+                            Otter.SetBool("slash", true);
+                        }
                         if (Otter.GetCurrentAnimatorStateInfo(1).IsName("AttackA"))
                         {
                             if (Root.childCount == 0)
@@ -1078,16 +1240,18 @@ public class Behaviour : MonoBehaviour
                                 LeftWind.transform.parent = Root;
                             }
                         }
-                        BeatGrounded -= Time.deltaTime;
-                        if (BeatGrounded <= 0)
-                        {
-                            Attack();
-                        }
+                        //BeatGrounded -= Time.deltaTime;
+                        //if (BeatGrounded <= 0)
+                        //{
+                        //    //Attack();
+                        //}
                     }
 
                 }
                 else
                 {
+                    Player.useGravity = true;
+                    Otter.SetBool("slash", false);
                     Otter.SetBool("fight", false);
                     InitiateAir = 0.5f;
                     GroundAttack = 50;
@@ -1236,7 +1400,6 @@ public class Behaviour : MonoBehaviour
                 }
             }
         }
-
         //Aurborne and landing sequence animations conditioning
         //+ Player's slide and full-break conditioning on ground
         if (grounded == false)
@@ -1330,6 +1493,18 @@ public class Behaviour : MonoBehaviour
             HealLight.enabled = true;
         }
 
+        //if (Input.GetKey(KeyCode.J))
+        //{
+        //    Sound.SwordSwing1();
+        //}
+        //if (Input.GetKey(KeyCode.K))
+        //{
+        //    Sound.SwordSwing2();
+        //}
+        //if (Input.GetKey(KeyCode.L))
+        //{
+        //    Sound.SwordSwing3();
+        //}
 
     }
 

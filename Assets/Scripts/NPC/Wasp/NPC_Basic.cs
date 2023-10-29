@@ -33,14 +33,16 @@ public class NPC_Basic : MonoBehaviour
     public float floatDistance = 1.0f;
     public float maxTiltAngle = 10.0f;
     [Header("Health and damage")]
+    public int hit2stun;
     public int combo = 0;
     public int Damage2Player = 1;
     public int MaxHealth = 2000;
     public int CurrentHealth;
     public NPC_Health NPCHealthBar;
     public GameObject HitEffect;
+    public GameObject SlashEffect;
     public GameObject Explosion;
-
+    [SerializeField] GameObject DamageEffect;
 
     [Header("Sound")]
     public NPC_Audio Sound;
@@ -72,7 +74,7 @@ public class NPC_Basic : MonoBehaviour
         Vector3 Distance = PlayerTarget.transform.position - transform.position;
         PlayerDistance = Distance.magnitude;
         ChangeNav -= Time.deltaTime;
-        if (combo < 3)
+        if (combo < hit2stun)
         {
             if (floating == true)
             {
@@ -135,6 +137,8 @@ public class NPC_Basic : MonoBehaviour
         if (!Input.GetKey(KeyCode.Mouse0) || PlayerDistance > 3)
         {
             HitEffect.SetActive(false);
+            SlashEffect.SetActive(false);
+            DamageEffect.SetActive(false);
         }
     }
     private void LateUpdate()
@@ -170,11 +174,16 @@ public class NPC_Basic : MonoBehaviour
     {
         if (OBJ.gameObject == PlayerTarget)
         {
-            if (combo < 3)
+            if (combo < hit2stun)
             {
                 Sting();
             }
             Contact = true;
+            if (OBJ.gameObject.GetComponent<Behaviour>().isParried== true)
+            {
+                TakeDamage(20);
+                combo += 10;
+            }
         }
         if (OBJ.gameObject.CompareTag("Strike"))
         {
@@ -183,7 +192,9 @@ public class NPC_Basic : MonoBehaviour
         if (OBJ.gameObject.CompareTag("Damage"))
         {
             Wasp.SetBool("Beat", true);
-            TakeDamage(1);
+            TakeDamage(15);
+            Sound.Beat();
+            combo = hit2stun;
         }
         if (OBJ.gameObject.CompareTag("Isle"))
         {
@@ -283,10 +294,51 @@ public class NPC_Basic : MonoBehaviour
         transform.rotation = rotGoal;
         NPC.useGravity = true;
         Wasp.SetBool("Beat", true);
-        HitEffect.SetActive(true);
+        DamageEffect.SetActive(true);
         Wasp.SetBool("Sting", false);
         CurrentHealth -= Damage;
-        Sound.Beat();
+        var playerArsenal = PlayerTarget.GetComponent<Behaviour>().Arsenal;
+        var currentWeapon = PlayerTarget.GetComponent<Behaviour>().arsenalBrowser;
+        switch (playerArsenal[currentWeapon])
+        {
+            case "Bare Hands":
+                {
+                    HitEffect.SetActive(true);
+                    Sound.Beat();
+                    break;
+                }
+            case "Hammers":
+                {
+                    HitEffect.SetActive(true);
+                    Sound.Beat();
+                    break;
+                }
+            case "Bow":
+                {
+                    SlashEffect.SetActive(true);
+                    Sound.HeavySwordDamage();
+                    break;
+                }
+            case "ArmorSet":
+                {
+                    SlashEffect.SetActive(true);
+                    Sound.LiteSwordDamage();
+                    //var playerAnimator = PlayerTarget.GetComponent<Behaviour>().Otter;
+                    //var currentClip = playerAnimator.GetComponent<AnimationClip>().ToString();
+                    //if (currentClip=="Sword1" || currentClip == "Sword2")
+                    //{
+                    //    HitEffect.SetActive(true);
+                    //    Sound.LiteSwordDamage();
+                    //}
+                    //if(currentClip=="NewSwordJump")
+                    //{
+                    //    Sound.HeavySwordDamage();
+                    //    //Sound.Beat();
+                    //}
+                    break;
+                }
+        }
+
         combo++;
         NPCHealthBar.SetNPCHealth(CurrentHealth);
 

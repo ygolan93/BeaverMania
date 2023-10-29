@@ -34,6 +34,22 @@ public class NPC_Audio : MonoBehaviour
         ActionSource.pitch = 1f;
         ActionSource.PlayOneShot(audioClip[3]);
     }
+    public void LiteSwordDamage()
+    {
+        ActionSource.clip = audioClip[4];
+        ActionSource.volume =0.3f;
+        ActionSource.pitch = 0.5f;
+        ActionSource.PlayOneShot(audioClip[4]);
+    }
+    public void HeavySwordDamage()
+    {
+        ActionSource.clip = audioClip[5];
+        ActionSource.volume = 1f;
+        ActionSource.pitch = 0.8f;
+        ActionSource.PlayOneShot(audioClip[5]);
+    }
+
+
     public void StopBuzzing()
     {
         BuzzSource.Stop();

@@ -23,8 +23,8 @@ public class NPC_Audio : MonoBehaviour
     public void Breath()
     {
         ActionSource.clip = audioClip[2];
-        ActionSource.volume = 0.7f;
-        ActionSource.pitch = 1f;
+        ActionSource.volume = 0.5f;
+        ActionSource.pitch = 0.8f;
         ActionSource.PlayOneShot(audioClip[2]);
     }
     public void Crawling()
@@ -37,8 +37,8 @@ public class NPC_Audio : MonoBehaviour
     public void LiteSwordDamage()
     {
         ActionSource.clip = audioClip[4];
-        ActionSource.volume =0.3f;
-        ActionSource.pitch = 0.5f;
+        ActionSource.volume =0.1f;
+        ActionSource.pitch = 1f;
         ActionSource.PlayOneShot(audioClip[4]);
     }
     public void HeavySwordDamage()

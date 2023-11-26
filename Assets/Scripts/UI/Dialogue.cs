@@ -10,6 +10,7 @@ public class Dialogue : MonoBehaviour
     public GameObject ContinueButton;
     public GameObject SkipButton;
     public Transform panel;
+    public Trader Merchant;
     public string[] lines;
     public float textSpeed;
     private int index;
@@ -71,9 +72,6 @@ public class Dialogue : MonoBehaviour
     public void EndConversation()
     {
         PlayerObjective.UpdateObjective();
-        Player.isAtTrader = false;
-        panel.gameObject.SetActive(false);
-        //Destroy(ContinueButton);
-        //Destroy(SkipButton);
+        Merchant.activateSkip();
     }
 }

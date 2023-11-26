@@ -8,7 +8,6 @@ public class NPC_Basic : MonoBehaviour
     [Header("Body and animation")]
     public Rigidbody NPC;
     [SerializeField] Animator Wasp;
-
     [Header("Movement")]
     GameObject PlayerTarget;
     Behaviour PlayerHealth;
@@ -42,7 +41,6 @@ public class NPC_Basic : MonoBehaviour
     public GameObject HitEffect;
     public GameObject SlashEffect;
     public GameObject Explosion;
-    [SerializeField] GameObject DamageEffect;
 
     [Header("Sound")]
     public NPC_Audio Sound;
@@ -138,12 +136,14 @@ public class NPC_Basic : MonoBehaviour
         {
             HitEffect.SetActive(false);
             SlashEffect.SetActive(false);
-            DamageEffect.SetActive(false);
         }
     }
     private void LateUpdate()
-    {
-        Wasp.SetBool("Beat", false);
+    { 
+        if (!Input.GetKey(KeyCode.Mouse0)||Distance.magnitude>6)
+        {
+            Wasp.SetBool("Beat", false);
+        }
         if (CurrentHealth <= 0)
         {
             Death();
@@ -294,7 +294,6 @@ public class NPC_Basic : MonoBehaviour
         transform.rotation = rotGoal;
         NPC.useGravity = true;
         Wasp.SetBool("Beat", true);
-        DamageEffect.SetActive(true);
         Wasp.SetBool("Sting", false);
         CurrentHealth -= Damage;
         var playerArsenal = PlayerTarget.GetComponent<Behaviour>().Arsenal;
@@ -315,8 +314,8 @@ public class NPC_Basic : MonoBehaviour
                 }
             case "Bow":
                 {
-                    SlashEffect.SetActive(true);
-                    Sound.HeavySwordDamage();
+                    HitEffect.SetActive(true);
+                    Sound.Beat();
                     break;
                 }
             case "ArmorSet":
@@ -338,10 +337,7 @@ public class NPC_Basic : MonoBehaviour
                     break;
                 }
         }
-
         combo++;
         NPCHealthBar.SetNPCHealth(CurrentHealth);
-
-
     }
 }

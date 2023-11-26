@@ -617,12 +617,18 @@ public class Behaviour : MonoBehaviour
             {
                 Otter.SetBool("Parry", true);
                 Otter.SetBool("HammerParry", false);
-
             }
             if (HammerHeld == true)
             {
-                Otter.SetBool("Parry", false);
                 Otter.SetBool("HammerParry", true);
+                Otter.SetBool("Parry", false);
+                Otter.SetBool("shieldParry", false);
+            }
+            if (ArmorEquipped == true)
+            {
+                Otter.SetBool("shieldParry", true);
+                Otter.SetBool("Parry", false);
+                Otter.SetBool("HammerParry", false);
             }
         }
         isParried = true;
@@ -631,6 +637,7 @@ public class Behaviour : MonoBehaviour
     {
         Otter.SetBool("Parry", false);
         Otter.SetBool("HammerParry", false);
+        Otter.SetBool("shieldParry", false);
         isParried = false;
     }
     public void HoneyON()
@@ -1261,7 +1268,7 @@ public class Behaviour : MonoBehaviour
             }
             //Parry Action
             {
-                if (Input.GetKey(KeyCode.F) && CurrentStamina > 0)
+                if (Input.GetKey(KeyCode.F) && CurrentStamina > 0 && !Input.GetKey(KeyCode.Mouse0) && !Input.GetKey(KeyCode.Mouse1))
                     ParryON();
                 else
                     ParryOFF();
@@ -1292,7 +1299,7 @@ public class Behaviour : MonoBehaviour
         Otter.SetBool("midair", false);
         Otter.SetBool("roll", false);
         Rolling = false;
-
+        
         //Switch off hurt and heal effects automaticly
         {
             if (hurt == true || heal == true)

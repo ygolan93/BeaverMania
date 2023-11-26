@@ -18,7 +18,8 @@ public class ArenaDoor : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Boss == null)
+       var BossHealth = Boss.GetComponent<BossScript>().CurrentHealth;
+        if (BossHealth <= 0)
         {
             if (Clock > 0)
             {

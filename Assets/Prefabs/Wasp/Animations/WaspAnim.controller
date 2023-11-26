@@ -72,9 +72,9 @@ AnimatorStateTransition:
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0.021033915
+  m_TransitionDuration: 0.0033910614
   m_TransitionOffset: 0
-  m_ExitTime: 0
+  m_ExitTime: 4.5307583e-10
   m_HasExitTime: 1
   m_HasFixedDuration: 1
   m_InterruptionSource: 0
@@ -151,18 +151,21 @@ AnimatorStateTransition:
   - m_ConditionMode: 1
     m_ConditionEvent: Stunned
     m_EventTreshold: 0
+  - m_ConditionMode: 2
+    m_ConditionEvent: Beat
+    m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 841365964780176885}
   m_Solo: 0
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0.1016611
+  m_TransitionDuration: 0.0048189634
   m_TransitionOffset: 0
-  m_ExitTime: 0.000000004842717
+  m_ExitTime: 0.00000003683341
   m_HasExitTime: 0
-  m_HasFixedDuration: 1
-  m_InterruptionSource: 0
+  m_HasFixedDuration: 0
+  m_InterruptionSource: 2
   m_OrderedInterruption: 1
   m_CanTransitionToSelf: 1
 --- !u!1102 &-2539250418135671139
@@ -174,7 +177,7 @@ AnimatorState:
   m_PrefabAsset: {fileID: 0}
   m_Name: Beaten
   m_Speed: 1
-  m_CycleOffset: 0
+  m_CycleOffset: 1
   m_Transitions:
   - {fileID: 1412110039852434803}
   - {fileID: -4989968111579563938}
@@ -272,17 +275,20 @@ AnimatorStateTransition:
   - m_ConditionMode: 2
     m_ConditionEvent: Beat
     m_EventTreshold: 0
+  - m_ConditionMode: 2
+    m_ConditionEvent: Stunned
+    m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: -7732531749854849462}
   m_Solo: 0
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0.015904993
-  m_TransitionOffset: 0.14784926
-  m_ExitTime: 0.9528076
-  m_HasExitTime: 1
-  m_HasFixedDuration: 1
+  m_TransitionDuration: 0.014156119
+  m_TransitionOffset: 0
+  m_ExitTime: 0.0000000020384048
+  m_HasExitTime: 0
+  m_HasFixedDuration: 0
   m_InterruptionSource: 0
   m_OrderedInterruption: 1
   m_CanTransitionToSelf: 1
@@ -303,9 +309,9 @@ AnimatorStateTransition:
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0.017857144
+  m_TransitionDuration: 0.020569457
   m_TransitionOffset: 0
-  m_ExitTime: 0.0000000070454242
+  m_ExitTime: 0
   m_HasExitTime: 0
   m_HasFixedDuration: 1
   m_InterruptionSource: 0
@@ -347,16 +353,19 @@ AnimatorStateTransition:
   - m_ConditionMode: 1
     m_ConditionEvent: Stunned
     m_EventTreshold: 0
+  - m_ConditionMode: 2
+    m_ConditionEvent: Beat
+    m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 841365964780176885}
   m_Solo: 0
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0.10409756
+  m_TransitionDuration: 0.0022404005
   m_TransitionOffset: 0
-  m_ExitTime: 0
-  m_HasExitTime: 1
+  m_ExitTime: 0.009781737
+  m_HasExitTime: 0
   m_HasFixedDuration: 1
   m_InterruptionSource: 0
   m_OrderedInterruption: 1
@@ -378,11 +387,11 @@ AnimatorStateTransition:
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0.15295611
-  m_TransitionOffset: 0
-  m_ExitTime: 0.0000000017074108
+  m_TransitionDuration: 0.36488548
+  m_TransitionOffset: 0.005352653
+  m_ExitTime: 0
   m_HasExitTime: 0
-  m_HasFixedDuration: 1
-  m_InterruptionSource: 0
+  m_HasFixedDuration: 0
+  m_InterruptionSource: 2
   m_OrderedInterruption: 1
   m_CanTransitionToSelf: 1

@@ -10,7 +10,6 @@ public class Destroy : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-         Clock = 5f;
         Physics.IgnoreLayerCollision(0, 7);
     }
     public void DestroySelf()

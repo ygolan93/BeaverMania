@@ -30,17 +30,20 @@ public class AnimatedAttack : MonoBehaviour
             {
                 case "NPC":
                     {
-                        enemy.GetComponent<NPC_Basic>().TakeDamage(Damage);
+                        var Wasp = enemy.gameObject.GetComponent<NPC_Basic>();
+                        Wasp.TakeDamage(Damage);
                         break;
                     }
                 case "Hive":
                     {
-                        enemy.GetComponent<Static_Hive>().TakeDamage(Damage);
+                        var Hive = enemy.gameObject.GetComponent<Static_Hive>();
+                        Hive.TakeDamage(Damage);
                         break;
                     }
                 case "Boss":
                     {
-                        enemy.GetComponent<BossScript>().TakeDamage(Damage);
+                        var Boss = enemy.gameObject.GetComponent<BossScript>();
+                        Boss.TakeDamage(Damage);
                         break;
                     }
             }
@@ -66,18 +69,18 @@ public class AnimatedAttack : MonoBehaviour
                 }
             case "Bow":
                 {
-                    CauseDamage(AttackPoint.position, 1f, 55);
+                    CauseDamage(AttackPoint.position, 1f, 50);
                     break;
                 }
             case "Hammers":
                 {
-                    CauseDamage(AttackPoint.position, 2f, 150);
+                    CauseDamage(AttackPoint.position, 2f, 700);
                     break;
                 }
             case "ArmorSet":
                 {
                     var feetPos = Sphere.position + new Vector3(0, 0.5f, 0);
-                    CauseDamage(feetPos, 4f, 100);
+                    CauseDamage(feetPos, 4f, 200);
                     break;
                 }
         }
@@ -101,7 +104,7 @@ public class AnimatedAttack : MonoBehaviour
                 }
             case "ArmorSet":
                 {
-                    CauseDamage(Sphere.position, 4f, 60);
+                    CauseDamage(Sphere.position+new Vector3(0,0.5f,0), 4f, 200);
                     break;
                 }
         }

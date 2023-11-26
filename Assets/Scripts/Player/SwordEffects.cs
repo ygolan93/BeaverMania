@@ -19,8 +19,7 @@ public class SwordEffects : MonoBehaviour
     {
         var BigSwordTrail = Instantiate(FireSwordTrail, Sword.position, Sword.rotation);
         BigSwordTrail.transform.parent = Sword;
-        var FireBall = Instantiate(FireBreath, AttackPoint.position + new Vector3(0, 1, 0), Sword.rotation);
-        Player.velocity = Player.transform.TransformDirection(Vector3.forward) * 2 + Vector3.up * 0.5f;
+        var FireBall = Instantiate(FireBreath, AttackPoint.position + new Vector3(0, 4, 0), Sword.rotation);
     }
 
     public void GreatSwing()

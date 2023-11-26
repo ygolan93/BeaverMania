@@ -101,10 +101,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Ball: {fileID: -4409854831365679520}
   isArrow: 0
+  isFireBall: 0
   RockSound: {fileID: 8440659277245134393}
   clock: 3
-  forwardVel: 70
-  upwardVel: 10
+  forwardVel: 35
+  upwardVel: 5
+  Explosion: {fileID: 8441742525532789622, guid: 40e313c95bc0b6b44bfc43db170973fc, type: 3}
+  Damage: 5
 --- !u!54 &-4409854831365679520
 Rigidbody:
   m_ObjectHideFlags: 0

@@ -24,7 +24,6 @@ public class AnimatedAttack : MonoBehaviour
             if (enemy.name != null)
             {
                 Debug.Log("Hit " + enemy.name);
-
             }
             switch (enemy.tag)
             {
@@ -44,6 +43,20 @@ public class AnimatedAttack : MonoBehaviour
                     {
                         var Boss = enemy.gameObject.GetComponent<BossScript>();
                         Boss.TakeDamage(Damage);
+                        break;
+                    }
+                case "House":
+                    {
+                        break;
+                    }
+
+                case "Isle":
+                    {
+                        break;
+                    }
+
+                case "Untagged":
+                    {
                         break;
                     }
             }
@@ -108,5 +121,14 @@ public class AnimatedAttack : MonoBehaviour
                     break;
                 }
         }
+    }
+
+    public void ShieldParryON()
+    {
+        Player.ParryON();
+    }
+    public void ShieldParryOFF()
+    {
+        Player.ParryOFF();
     }
 }

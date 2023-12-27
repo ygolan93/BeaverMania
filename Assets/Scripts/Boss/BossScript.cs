@@ -4,17 +4,12 @@ using UnityEngine;
 
 public class BossScript : MonoBehaviour
 {
+    [Header("Boss Stats")]
     Rigidbody Boss;
     [SerializeField] Animator Scorpion;
     public NPC_Health BossHealth;
     public int CurrentHealth;
     public int MaxHealth = 2000;
-    public GameObject BossHPBar;
-    public GameObject BossPanel;
-    public GameObject HitEffect;
-    public GameObject Explosion;
-    public GameObject StunEffect;
-    public NPC_Audio Sound;
     public Behaviour Player;
     Vector3 Distance;
     public Quaternion rotGoal;
@@ -30,6 +25,18 @@ public class BossScript : MonoBehaviour
     public Collider Jaw2A;
     public Collider Jaw2B;
     public Collider Sting;
+
+    [Header("Boss UI")]
+    public GameObject BossHPBar;
+    public GameObject BossPanel;
+
+    [Header("Effects & Sound")]
+    public GameObject HitEffect;
+    public GameObject Explosion;
+    public GameObject StunEffect;
+    public NPC_Audio Sound;
+
+
 
     private void Start()
     {
@@ -204,6 +211,5 @@ public class BossScript : MonoBehaviour
         StunEffect.SetActive(false);
         Charge = true;
     }
-
 }
 

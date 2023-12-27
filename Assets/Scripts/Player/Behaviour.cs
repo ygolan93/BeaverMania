@@ -34,6 +34,7 @@ public class Behaviour : MonoBehaviour
     int GobletJumpLimit;
     int JumpNumPreserve;
     public Transform Root;
+    public Transform Face;
     public Animator Otter;
     public bool OnPlatform = false;
     [Header("Health")]
@@ -775,7 +776,14 @@ public class Behaviour : MonoBehaviour
         }
         else
         {
-            CurrentStamina -= 0.05f;
+            if (ArmorEquipped==false)
+            {
+                CurrentStamina -= 0.05f;
+            }
+            if (ArmorEquipped==true)
+            {
+                CurrentStamina -= 0.001f;
+            }
         }
         HealthPercent = System.Math.Round((CurrentHealth / MaxHealth) * 100f, 1);
         DebugText = HealthPercent + "%";
@@ -857,6 +865,15 @@ public class Behaviour : MonoBehaviour
 
         //Crouch action - Place Logs
         {
+            if (Input.GetKey(KeyCode.LeftControl)&& FreeLook.m_Lens.FieldOfView<20)
+            {
+                FreeLook.m_LookAt = Face;
+            }
+            //else
+            //{
+            //    FreeLook.m_LookAt = Root;
+            //}
+
             if (Input.GetKey(KeyCode.LeftControl) && grounded == true && Rolling == false && !Input.GetKey(KeyCode.Space))
             {
                 if (Load.i == 9)
@@ -884,6 +901,7 @@ public class Behaviour : MonoBehaviour
                 ParryOFF();
                 HealingText = "";
             }
+
         }
 
 

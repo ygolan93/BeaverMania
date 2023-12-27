@@ -5,6 +5,7 @@ using TMPro;
 public class Dialogue : MonoBehaviour
 {
     public Behaviour Player;
+    public BossScript Boss;
     public ObjectiveUI PlayerObjective;
     public TextMeshProUGUI textComponent;
     public GameObject ContinueButton;
@@ -14,13 +15,15 @@ public class Dialogue : MonoBehaviour
     public string[] lines;
     public float textSpeed;
     private int index;
-
+    public bool isBoss;
     // Start is called before the first frame update
     void Start()
     {
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
+        //Boss = GameObject.FindGameObjectWithTag("Boss").GetComponent<BossScript>();
         PlayerObjective = GameObject.FindGameObjectWithTag("Player").GetComponent<ObjectiveUI>();
         panel = gameObject.transform.parent.GetComponent<Transform>();
+        SkipButton.SetActive(true);
         textComponent.text = string.Empty;
         StartDialogue();
         index = 0;
@@ -72,6 +75,20 @@ public class Dialogue : MonoBehaviour
     public void EndConversation()
     {
         PlayerObjective.UpdateObjective();
-        Merchant.activateSkip();
+        if (isBoss==true)
+        {
+            EndBossDialogue();
+        }
+        else
+        {
+            Merchant.activateSkip();
+        }
+    }
+
+    public void EndBossDialogue()
+    {
+        PlayerObjective.UpdateObjective();
+        Player.GetComponent<BossHandler>().SkipBossChat();
+        Boss.InitiateCharge();
     }
 }

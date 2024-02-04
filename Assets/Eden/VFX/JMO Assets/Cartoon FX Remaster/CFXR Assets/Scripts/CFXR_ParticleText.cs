@@ -47,7 +47,7 @@ namespace CartoonFX
 #if UNITY_EDITOR
         void OnValidate()
         {
-            this.hideFlags = isDynamic ? HideFlags.None : HideFlags.DontSaveInBuild;
+            //this.hideFlags = isDynamic ? HideFlags.None : HideFlags.DontSaveInBuild;
 
             if (text == null || font == null)
             {

@@ -75,9 +75,7 @@ public class Behaviour : MonoBehaviour
     public float attackRange = 0.5f;
     public LayerMask enemyLayers;
     public float GroundBeat = 0.3f;
-    //float BeatGrounded = 0.4f;
     public float AirBeat = 0.2f;
-    //float BeatAir = 0.2f;
     float FallClock;
     [SerializeField] float InitialFall = 0.2f;
     public int GroundAttack = 50;
@@ -87,7 +85,6 @@ public class Behaviour : MonoBehaviour
     public bool Defend = false;
     public float DefendAnim = 0.3f;
     bool WhichAttack = false;
-    //public GameObject ParryShield;
     public bool isParried;
     [SerializeField] GameObject RightHandWeapon;
     [SerializeField] GameObject LeftHandWeapon;
@@ -105,12 +102,10 @@ public class Behaviour : MonoBehaviour
     public bool GobletPicked;
     public float GobletClock = 10f;
     public string GobletText;
-    //float drinkClock=1f;
     [Header("Chat")]
     public string Plattering;
     [Header("Audio & Effects")]
     public AudioScript Sound;
-    //public MusicPlaylist MusicOP;
     public float HealQue = 3;
     [SerializeField] ParticleSystem SlideEffect;
     [SerializeField] ParticleSystem HealEffect;
@@ -181,6 +176,7 @@ public class Behaviour : MonoBehaviour
                 if (OBJ.gameObject.CompareTag("stairs"))
                 {
                     Player.velocity += new Vector3(0, 1, 0);
+                    Player.drag = 0;
                 }
             }
         }
@@ -198,12 +194,14 @@ public class Behaviour : MonoBehaviour
     }
     public void OnCollisionStay(Collision OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Isle") || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("Tile") || OBJ.gameObject.CompareTag("House") || OBJ.gameObject.CompareTag("stairs") || OBJ.gameObject.CompareTag("Tile"))
+        if (OBJ.gameObject.CompareTag("Isle") || 
+            OBJ.gameObject.CompareTag("Bridge") || 
+            OBJ.gameObject.CompareTag("Tile") || 
+            OBJ.gameObject.CompareTag("House") || 
+            OBJ.gameObject.CompareTag("stairs") || 
+            OBJ.gameObject.CompareTag("Tile"))
         {
-            if (disableGround==false)
-            {
-                grounded = true;
-            }
+            grounded = true;
         }
 
         if (OBJ.gameObject.CompareTag("Weapon"))
@@ -247,6 +245,7 @@ public class Behaviour : MonoBehaviour
             Otter.Play("Crouch");
             GoldON();
             Destroy(OBJ.gameObject);
+            
         }
         if (OBJ.gameObject.CompareTag("NPC"))
         {
@@ -269,7 +268,11 @@ public class Behaviour : MonoBehaviour
     }
     public void OnCollisionExit(Collision OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Isle") || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("House") || OBJ.gameObject.CompareTag("stairs") || OBJ.gameObject.CompareTag("Tile"))
+        if (OBJ.gameObject.CompareTag("Isle") || 
+            OBJ.gameObject.CompareTag("Bridge") || 
+            OBJ.gameObject.CompareTag("House") || 
+            OBJ.gameObject.CompareTag("stairs") || 
+            OBJ.gameObject.CompareTag("Tile"))
         {
             grounded = false;
         }
@@ -278,7 +281,6 @@ public class Behaviour : MonoBehaviour
             TouchShroom = false;
         }
     }
-
     public void OnTriggerEnter(Collider OBJ)
     {
         if (OBJ.gameObject.CompareTag("Life"))
@@ -294,17 +296,22 @@ public class Behaviour : MonoBehaviour
         {   
             Player.transform.SetParent(OBJ.gameObject.transform, true);
 
-            Player.transform.localScale = new(0.15f,2,0.18f);
+            //Player.transform.localScale = new(0.18f, 2, 0.18f);
             OnPlatform = true;
         }
     }
     public void OnTriggerStay(Collider OBJ)
     {
-        if (OBJ.gameObject.CompareTag("DisableGround"))
+        if (OBJ.gameObject.CompareTag("Tile"))
         {
-            disableGround = true;
+            OnPlatform = true;
+            Player.transform.parent = OBJ.gameObject.transform;
         }
-            if (OBJ.gameObject.CompareTag("Life"))
+        if (OBJ.gameObject.CompareTag("stairs"))
+        {
+            step = true;
+        }
+        if (OBJ.gameObject.CompareTag("Life"))
         {
             GM.lastCheckPointPos = OBJ.transform.position;
             Plattering = ("Shroom!");
@@ -351,6 +358,11 @@ public class Behaviour : MonoBehaviour
     }
     public void OnTriggerExit(Collider OBJ)
     {
+        if (OBJ.gameObject.CompareTag("stairs"))
+        {
+            step = false;
+        }
+
         if (OBJ.gameObject.CompareTag("DisableGround"))
         {
             disableGround = false;
@@ -383,75 +395,6 @@ public class Behaviour : MonoBehaviour
             //FreeLook.m_Lens.FieldOfView = 25;
         }
     }
-
-    //public void Attack()
-    //{
-    //    //if (isParried == false)
-    //    {
-
-    //        //if (ArmorEquipped==true)
-    //        //{
-    //        //    Otter.SetBool("slash", true);
-    //        //}
-    //        //if (ArmorEquipped == false)
-    //        //{
-    //        //    Otter.SetBool("slash", false);
-    //        //}
-    //        if (grounded == true)
-    //        {
-    //            Collider[] hitEnemies = Physics.OverlapSphere(AttackPoint.position, attackRange, enemyLayers);
-
-    //            foreach (Collider enemy in hitEnemies)
-    //            {
-    //                if (enemy.CompareTag("NPC"))
-    //                {
-    //                    if (enemy.name!=null)
-    //                    {
-    //                        Debug.Log("Hit " + enemy.name);
-    //                    }
-    //                    enemy.GetComponent<NPC_Basic>().TakeDamage(GroundAttack);
-    //                }
-    //                if (enemy.CompareTag("Boss"))
-    //                {
-    //                    Debug.Log("Hit " + enemy.name);
-    //                    enemy.GetComponent<BossScript>().TakeDamage(GroundAttack);
-    //                }
-    //                if (enemy.CompareTag("Hive"))
-    //                {
-    //                    Debug.Log("Hit " + enemy.name);
-    //                    enemy.GetComponent<Static_Hive>().TakeDamage(GroundAttack);
-    //                }
-    //            }
-    //            BeatGrounded = GroundBeat / Otter.speed;
-    //        }
-    //        if (grounded == false)
-    //        {
-    //            Collider[] hitEnemies = Physics.OverlapSphere(Sphere.position, attackRange, enemyLayers);
-
-    //            foreach (Collider enemy in hitEnemies)
-    //            {
-    //                if (enemy.CompareTag("NPC"))
-    //                {
-    //                    Debug.Log("Hit " + enemy.name);
-    //                    enemy.GetComponent<NPC_Basic>().TakeDamage(40);
-    //                }
-    //                if (enemy.CompareTag("Boss"))
-    //                {
-    //                    Debug.Log("Hit " + enemy.name);
-    //                    enemy.GetComponent<BossScript>().TakeDamage(40);
-    //                }
-    //                if (enemy.CompareTag("Hive"))
-    //                {
-    //                    Debug.Log("Hit " + enemy.name);
-    //                    enemy.GetComponent<Static_Hive>().TakeDamage(40);
-    //                }
-
-    //            }
-    //            BeatAir = AirBeat * Otter.speed;
-    //        }
-    //    }
-
-    //}
     public void TakeDamage(float Damage)
     {
         if (isParried == false)
@@ -482,36 +425,45 @@ public class Behaviour : MonoBehaviour
     {
         rotGoal = Quaternion.LookRotation(new Vector3(Direction.x, 0, Direction.z));
         transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
-
         Otter.SetBool("walk", true);
-        //if (OnPlatform == false)
-        //{
-            if (grounded == true)
+        if (step==true)
+        {
+            Otter.SetBool("climb", true);
+        }
+        else
+        {
+            Otter.SetBool("climb", false);
+        }
+
+        if (grounded == true)
+        {
+            if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey && Rolling == false)
             {
-                if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey && Rolling == false)
+                if (ArmorEquipped==true)
                 {
-                    if (ArmorEquipped==true)
-                    {
-                         Otter.SetBool("armor", true);
-                    }
-                    if (ArmorEquipped == false)
-                    {
-                        Otter.SetBool("armor", false);
-                    }
+                        Otter.SetBool("armor", true);
+                }
+                if (ArmorEquipped == false)
+                {
+                    Otter.SetBool("armor", false);
+                }
+                if (step==false)
+                {
                     Otter.SetBool("run", true);
                     speed = Run;
                     steer = 0.12f;
-                }
-                else
-                {
-                    Otter.SetBool("run", false);
-                    speed = Walk;
-                    steer = 0.1f;
-                }
-                Player.velocity = (Direction.normalized * speed) + new Vector3(0, Player.velocity.y, 0);
+                    }
             }
-            if (grounded == false && Input.GetKey(KeyCode.LeftShift))
-                Player.AddForce(Direction.normalized * 5);
+            else
+            {
+                Otter.SetBool("run", false);
+                speed = Walk;
+                steer = 0.1f;
+            }
+            Player.velocity = (Direction.normalized * speed) + new Vector3(0, Player.velocity.y, 0);
+        }
+        if (grounded == false && Input.GetKey(KeyCode.LeftShift))
+            Player.AddForce(Direction.normalized * 5);
 
     }
     public void PlayerRoll(Vector3 Direction)
@@ -541,8 +493,7 @@ public class Behaviour : MonoBehaviour
     public void RotateForward()
     {
         var CamForward = Camera.main.transform.TransformDirection(Vector3.forward);
-        var DirectionGoal = new Vector3(CamForward.x, CamForward.y, CamForward.z);
-        rotGoal = Quaternion.LookRotation(DirectionGoal);
+        rotGoal = Quaternion.LookRotation(CamForward);
         transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
     }
     public void ShowCursor()
@@ -655,13 +606,13 @@ public class Behaviour : MonoBehaviour
     {
         GoldPicked = true;
         GoldBrick.SetActive(true);
-        //Physics.IgnoreLayerCollision(gameObject.layer, 7, true);
+        Physics.IgnoreLayerCollision(gameObject.layer, 7, true);
     }
     public void GoldOFF()
     {
         GoldPicked = false;
         GoldBrick.SetActive(false);
-        //Physics.IgnoreLayerCollision(gameObject.layer, 7, false);
+        Physics.IgnoreLayerCollision(gameObject.layer, 7, false);
     }
 
     public void Start()
@@ -710,16 +661,16 @@ public class Behaviour : MonoBehaviour
     [System.Obsolete]
     public void Update()
     {
-        //Climb on stairs/obsticle
-        step = obsticle.step;
-        if (step==true)
-        {
-            Otter.SetBool("climb", true);
-        }
-        if (step == false)
-        {
-            Otter.SetBool("climb", false);
-        }
+        ////Climb on stairs/obsticle
+        //step = obsticle.step;
+        //if (step == true)
+        //{
+        //    Otter.SetBool("climb", true);
+        //}
+        //if (step == false)
+        //{
+        //    Otter.SetBool("climb", false);
+        //}
 
         //Parry animations
         if (Defend == true)
@@ -892,10 +843,12 @@ public class Behaviour : MonoBehaviour
                 {
                     GoldOFF();
                     Instantiate(PlacedGold, AttackPoint.position - new Vector3(0, 0.5f, 0.3f), Quaternion.identity);
+                    Physics.IgnoreLayerCollision(gameObject.layer, 7, true);
                 }
             }
             else
             {
+                Physics.IgnoreLayerCollision(gameObject.layer, 7, false);
                 HologramedBridge.SetActive(false);
                 Otter.SetBool("crouch", false);
                 ParryOFF();
@@ -903,8 +856,6 @@ public class Behaviour : MonoBehaviour
             }
 
         }
-
-
 
         //Browse Arsenal
         {
@@ -1313,6 +1264,7 @@ public class Behaviour : MonoBehaviour
         //transform.Translate(movement);
 
         Otter.SetBool("walk", false);
+        Otter.SetBool("climb", false);
         Otter.SetBool("run", false);
         Otter.SetBool("midair", false);
         Otter.SetBool("roll", false);

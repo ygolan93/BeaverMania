@@ -10816,7 +10816,7 @@ GameObject:
   - component: {fileID: 1427810939935276862}
   - component: {fileID: 1427810939935276858}
   m_Layer: 3
-  m_Name: RightHandWeapon
+  m_Name: RightHandHammer
   m_TagString: Weapon
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11357,7 +11357,7 @@ GameObject:
   - component: {fileID: 1427810941059768577}
   - component: {fileID: 7257359136474153047}
   m_Layer: 3
-  m_Name: LeftHandWeapon
+  m_Name: LeftHandHammer
   m_TagString: Weapon
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -36866,7 +36866,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 5fe0aebe85b574b4a94e74712f0aa915, type: 2}
+  - {fileID: 2100000, guid: 596f6a514a721364f97764c88759f146, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -49227,7 +49227,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: ecce1a1895e37524282423faddfd60c9, type: 2}
+  - {fileID: 2100000, guid: 11a8c080607cf47c299aff53087e0334, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -50557,7 +50557,6 @@ GameObject:
   - component: {fileID: 7370122799389070937}
   - component: {fileID: 8668838197977538417}
   - component: {fileID: 7624992565179513156}
-  - component: {fileID: 7414242091140705074}
   - component: {fileID: 7624992565179513157}
   - component: {fileID: 7624992565179513154}
   - component: {fileID: 8668838197977538418}
@@ -50698,7 +50697,7 @@ MonoBehaviour:
   PlatformVelocity: {x: 0, y: 0, z: 0}
   Load: {fileID: 7624992565179513157}
   rotGoal: {x: 0, y: 0, z: 0, w: 0}
-  obsticle: {fileID: 7414242091140705074}
+  obsticle: {fileID: 0}
   speed: 9
   steer: 0.9
   JumpForce: 5
@@ -50808,27 +50807,6 @@ MonoBehaviour:
   FreeLook: {fileID: 1427810939599441655}
   CamForTraders: {fileID: 3156488547051756512}
   ChangeSpeech: 1
---- !u!114 &7414242091140705074
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7624992565179513158}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cebeb71f51b7ec54299a0c4215527197, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  distance: 0.7
-  offset: 0.04
-  stepLeap: 100
-  stepTime: 0.01
-  step: 0
-  player: {fileID: 7624992565179513018}
-  collisionLayer:
-    serializedVersion: 2
-    m_Bits: 512
 --- !u!114 &7624992565179513157
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -62351,6 +62329,10 @@ PrefabInstance:
     - target: {fileID: 1947442990589676846, guid: c728f815c9053594e88231e1980f63a9, type: 3}
       propertyPath: m_Name
       value: HatLowPoly
+      objectReference: {fileID: 0}
+    - target: {fileID: 1947442990589676846, guid: c728f815c9053594e88231e1980f63a9, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c728f815c9053594e88231e1980f63a9, type: 3}

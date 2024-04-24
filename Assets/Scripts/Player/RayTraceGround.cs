@@ -6,7 +6,9 @@ public class RayTraceGround : MonoBehaviour
 {
     
     [Range(0, 1)]
-    public float distance;
+    public float bottomRayDistance;
+    [Range(0, 1)]
+    public float topRayDistance;
     [Range(0, 1)]
     public float offset;
     [Range(0, 300)]
@@ -14,7 +16,8 @@ public class RayTraceGround : MonoBehaviour
     [Range(0, 0.1f)]
     public float stepTime;
     public bool step;
-
+    [Range(0.1f, 0.4f)]
+    public float rayGap;
     public Rigidbody player;
     public LayerMask collisionLayer;
     Vector3 riseVector;
@@ -36,11 +39,11 @@ public class RayTraceGround : MonoBehaviour
         originRay = transform.position + new Vector3(0, offset, 0);
 
         Ray ray = new(originRay, directionRay);
-        Debug.DrawRay(originRay, directionRay * distance, Color.red);
-        Ray ray2 = new(originRay+new Vector3(0,0.4f,0), directionRay);
-        Debug.DrawRay(originRay + new Vector3(0, 0.4f, 0), 1.5f * distance * directionRay, Color.yellow);
+        Debug.DrawRay(originRay, directionRay * bottomRayDistance, Color.red);
+        Ray ray2 = new(originRay+new Vector3(0,rayGap,0), directionRay);
+        Debug.DrawRay(originRay + new Vector3(0, rayGap, 0), 1.5f * topRayDistance * directionRay, Color.yellow);
 
-        if (Physics.Raycast(ray, out _, distance, collisionLayer) || Physics.Raycast(ray2, out _, distance, collisionLayer))
+        if (Physics.Raycast(ray, out _, bottomRayDistance, collisionLayer) || Physics.Raycast(ray2, out _, topRayDistance, collisionLayer))
 
         {
             if ((Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.D)))
@@ -65,7 +68,7 @@ public class RayTraceGround : MonoBehaviour
     }
     private void OnTriggerExit(Collider OBJ)
     {
-        if (OBJ.gameObject.layer==9)
+        if (OBJ.gameObject.layer == 9)
         {
             step = false;
             player.GetComponent<Behaviour>().Otter.SetBool("climb", false);

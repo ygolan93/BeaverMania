@@ -2,14 +2,15 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!21 &2100000
 Material:
-  serializedVersion: 6
+  serializedVersion: 8
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Waterfall_01
   m_Shader: {fileID: 4800000, guid: 276a39a5a210b124885f0eff3e80f1f3, type: 3}
-  m_ShaderKeywords: 
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
   m_LightmapFlags: 0
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -131,6 +132,7 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    m_Ints: []
     m_Floats:
     - _BumpScale: 1
     - _CausticDepthFade: 11.22
@@ -150,6 +152,7 @@ Material:
     - _FoamDepth1: 0
     - _FoamFalloff: -56
     - _FoamFalloff1: 0
+    - _FoamGlowMultiplier: 1
     - _FoamShoreline: 0.974
     - _FoamSize: 2.62
     - _FoamSize1: 0.019
@@ -159,6 +162,8 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
+    - _GlowDepth: 0.1
+    - _GlowFalloff: 0.1
     - _Metallic: 0
     - _Mode: 0
     - _NormalScale: 0.201
@@ -168,15 +173,15 @@ Material:
     - _OcclusionStrength: 1
     - _Opacity: 1
     - _OpacityFalloff: 3.83
-    - _OpacityMin: 0.36
-    - _OverallFalloff: 1.14
+    - _OpacityMin: 0.676
+    - _OverallFalloff: 1.69
     - _Parallax: 0.02
-    - _ReflectionPower: 0.32
+    - _ReflectionPower: 0.363
     - _RippleSpeed: 0.357
     - _ShallowFalloff: 0.56
     - _Smoothness: 2.83
     - _SmoothnessTextureChannel: 0
-    - _Specular: 0.244
+    - _Specular: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _Tiling: 0.36
@@ -244,13 +249,16 @@ Material:
     - _Color3: {r: 0.2924528, g: 0.2924528, b: 0.2924528, a: 0}
     - _Color4: {r: 0.2924528, g: 0.2924528, b: 0.2924528, a: 0}
     - _DeepColour: {r: 0.08627451, g: 0.34117648, b: 0.32941177, a: 0}
+    - _DepthGlowColour: {r: 0, g: 0, b: 0, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _FoamColor: {r: 1, g: 1, b: 1, a: 1}
     - _FoamColor1: {r: 0.5215687, g: 0.8980392, b: 0.8470588, a: 0}
-    - _ShallowColour: {r: 0.14117648, g: 0.35686275, b: 0.25882354, a: 0}
+    - _FoamEmitColour: {r: 0, g: 0, b: 0, a: 0}
+    - _ShallowColour: {r: 0.07518689, g: 0.20754719, b: 0.1473834, a: 0}
     - _VeryDeepColour: {r: 0.015686275, g: 0.16862746, b: 0.03137255, a: 0}
     - _WaterDeepColor: {r: 0.056069765, g: 0.33962262, b: 0.3294575, a: 0}
     - _WaterDeepColor1: {r: 0.04705882, g: 0.3098039, b: 0.1960784, a: 0}
     - _WaterReallyDeepColor: {r: 0.0056069805, g: 0.16981131, b: 0.027871966, a: 1}
     - _WaterShallowColor: {r: 0.12006053, g: 0.3584906, b: 0.2587217, a: 1}
     - _WaterShallowColor1: {r: 0.9607843, g: 0.7882353, b: 0.5764706, a: 0}
+  m_BuildTextureStacks: []

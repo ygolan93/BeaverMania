@@ -11,11 +11,9 @@ public class Behaviour : MonoBehaviour
     [Header("Movement and animation")]
     public Rigidbody Player;
     public bool grounded;
-    bool disableGround = false;
-    public Vector3 PlatformVelocity;
     public Carry Load;
     public Quaternion rotGoal;
-    public RayTraceGround obsticle;
+    //public RayTraceGround obsticle;
     bool step;
     public float speed = 5;
     public float steer = 0.12f;
@@ -102,8 +100,10 @@ public class Behaviour : MonoBehaviour
     public bool GobletPicked;
     public float GobletClock = 10f;
     public string GobletText;
+
     [Header("Chat")]
     public string Plattering;
+
     [Header("Audio & Effects")]
     public AudioScript Sound;
     public float HealQue = 3;
@@ -121,6 +121,7 @@ public class Behaviour : MonoBehaviour
     [SerializeField] GameObject SwordPlainTrail;
     [SerializeField] GameObject BoxWind;
     [SerializeField] Transform KickEffectPos;
+
     [Header("UI")]
     public float moveSpeed = 5.0f;
     public GameObject LooseScreen;
@@ -295,8 +296,6 @@ public class Behaviour : MonoBehaviour
         if (OBJ.gameObject.CompareTag("Tile"))
         {   
             Player.transform.SetParent(OBJ.gameObject.transform, true);
-
-            //Player.transform.localScale = new(0.18f, 2, 0.18f);
             OnPlatform = true;
         }
     }
@@ -362,11 +361,6 @@ public class Behaviour : MonoBehaviour
         {
             step = false;
         }
-
-        if (OBJ.gameObject.CompareTag("DisableGround"))
-        {
-            disableGround = false;
-        }
         if (OBJ.gameObject.CompareTag("Tile"))
         {
             grounded = false;
@@ -425,7 +419,9 @@ public class Behaviour : MonoBehaviour
     {
         rotGoal = Quaternion.LookRotation(new Vector3(Direction.x, 0, Direction.z));
         transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+
         Otter.SetBool("walk", true);
+
         if (step==true)
         {
             Otter.SetBool("climb", true);
@@ -452,7 +448,8 @@ public class Behaviour : MonoBehaviour
                     Otter.SetBool("run", true);
                     speed = Run;
                     steer = 0.12f;
-                    }
+                }
+
             }
             else
             {
@@ -474,7 +471,6 @@ public class Behaviour : MonoBehaviour
         {
             if (Input.GetKey(KeyCode.LeftControl) && CurrentStamina > 0 && grounded == true)
             {
-                //GroundAttack = 300;
                 Rolling = true;
                 Otter.SetBool("roll", true);
                 CurrentStamina -= 0.1f;
@@ -1259,11 +1255,12 @@ public class Behaviour : MonoBehaviour
         Vector3 XZBack = new(cameraRelativeBack.x, 0, cameraRelativeBack.z);
         Vector3 XZRight = new(cameraRelativeRight.x, 0, cameraRelativeRight.z);
         Vector3 XZLeft = new(cameraRelativeLeft.x, 0, cameraRelativeLeft.z);
-
         //Vector3 movement = new Vector3(horizontalInput, 0, verticalInput) * moveSpeed * Time.deltaTime;
         //transform.Translate(movement);
 
         Otter.SetBool("walk", false);
+        Otter.SetBool("turn right", false);
+        Otter.SetBool("turn left", false);
         Otter.SetBool("climb", false);
         Otter.SetBool("run", false);
         Otter.SetBool("midair", false);
@@ -1316,10 +1313,12 @@ public class Behaviour : MonoBehaviour
                 }
                 if (Input.GetKey(KeyCode.D))
                 {
+                    //Otter.Play("Walk Right");
                     PlayerMove(XZRight);
                 }
                 if (Input.GetKey(KeyCode.A))
                 {
+                    //Otter.Play("Walk Left");
                     PlayerMove(XZLeft);
                 }
                 if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.D))

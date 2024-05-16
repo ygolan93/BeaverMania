@@ -105,6 +105,7 @@ public class Behaviour : MonoBehaviour
     public string Plattering;
 
     [Header("Audio & Effects")]
+    public MusicPlaylist Music;
     public AudioScript Sound;
     public float HealQue = 3;
     [SerializeField] ParticleSystem SlideEffect;
@@ -284,6 +285,19 @@ public class Behaviour : MonoBehaviour
     }
     public void OnTriggerEnter(Collider OBJ)
     {
+        if (OBJ.gameObject.CompareTag("Music"))
+        {
+            OBJ.gameObject.SetActive(false);
+            if (int.TryParse(OBJ.gameObject.name, out int songIndex))
+            {
+                Music.ChangeSong(songIndex);
+            }
+            else
+            {
+                Debug.LogWarning("The game object's name is not a valid integer: " + OBJ.gameObject.name);
+            }
+
+        }
         if (OBJ.gameObject.CompareTag("Life"))
         {
             HealingText = "Checkpoint saved";
@@ -622,6 +636,7 @@ public class Behaviour : MonoBehaviour
         AimIcon.SetActive(false);
         Player = GetComponent<Rigidbody>();
         GM = GameObject.FindGameObjectWithTag("GM").GetComponent<GameMaster>();
+        Music = GameObject.Find("GameMusic").GetComponent<MusicPlaylist>();
         CurrentHealth = MaxHealth;
         HealthBar.SetMaxHealth(CurrentHealth);
         CurrentStamina = MaxStamina;

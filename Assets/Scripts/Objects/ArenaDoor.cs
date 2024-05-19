@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class ArenaDoor : MonoBehaviour
 {
-    public BossScript Boss;
+    public ScorpionScript Scorpion;
     float InitialHeight;
     public float Clock;
     public float LiftFactor;
@@ -18,7 +18,7 @@ public class ArenaDoor : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-       var BossHealth = Boss.GetComponent<BossScript>().CurrentHealth;
+       var BossHealth = Scorpion.GetComponent<ScorpionScript>().CurrentHealth;
         if (BossHealth <= 0)
         {
             if (Clock > 0)

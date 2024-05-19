@@ -83,10 +83,10 @@ public class Projectile : MonoBehaviour
             Player.Plattering = "Bam! Take that";
             Player.ChangeSpeech = 1f;
         }
-        if (OBJ.gameObject.CompareTag("Boss"))
+        if (OBJ.gameObject.CompareTag("Scorpion"))
         {
-            OBJ.gameObject.GetComponent<BossScript>().TakeDamage(Damage);
-            OBJ.gameObject.GetComponent<BossScript>().combo+=3;
+            OBJ.gameObject.GetComponent<ScorpionScript>().TakeDamage(Damage);
+            OBJ.gameObject.GetComponent<ScorpionScript>().combo+=3;
             if (isFireBall == true)
             {
                 Explode();

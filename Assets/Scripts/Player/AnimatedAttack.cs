@@ -39,9 +39,9 @@ public class AnimatedAttack : MonoBehaviour
                         Hive.TakeDamage(Damage);
                         break;
                     }
-                case "Boss":
+                case "Scorpion":
                     {
-                        var Boss = enemy.gameObject.GetComponent<BossScript>();
+                        var Boss = enemy.gameObject.GetComponent<ScorpionScript>();
                         Boss.TakeDamage(Damage);
                         break;
                     }

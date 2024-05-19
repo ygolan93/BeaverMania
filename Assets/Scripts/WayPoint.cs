@@ -6,29 +6,36 @@ using UnityEngine.UI;
 public class WayPoint : MonoBehaviour
 {
     public Image Mark;
-    Transform target;
+    private Transform target;
     public Transform[] Locations;
     public Transform Arrow;
     public int i;
 
-
-    // Update is called once per frame
-    public void Start()
+    // Start is called before the first frame update
+    void Start()
     {
         Arrow.gameObject.SetActive(false);
-        for (int index=0; index<Locations.Length; index++)
+        for (int index = 0; index < Locations.Length; index++)
         {
-            if (index!=i && index!=21 && index!=22)
+            if (index != i && index != 21 && index != 22)
             {
                 Locations[index].gameObject.SetActive(false);
             }
         }
-        Locations[i].gameObject.SetActive(true);
+        if (i >= 0 && i < Locations.Length)
+        {
+            Locations[i].gameObject.SetActive(true);
+            target = Locations[i];
+        }
+        else
+        {
+            Debug.LogError("Index i is out of bounds.");
+        }
     }
 
     void Update()
     {
-        //Arrow Compass
+        // Arrow Compass
         if (Input.GetKey(KeyCode.Q))
         {
             Arrow.gameObject.SetActive(true);
@@ -37,25 +44,24 @@ public class WayPoint : MonoBehaviour
         {
             Arrow.gameObject.SetActive(false);
         }
-        target = Locations[i];
-        Arrow.gameObject.transform.rotation = Quaternion.LookRotation(Locations[i].transform.position - transform.position);
-        if (target==null)
+
+        if (target != null)
         {
-            i++;
+            Arrow.gameObject.transform.rotation = Quaternion.LookRotation(target.position - transform.position);
         }
 
-        //Waypoint Mark
+        // Waypoint Mark
+        if (target != null)
         {
             float minX = Mark.GetPixelAdjustedRect().width / 2;
             float maxX = Screen.width - minX;
-            float minY = Mark.GetPixelAdjustedRect().width / 2;
-            float maxY = Screen.width - minY;
-            Vector2 Pos = Camera.main.WorldToScreenPoint(target.position + new Vector3(0, 2, 0));
-
+            float minY = Mark.GetPixelAdjustedRect().height / 2;
+            float maxY = Screen.height - minY;
+            Vector2 pos = Camera.main.WorldToScreenPoint(target.position + new Vector3(0, 2, 0));
 
             if (Vector3.Dot((target.position - transform.position), transform.forward) < 0)
             {
-                //Target is behind player
+                // Target is behind player
                 Mark.enabled = false;
             }
             else
@@ -63,9 +69,9 @@ public class WayPoint : MonoBehaviour
                 Mark.enabled = true;
             }
 
-            Pos.x = Mathf.Clamp(Pos.x, minX, maxX);
-            Pos.y = Mathf.Clamp(Pos.y, minY, maxY);
-            Mark.transform.position = Pos;
+            pos.x = Mathf.Clamp(pos.x, minX, maxX);
+            pos.y = Mathf.Clamp(pos.y, minY, maxY);
+            Mark.transform.position = pos;
         }
     }
 
@@ -74,9 +80,24 @@ public class WayPoint : MonoBehaviour
         if (OBJ.gameObject.CompareTag("WayPoint"))
         {
             OBJ.gameObject.SetActive(false);
-            i++;
-            Locations[i].gameObject.SetActive(true);
+
+            if (int.TryParse(OBJ.gameObject.name, out int newIndex))
+            {
+                i = newIndex;
+                if (i >= 0 && i < Locations.Length)
+                {
+                    Locations[i].gameObject.SetActive(true);
+                    target = Locations[i];
+                }
+                else
+                {
+                    Debug.LogWarning("Parsed index is out of bounds: " + i);
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Failed to parse waypoint name: " + OBJ.gameObject.name);
+            }
         }
     }
-
 }

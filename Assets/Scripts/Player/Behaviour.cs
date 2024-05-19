@@ -74,6 +74,7 @@ public class Behaviour : MonoBehaviour
     public LayerMask enemyLayers;
     public float GroundBeat = 0.3f;
     public float AirBeat = 0.2f;
+    bool scorpAttack;
     float FallClock;
     [SerializeField] float InitialFall = 0.2f;
     public int GroundAttack = 50;
@@ -105,6 +106,7 @@ public class Behaviour : MonoBehaviour
     public string Plattering;
 
     [Header("Audio & Effects")]
+    [SerializeField] bool seekMusic;
     public MusicPlaylist Music;
     public AudioScript Sound;
     public float HealQue = 3;
@@ -312,9 +314,32 @@ public class Behaviour : MonoBehaviour
             Player.transform.SetParent(OBJ.gameObject.transform, true);
             OnPlatform = true;
         }
+        if (OBJ.gameObject.CompareTag("ScorpionDamage"))
+        {
+            if (isParried == false)
+            {
+                if (scorpAttack == true)
+                {
+                    TakeDamage(15);
+                }
+            }
+        }
+        if (OBJ.gameObject.CompareTag("ScorpionSting"))
+        {
+            if (scorpAttack == true && isParried==false)
+            {
+                TakeDamage(30);
+            }
+        }
     }
     public void OnTriggerStay(Collider OBJ)
     {
+        if (OBJ.gameObject.CompareTag("Scorpion"))
+        {
+            scorpAttack = OBJ.gameObject.GetComponent<ScorpionScript>().isAttacking;
+        }
+
+
         if (OBJ.gameObject.CompareTag("Tile"))
         {
             OnPlatform = true;
@@ -636,7 +661,12 @@ public class Behaviour : MonoBehaviour
         AimIcon.SetActive(false);
         Player = GetComponent<Rigidbody>();
         GM = GameObject.FindGameObjectWithTag("GM").GetComponent<GameMaster>();
-        Music = GameObject.Find("GameMusic").GetComponent<MusicPlaylist>();
+        if(seekMusic==true)
+        {
+            Music = GameObject.Find("GameMusic").GetComponent<MusicPlaylist>();
+            Music.transform.parent = Player.transform;
+            Music.transform.position = new Vector3(0, 0, 0);
+        }
         CurrentHealth = MaxHealth;
         HealthBar.SetMaxHealth(CurrentHealth);
         CurrentStamina = MaxStamina;

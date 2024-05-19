@@ -44,7 +44,7 @@ public class NPC_Basic : MonoBehaviour
 
     [Header("Sound")]
     public NPC_Audio Sound;
-
+    [SerializeField] GameObject BuzzSource;
     [Header("On Death")]
     public GameObject Body;
     public GameObject Head;
@@ -62,12 +62,12 @@ public class NPC_Basic : MonoBehaviour
         HitEffect.SetActive(false);
         RandoMovement();
         NPC.velocity = Vector3.forward;
+        BuzzSource.SetActive(true);
     }
 
     // Update is called once per frame
     public void FixedUpdate()
     {
-        //Sound.Buzz();
         AnotherWasp = GameObject.FindGameObjectWithTag("NPC");
         Vector3 Distance = PlayerTarget.transform.position - transform.position;
         PlayerDistance = Distance.magnitude;
@@ -88,6 +88,7 @@ public class NPC_Basic : MonoBehaviour
                 {
                     if (ChangeNav <= 0)
                     {
+                        BuzzSource.SetActive(true);
                         Wasp.SetBool("Sting", false);
                         RandoMovement();
                     }
@@ -101,6 +102,7 @@ public class NPC_Basic : MonoBehaviour
                 {
                     if (Contact == false)
                     {
+                        BuzzSource.SetActive(true);
                         ChargeClock = 0.7f;
                         Physics.IgnoreCollision(AnotherWasp.GetComponent<Collider>(), transform.GetComponent<Collider>());
                         NPC.velocity = (Distance.normalized * 50f);
@@ -204,6 +206,7 @@ public class NPC_Basic : MonoBehaviour
     }
     public void TurnBack()
     {
+        BuzzSource.SetActive(true);
         Wasp.SetBool("Sting", false);
         if ((transform.position - SpawnPos).magnitude > 30)
         {
@@ -235,7 +238,7 @@ public class NPC_Basic : MonoBehaviour
     }
    public void Stunned()
     {
-        //Sound.StopBuzzing();
+        BuzzSource.SetActive(false);
         floating = false;
         NPC.constraints = RigidbodyConstraints.None;
         NPC.useGravity = true;
@@ -245,7 +248,7 @@ public class NPC_Basic : MonoBehaviour
 
     void Recovered()
     {
-        //Sound.Buzz();
+        BuzzSource.SetActive(true);
         floating = false;
         Wasp.SetBool("Stunned", false);
         Recovery = 10f;
@@ -273,7 +276,7 @@ public class NPC_Basic : MonoBehaviour
 
     public void RandoMovement()
     {
-        //floating = true;
+        BuzzSource.SetActive(true);
         if ((SpawnPos - transform.position).magnitude < 20)
         {
             Recovered();
@@ -289,7 +292,7 @@ public class NPC_Basic : MonoBehaviour
 
     public void TakeDamage(int Damage)
     {
-        //Sound.StopBuzzing();
+        BuzzSource.SetActive(false);
         rotGoal = Quaternion.LookRotation(Distance);
         transform.rotation = rotGoal;
         NPC.useGravity = true;

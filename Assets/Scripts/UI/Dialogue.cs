@@ -5,7 +5,7 @@ using TMPro;
 public class Dialogue : MonoBehaviour
 {
     public Behaviour Player;
-    public BossScript Boss;
+    public ScorpionScript Scorpion;
     public ObjectiveUI PlayerObjective;
     public TextMeshProUGUI textComponent;
     public GameObject ContinueButton;
@@ -89,6 +89,6 @@ public class Dialogue : MonoBehaviour
     {
         PlayerObjective.UpdateObjective();
         Player.GetComponent<BossHandler>().SkipBossChat();
-        Boss.InitiateCharge();
+        Scorpion.InitiateCharge();
     }
 }

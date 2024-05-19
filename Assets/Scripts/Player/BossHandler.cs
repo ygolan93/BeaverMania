@@ -5,7 +5,7 @@ using UnityEngine;
 public class BossHandler : MonoBehaviour
 {
     public Behaviour player;
-    public BossScript Boss;
+    public ScorpionScript Boss;
     //NPC_Audio bossSound;
     public GameObject ChatCollider;
     public GameObject BossBar;
@@ -18,7 +18,7 @@ public class BossHandler : MonoBehaviour
     void Start()
     {
         player = gameObject.GetComponent<Behaviour>();
-        Boss = GameObject.Find("Boss").GetComponent<BossScript>();
+        Boss = GameObject.Find("ScorpionBoss").GetComponent<ScorpionScript>();
         //bossSound = Boss.GetComponent<NPC_Audio>();
         BossBar.SetActive(false);
     }

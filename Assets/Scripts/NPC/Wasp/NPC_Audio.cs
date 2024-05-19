@@ -4,7 +4,6 @@ public class NPC_Audio : MonoBehaviour
 {
     [SerializeField] AudioClip[] audioClip;
     [SerializeField] AudioSource ActionSource;
-    [SerializeField] AudioSource BuzzSource;
 
     public void Beat()
     {
@@ -16,7 +15,7 @@ public class NPC_Audio : MonoBehaviour
     public void Sting()
     {
         ActionSource.clip = audioClip[1];
-        ActionSource.volume = 0.7f;
+        ActionSource.volume = 0.5f;
         ActionSource.pitch = 1f;
         ActionSource.PlayOneShot(audioClip[1]);
     }
@@ -30,14 +29,14 @@ public class NPC_Audio : MonoBehaviour
     public void Crawling()
     {
         ActionSource.clip = audioClip[3];
-        ActionSource.volume = 0.7f;
+        ActionSource.volume = 0.5f;
         ActionSource.pitch = 1f;
         ActionSource.PlayOneShot(audioClip[3]);
     }
     public void LiteSwordDamage()
     {
         ActionSource.clip = audioClip[4];
-        ActionSource.volume =0.1f;
+        ActionSource.volume = 0.1f;
         ActionSource.pitch = 1f;
         ActionSource.PlayOneShot(audioClip[4]);
     }
@@ -47,16 +46,6 @@ public class NPC_Audio : MonoBehaviour
         ActionSource.volume = 1f;
         ActionSource.pitch = 0.8f;
         ActionSource.PlayOneShot(audioClip[5]);
-    }
-
-
-    public void StopBuzzing()
-    {
-        BuzzSource.Stop();
-    }
-    public void Buzz()
-    {
-        BuzzSource.Play();
     }
 
 }

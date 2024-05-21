@@ -51329,7 +51329,7 @@ GameObject:
   m_Layer: 10
   m_Name: ScorpionBoss
   m_TagString: Scorpion
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 2800000, guid: 03a188aeeaecbb9478d9ae70eae185f6, type: 3}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -51370,11 +51370,12 @@ MonoBehaviour:
   CurrentHealth: 150000
   MaxHealth: 150000
   Player: {fileID: 0}
+  playerDistance: 20
   isAttacking: 0
   maxDistanceScalar: 100
-  minDistanceScalar: 76
+  minDistanceScalar: 5
   rotGoal: {x: 0, y: 0, z: 0, w: 0}
-  chargeSpeed: 0
+  chargeSpeed: 15
   StrideClock: 7
   BeatClock: 10
   StunnedClock: 5
@@ -52088,21 +52089,21 @@ AudioSource:
   m_GameObject: {fileID: 6342124517880834066}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 897629281565178079, guid: 80330d5770d5ae2488c7e64aa33e4761, type: 2}
   m_audioClip: {fileID: 0}
   m_PlayOnAwake: 1
-  m_Volume: 0.545
-  m_Pitch: 1
+  m_Volume: 0.5
+  m_Pitch: 0.8
   Loop: 0
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
-  Priority: 168
-  DopplerLevel: 1
+  Priority: 1
+  DopplerLevel: 0.1
   MinDistance: 1
-  MaxDistance: 500
+  MaxDistance: 100
   Pan2D: 0
-  rolloffMode: 0
+  rolloffMode: 1
   BypassEffects: 0
   BypassListenerEffects: 0
   BypassReverbZones: 0
@@ -52135,7 +52136,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -52150,7 +52151,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0

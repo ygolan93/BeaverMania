@@ -354,7 +354,7 @@ GameObject:
   m_Layer: 10
   m_Name: NewHive
   m_TagString: Hive
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 2800000, guid: abf61d860880ff245818240600d200e1, type: 3}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -510,21 +510,21 @@ AudioSource:
   m_GameObject: {fileID: 7115676670349774032}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 8856627466121864432, guid: 80330d5770d5ae2488c7e64aa33e4761, type: 2}
   m_audioClip: {fileID: 8300000, guid: 26006051b5c98c644964fe770338f09d, type: 3}
   m_PlayOnAwake: 0
-  m_Volume: 0.675
+  m_Volume: 1
   m_Pitch: 1
   Loop: 0
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
-  Priority: 128
+  Priority: 1
   DopplerLevel: 1
   MinDistance: 1
-  MaxDistance: 500
+  MaxDistance: 40
   Pan2D: 0
-  rolloffMode: 0
+  rolloffMode: 1
   BypassEffects: 0
   BypassListenerEffects: 0
   BypassReverbZones: 0
@@ -557,7 +557,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -758,6 +758,22 @@ PrefabInstance:
     - target: {fileID: 4085418682846878757, guid: 93bcecb52790ff041b53a861bc725937, type: 3}
       propertyPath: m_Layer
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 4443764700134952912, guid: 93bcecb52790ff041b53a861bc725937, type: 3}
+      propertyPath: Priority
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4443764700134952912, guid: 93bcecb52790ff041b53a861bc725937, type: 3}
+      propertyPath: rolloffMode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4443764700134952912, guid: 93bcecb52790ff041b53a861bc725937, type: 3}
+      propertyPath: OutputAudioMixerGroup
+      value: 
+      objectReference: {fileID: 8856627466121864432, guid: 80330d5770d5ae2488c7e64aa33e4761, type: 2}
+    - target: {fileID: 4443764700134952912, guid: 93bcecb52790ff041b53a861bc725937, type: 3}
+      propertyPath: panLevelCustomCurve.m_Curve.Array.data[0].value
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4582539356016660397, guid: 93bcecb52790ff041b53a861bc725937, type: 3}
       propertyPath: m_Layer

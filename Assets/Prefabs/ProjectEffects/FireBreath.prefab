@@ -44,7 +44,7 @@ Light:
   m_Type: 2
   m_Shape: 0
   m_Color: {r: 1, g: 0.32040966, b: 0, a: 1}
-  m_Intensity: 3.0187254
+  m_Intensity: 2.8962955
   m_Range: 7
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -127,7 +127,7 @@ Transform:
   m_GameObject: {fileID: 8764043878647920493}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: -3.149, z: 0.44351}
-  m_LocalScale: {x: 15.61, y: 15.61, z: 15.61}
+  m_LocalScale: {x: 5, y: 5, z: 5}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 8769712368058676127}
@@ -4920,7 +4920,7 @@ MonoBehaviour:
   forwardVel: 90
   upwardVel: 1
   Explosion: {fileID: 2433282508537954060, guid: 9cfe40900aead6b46be69d2c02675f7e, type: 3}
-  Damage: 5000
+  Damage: 20000
 --- !u!54 &4052894699184453993
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -4948,8 +4948,8 @@ SphereCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.14
-  m_Center: {x: 0, y: -0.036245022, z: 0.05}
+  m_Radius: 0.4
+  m_Center: {x: 0, y: -0.036245022, z: 0.23}
 --- !u!82 &1091704372948249461
 AudioSource:
   m_ObjectHideFlags: 0

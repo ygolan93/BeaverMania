@@ -329,7 +329,31 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4968688398559378340, guid: 141ffa0ef1509874f97475a17f55a1ef, type: 3}
+      propertyPath: DopplerLevel
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4968688398559378340, guid: 141ffa0ef1509874f97475a17f55a1ef, type: 3}
+      propertyPath: BypassEffects
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4968688398559378340, guid: 141ffa0ef1509874f97475a17f55a1ef, type: 3}
+      propertyPath: BypassReverbZones
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4968688398559378340, guid: 141ffa0ef1509874f97475a17f55a1ef, type: 3}
+      propertyPath: BypassListenerEffects
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4968688398559378340, guid: 141ffa0ef1509874f97475a17f55a1ef, type: 3}
+      propertyPath: OutputAudioMixerGroup
+      value: 
+      objectReference: {fileID: 8626823355104539361, guid: 80330d5770d5ae2488c7e64aa33e4761, type: 2}
+    - target: {fileID: 4968688398559378340, guid: 141ffa0ef1509874f97475a17f55a1ef, type: 3}
       propertyPath: panLevelCustomCurve.m_Curve.Array.data[0].value
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4968688398559378340, guid: 141ffa0ef1509874f97475a17f55a1ef, type: 3}
+      propertyPath: reverbZoneMixCustomCurve.m_Curve.Array.data[0].value
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4968688398559378341, guid: 141ffa0ef1509874f97475a17f55a1ef, type: 3}
@@ -3443,7 +3467,7 @@ AudioSource:
   m_GameObject: {fileID: 675850633}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 6591358193900728815, guid: 80330d5770d5ae2488c7e64aa33e4761, type: 2}
   m_audioClip: {fileID: 8300000, guid: b726575d1445ba44e8ce0030532d1435, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 1

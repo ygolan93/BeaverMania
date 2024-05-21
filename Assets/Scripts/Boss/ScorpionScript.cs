@@ -11,6 +11,7 @@ public class ScorpionScript : MonoBehaviour
     public int CurrentHealth;
     public int MaxHealth = 2000;
     public Behaviour Player;
+    public float playerDistance;
     public bool isAttacking;
     GameObject AnotherScorpion;
     Vector3 Distance;
@@ -52,17 +53,20 @@ public class ScorpionScript : MonoBehaviour
         combo = 0;
         Explosion.SetActive(false);
     }
+
     public void FixedUpdate()
     {
+        Distance = Player.transform.position - RBScorpion.position;
+        var DistanceScalar = Mathf.Abs(Distance.magnitude);
+
         if (Charge==false)
         {
             isAttacking = false;
         }
-        if (Charge==true)
+        if (DistanceScalar<=playerDistance)
         {
             AnotherScorpion = GameObject.FindGameObjectWithTag("Scorpion");
-            Distance = Player.transform.position - RBScorpion.position;
-            var DistanceScalar = Mathf.Abs(Distance.magnitude);
+            Charge = true;
             isAttacking = true;
             rotGoal = Quaternion.LookRotation(new Vector3(Distance.x, 0, Distance.z));
             RBScorpion.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
@@ -211,7 +215,6 @@ public class ScorpionScript : MonoBehaviour
             combo = 10;
         }
     }
-
     private void ScorpionStunned()
     {
         Scorpion.SetBool("Backwards", false);

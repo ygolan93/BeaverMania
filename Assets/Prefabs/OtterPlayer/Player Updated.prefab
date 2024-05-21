@@ -10651,7 +10651,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.7777778, y: 1}
+    m_SensorSize: {x: 36, y: 24}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -10749,7 +10749,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1427810939919146176}
-  m_LocalRotation: {x: 0.04946411, y: 0.0011885086, z: -0.000058860616, w: 0.9987752}
+  m_LocalRotation: {x: 0.049464114, y: 0.0011885064, z: -0.00005886051, w: 0.9987752}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -10794,7 +10794,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.7777778, y: 1}
+    m_SensorSize: {x: 36, y: 24}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -10912,7 +10912,7 @@ GameObject:
   - component: {fileID: 1427810940025255302}
   - component: {fileID: 1427810940025255303}
   m_Layer: 3
-  m_Name: audioSource2
+  m_Name: AudioEffects
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10942,7 +10942,7 @@ AudioSource:
   m_GameObject: {fileID: 1427810940025255321}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 3102597708893234507, guid: 80330d5770d5ae2488c7e64aa33e4761, type: 2}
   m_audioClip: {fileID: 0}
   m_PlayOnAwake: 1
   m_Volume: 1
@@ -10951,12 +10951,12 @@ AudioSource:
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
-  Priority: 128
+  Priority: 1
   DopplerLevel: 1
   MinDistance: 1
   MaxDistance: 500
   Pan2D: 0
-  rolloffMode: 0
+  rolloffMode: 1
   BypassEffects: 0
   BypassListenerEffects: 0
   BypassReverbZones: 0
@@ -10989,7 +10989,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -11053,7 +11053,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1427810940129001408}
-  m_LocalRotation: {x: -0.011491394, y: 0.0011898861, z: 0.000013674363, w: 0.9999333}
+  m_LocalRotation: {x: -0.0114913955, y: 0.0011898839, z: 0.00001367434, w: 0.9999333}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -11098,7 +11098,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.7777778, y: 1}
+    m_SensorSize: {x: 36, y: 24}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -11289,7 +11289,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1427810940599071088}
-  m_LocalRotation: {x: 0.018881433, y: 0.0011897532, z: -0.000022468263, w: 0.999821}
+  m_LocalRotation: {x: 0.018881433, y: 0.001189749, z: -0.000022468183, w: 0.999821}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -11334,7 +11334,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.7777778, y: 1}
+    m_SensorSize: {x: 36, y: 24}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -12128,6 +12128,7 @@ Transform:
   - {fileID: 7685288834688339274}
   - {fileID: 1835536630924413452}
   - {fileID: 8226085136439530891}
+  - {fileID: 8858074771611284031}
   m_Father: {fileID: 1672028326895023156}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -12165,7 +12166,7 @@ Transform:
   - {fileID: 4873843299834556386}
   - {fileID: 5887446665744764533}
   m_Father: {fileID: 7624992565179513019}
-  m_RootOrder: 15
+  m_RootOrder: 14
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &7049981857312613617
 MonoBehaviour:
@@ -12949,7 +12950,7 @@ Transform:
   m_Children:
   - {fileID: 7435726430228843396}
   m_Father: {fileID: 7624992565179513019}
-  m_RootOrder: 17
+  m_RootOrder: 16
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2425255351969090634
 GameObject:
@@ -13051,7 +13052,7 @@ Transform:
   - {fileID: 553267124788207496}
   - {fileID: 8826126154660395254}
   m_Father: {fileID: 7624992565179513019}
-  m_RootOrder: 16
+  m_RootOrder: 15
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!33 &2557506090177219451
 MeshFilter:
@@ -37555,7 +37556,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4931902873114587256}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.7289808, y: 3.21, z: 5.745488}
+  m_LocalPosition: {x: 5.0422344, y: 3.21, z: 3.2520568}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -37563,7 +37564,7 @@ Transform:
   - {fileID: 5491213514642611067}
   - {fileID: 8517005172103364959}
   m_Father: {fileID: 7624992565179513019}
-  m_RootOrder: 14
+  m_RootOrder: 13
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &3156488547051756512
 MonoBehaviour:
@@ -37595,7 +37596,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.7777778, y: 1}
+    m_SensorSize: {x: 36, y: 24}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -37738,7 +37739,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.7777778, y: 1}
+    m_SensorSize: {x: 36, y: 24}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -48423,7 +48424,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.7777778, y: 1}
+    m_SensorSize: {x: 36, y: 24}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -49508,7 +49509,7 @@ Light:
   m_Type: 2
   m_Shape: 0
   m_Color: {r: 0.7311321, g: 0.9361015, b: 1, a: 1}
-  m_Intensity: 0
+  m_Intensity: 1.7784097
   m_Range: 8
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -50398,7 +50399,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.7777778, y: 1}
+    m_SensorSize: {x: 36, y: 24}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -50579,7 +50580,6 @@ Transform:
   - {fileID: 5064708578351649271}
   - {fileID: 9064840667715565130}
   - {fileID: 1816785930663036428}
-  - {fileID: 8858074771611284031}
   - {fileID: 97297671353652214}
   - {fileID: 1214771775112142115}
   - {fileID: 2557506090176416603}
@@ -50723,7 +50723,6 @@ MonoBehaviour:
   Beat: 0
   Ball: {fileID: 1429953180212373313, guid: 618f5c1422316834194d463f67abe9e4, type: 3}
   AttackPoint: {fileID: 7624992564637512164}
-  Sphere: {fileID: 7624992564719209494}
   attackRange: 1
   enemyLayers:
     serializedVersion: 2
@@ -50756,6 +50755,7 @@ MonoBehaviour:
   GobletClock: 0
   GobletText: 
   Plattering: 
+  Music: {fileID: 0}
   Sound: {fileID: 5780172247254938579}
   HealQue: 3
   SlideEffect: {fileID: 5230319077118341865}
@@ -56847,7 +56847,7 @@ AudioSource:
   m_GameObject: {fileID: 8601147714667543457}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: -1238203413905274933, guid: 80330d5770d5ae2488c7e64aa33e4761, type: 2}
   m_audioClip: {fileID: 0}
   m_PlayOnAwake: 1
   m_Volume: 1
@@ -56959,7 +56959,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: da67893bdaaa54548b2a035564e5eba8, type: 3}
   - {fileID: 8300000, guid: 3e2dbd32b76d9784c8f13de4e377673b, type: 3}
   audioSource: {fileID: 2247776605461801549}
-  audioSource2: {fileID: 1427810940025255303}
+  audioEffects: {fileID: 1427810940025255303}
 --- !u!114 &6550047410051117215
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -57073,17 +57073,17 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8858074771611284024}
-  m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0.79577637, z: -0.034683228}
-  m_LocalScale: {x: 0.44318, y: 0.44318, z: 0.44318}
+  m_LocalRotation: {x: -0.6870654, y: 0.028582541, z: 0.00036945086, w: 0.72603315}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.12550147, y: 0.12550145, z: 0.12550147}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 91752751511880244}
   - {fileID: 91752752129682618}
   - {fileID: 5988556549177370521}
   - {fileID: 104977390451229833}
-  m_Father: {fileID: 7624992565179513019}
-  m_RootOrder: 13
+  m_Father: {fileID: 6565228024971101753}
+  m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!198 &8858074771611284030
 ParticleSystem:

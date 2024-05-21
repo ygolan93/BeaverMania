@@ -15,22 +15,22 @@ public class NPC_Audio : MonoBehaviour
     public void Sting()
     {
         ActionSource.clip = audioClip[1];
-        ActionSource.volume = 0.5f;
-        ActionSource.pitch = 1f;
+        //ActionSource.volume = 0.5f;
+        //ActionSource.pitch = 1f;
         ActionSource.PlayOneShot(audioClip[1]);
     }
     public void Breath()
     {
         ActionSource.clip = audioClip[2];
-        ActionSource.volume = 0.5f;
-        ActionSource.pitch = 0.8f;
+        //ActionSource.volume = 0.5f;
+        //ActionSource.pitch = 0.8f;
         ActionSource.PlayOneShot(audioClip[2]);
     }
     public void Crawling()
     {
         ActionSource.clip = audioClip[3];
-        ActionSource.volume = 0.5f;
-        ActionSource.pitch = 1f;
+        //ActionSource.volume = 0.5f;
+        //ActionSource.pitch = 1f;
         ActionSource.PlayOneShot(audioClip[3]);
     }
     public void LiteSwordDamage()

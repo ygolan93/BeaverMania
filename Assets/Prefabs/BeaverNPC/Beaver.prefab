@@ -566,6 +566,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  beavers: []
   currentPoint: 0
   isHIT: 0
   steer: 0.12
@@ -573,6 +574,7 @@ MonoBehaviour:
   heading: 0
   wait: 4
   MaxHealth: 2000
+  moveClock: 0
   Wander: {x: 0, y: 0, z: 0}
   rotGoal: {x: 0, y: 0, z: 0, w: 0}
 --- !u!95 &8726202019487909192
@@ -640,7 +642,7 @@ MonoBehaviour:
   audioClip:
   - {fileID: 8300000, guid: f842b00edd987af4d95ee25409d0b9d9, type: 3}
   audioSource: {fileID: 2582342443465146300}
-  audioSource2: {fileID: 2582342443465146300}
+  audioEffects: {fileID: 2582342443465146300}
 --- !u!82 &2582342443465146300
 AudioSource:
   m_ObjectHideFlags: 0
@@ -650,7 +652,7 @@ AudioSource:
   m_GameObject: {fileID: 2644262761601828232}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: -5956301807436203057, guid: 80330d5770d5ae2488c7e64aa33e4761, type: 2}
   m_audioClip: {fileID: 8300000, guid: f842b00edd987af4d95ee25409d0b9d9, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 1
@@ -659,12 +661,12 @@ AudioSource:
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
-  Priority: 68
+  Priority: 1
   DopplerLevel: 1
   MinDistance: 1
-  MaxDistance: 500
+  MaxDistance: 15
   Pan2D: 0
-  rolloffMode: 0
+  rolloffMode: 1
   BypassEffects: 0
   BypassListenerEffects: 0
   BypassReverbZones: 0
@@ -697,7 +699,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -712,7 +714,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0

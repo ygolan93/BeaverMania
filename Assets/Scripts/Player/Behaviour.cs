@@ -69,7 +69,7 @@ public class Behaviour : MonoBehaviour
     public float Beat = 0;
     public Projectile Ball;
     public Transform AttackPoint;
-    public Transform Sphere;
+    //public Transform Sphere;
     public float attackRange = 0.5f;
     public LayerMask enemyLayers;
     public float GroundBeat = 0.3f;
@@ -106,7 +106,7 @@ public class Behaviour : MonoBehaviour
     public string Plattering;
 
     [Header("Audio & Effects")]
-    [SerializeField] bool seekMusic;
+    //[SerializeField] bool seekMusic;
     public MusicPlaylist Music;
     public AudioScript Sound;
     public float HealQue = 3;
@@ -207,7 +207,6 @@ public class Behaviour : MonoBehaviour
         {
             grounded = true;
         }
-
         if (OBJ.gameObject.CompareTag("Weapon"))
         {
             Plattering = ("Hammers!");
@@ -308,7 +307,6 @@ public class Behaviour : MonoBehaviour
         {
             Player.velocity += new Vector3(0, 1, 0);
         }
-
         if (OBJ.gameObject.CompareTag("Tile"))
         {   
             Player.transform.SetParent(OBJ.gameObject.transform, true);
@@ -338,8 +336,6 @@ public class Behaviour : MonoBehaviour
         {
             scorpAttack = OBJ.gameObject.GetComponent<ScorpionScript>().isAttacking;
         }
-
-
         if (OBJ.gameObject.CompareTag("Tile"))
         {
             OnPlatform = true;
@@ -407,7 +403,6 @@ public class Behaviour : MonoBehaviour
             Player.transform.parent = null;
             Player.transform.localScale = new(1, 1, 1);
         }
-
         if (OBJ.gameObject.CompareTag("Life"))
         {
             TouchShroom = false;
@@ -661,12 +656,12 @@ public class Behaviour : MonoBehaviour
         AimIcon.SetActive(false);
         Player = GetComponent<Rigidbody>();
         GM = GameObject.FindGameObjectWithTag("GM").GetComponent<GameMaster>();
-        if(seekMusic==true)
-        {
+        //if(seekMusic==true)
+        //{
             Music = GameObject.Find("GameMusic").GetComponent<MusicPlaylist>();
             Music.transform.parent = Player.transform;
             Music.transform.position = new Vector3(0, 0, 0);
-        }
+        //}
         CurrentHealth = MaxHealth;
         HealthBar.SetMaxHealth(CurrentHealth);
         CurrentStamina = MaxStamina;
@@ -1203,10 +1198,7 @@ public class Behaviour : MonoBehaviour
                         //BeatAir -= Time.deltaTime;
                         //if (BeatAir <= 0)
                         //{
-                        //    //Attack();
-                        //}
-                        InitiateAir -= Time.deltaTime;
-                        if (InitiateAir <= 0)
+                        
                         {
                             if (Otter.speed > 0.4)
                             {

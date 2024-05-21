@@ -41,24 +41,24 @@ public class AnimatedAttack : MonoBehaviour
                     }
                 case "Scorpion":
                     {
-                        var Boss = enemy.gameObject.GetComponent<ScorpionScript>();
-                        Boss.TakeDamage(Damage);
+                        var Scorpion = enemy.gameObject.GetComponent<ScorpionScript>();
+                        Scorpion.TakeDamage(Damage);
                         break;
                     }
-                case "House":
-                    {
-                        break;
-                    }
+                //case "House":
+                //    {
+                //        break;
+                //    }
 
-                case "Isle":
-                    {
-                        break;
-                    }
+                //case "Isle":
+                //    {
+                //        break;
+                //    }
 
-                case "Untagged":
-                    {
-                        break;
-                    }
+                //case "Untagged":
+                //    {
+                //        break;
+                //    }
             }
         }
     }

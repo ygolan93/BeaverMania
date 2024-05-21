@@ -11,11 +11,13 @@ public class UIMenu : MonoBehaviour
     public Behaviour Player;
     public bool ActivePause = false;
     [SerializeField] Slider volumeSlider;
+    [SerializeField] AudioSource Music;
 
     // Start is called before the first frame update
     private void Start()
     {
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
+        Music = GameObject.FindGameObjectWithTag("Music").GetComponent<AudioSource>();
         Player.HideCursor();
         PauseMenu.SetActive(false);
         Question.SetActive(false);
@@ -66,7 +68,8 @@ public class UIMenu : MonoBehaviour
     }
     public void Volume()
     {
-        AudioListener.volume = volumeSlider.value;
+        //AudioListener.volume = volumeSlider.value;
+        Music.volume = volumeSlider.value;
     }
 
     // Update is called once per frame

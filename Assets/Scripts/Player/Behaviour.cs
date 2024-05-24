@@ -61,6 +61,8 @@ public class Behaviour : MonoBehaviour
     public int arsenalBrowser = 0;
     public int ArsenalCounter = 0;
     public GameObject Arrow;
+    public int arrowMunition = 0;
+    [SerializeField] GameObject[] Arrows;
     [SerializeField] GameObject arrowModel;
     [SerializeField] LineRenderer stringLine;
     public GameObject[] Bow;
@@ -106,7 +108,7 @@ public class Behaviour : MonoBehaviour
     public string Plattering;
 
     [Header("Audio & Effects")]
-    //[SerializeField] bool seekMusic;
+    [SerializeField] bool seekMusic;
     public MusicPlaylist Music;
     public AudioScript Sound;
     public float HealQue = 3;
@@ -194,6 +196,35 @@ public class Behaviour : MonoBehaviour
             var ParryDirection = new Vector3((OBJ.transform.position - transform.position).x, 0, (OBJ.transform.position - transform.position).z);
             transform.rotation = Quaternion.LookRotation(ParryDirection);
         }
+        if (OBJ.gameObject.CompareTag("Arrow"))
+        {
+            Otter.Play("Crouch");
+            Sound.PickUp2();
+            arrowMunition++;
+            if (bowEquipped==true)
+            {
+                CountArrows();
+            }
+            Destroy(OBJ.gameObject);
+        }
+        if (OBJ.gameObject.CompareTag("ArrowBundle"))
+        {
+            Otter.Play("Crouch");
+            Sound.PickUp2();
+            if(arrowMunition+10<Arrows.Length)
+            {
+                arrowMunition += 10;
+            }
+            else
+            {
+                arrowMunition = Arrows.Length;
+            }
+            if (bowEquipped == true)
+            {
+                CountArrows();
+            }
+            Destroy(OBJ.gameObject);
+        }
 
     }
     public void OnCollisionStay(Collision OBJ)
@@ -225,6 +256,8 @@ public class Behaviour : MonoBehaviour
             Arsenal.Add("Bow");
             ArsenalCounter++;
             Sound.PickItem();
+            arrowMunition = 5;
+            CountArrows();
             Destroy(OBJ.gameObject);
         }
         if (OBJ.gameObject.CompareTag("Armor"))
@@ -378,7 +411,6 @@ public class Behaviour : MonoBehaviour
                 FreeLook.m_LookAt.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Root.position), 0.5f);
             }
         }
-
         if (OBJ.gameObject.CompareTag("House"))
         {
             FreeLook.m_Orbits[0].m_Radius = 1f;
@@ -526,6 +558,21 @@ public class Behaviour : MonoBehaviour
         rotGoal = Quaternion.LookRotation(CamForward);
         transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
     }
+    public void CountArrows()
+    {
+        //Turn on active arrows
+        for (int arrow = 0; arrow <= arrowMunition - 1; arrow++)
+        {
+            Arrows[arrow].SetActive(true);
+        }
+        if (arrowMunition <= Arrows.Length-1)
+        {
+            for (int arrow = arrowMunition; arrow < Arrows.Length; arrow++)
+            {
+                Arrows[arrow].SetActive(false);
+            }
+        }
+    }
     public void ShowCursor()
     {
         //show mouse icon
@@ -656,12 +703,28 @@ public class Behaviour : MonoBehaviour
         AimIcon.SetActive(false);
         Player = GetComponent<Rigidbody>();
         GM = GameObject.FindGameObjectWithTag("GM").GetComponent<GameMaster>();
-        //if(seekMusic==true)
-        //{
+        //Enable/Disable Background music
+        if (seekMusic == true)
+        {
             Music = GameObject.Find("GameMusic").GetComponent<MusicPlaylist>();
             Music.transform.parent = Player.transform;
             Music.transform.position = new Vector3(0, 0, 0);
-        //}
+            var MusicSwitches = GameObject.FindGameObjectsWithTag("Music");
+            foreach (var item in MusicSwitches)
+            {
+                item.SetActive(true);
+            }
+
+        }
+        else
+        {
+            Music = null;
+            var MusicSwitches = GameObject.FindGameObjectsWithTag("Music");
+            foreach (var item in MusicSwitches)
+            {
+                item.SetActive(false);
+            }
+        }
         CurrentHealth = MaxHealth;
         HealthBar.SetMaxHealth(CurrentHealth);
         CurrentStamina = MaxStamina;
@@ -697,17 +760,6 @@ public class Behaviour : MonoBehaviour
     [System.Obsolete]
     public void Update()
     {
-        ////Climb on stairs/obsticle
-        //step = obsticle.step;
-        //if (step == true)
-        //{
-        //    Otter.SetBool("climb", true);
-        //}
-        //if (step == false)
-        //{
-        //    Otter.SetBool("climb", false);
-        //}
-
         //Parry animations
         if (Defend == true)
         {
@@ -972,6 +1024,7 @@ public class Behaviour : MonoBehaviour
                         case "Bow":
                             {
                                 Otter.Play("Equip");
+                                CountArrows();
                                 //Turn off Hammers
                                 HammerHeld = false;
                                 Otter.SetBool("armor", false);
@@ -1030,33 +1083,44 @@ public class Behaviour : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.Mouse1))
             {
-                Sound.ArrowDraw();
-            }
-
-            if (Input.GetKey(KeyCode.Mouse1) && CurrentStamina > 0 && !Input.GetKey(KeyCode.LeftControl))
-            {
-                if (!Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
+                if (arrowMunition > 0)
                 {
-                    AimIcon.SetActive(true);
-                    RotateForward();
+                    Sound.ArrowDraw();
+                    arrowMunition--;
+                    CountArrows();
                 }
-                arrowModel.SetActive(true);
-                bowString.SetActive(false);
-                Otter.SetBool("draw", true);
-                stringLine.enabled = true;
-                stringLine.useWorldSpace = false;
-            }
-            if (Input.GetKeyUp(KeyCode.Mouse1) && CurrentStamina > 0)
-            {
-                Sound.ArrowShoot();
-                var arrow = Instantiate(Arrow, AttackPoint.position + new Vector3(0, 0.6f, 0), rotGoal * Quaternion.Euler(90, 0, 0));
-                CurrentStamina -= 30;
-                HealthBar.SetStamina(CurrentStamina);
-                arrowModel.SetActive(false);
-                stringLine.enabled = false;
-                bowString.SetActive(true);
-                Otter.SetBool("draw", false);
-            }
+                else
+                {
+                    Sound.Error();
+                    Plattering = "Not enough arrows!";
+                    ChangeSpeech = 1f;
+                }
+            }   
+                if (arrowMunition >= 0 && Input.GetKey(KeyCode.Mouse1) && CurrentStamina > 0 && !Input.GetKey(KeyCode.LeftControl) && Plattering != "Not enough arrows!")
+                {
+
+                    if (!Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
+                    {
+                        AimIcon.SetActive(true);
+                        RotateForward();
+                    }
+                    arrowModel.SetActive(true);
+                    bowString.SetActive(false);
+                    Otter.SetBool("draw", true);
+                    stringLine.enabled = true;
+                    stringLine.useWorldSpace = false;
+                }
+                if (arrowMunition >= 0 && Input.GetKeyUp(KeyCode.Mouse1) && CurrentStamina > 0 && Plattering != "Not enough arrows!")
+                {
+                    Sound.ArrowShoot();
+                    var arrow = Instantiate(Arrow, AttackPoint.position + new Vector3(0, 0.6f, 0), rotGoal * Quaternion.Euler(90, 0, 0));
+                    CurrentStamina -= 30;
+                    HealthBar.SetStamina(CurrentStamina);
+                    arrowModel.SetActive(false);
+                    stringLine.enabled = false;
+                    bowString.SetActive(true);
+                    Otter.SetBool("draw", false);
+                }
         }
         //Stoning action
         {

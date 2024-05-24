@@ -8,12 +8,13 @@ public class Projectile : MonoBehaviour
     Behaviour Player;
     public bool isArrow;
     public bool isFireBall;
-    [SerializeField] AudioSource RockSound;
+    [SerializeField] AudioSource Sound;
     [SerializeField] float clock;
     [SerializeField] int forwardVel;
     [SerializeField] int upwardVel;
     [SerializeField] GameObject Explosion;
     [SerializeField] int Damage;
+    [SerializeField] GameObject arrowPickup;
     // Start is called before the first frame update
     void Start()
     {
@@ -48,6 +49,10 @@ public class Projectile : MonoBehaviour
         if (clock<=0)
         {
             Destroy(gameObject);
+            if (isArrow==true)
+            {
+                Instantiate(arrowPickup, transform.position, Quaternion.identity);
+            }
         }
         
     }
@@ -62,9 +67,9 @@ public class Projectile : MonoBehaviour
 
     public void RockHit()
     {
-        RockSound.PlayOneShot(RockSound.clip);
-        RockSound.volume = 0.2f;
-        RockSound.pitch = 0.8f;
+        Sound.PlayOneShot(Sound.clip);
+        Sound.volume = 0.2f;
+        Sound.pitch = 0.8f;
     }
     private void OnCollisionEnter(Collision OBJ)
     {

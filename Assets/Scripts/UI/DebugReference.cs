@@ -17,6 +17,7 @@ public class DebugReference : MonoBehaviour
     public TextMeshProUGUI SeedCount;
     public TextMeshProUGUI GobletCount;
     public TextMeshProUGUI AppleCount;
+    public TextMeshProUGUI ArrowMunition;
     private void Start()
     {
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
@@ -34,5 +35,6 @@ public class DebugReference : MonoBehaviour
         SeedCount.text = Player.SeedText;
         GobletCount.text = Player.GobletText;
         AppleCount.text = Player.AppleText;
+        ArrowMunition.text = Player.ArrowText;
     }
 }

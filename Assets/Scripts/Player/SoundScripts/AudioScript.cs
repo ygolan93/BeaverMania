@@ -43,10 +43,10 @@ public class AudioScript : MonoBehaviour
     }
     public void SwitchItem()
     {
-        audioEffects.clip = audioClip[13];
-        audioEffects.volume = 6f;
-        audioEffects.pitch = 1f;
-        audioEffects.PlayOneShot(audioClip[13]);
+        audioSource.clip = audioClip[13];
+        audioSource.volume = 6f;
+        audioSource.pitch = 1f;
+        audioSource.PlayOneShot(audioClip[13]);
     }
 
 
@@ -59,17 +59,17 @@ public class AudioScript : MonoBehaviour
     }
     public void ArrowDraw()
     {
-        audioEffects.clip = audioClip[11];
-        audioEffects.volume = 6f;
-        audioEffects.pitch = 1f;
-        audioEffects.PlayOneShot(audioClip[11]);
+        audioSource.clip = audioClip[11];
+        audioSource.volume = 6f;
+        audioSource.pitch = 1f;
+        audioSource.PlayOneShot(audioClip[11]);
     }
     public void Drink()
     {
-        audioEffects.clip = audioClip[10];
-        audioEffects.volume = 6f;
-        audioEffects.pitch = 1f;
-        audioEffects.PlayOneShot(audioClip[10]);
+        audioSource.clip = audioClip[10];
+        audioSource.volume = 6f;
+        audioSource.pitch = 1f;
+        audioSource.PlayOneShot(audioClip[10]);
     }
     public void Eat()
     {
@@ -122,10 +122,10 @@ public class AudioScript : MonoBehaviour
     }
     public void Wind()
     {
-        audioEffects.clip = audioClip[2];
-        audioEffects.volume = 0.3f;
-        audioEffects.pitch = 1f;
-        audioEffects.PlayOneShot(audioClip[2]);
+        audioSource.clip = audioClip[2];
+        audioSource.volume = 0.3f;
+        audioSource.pitch = 1f;
+        audioSource.PlayOneShot(audioClip[2]);
     }
     public void Step()
     {

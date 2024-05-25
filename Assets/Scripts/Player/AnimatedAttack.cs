@@ -7,13 +7,13 @@ public class AnimatedAttack : MonoBehaviour
     [SerializeField] Behaviour Player;
     [SerializeField] Transform AttackPoint;
     [SerializeField] Transform Sphere;
-     float attackRange;
-    int Damage;
+    [SerializeField] GameObject GlowEffect;
     [SerializeField] LayerMask enemyLayers;
 
     private void Start()
     {
         Player = transform.parent.GetComponent<Behaviour>();
+        GlowEffect.SetActive(false);
     }
 
     public void CauseDamage(Vector3 origin, float range, int Damage)
@@ -45,20 +45,6 @@ public class AnimatedAttack : MonoBehaviour
                         Scorpion.TakeDamage(Damage);
                         break;
                     }
-                //case "House":
-                //    {
-                //        break;
-                //    }
-
-                //case "Isle":
-                //    {
-                //        break;
-                //    }
-
-                //case "Untagged":
-                //    {
-                //        break;
-                //    }
             }
         }
     }
@@ -107,12 +93,12 @@ public class AnimatedAttack : MonoBehaviour
         {
             case "Bare Hands":
                 {
-                    CauseDamage(Sphere.position, 1f, 20);
+                    CauseDamage(Sphere.position, 2.5f, 20);
                     break;
                 }
             case "Hammers":
                 {
-                    CauseDamage(Sphere.position, 1f, 20);
+                    CauseDamage(Sphere.position, 2.5f, 20);
                     break;
                 }
             case "ArmorSet":
@@ -130,5 +116,15 @@ public class AnimatedAttack : MonoBehaviour
     public void ShieldParryOFF()
     {
         Player.ParryOFF();
+    }
+
+    public void TurnOnGlow()
+    {
+        GlowEffect.SetActive(true);
+    }
+
+    public void TurnOffGlow()
+    {
+        GlowEffect.SetActive(false);
     }
 }

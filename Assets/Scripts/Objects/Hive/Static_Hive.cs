@@ -9,12 +9,13 @@ public class Static_Hive : MonoBehaviour
     public int CurrentHealth;
     public NPC_Health HiveBar;
     public GameObject Hive;
-    public Transform Log1;
-    public Transform Log2;
-    public Transform Log3;
-    public Transform Log4;
-    public Transform Log5;
-    public Transform Log6;
+    [SerializeField] GameObject[] SpawnedObjects;
+    //public Transform Log1;
+    //public Transform Log2;
+    //public Transform Log3;
+    //public Transform Log4;
+    //public Transform Log5;
+    //public Transform Log6;
     public Transform Wasp;
     public GameObject Explosion;
     public AudioSource Sound;
@@ -39,12 +40,11 @@ public class Static_Hive : MonoBehaviour
     {
         Explosion.SetActive(true);
         Explosion.transform.parent = null;
-        Instantiate(Log1, gameObject.transform.position, Quaternion.identity);
-        Instantiate(Log2, gameObject.transform.position, Quaternion.identity);
-        Instantiate(Log3, gameObject.transform.position, Quaternion.identity);
-        Instantiate(Log4, gameObject.transform.position, Quaternion.identity);
-        Instantiate(Log5, gameObject.transform.position, Quaternion.identity);
-        Instantiate(Log6, gameObject.transform.position, Quaternion.identity);
+        foreach (var OBJ in SpawnedObjects)
+        {
+            Instantiate(OBJ, gameObject.transform.position, Quaternion.identity);
+
+        }
         for (int i = 0; i < 30; i++)
         {
             Instantiate(Wasp, gameObject.transform.position, Quaternion.identity);

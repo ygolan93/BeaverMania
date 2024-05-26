@@ -12,6 +12,7 @@ public class Behaviour : MonoBehaviour
     public Rigidbody Player;
     public bool grounded;
     public Carry Load;
+    bool movementInvoked = false;
     public Quaternion rotGoal;
     //public RayTraceGround obsticle;
     bool step;
@@ -112,7 +113,7 @@ public class Behaviour : MonoBehaviour
     public string Plattering;
 
     [Header("Audio & Effects")]
-    [SerializeField] bool seekMusic;
+    public bool seekMusic;
     public MusicPlaylist Music;
     public AudioScript Sound;
     public float HealQue = 3;
@@ -155,7 +156,7 @@ public class Behaviour : MonoBehaviour
 
     public void OnCollisionEnter(Collision OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Part")&& Load.CanCarry == true)
+        if (OBJ.gameObject.CompareTag("Part")&& Load.CanCarry == true && grounded==true && !Input.GetKey(KeyCode.Mouse0)&& !Input.GetKey(KeyCode.Mouse1))
         {
             Otter.Play("Crouch");
             Sound.PickItem();
@@ -203,11 +204,6 @@ public class Behaviour : MonoBehaviour
         {
             Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
             Sound.Coin();
-        }
-        if (OBJ.gameObject.CompareTag("NPC")&& isParried==true)
-        {
-            var ParryDirection = new Vector3((OBJ.transform.position - transform.position).x, 0, (OBJ.transform.position - transform.position).z);
-            transform.rotation = Quaternion.LookRotation(ParryDirection);
         }
         if (arrowMunition<Arrows.Length && bowEquipped==true)
         {
@@ -311,10 +307,12 @@ public class Behaviour : MonoBehaviour
             Destroy(OBJ.gameObject);
             
         }
-        if (OBJ.gameObject.CompareTag("NPC"))
+        if (OBJ.gameObject.CompareTag("NPC") && isParried == true || OBJ.gameObject.CompareTag("Scorpion") && isParried == true)
         {
             Plattering = "Get off me ya nasty bastards!";
             ChangeSpeech = 3;
+            var ParryDirection = new Vector3((OBJ.transform.position - transform.position).x, 0, (OBJ.transform.position - transform.position).z);
+            transform.rotation = Quaternion.LookRotation(ParryDirection);
         }
         if (OBJ.gameObject.CompareTag("Strike"))
         {
@@ -347,7 +345,7 @@ public class Behaviour : MonoBehaviour
     }
     public void OnTriggerEnter(Collider OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Music"))
+        if (OBJ.gameObject.CompareTag("SwitchMusic"))
         {
             OBJ.gameObject.SetActive(false);
             if (int.TryParse(OBJ.gameObject.name, out int songIndex))
@@ -511,6 +509,7 @@ public class Behaviour : MonoBehaviour
     }
     public void PlayerMove(Vector3 Direction)
     {
+        movementInvoked = true;
         rotGoal = Quaternion.LookRotation(new Vector3(Direction.x, 0, Direction.z));
         transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
 
@@ -719,7 +718,6 @@ public class Behaviour : MonoBehaviour
         GoldBrick.SetActive(false);
         Physics.IgnoreLayerCollision(gameObject.layer, 7, false);
     }
-
     public void Start()
     {
         arrowModel.SetActive(false);
@@ -738,7 +736,7 @@ public class Behaviour : MonoBehaviour
             Music = GameObject.Find("GameMusic").GetComponent<MusicPlaylist>();
             Music.transform.parent = Player.transform;
             Music.transform.position = new Vector3(0, 0, 0);
-            var MusicSwitches = GameObject.FindGameObjectsWithTag("Music");
+            var MusicSwitches = GameObject.FindGameObjectsWithTag("SwitchMusic");
             foreach (var item in MusicSwitches)
             {
                 item.SetActive(true);
@@ -748,7 +746,7 @@ public class Behaviour : MonoBehaviour
         else
         {
             Music = null;
-            var MusicSwitches = GameObject.FindGameObjectsWithTag("Music");
+            var MusicSwitches = GameObject.FindGameObjectsWithTag("SwitchMusic");
             foreach (var item in MusicSwitches)
             {
                 item.SetActive(false);
@@ -1399,7 +1397,7 @@ public class Behaviour : MonoBehaviour
         Otter.SetBool("midair", false);
         Otter.SetBool("roll", false);
         Rolling = false;
-        
+        movementInvoked = false;
         //Switch off hurt and heal effects automaticly
         {
             if (hurt == true || heal == true)
@@ -1533,7 +1531,7 @@ public class Behaviour : MonoBehaviour
             Otter.SetBool("midair", false);
             levitation = 10;
             Otter.speed = AnimSpeed;
-            if (!Input.anyKey && Player.velocity.magnitude >= 6)
+            if (movementInvoked==false&& Player.velocity.magnitude >= 6)
             {
                 neutralAndMoving = true;
                 if (Player.velocity.magnitude < 6)
@@ -1550,8 +1548,11 @@ public class Behaviour : MonoBehaviour
         }
         if (neutralAndMoving == true)
         {
-            rotGoal = Quaternion.LookRotation(new Vector3(Player.velocity.x, 0, Player.velocity.z));
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.5f);
+            if (isParried==false)
+            {
+                rotGoal = Quaternion.LookRotation(new Vector3(Player.velocity.x, 0, Player.velocity.z));
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.5f);
+            }
             Otter.SetBool("moving", true);
             SlideEffect.enableEmission = true;
         }

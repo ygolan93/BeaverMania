@@ -17,17 +17,27 @@ public class LogSpawner : MonoBehaviour
     {
         if (OBJ.gameObject.tag=="Player")
         {
+           var isGrounded= OBJ.gameObject.GetComponent<Behaviour>().grounded;
+            if (Input.GetKey(KeyCode.Mouse0)&&isGrounded==false)
+            {
+                DestroyTree(OBJ.transform);
+            }
+        }
+    }
+    public void OnCollisionStay(Collision OBJ)
+    {
+        if (OBJ.gameObject.tag == "Player")
+        {
             if (Input.GetKey(KeyCode.Mouse0))
             {
-                Instantiate(TreeDeath, new Vector3(SpawnPoint.position.x, OBJ.transform.position.y, SpawnPoint.position.z), Quaternion.identity);
-                DestroyTree();
+                DestroyTree(OBJ.transform);
             }
         }
     }
 
-    public void DestroyTree()
+    public void DestroyTree(Transform OBJ)
     {
-
+        Instantiate(TreeDeath, new Vector3(SpawnPoint.position.x, OBJ.transform.position.y, SpawnPoint.position.z), Quaternion.identity);
         var counter = 0;
         foreach (var item in Prefab)
         {

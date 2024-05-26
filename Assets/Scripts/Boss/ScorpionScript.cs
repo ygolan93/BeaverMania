@@ -11,10 +11,11 @@ public class ScorpionScript : MonoBehaviour
     public int CurrentHealth;
     public int MaxHealth = 2000;
     public Behaviour Player;
-    public float playerDistance;
+    public float chargeDistance;
     public bool isAttacking;
     GameObject AnotherScorpion;
     Vector3 Distance;
+    public float currentDistance;
     [SerializeField] float maxDistanceScalar;
     [SerializeField] float minDistanceScalar;
     public Quaternion rotGoal;
@@ -57,23 +58,24 @@ public class ScorpionScript : MonoBehaviour
     public void FixedUpdate()
     {
         Distance = Player.transform.position - RBScorpion.position;
-        var DistanceScalar = Mathf.Abs(Distance.magnitude);
+        currentDistance = Mathf.Abs(Distance.magnitude);
+        AnotherScorpion = GameObject.FindGameObjectWithTag("Scorpion");
+        RBScorpion.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
 
         if (Charge==false)
         {
             isAttacking = false;
         }
-        if (DistanceScalar<=playerDistance)
+        if (currentDistance <= chargeDistance)
         {
-            AnotherScorpion = GameObject.FindGameObjectWithTag("Scorpion");
             Charge = true;
             isAttacking = true;
             rotGoal = Quaternion.LookRotation(new Vector3(Distance.x, 0, Distance.z));
-            RBScorpion.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
+
             if (combo < comboLimit)
             {
                 ChargeTowardsPlayer();
-                if (DistanceScalar < maxDistanceScalar && DistanceScalar > minDistanceScalar)
+                if (currentDistance < maxDistanceScalar && currentDistance > minDistanceScalar)
                 {
                     if (Input.GetKey(KeyCode.Mouse1)|| Input.GetKey(KeyCode.Mouse0))
                     {
@@ -88,7 +90,7 @@ public class ScorpionScript : MonoBehaviour
                         }
                         if (StrideClock <= 5)
                         {
-                            IdleStop();
+                            Charge = false;
                         }
                         if (StrideClock <= 0)
                             StrideClock = 10;
@@ -97,16 +99,21 @@ public class ScorpionScript : MonoBehaviour
 
                 }
 
-                if (DistanceScalar < minDistanceScalar)
+                if (currentDistance == minDistanceScalar)
                 {
                     StopAndAttack();
                 }
-                if (DistanceScalar < minDistanceScalar-1)
+                if (currentDistance < minDistanceScalar-1)
                 {
                     Reverse();
                 }
             }
         }
+        else
+        {
+            Charge = false;
+        }
+
         if (Charge==false)
         {
             IdleStop();
@@ -210,7 +217,7 @@ public class ScorpionScript : MonoBehaviour
         if (OBJ.gameObject.CompareTag("Bridge"))
         {
             var Tree = OBJ.gameObject.GetComponent<LogSpawner>();
-            Tree.DestroyTree();
+            Tree.DestroyTree(OBJ.transform);
             TakeDamage(10);
             combo = 10;
         }

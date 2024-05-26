@@ -14,7 +14,11 @@ public class Destroy : MonoBehaviour
     }
     public void DestroySelf()
     {
-        Instantiate(effect, gameObject.transform.position, Quaternion.identity);
+        if (effect!=null)
+        {
+            Instantiate(effect, gameObject.transform.position, Quaternion.identity);
+        }
+
         if (saveAfterKill == false)
         {
             Destroy(gameObject);

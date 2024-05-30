@@ -1292,32 +1292,26 @@ public class Behaviour : MonoBehaviour
                         {
                             var SwordTrail = Instantiate(SwordCopter, KickEffectPos.position +new Vector3(0,0.5f,0), Quaternion.Euler(-90, UnityEngine.Random.Range(0f, 360f), 0));
                             SwordTrail.transform.parent = KickEffectPos;
-                        }
-                        //BeatAir -= Time.deltaTime;
-                        //if (BeatAir <= 0)
-                        //{
-                        
+                        }                        
+                        if (Otter.speed > 0.4)
                         {
-                            if (Otter.speed > 0.4)
+                            if (ArmorEquipped==false)
                             {
-                                if (ArmorEquipped==false)
-                                {
-                                    levitation -= 0.05f;
-                                    Otter.speed -= 0.005f;
-                                    Player.AddForce(0, levitation, 0);
-                                }
-                                if (ArmorEquipped==true)
-                                {
-                                    Player.useGravity = false;
-                                }
+                                levitation -= 0.05f;
+                                Otter.speed -= 0.005f;
+                                Player.AddForce(0, levitation, 0);
+                            }
+                            if (ArmorEquipped==true)
+                            {
+                                Player.useGravity = false;
+                            }
 
-                            }
-                            else
-                            {
-                                Player.useGravity = true;
-                                Otter.SetBool("fight", false);
-                            }
                         }
+                        else
+                        {
+                            Player.useGravity = true;
+                            Otter.SetBool("fight", false);
+                        }      
                     }
                     if (grounded == true)
                     {

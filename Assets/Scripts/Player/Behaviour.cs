@@ -1384,8 +1384,8 @@ public class Behaviour : MonoBehaviour
         //transform.Translate(movement);
 
         Otter.SetBool("walk", false);
-        Otter.SetBool("turn right", false);
-        Otter.SetBool("turn left", false);
+        //Otter.SetBool("turn right", false);
+        //Otter.SetBool("turn left", false);
         Otter.SetBool("climb", false);
         Otter.SetBool("run", false);
         Otter.SetBool("midair", false);

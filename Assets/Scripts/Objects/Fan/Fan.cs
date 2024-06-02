@@ -5,7 +5,7 @@ using UnityEngine;
 public class Fan : MonoBehaviour
 {
     [Range(0, 100)]
-    [SerializeField] float elevateForce;
+    [SerializeField] float elevateSpeed;
     [SerializeField] Animator rotor;
     public bool turnON;
     [SerializeField] float counter;
@@ -42,9 +42,9 @@ public class Fan : MonoBehaviour
         {
             bool isGrounded = OBJ.gameObject.GetComponent<Behaviour>().grounded;
             Rigidbody Player = OBJ.gameObject.GetComponent<Rigidbody>();
-            if (isGrounded == false && Input.GetKey(KeyCode.Mouse0))
+            if (isGrounded == false && Input.GetKeyDown(KeyCode.Mouse0))
             {
-                Player.AddForce(0, elevateForce, 0);
+                Player.velocity += new Vector3(0, elevateSpeed, 0);
             }
         }
     }

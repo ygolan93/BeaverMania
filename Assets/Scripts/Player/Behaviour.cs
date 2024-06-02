@@ -14,7 +14,6 @@ public class Behaviour : MonoBehaviour
     public Carry Load;
     bool movementInvoked = false;
     public Quaternion rotGoal;
-    //public RayTraceGround obsticle;
     bool step;
     public float speed = 5;
     public float steer = 0.12f;
@@ -39,6 +38,7 @@ public class Behaviour : MonoBehaviour
     public bool OnPlatform = false;
     [Header("Health")]
     float StopHurt = 0;
+    [SerializeField] Rigidbody rb;
     public float MaxHealth = 1000;
     public float CurrentHealth;
     public float MaxStamina = 100;
@@ -1380,6 +1380,7 @@ public class Behaviour : MonoBehaviour
         Vector3 XZBack = new(cameraRelativeBack.x, 0, cameraRelativeBack.z);
         Vector3 XZRight = new(cameraRelativeRight.x, 0, cameraRelativeRight.z);
         Vector3 XZLeft = new(cameraRelativeLeft.x, 0, cameraRelativeLeft.z);
+
         //Vector3 movement = new Vector3(horizontalInput, 0, verticalInput) * moveSpeed * Time.deltaTime;
         //transform.Translate(movement);
 
@@ -1412,6 +1413,7 @@ public class Behaviour : MonoBehaviour
                 heal = false;
             }
         }
+        
 
         if (grounded == false || speed == Run)
         {

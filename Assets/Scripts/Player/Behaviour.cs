@@ -307,7 +307,10 @@ public class Behaviour : MonoBehaviour
             Destroy(OBJ.gameObject);
             
         }
-        if (OBJ.gameObject.CompareTag("NPC") && isParried == true || OBJ.gameObject.CompareTag("Scorpion") && isParried == true)
+        if (OBJ.gameObject.CompareTag("NPC") && isParried == true 
+            || OBJ.gameObject.CompareTag("Scorpion") && isParried == true 
+            || OBJ.gameObject.CompareTag("Scorpion") && Input.GetKey(KeyCode.Mouse0) 
+            || OBJ.gameObject.CompareTag("Scorpion") && Input.GetKey(KeyCode.Mouse1))
         {
             Plattering = "Get off me ya nasty bastards!";
             ChangeSpeech = 3;
@@ -379,6 +382,10 @@ public class Behaviour : MonoBehaviour
                 {
                     TakeDamage(15);
                 }
+            }
+            else
+            {
+
             }
         }
         if (OBJ.gameObject.CompareTag("ScorpionSting"))

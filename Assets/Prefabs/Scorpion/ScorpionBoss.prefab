@@ -51370,25 +51370,24 @@ MonoBehaviour:
   CurrentHealth: 150000
   MaxHealth: 150000
   Player: {fileID: 0}
-  playerDistance: 20
-  isAttacking: 0
-  maxDistanceScalar: 100
-  minDistanceScalar: 5
-  rotGoal: {x: 0, y: 0, z: 0, w: 0}
-  chargeSpeed: 15
-  StrideClock: 7
-  BeatClock: 10
-  StunnedClock: 5
-  Charge: 0
+  drops: []
   combo: 0
-  comboLimit: 10
+  comboLimit: 20
+  StunnedClock: 7
+  isAttacking: 0
+  chargeSpeed: 15
+  chargeClock: 5
   Jaw1A: {fileID: 2526920102824034338}
   Jaw1B: {fileID: 3893775697488114769}
   Jaw2A: {fileID: 3621794351671399776}
   Jaw2B: {fileID: 8755712033370654960}
   Sting: {fileID: 994262058274469954}
-  BossHPBar: {fileID: 4047390277484216763}
-  BossPanel: {fileID: 4047390276090216015}
+  state: Idle
+  lookDistance: 40
+  chargeDistance: 30
+  attackDistance: 4
+  currentDistance: 0
+  rotGoal: {x: 0, y: 0, z: 0, w: 0}
   HitEffect: {fileID: 3050568388787473839}
   Explosion: {fileID: 8211043342563841022}
   StunEffect: {fileID: 3420684630745268385}

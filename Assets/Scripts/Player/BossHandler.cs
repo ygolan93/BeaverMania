@@ -39,7 +39,7 @@ public class BossHandler : MonoBehaviour
         player.isAtTrader = false;
         player.HideCursor();
         BossPanel.SetActive(false);
-        Boss.Charge = true;
+        Boss.isAttacking = true;
         BossBar.SetActive(true);
         player.FreeLook.m_Orbits[1].m_Radius = 6;
         player.FreeLook.m_XAxis.m_MaxSpeed = 300;
@@ -52,7 +52,7 @@ public class BossHandler : MonoBehaviour
         {  
             player.ShowCursor();
             player.isAtTrader = true;
-            Boss.Charge = false;
+            Boss.isAttacking = false;
             BossPanel.SetActive(true);
             player.FreeLook.m_Orbits[1].m_Radius = 15;
             player.FreeLook.m_XAxis.m_MaxSpeed = 0;
@@ -62,7 +62,7 @@ public class BossHandler : MonoBehaviour
     }
     public void OnTriggerEnter(Collider OBJ)
     {
-        if (Boss.Charge==true)
+        if (Boss.isAttacking==true)
         {
             if (OBJ.gameObject.CompareTag("ScorpionDamage"))
             {

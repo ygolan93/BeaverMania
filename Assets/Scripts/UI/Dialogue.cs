@@ -89,6 +89,6 @@ public class Dialogue : MonoBehaviour
     {
         PlayerObjective.UpdateObjective();
         Player.GetComponent<BossHandler>().SkipBossChat();
-        Scorpion.InitiateCharge();
+        //Scorpion.InitiateCharge();
     }
 }

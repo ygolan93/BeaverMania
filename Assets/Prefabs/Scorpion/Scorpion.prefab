@@ -16676,7 +16676,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2948367004167687818}
   m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 1.8843079, z: 1.8317108}
+  m_LocalPosition: {x: 0, y: 2.578, z: 1.29}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -16819,7 +16819,7 @@ ParticleSystem:
     startSpeed:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 5
+      scalar: 1
       minScalar: 5
       maxCurve:
         serializedVersion: 2
@@ -17398,7 +17398,7 @@ ParticleSystem:
     sphericalDirectionAmount: 0
     randomPositionAmount: 0
     radius:
-      value: 1
+      value: 0.28
       mode: 0
       spread: 0
       speed:
@@ -17517,7 +17517,7 @@ ParticleSystem:
     rateOverTime:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 10
+      scalar: 20
       minScalar: 10
       maxCurve:
         serializedVersion: 2
@@ -18136,7 +18136,7 @@ ParticleSystem:
     flipU: 0
     flipV: 0
   VelocityModule:
-    enabled: 0
+    enabled: 1
     x:
       serializedVersion: 2
       minMaxState: 0
@@ -18405,7 +18405,7 @@ ParticleSystem:
     orbitalZ:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0
+      scalar: 1
       minScalar: 0
       maxCurve:
         serializedVersion: 2
@@ -18617,7 +18617,7 @@ ParticleSystem:
     radial:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0
+      scalar: 1
       minScalar: 0
       maxCurve:
         serializedVersion: 2
@@ -18670,7 +18670,7 @@ ParticleSystem:
     speedModifier:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 1
+      scalar: 0.2
       minScalar: 1
       maxCurve:
         serializedVersion: 2
@@ -21411,7 +21411,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: ae4bd2bfbe5feee409f42cd62343a844, type: 2}
+  - {fileID: 2100000, guid: b6a4ebddb006a4a4bb0bea6365c7512a, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -38970,9 +38970,9 @@ MonoBehaviour:
   m_HandleRect: {fileID: 0}
   m_Direction: 1
   m_MinValue: 0
-  m_MaxValue: 2000
+  m_MaxValue: 8000
   m_WholeNumbers: 1
-  m_Value: 2000
+  m_Value: 8000
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -53847,7 +53847,7 @@ Transform:
   m_GameObject: {fileID: 6003487228124988382}
   m_LocalRotation: {x: -0, y: -0.86628115, z: -0, w: 0.4995569}
   m_LocalPosition: {x: 1340.502, y: 52.01699, z: -206.68039}
-  m_LocalScale: {x: 0.32281682, y: 0.32281682, z: 0.32281682}
+  m_LocalScale: {x: 0.3, y: 0.3, z: 0.3}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 3298826728073757579}
@@ -53872,29 +53872,32 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Scorpion: {fileID: 160509433125316345}
   BossHealth: {fileID: 6003487228124988379}
-  CurrentHealth: 3000
-  MaxHealth: 3000
+  CurrentHealth: 8000
+  MaxHealth: 8000
   Player: {fileID: 0}
-  chargeDistance: 20
-  isAttacking: 0
-  currentDistance: 0
-  maxDistanceScalar: 22
-  minDistanceScalar: 2
-  rotGoal: {x: 0, y: 0, z: 0, w: 0}
-  chargeSpeed: 8
-  StrideClock: 4
-  BeatClock: 10
-  StunnedClock: 5
-  Charge: 0
+  drops:
+  - {fileID: 2657320476707681433, guid: 06f9d786657c1ad4da503fca33b8ce6b, type: 3}
+  - {fileID: 2657320476707681433, guid: 06f9d786657c1ad4da503fca33b8ce6b, type: 3}
+  - {fileID: 2969994238874094856, guid: 6418a51a4bd5c1f46bb8507bd8627f51, type: 3}
+  - {fileID: 2969994238874094856, guid: 6418a51a4bd5c1f46bb8507bd8627f51, type: 3}
+  - {fileID: 2969994238874094856, guid: 6418a51a4bd5c1f46bb8507bd8627f51, type: 3}
   combo: 0
-  comboLimit: 10
+  comboLimit: 15
+  StunnedClock: 10
+  isAttacking: 0
+  chargeSpeed: 9
+  chargeClock: 3
   Jaw1A: {fileID: 2631068468930072073}
   Jaw1B: {fileID: 3574585947653929594}
   Jaw2A: {fileID: 3877933947483839307}
   Jaw2B: {fileID: 9083913364248970971}
   Sting: {fileID: 747129927400765033}
-  BossHPBar: {fileID: 4591765773042651024}
-  BossPanel: {fileID: 4591765771254378596}
+  state: Idle
+  lookDistance: 30
+  chargeDistance: 20
+  attackDistance: 2.2
+  currentDistance: 0
+  rotGoal: {x: 0, y: 0, z: 0, w: 0}
   HitEffect: {fileID: 3298826728073757572}
   Explosion: {fileID: 8530238590734212565}
   StunEffect: {fileID: 2948367004167687818}

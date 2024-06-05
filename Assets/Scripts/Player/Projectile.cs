@@ -91,7 +91,7 @@ public class Projectile : MonoBehaviour
         if (OBJ.gameObject.CompareTag("Scorpion"))
         {
             OBJ.gameObject.GetComponent<ScorpionScript>().TakeDamage(Damage);
-            OBJ.gameObject.GetComponent<ScorpionScript>().combo+=3;
+            OBJ.gameObject.GetComponent<ScorpionScript>().combo += 3;
             if (isFireBall == true)
             {
                 Explode();

@@ -12,8 +12,9 @@ public class Behaviour : MonoBehaviour
     public Rigidbody Player;
     public bool grounded;
     public Carry Load;
-    bool movementInvoked = false;
+    public bool movementInvoked = false;
     public Quaternion rotGoal;
+    public bool keepLooking = false;
     bool step;
     public float speed = 5;
     public float steer = 0.12f;
@@ -33,9 +34,12 @@ public class Behaviour : MonoBehaviour
     int JumpNumPreserve;
     public Transform Root;
     public Transform Face;
+    public Transform Spine;
+    public Transform Hips;
     public Animator Otter;
     [SerializeField] AnimatedAttack otterAction;
     public bool OnPlatform = false;
+
     [Header("Health")]
     float StopHurt = 0;
     [SerializeField] Rigidbody rb;
@@ -58,11 +62,14 @@ public class Behaviour : MonoBehaviour
     public GameObject ICON_3;
     [SerializeField] GameObject appleOBJ;
     [SerializeField] GameObject gobletOBJ;
+
     [Header("Combat")]
+    [SerializeField] Vector3 bowAim;
     public List<String> Arsenal;
     public int arsenalBrowser = 0;
     public int ArsenalCounter = 0;
     public GameObject Arrow;
+    bool arrowReady = false;
     public int arrowMunition = 0;
     [SerializeField] GameObject[] Arrows;
     [SerializeField] GameObject arrowModel;
@@ -487,6 +494,10 @@ public class Behaviour : MonoBehaviour
             FreeLook.m_Orbits[2].m_Radius = 5;
             //FreeLook.m_Lens.FieldOfView = 25;
         }
+        if (OBJ.gameObject.CompareTag("Scorpion"))
+        {
+            scorpAttack = false;
+        }
     }
     public void TakeDamage(float Damage)
     {
@@ -517,11 +528,38 @@ public class Behaviour : MonoBehaviour
     public void PlayerMove(Vector3 Direction)
     {
         movementInvoked = true;
-        rotGoal = Quaternion.LookRotation(new Vector3(Direction.x, 0, Direction.z));
-        transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
-
-        Otter.SetBool("walk", true);
-
+        //Regular walk
+        if (keepLooking==false)
+        {
+            rotGoal = Quaternion.LookRotation(Direction);
+            transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            Otter.SetBool("walk", true);
+        }
+        //Strafe
+        if (keepLooking == true)
+        {
+            Vector3 forwardFace = Camera.main.transform.TransformDirection(Vector3.forward);
+            rotGoal = Quaternion.LookRotation(new Vector3(forwardFace.x, 0, forwardFace.z));
+            transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            Otter.SetBool("walk", false);
+            if (Input.GetKey(KeyCode.W))
+            {
+                Otter.SetBool("strafeForward", true);
+            }
+            if (Input.GetKey(KeyCode.S))
+            {
+                Otter.SetBool("strafeBack", true);
+            }
+            if (Input.GetKey(KeyCode.A))
+            {
+                Otter.SetBool("strafeLeft", true);
+            }
+            if (Input.GetKey(KeyCode.D))
+            {
+                Otter.SetBool("strafeRight", true);
+            }
+        }
+        //Stairs
         if (step==true)
         {
             Otter.SetBool("climb", true);
@@ -530,14 +568,14 @@ public class Behaviour : MonoBehaviour
         {
             Otter.SetBool("climb", false);
         }
-
+        //Sprint
         if (grounded == true)
         {
-            if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey && Rolling == false)
+            if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey && Rolling == false && keepLooking==false)
             {
                 if (ArmorEquipped==true)
                 {
-                        Otter.SetBool("armor", true);
+                    Otter.SetBool("armor", true);
                 }
                 if (ArmorEquipped == false)
                 {
@@ -549,7 +587,6 @@ public class Behaviour : MonoBehaviour
                     speed = Run;
                     steer = 0.12f;
                 }
-
             }
             else
             {
@@ -561,7 +598,6 @@ public class Behaviour : MonoBehaviour
         }
         if (grounded == false && Input.GetKey(KeyCode.LeftShift))
             Player.AddForce(Direction.normalized * 5);
-
     }
     public void PlayerRoll(Vector3 Direction)
     {
@@ -586,25 +622,36 @@ public class Behaviour : MonoBehaviour
 
         }
     }
+
+    [Obsolete]
     public void RotateForward()
     {
-        var CamForward = Camera.main.transform.TransformDirection(Vector3.forward);
-        rotGoal = Quaternion.LookRotation(CamForward);
-        transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+        Vector3 camForward = Camera.main.transform.TransformDirection(Vector3.forward);
+        Quaternion direction = Quaternion.LookRotation(camForward);
+        if (bowEquipped==false)
+        {
+            Spine.rotation = direction;
+        }
+        if (bowEquipped == true && Input.GetKey(KeyCode.Mouse1) && arrowMunition > 0)
+        {
+            Spine.rotation = direction*Quaternion.EulerRotation(bowAim);
+        }
+  
     }
     public void CountArrows()
     {
-        //Turn on active arrows
-        for (int arrow = 0; arrow <= arrowMunition - 1; arrow++)
+        var i = 0;
+        foreach (var arrow in Arrows)
         {
-            Arrows[arrow].SetActive(true);
-        }
-        if (arrowMunition <= Arrows.Length-1)
-        {
-            for (int arrow = arrowMunition; arrow < Arrows.Length; arrow++)
+            if (i < arrowMunition )
             {
-                Arrows[arrow].SetActive(false);
+                arrow.SetActive(true);
             }
+            else
+            {
+                arrow.SetActive(false);
+            }
+            i++;
         }
     }
     public void ShowCursor()
@@ -728,9 +775,8 @@ public class Behaviour : MonoBehaviour
     public void Start()
     {
         arrowModel.SetActive(false);
-        //playerCollider = GetComponent<CapsuleCollider>();
+        bowAim = new Vector3(-0.33f, 20f, -0.3f);
         CamForTraders.enabled = false;
-        //InHouseCam.enabled = false;
         Instantiate(PopUpEffect, Root.position, Quaternion.identity);
         HideCursor();
         AimIcon.SetActive(false);
@@ -864,43 +910,36 @@ public class Behaviour : MonoBehaviour
                 CurrentStamina -= 0.001f;
             }
         }
-        HealthPercent = System.Math.Round((CurrentHealth / MaxHealth) * 100f, 1);
-        DebugText = HealthPercent + "%";
-        StaminaPercent = System.Math.Round((CurrentStamina / MaxStamina) * 100f, 1);
-        StaminaText = StaminaPercent + "%";
-        Wallet = "COINS: "+Currency;
-        SeedText =  "NUTS (R): "+NutCount;
-        AppleText = "APPLES (T): "+Apple;
-        GobletText = "GOBLETS (Y): " + GobletPickup;
-        ArrowText = "ARROWS (RM): "+arrowMunition;
-        if (Lives == 3)
+        //Update UI
         {
-            ICON_1.SetActive(true);
-            ICON_2.SetActive(true);
-            ICON_3.SetActive(true);
+            HealthPercent = System.Math.Round((CurrentHealth / MaxHealth) * 100f, 1);
+            DebugText = HealthPercent + "%";
+            StaminaPercent = System.Math.Round((CurrentStamina / MaxStamina) * 100f, 1);
+            StaminaText = StaminaPercent + "%";
+            Wallet = "COINS: " + Currency;
+            SeedText = "NUTS (R): " + NutCount;
+            AppleText = "APPLES (T): " + Apple;
+            GobletText = "GOBLETS (Y): " + GobletPickup;
+            ArrowText = "ARROWS (RM): " + arrowMunition;
+            if (Lives == 3)
+            {
+                ICON_1.SetActive(true);
+                ICON_2.SetActive(true);
+                ICON_3.SetActive(true);
+            }
+            if (Lives == 2)
+            {
+                ICON_1.SetActive(false);
+                ICON_2.SetActive(true);
+                ICON_3.SetActive(true);
+            }
+            if (Lives == 1)
+            {
+                ICON_1.SetActive(false);
+                ICON_2.SetActive(false);
+                ICON_3.SetActive(true);
+            }
         }
-        if (Lives == 2)
-        {
-            ICON_1.SetActive(false);
-            ICON_2.SetActive(true);
-            ICON_3.SetActive(true);
-        }
-        if (Lives == 1)
-        {
-            ICON_1.SetActive(false);
-            ICON_2.SetActive(false);
-            ICON_3.SetActive(true);
-        }
-
-        if (HammerHeld == true)
-        {
-            GroundAttack = 450;
-        }
-        else
-        {
-            GroundAttack = 50;
-        }
-
         //Jump action
         {
             if (Input.GetKeyDown(KeyCode.Space) && JumpNum > 0)
@@ -935,14 +974,12 @@ public class Behaviour : MonoBehaviour
                 ActivateLooseMenu();
             }
         }
-
         //Limit Stamina decrease down to 0 only
         if (CurrentStamina <= 0)
         {
             ParryOFF();
             CurrentStamina = 0;
         }
-
         //Crouch action - Place Logs
         {
             if (Input.GetKey(KeyCode.LeftControl)&& FreeLook.m_Lens.FieldOfView<20)
@@ -981,7 +1018,6 @@ public class Behaviour : MonoBehaviour
             }
 
         }
-
         //Browse Arsenal
         {
             if (Input.GetKeyDown(KeyCode.C))
@@ -1011,6 +1047,7 @@ public class Behaviour : MonoBehaviour
                                 Otter.Play("Disarm");
                                 //Turn off Hammers
                                 HammerHeld = false;
+                                GroundAttack = 50;
                                 Otter.SetBool("armor", false);
                                 RightHandWeapon.SetActive(false);
                                 LeftHandWeapon.SetActive(false);
@@ -1038,6 +1075,7 @@ public class Behaviour : MonoBehaviour
                                 Otter.Play("Equip");
                                 //Turn on Hammers
                                 HammerHeld = true;
+                                GroundAttack = 450;
                                 Otter.SetBool("armor", false);
                                 RightHandWeapon.SetActive(true);
                                 LeftHandWeapon.SetActive(true);
@@ -1066,6 +1104,7 @@ public class Behaviour : MonoBehaviour
                                 CountArrows();
                                 //Turn off Hammers
                                 HammerHeld = false;
+                                GroundAttack = 50;
                                 Otter.SetBool("armor", false);
                                 RightHandWeapon.SetActive(false);
                                 LeftHandWeapon.SetActive(false);
@@ -1106,6 +1145,7 @@ public class Behaviour : MonoBehaviour
 
                                 //Turn on Armor Set
                                 ArmorEquipped = true;
+                                GroundAttack = 150;
                                 Otter.SetBool("armor", true);
                                 for (int item = 0; item < ArmorSet.Length; item++)
                                 {
@@ -1117,80 +1157,6 @@ public class Behaviour : MonoBehaviour
                     }
 
                 }
-            }
-        }
-        //Bow action
-        if (bowEquipped == true)
-        {
-            if (Input.GetKeyDown(KeyCode.Mouse1))
-            {
-                if (arrowMunition > 0)
-                {
-                    Sound.ArrowDraw();
-                    arrowMunition--;
-                    CountArrows();
-                }
-                else
-                {
-                    Sound.Error();
-                    Plattering = "Not enough arrows!";
-                    ChangeSpeech = 1f;
-                }
-            }   
-                if (arrowMunition >= 0 && Input.GetKey(KeyCode.Mouse1) && CurrentStamina > 0 && !Input.GetKey(KeyCode.LeftControl) && Plattering != "Not enough arrows!")
-                {
-
-                    if (!Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
-                    {
-                        AimIcon.SetActive(true);
-                        RotateForward();
-                    }
-                    arrowModel.SetActive(true);
-                    bowString.SetActive(false);
-                    Otter.SetBool("draw", true);
-                    stringLine.enabled = true;
-                    stringLine.useWorldSpace = false;
-                }
-                if (arrowMunition >= 0 && Input.GetKeyUp(KeyCode.Mouse1) && CurrentStamina > 0 && Plattering != "Not enough arrows!")
-                {
-                    Sound.ArrowShoot();
-                    var arrow = Instantiate(Arrow, AttackPoint.position + new Vector3(0, 0.6f, 0), rotGoal * Quaternion.Euler(90, 0, 0));
-                    CurrentStamina -= 30;
-                    HealthBar.SetStamina(CurrentStamina);
-                    arrowModel.SetActive(false);
-                    stringLine.enabled = false;
-                    bowString.SetActive(true);
-                    Otter.SetBool("draw", false);
-                }
-        }
-        //Stoning action
-        {
-            if (Input.GetKey(KeyCode.Mouse1) && CurrentStamina > 0 && !Input.GetKey(KeyCode.LeftControl) && bowEquipped == false)
-            {
-                Stone.SetActive(true);
-                AimIcon.SetActive(true);
-                if (Input.GetKeyDown(KeyCode.Mouse1))
-                {
-                    Otter.Play("Crouch");
-                }
-                if (!Input.GetKey(KeyCode.S) && !Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D))
-                {
-                    RotateForward();
-                }
-            }
-            if (Input.GetKeyUp(KeyCode.Mouse1) && Stone.active && CurrentStamina > 0)
-            {
-                Otter.SetBool("fight", false);
-                Otter.SetBool("slash", false);
-                Otter.Play("Throw");
-                Instantiate(Ball, AttackPoint.position + new Vector3(0, 0.6f, 0), Quaternion.identity);
-                CurrentStamina -= 20;
-                HealthBar.SetStamina(CurrentStamina);
-            }
-            if (!Input.GetKey(KeyCode.Mouse1))
-            {
-                Stone.SetActive(false);
-                AimIcon.SetActive(false);
             }
         }
         //Plant Seed action
@@ -1373,6 +1339,23 @@ public class Behaviour : MonoBehaviour
         }
     }
 
+    [Obsolete]
+    public void LateUpdate()
+    {
+        if (Input.GetKey(KeyCode.Mouse1))
+        {
+            RotateForward();
+        }
+        if (Input.anyKeyDown && !Input.GetKey(KeyCode.Mouse1))
+        {
+            keepLooking = false;
+        }
+        if (bowEquipped==true && Input.GetKeyDown(KeyCode.Mouse1)&&arrowMunition>0 && CurrentStamina>0)
+        {
+            arrowMunition--;
+        }
+    }
+
     [System.Obsolete]
     public void FixedUpdate()
     {
@@ -1388,18 +1371,108 @@ public class Behaviour : MonoBehaviour
         Vector3 XZRight = new(cameraRelativeRight.x, 0, cameraRelativeRight.z);
         Vector3 XZLeft = new(cameraRelativeLeft.x, 0, cameraRelativeLeft.z);
 
-        //Vector3 movement = new Vector3(horizontalInput, 0, verticalInput) * moveSpeed * Time.deltaTime;
-        //transform.Translate(movement);
+        //Switch off additional animations if not invoked
+        {
+            Otter.SetBool("walk", false);
+            Otter.SetBool("strafeForward", false);
+            Otter.SetBool("strafeBack", false);
+            Otter.SetBool("strafeLeft", false);
+            Otter.SetBool("strafeRight", false);
+            Otter.SetBool("climb", false);
+            Otter.SetBool("run", false);
+            Otter.SetBool("midair", false);
+            Otter.SetBool("roll", false);
+            Otter.SetBool("aim", false);
+            //Otter.SetBool("draw", false);
+            Rolling = false;
+            movementInvoked = false;
+            //keepLooking = false;
+        }
+        //Stoning action
+        if (bowEquipped == false)
+        {
+            if (Input.GetKey(KeyCode.Mouse1)
+                && CurrentStamina > 0
+                && !Input.GetKey(KeyCode.LeftControl)
+                && bowEquipped == false && grounded == true)
+            {
+                Stone.SetActive(true);
+                AimIcon.SetActive(true);
+                Otter.SetBool("aim", true);
+                Otter.Play("Aim");
+                if (Input.GetKeyDown(KeyCode.Mouse1))
+                {
+                    rotGoal = Quaternion.LookRotation(cameraRelativeForward);
+                    transform.rotation = rotGoal;
+                    Otter.Play("Crouch");
+                }
+                keepLooking = true;
+            }
+            if (Input.GetKeyUp(KeyCode.Mouse1) && Stone.active && CurrentStamina > 0)
+            {
+                Otter.SetBool("slash", false);
+                Otter.Play("Throw");
+                Instantiate(Ball, AttackPoint.position + new Vector3(0, 0.6f, 0), Spine.rotation);
+                CurrentStamina -= 20;
+                HealthBar.SetStamina(CurrentStamina);
+            }
+            if (!Input.GetKey(KeyCode.Mouse1))
+            {
+                Stone.SetActive(false);
+                AimIcon.SetActive(false);
+            }
+        }
+        //Bow action       
+        if (bowEquipped == true)
+        {
+            if (Input.GetKeyDown(KeyCode.Mouse1) && !Input.GetKeyUp(KeyCode.Mouse1))
+            {
+                rotGoal = Quaternion.LookRotation(cameraRelativeForward);
+                transform.rotation = rotGoal;
+                if (arrowMunition > 0 &&
+                CurrentStamina > 0)
+                {
+                    CountArrows();
+                    Sound.ArrowDraw();
+                    arrowReady = true;
+                    AimIcon.SetActive(true);
+                    keepLooking = true;
+                    arrowModel.SetActive(true);
+                    bowString.SetActive(false);
+                    Otter.SetBool("draw", true);
+                    stringLine.enabled = true;
+                    stringLine.useWorldSpace = false;
+                }
+                else
+                {
+                    arrowReady = false;
+                    Otter.SetBool("draw", false);
+                    Sound.Error();
+                    if (CurrentStamina <= 0)
+                    {
+                        Plattering = "Jee, let me catch a breath!";
+                    }
+                    if (arrowMunition == 0)
+                    {
+                        Plattering = "Not enough arrows!";
+                    }
+                    ChangeSpeech = 1f;
+                }
+            }
+            if (arrowReady == true && Input.GetKeyUp(KeyCode.Mouse1) && CurrentStamina > 0)
+            {
+                Sound.ArrowShoot();
+                Instantiate(Arrow, Spine.position + new Vector3(0,1.4f * cameraRelativeForward.normalized.y, 1.4f * cameraRelativeForward.normalized.z), Quaternion.LookRotation(cameraRelativeForward)* Quaternion.Euler(90, 0, 0));
+                CurrentStamina -= 30;
+                HealthBar.SetStamina(CurrentStamina);
+                arrowModel.SetActive(false);
+                stringLine.enabled = false;
+                bowString.SetActive(true);
+                Otter.SetBool("draw", false);
+                arrowReady = false;
+            }
+        }
 
-        Otter.SetBool("walk", false);
-        //Otter.SetBool("turn right", false);
-        //Otter.SetBool("turn left", false);
-        Otter.SetBool("climb", false);
-        Otter.SetBool("run", false);
-        Otter.SetBool("midair", false);
-        Otter.SetBool("roll", false);
-        Rolling = false;
-        movementInvoked = false;
         //Switch off hurt and heal effects automaticly
         {
             if (hurt == true || heal == true)
@@ -1420,17 +1493,17 @@ public class Behaviour : MonoBehaviour
                 heal = false;
             }
         }
-        
-
-        if (grounded == false || speed == Run)
+        //Control player rigidbody's friction
         {
-            Player.drag = 0;
+            if (grounded == false || speed == Run)
+            {
+                Player.drag = 0;
+            }
+            else
+            {
+                Player.drag = 0.8f;
+            }
         }
-        else
-        {
-            Player.drag = 0.8f;
-        }
-
         //Basic movement setup
         {
             //No Crouch = Regular Movement
@@ -1510,101 +1583,106 @@ public class Behaviour : MonoBehaviour
                 }
             }
         }
+       
+        
         //Aurborne and landing sequence animations conditioning
-        //+ Player's slide and full-break conditioning on ground
-        if (grounded == false)
         {
-            if (JumpNum < JumpLimit)
+            //+ Player's slide and full-break conditioning on ground
+            if (grounded == false)
             {
-                Otter.SetBool("midair", true);
-            }
-            if (JumpNum == JumpLimit)
-            {
-                Otter.SetBool("midair", false);
-                FallClock -= Time.deltaTime;
-                if (FallClock <= 0)
+                if (JumpNum < JumpLimit)
                 {
                     Otter.SetBool("midair", true);
                 }
+                if (JumpNum == JumpLimit)
+                {
+                    Otter.SetBool("midair", false);
+                    FallClock -= Time.deltaTime;
+                    if (FallClock <= 0)
+                    {
+                        Otter.SetBool("midair", true);
+                    }
+                }
             }
-        }
-        if (grounded == true)
-        {
-            JumpNum = JumpLimit;
-            Otter.SetBool("midair", false);
-            levitation = 10;
-            Otter.speed = AnimSpeed;
-            if (movementInvoked==false&& Player.velocity.magnitude >= 6)
+            if (grounded == true)
             {
-                neutralAndMoving = true;
-                if (Player.velocity.magnitude < 6)
-                    Player.velocity = new Vector3(0, Player.velocity.y, 0);
+                JumpNum = JumpLimit;
+                Otter.SetBool("midair", false);
+                levitation = 10;
+                Otter.speed = AnimSpeed;
+                if (movementInvoked == false && Player.velocity.magnitude >= 6)
+                {
+                    neutralAndMoving = true;
+                    if (Player.velocity.magnitude < 6)
+                        Player.velocity = new Vector3(0, Player.velocity.y, 0);
+                }
+                else
+                {
+                    neutralAndMoving = false;
+                }
             }
             else
             {
                 neutralAndMoving = false;
             }
-        }
-        else
-        {
-            neutralAndMoving = false;
-        }
-        if (neutralAndMoving == true)
-        {
-            if (isParried==false)
+            if (neutralAndMoving == true)
             {
-                rotGoal = Quaternion.LookRotation(new Vector3(Player.velocity.x, 0, Player.velocity.z));
-                transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.5f);
+                if (isParried == false)
+                {
+                    rotGoal = Quaternion.LookRotation(new Vector3(Player.velocity.x, 0, Player.velocity.z));
+                    transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.5f);
+                }
+                Otter.SetBool("moving", true);
+                SlideEffect.enableEmission = true;
             }
-            Otter.SetBool("moving", true);
-            SlideEffect.enableEmission = true;
+            if (neutralAndMoving == false)
+            {
+                Otter.SetBool("moving", false);
+                SlideEffect.enableEmission = false;
+            }
         }
-        if (neutralAndMoving == false)
-        {
-            Otter.SetBool("moving", false);
-            SlideEffect.enableEmission = false;
-        }
-
         //Heal and hurt effects conditioning
-        if (heal == true)
         {
-            //Sound.Heal();
-            HealShape.radius = 5;
-            HealShape.radiusSpeed = 1;
-            HealEffect.emissionRate = 30f;
-            HealLight.intensity = (1f);
-            HurtEffect.enableEmission = false;
-            HealEffect.enableEmission = true;
-            HurtLight.enabled = false;
-            HealLight.enabled = true;
+            if (heal == true)
+            {
+                //Sound.Heal();
+                HealShape.radius = 5;
+                HealShape.radiusSpeed = 1;
+                HealEffect.emissionRate = 30f;
+                HealLight.intensity = (1f);
+                HurtEffect.enableEmission = false;
+                HealEffect.enableEmission = true;
+                HurtLight.enabled = false;
+                HealLight.enabled = true;
+            }
+            if (hurt == true)
+            {
+                HurtEffect.enableEmission = true;
+                HealEffect.enableEmission = false;
+                HurtLight.enabled = true;
+                HealLight.enabled = false;
+            }
+            if (heal == false && hurt == false && TouchShroom == false)
+            {
+                HurtEffect.enableEmission = false;
+                HealEffect.enableEmission = false;
+                HurtLight.enabled = false;
+                HealLight.enabled = false;
+            }
+            if (TouchShroom == true)
+            {
+                Sound.Heal();
+                HealShape.radius = 10;
+                HealShape.radiusSpeed = 3;
+                HealEffect.emissionRate = 70f;
+                HealLight.intensity = (10f);
+                HurtEffect.enableEmission = false;
+                HealEffect.enableEmission = true;
+                HurtLight.enabled = false;
+                HealLight.enabled = true;
+            }
         }
-        if (hurt == true)
-        {
-            HurtEffect.enableEmission = true;
-            HealEffect.enableEmission = false;
-            HurtLight.enabled = true;
-            HealLight.enabled = false;
-        }
-        if (heal == false && hurt == false && TouchShroom == false)
-        {
-            HurtEffect.enableEmission = false;
-            HealEffect.enableEmission = false;
-            HurtLight.enabled = false;
-            HealLight.enabled = false;
-        }
-        if (TouchShroom == true)
-        {
-            Sound.Heal();
-            HealShape.radius = 10;
-            HealShape.radiusSpeed = 3;
-            HealEffect.emissionRate = 70f;
-            HealLight.intensity = (10f);
-            HurtEffect.enableEmission = false;
-            HealEffect.enableEmission = true;
-            HurtLight.enabled = false;
-            HealLight.enabled = true;
-        }
-    }
 
+    }
 }
 

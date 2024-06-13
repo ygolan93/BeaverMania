@@ -35,7 +35,7 @@ public class CameraZoom : MonoBehaviour
 
         //Aim Mark
         {
-            aim.transform.position = Camera.main.WorldToScreenPoint(aimPoint.position + new Vector3(0, 0.65f, 0));
+            aim.transform.position -= new Vector3(0, scroll * zoomSpeed * 0.001f, 0);
         }
     }
 }

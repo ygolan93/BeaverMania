@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 400000}
   - component: {fileID: 3300000}
   - component: {fileID: 2300000}
-  - component: {fileID: 6500000}
+  - component: {fileID: 2809322889538920880}
   m_Layer: 0
   m_Name: Rock6C
   m_TagString: Isle
@@ -84,8 +84,8 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &6500000
-BoxCollider:
+--- !u!64 &2809322889538920880
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -94,6 +94,7 @@ BoxCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 3.15, y: 1.55, z: 2.3}
-  m_Center: {x: 0.009681463, y: 0.021104664, z: -0.30547738}
+  serializedVersion: 4
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300000, guid: f086abf98764ee6488fbf0e5af919765, type: 3}

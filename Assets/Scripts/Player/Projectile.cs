@@ -18,30 +18,10 @@ public class Projectile : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        Vector3 launchDirection = Camera.main.transform.TransformDirection(Vector3.forward);
         Physics.IgnoreLayerCollision(1, 3);
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
-        //Ball.velocity = Camera.main.transform.TransformDirection(Vector3.forward)* forwardVel + Vector3.up* upwardVel;
-        Ball.velocity = Player.transform.TransformDirection(Vector3.forward)* forwardVel + Vector3.up * upwardVel;
-        //if (isArrow == true)
-        //{
-        //    Damage = 2000;
-        //    isFireBall = false;
-        //    forwardVel = 70;
-        //    upwardVel = 10;
-        //}
-        //if (isFireBall == true)
-        //{
-        //    Damage = 50000;
-        //    isArrow = false;
-        //    forwardVel = 90;
-        //    upwardVel = 10;
-        //}
-        //if (isArrow==false&&isFireBall==false)
-        //{
-        //    Damage = 5;
-        //    forwardVel = 3;
-        //    upwardVel = 10;
-        //}
+        Ball.velocity = launchDirection * forwardVel + Vector3.up * upwardVel;
     }
     private void Update()
     {

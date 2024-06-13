@@ -139,41 +139,75 @@ public class ScorpionScript : MonoBehaviour
         }
         if (combo<comboLimit)
         {
+            if (combo==1)
+            {
+                state = "Look";
+            }
+            if (combo==3)
+            {
+                state = "Charge";
+            }
             if (currentDistance > lookDistance)
             {
                 state = "Idle";
             }
-            if (currentDistance <= lookDistance && currentDistance > chargeDistance)
+            if(currentDistance <= lookDistance)
             {
-                state = "Look";
-            }
-            if (currentDistance <= chargeDistance)
-            {
-                if (chargeClock > 0)
+                if (combo<comboLimit-5)
                 {
-                    state = "Charge";
-                    chargeClock -= Time.deltaTime;
-                }
-                if (chargeClock <= 0)
-                {
-                    if (currentDistance > attackDistance)
+                    if (Input.GetKey(KeyCode.Mouse0) || Input.GetKey(KeyCode.Mouse1))
                     {
-                        state = "Charge";
-                    }
-                    else
-                    {
-                        state = "Stop";
-                        if (Input.GetKey(KeyCode.Mouse0) || Input.GetKey(KeyCode.Mouse1))
+                        if (currentDistance<chargeDistance-10)
                         {
                             state = "Reverse";
                         }
-                        if (Input.GetKeyUp(KeyCode.Mouse0) || Input.GetKeyUp(KeyCode.Mouse1))
+                        else
                         {
-                            chargeClock = resetCharge;
+                            state = "Look";
+                        }
+                        
+                    }
+                    else
+                    {
+                        if (currentDistance > chargeDistance)
+                        {
+                            state = "Look";
+                        }
+                        if (currentDistance <= chargeDistance)
+                        {
+
+                            if (chargeClock > 0)
+                            {
+                                state = "Charge";
+                                chargeClock -= Time.deltaTime;
+                            }
+                            if (chargeClock <= 0)
+                            {
+                                if (currentDistance > attackDistance)
+                                {
+                                    state = "Charge";
+                                }
+                                else
+                                {
+                                    state = "Stop";
+
+                                    if (Input.GetKeyUp(KeyCode.Mouse0) || Input.GetKeyUp(KeyCode.Mouse1))
+                                    {
+                                        chargeClock = resetCharge;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
+                else
+                {
+                    state = "Charge";
+                }
+      
             }
+            
+
         }
         if (combo >= comboLimit)
         {

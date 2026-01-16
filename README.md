@@ -74,11 +74,9 @@ Special thanks to early playtesters and everyone who gave feedback!
 
 🔗 Links
 
-🕹️ Play on Itch.io
+🕹️ Play on Itch.io[https://exteto.itch.io/beavermania]
 
-💻 GitHub Repo
-
-📹 Gameplay Trailer (YouTube)
+📹 Gameplay Trailer [https://www.youtube.com/watch?v=GfQ1fyxgLbg]
 
 📜 License
 

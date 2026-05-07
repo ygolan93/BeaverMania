@@ -15,7 +15,6 @@ public class PlayerInteractionController : MonoBehaviour
     public void ShowCursor()
     {
         CursorStateService.GetOrCreate().ShowCursor();
-        GetInputReader().EnableUiInput();
     }
 
     public void HideCursor()
@@ -25,7 +24,7 @@ public class PlayerInteractionController : MonoBehaviour
         var gameFlow = GameFlowController.Instance;
         if (gameFlow == null || gameFlow.State == GameFlowState.Playing)
         {
-            GetInputReader().EnableGameplayInput();
+            GameFlowController.GetOrCreate().SetPlaying();
         }
     }
 
@@ -36,7 +35,7 @@ public class PlayerInteractionController : MonoBehaviour
         {
             ShowCursor();
             owner.isAtTrader = true;
-            GetInputReader().EnableUiInput();
+            GameFlowController.GetOrCreate().SetShop();
             owner.FreeLook.enabled = false;
             owner.CamForTraders.enabled = true;
             owner.CamForTraders.m_LookAt = trader.transform;
@@ -49,7 +48,7 @@ public class PlayerInteractionController : MonoBehaviour
     public void ExitTrader()
     {
         owner.isAtTrader = false;
-        GetInputReader().EnableGameplayInput();
+        GameFlowController.GetOrCreate().SetPlaying();
         owner.CamForTraders.enabled = false;
         owner.CamForTraders.m_LookAt = null;
         owner.FreeLook.enabled = true;

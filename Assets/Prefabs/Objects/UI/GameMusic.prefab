@@ -14,6 +14,8 @@ GameObject:
   - component: {fileID: 4968688398559378343}
   - component: {fileID: 4968688398559378344}
   - component: {fileID: 4968688398559378345}
+  - component: {fileID: 4968688398559378346}
+  - component: {fileID: 4968688398559378347}
   m_Layer: 5
   m_Name: GameMusic
   m_TagString: Music
@@ -183,5 +185,29 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ceed2cbf5f3d470f81d4370ba7bdfa0a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
+--- !u!114 &4968688398559378346
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4968688398559378331}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9df28112db774dffa98adda7788af9e2, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+--- !u!114 &4968688398559378347
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4968688398559378331}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b95fb80eea43429e8636de54a40675ab, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:

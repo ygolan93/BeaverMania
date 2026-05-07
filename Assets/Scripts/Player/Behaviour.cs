@@ -725,17 +725,19 @@ public class Behaviour : MonoBehaviour, IDamageable
     public void ActivateLooseMenu()
     {
         //MusicOP.StopMusic();
-        GameFlowController.GetOrCreate().SetGameOver();
+        if (!GameFlowController.GetOrCreate().SetGameOver())
+        {
+            return;
+        }
+
         ShowCursor();
         ShowLosePanel();
-        GetInputReader().DisableGameplayInput();
     }
     public void HideLooseMenu()
     {
         //MusicOP.ResumeMusic();
         GameFlowController.GetOrCreate().SetPlaying();
         HideCursor();
-        GetInputReader().EnableGameplayInput();
         HideLosePanel();
     }
 
@@ -949,7 +951,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         }
 
         inputReader = GameInputReader.GetOrCreate();
-        inputReader.EnableGameplayInput();
+        GameFlowController.GetOrCreate().SetPlaying();
         Inventory.Initialize(this);
         Interaction.Initialize(this, inputReader);
         Combat.Initialize(this);

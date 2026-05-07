@@ -7,6 +7,9 @@ using UnityEngine;
 
 public class Behaviour : MonoBehaviour
 {
+    [Header("Config")]
+    [SerializeField] HazardDamageConfig hazardDamageConfig;
+
     [Header("Movement and animation")]
     public Rigidbody Player;
     public bool grounded;
@@ -462,6 +465,9 @@ public class Behaviour : MonoBehaviour
             TouchShroom = false;
         }
     }
+    float ScorpionJawDamage => hazardDamageConfig != null ? hazardDamageConfig.scorpionJawClampDamage : 15f;
+    float ScorpionStingDamage => hazardDamageConfig != null ? hazardDamageConfig.scorpionStingDamage : 30f;
+
     public void OnTriggerEnter(Collider OBJ)
     {
         if (OBJ.gameObject.CompareTag("SwitchMusic"))
@@ -496,7 +502,10 @@ public class Behaviour : MonoBehaviour
             {
                 if (scorpAttack == true)
                 {
-                    TakeDamage(15);
+                    if (CombatDebugGate.AllowsDamage(gameObject))
+                    {
+                        TakeDamage(ScorpionJawDamage);
+                    }
                 }
             }
             else
@@ -508,7 +517,10 @@ public class Behaviour : MonoBehaviour
         {
             if (scorpAttack == true && isParried==false)
             {
-                TakeDamage(30);
+                if (CombatDebugGate.AllowsDamage(gameObject))
+                {
+                    TakeDamage(ScorpionStingDamage);
+                }
             }
         }
     }

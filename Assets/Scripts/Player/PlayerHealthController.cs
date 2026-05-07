@@ -91,14 +91,7 @@ public class PlayerHealthController : MonoBehaviour
             return;
         }
 
-        if (owner.Lives > 0)
-        {
-            owner.RestartCheckpoint();
-        }
-        if (owner.Lives == 0)
-        {
-            owner.ActivateLooseMenu();
-        }
+        owner.HandleFailure(PlayerFailureReason.HealthDepleted);
     }
 
     public void TickHurtHealEffects()

@@ -61,12 +61,20 @@ public class ScorpionDamage : MonoBehaviour
                     if (CombatDebugGate.AllowsDamage(Player.gameObject))
                     {
                         Player.TakeDamage(JawClamp);
+                        if (Player.CurrentHealth <= 0)
+                        {
+                            Player.HandleFailure(PlayerFailureReason.BossDamage);
+                        }
                     }
                     BossAudio.Sting();
                 }
                 if (Player.isParried == true)
                 {
                     Player.TakeDamage(ParryChipDamage);
+                    if (Player.CurrentHealth <= 0)
+                    {
+                        Player.HandleFailure(PlayerFailureReason.BossDamage);
+                    }
                     Scorpion.TakeDamage(ParryCounterDamage);
                     Scorpion.combo++;
                 }
@@ -82,12 +90,20 @@ public class ScorpionDamage : MonoBehaviour
                     if (CombatDebugGate.AllowsDamage(Player.gameObject))
                     {
                         Player.TakeDamage(Sting);
+                        if (Player.CurrentHealth <= 0)
+                        {
+                            Player.HandleFailure(PlayerFailureReason.BossDamage);
+                        }
                     }
                     BossAudio.Sting();
                 }
                 if (Player.isParried == true)
                 {
                     Player.TakeDamage(ParryChipDamage);
+                    if (Player.CurrentHealth <= 0)
+                    {
+                        Player.HandleFailure(PlayerFailureReason.BossDamage);
+                    }
                     Scorpion.TakeDamage(ParryCounterDamage);
                     Scorpion.combo++;
                 }

@@ -179,6 +179,7 @@ public class Behaviour : MonoBehaviour
     PlayerInteractionController interactionController;
     PlayerCombatController combatController;
     PlayerMovementController movementController;
+    PlayerFailureController failureController;
 
 
     PlayerHealthController Health
@@ -267,6 +268,24 @@ public class Behaviour : MonoBehaviour
             }
 
             return movementController;
+        }
+    }
+
+    PlayerFailureController Failure
+    {
+        get
+        {
+            if (failureController == null)
+            {
+                failureController = GetComponent<PlayerFailureController>();
+                if (failureController == null)
+                {
+                    failureController = gameObject.AddComponent<PlayerFailureController>();
+                }
+                failureController.Initialize(this);
+            }
+
+            return failureController;
         }
     }
 
@@ -438,16 +457,7 @@ public class Behaviour : MonoBehaviour
         }
         if (OBJ.gameObject.CompareTag("Strike"))
         {
-            if (Lives > 0)
-            {
-                transform.position = CheckpointService.GetOrCreate().RespawnPosition(new Vector3(1, 1, 1));
-                Instantiate(PopUpEffect, transform.position, Quaternion.identity);
-                Lives--;
-            }
-            if (Lives == 0)
-            {
-                ActivateLooseMenu();
-            }
+            HandleFailure(PlayerFailureReason.Strike);
         }
     }
     public void OnCollisionExit(Collision OBJ)
@@ -505,6 +515,10 @@ public class Behaviour : MonoBehaviour
                     if (CombatDebugGate.AllowsDamage(gameObject))
                     {
                         TakeDamage(ScorpionJawDamage);
+                        if (CurrentHealth <= 0)
+                        {
+                            HandleFailure(PlayerFailureReason.BossDamage);
+                        }
                     }
                 }
             }
@@ -520,6 +534,10 @@ public class Behaviour : MonoBehaviour
                 if (CombatDebugGate.AllowsDamage(gameObject))
                 {
                     TakeDamage(ScorpionStingDamage);
+                    if (CurrentHealth <= 0)
+                    {
+                        HandleFailure(PlayerFailureReason.BossDamage);
+                    }
                 }
             }
         }
@@ -609,6 +627,7 @@ public class Behaviour : MonoBehaviour
         }
     }
     public void TakeDamage(float Damage) => Health.TakeDamage(Damage);
+    public void HandleFailure(PlayerFailureReason reason) => Failure.HandleFailure(reason);
     public void PlayerMove(Vector3 Direction)
     {
         movementInvoked = true;
@@ -795,13 +814,18 @@ public class Behaviour : MonoBehaviour
         }
     }
 
-    public void RestartCheckpoint()
+    public void RestartCheckpoint() => HandleFailure(PlayerFailureReason.CompatibilityRestart);
+
+    public void RestoreHealth()
     {
-        HealthBar.SetHealth(MaxHealth);
         CurrentHealth = MaxHealth;
+        HealthBar.SetHealth(CurrentHealth);
+    }
+
+    public void MoveToCheckpoint()
+    {
         transform.position = CheckpointService.GetOrCreate().LastCheckpointPosition;
         Instantiate(PopUpEffect, transform.position, Quaternion.identity);
-        Lives--;
     }
     void SaveCheckpoint(Vector3 position)
     {
@@ -967,6 +991,7 @@ public class Behaviour : MonoBehaviour
         Interaction.Initialize(this, inputReader);
         Combat.Initialize(this);
         Movement.Initialize(this);
+        Failure.Initialize(this);
         arrowModel.SetActive(false);
         bowAim = new Vector3(-0.33f, 20f, -0.3f);
         CamForTraders.enabled = false;

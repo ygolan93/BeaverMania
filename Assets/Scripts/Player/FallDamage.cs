@@ -57,6 +57,10 @@ public class FallDamage : MonoBehaviour
             if (fallReader >= damageVelocity)
             {
                 Player.TakeDamage(fallDamageFactor * fallReader);
+                if (Player.CurrentHealth <= 0)
+                {
+                    Player.HandleFailure(PlayerFailureReason.FallDamage);
+                }
             }
 
         }

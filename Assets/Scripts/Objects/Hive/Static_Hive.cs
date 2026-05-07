@@ -20,6 +20,7 @@ public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
     public GameObject Explosion;
     public AudioSource Sound;
     public GameObject HitEffect;
+    [SerializeField] CombatFeedbackEmitter feedback;
 
     Vector3 initialPosition;
     Quaternion initialRotation;
@@ -30,11 +31,17 @@ public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
     Quaternion initialExplosionLocalRotation;
     bool initialExplosionActive;
     bool deathResolved;
+    bool isDead;
     readonly List<GameObject> spawnedOnDeath = new List<GameObject>();
 
     //Start is called before the first frame update
     public void Start()
     {
+        if (feedback == null)
+        {
+            feedback = GetComponent<CombatFeedbackEmitter>();
+        }
+
         if (!ValidateReferences())
         {
             return;
@@ -42,6 +49,7 @@ public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
 
         CurrentHealth = MaxHealth;
         Explosion.SetActive(false);
+        feedback?.ResetFeedback();
         CaptureRuntimeState();
     }
 
@@ -66,6 +74,7 @@ public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
         transform.SetPositionAndRotation(initialPosition, initialRotation);
         CurrentHealth = initialHealth;
         deathResolved = false;
+        isDead = false;
 
         if (Hive != null)
         {
@@ -80,10 +89,7 @@ public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
             Explosion.SetActive(initialExplosionActive);
         }
 
-        if (HitEffect != null)
-        {
-            HitEffect.SetActive(false);
-        }
+        feedback?.ResetFeedback();
 
         if (HiveBar != null)
         {
@@ -107,6 +113,7 @@ public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
             RuntimeReferenceValidator.Require(Hive, this, nameof(Hive)) &
             RuntimeReferenceValidator.Require(Wasp, this, nameof(Wasp)) &
             RuntimeReferenceValidator.Require(Explosion, this, nameof(Explosion)) &
+            RuntimeReferenceValidator.Require(feedback, this, nameof(feedback)) &
             RuntimeReferenceValidator.Require(Sound, this, nameof(Sound)) &
             RuntimeReferenceValidator.Require(HitEffect, this, nameof(HitEffect));
 
@@ -122,7 +129,6 @@ public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
     }
     private void LateUpdate()
     {
-        HitEffect.SetActive(false);
         if (CurrentHealth <= 0 && !deathResolved)
         {
             Death();
@@ -131,7 +137,14 @@ public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
 
     public void Death()
     {
+        if (isDead)
+        {
+            return;
+        }
+
+        isDead = true;
         deathResolved = true;
+        feedback?.EmitDeath();
         Explosion.SetActive(true);
         Explosion.transform.parent = null;
         foreach (var OBJ in SpawnedObjects)
@@ -150,7 +163,14 @@ public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
 
     public void TakeDamage(DamageEvent damageEvent)
     {
-        HitEffect.SetActive(true);
+        if (damageEvent.Type == DamageType.Hazard)
+        {
+            feedback?.EmitHazard();
+        }
+        else
+        {
+            feedback?.EmitHit();
+        }
         CurrentHealth -= Mathf.RoundToInt(damageEvent.Amount);
         Sound.Play();
         HiveBar.SetNPCHealth(CurrentHealth);

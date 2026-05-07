@@ -23,7 +23,9 @@ public class AnimatedAttack : MonoBehaviour
         {
             if (enemy.name != null)
             {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 Debug.Log("Hit " + enemy.name);
+#endif
             }
             if (enemy.TryGetComponent(out IDamageable damageable))
             {

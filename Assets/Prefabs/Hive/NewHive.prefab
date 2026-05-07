@@ -351,6 +351,7 @@ GameObject:
   - component: {fileID: 4619415292314880598}
   - component: {fileID: 1833881584578269942}
   - component: {fileID: 5834629351513488892}
+  - component: {fileID: 9003000000000000001}
   m_Layer: 10
   m_Name: NewHive
   m_TagString: Hive
@@ -478,6 +479,31 @@ MonoBehaviour:
   Explosion: {fileID: 5339181585990677648}
   Sound: {fileID: 5834629351513488892}
   HitEffect: {fileID: 7810621778169316528}
+  feedback: {fileID: 9003000000000000001}
+--- !u!114 &9003000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7115676670349774032}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5eddf2f5ce7442378a32f39e80880024, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  hitEffect:
+    target: {fileID: 7810621778169316528}
+    duration: 0.08
+  slashHitEffect:
+    target: {fileID: 0}
+    duration: 0.08
+  deathEffect:
+    target: {fileID: 5339181585990677648}
+    duration: 0.08
+  hazardEffect:
+    target: {fileID: 7810621778169316528}
+    duration: 0.08
 --- !u!114 &4619415292314880598
 MonoBehaviour:
   m_ObjectHideFlags: 0

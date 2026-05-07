@@ -46,6 +46,7 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
     public GameObject Explosion;
     public GameObject StunEffect;
     public NPC_Audio Sound;
+    [SerializeField] CombatFeedbackEmitter feedback;
 
     Vector3 initialPosition;
     Quaternion initialRotation;
@@ -64,6 +65,7 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
     Quaternion initialExplosionLocalRotation;
     bool initialExplosionActive;
     readonly Dictionary<string, bool> initialAnimatorBools = new Dictionary<string, bool>();
+    bool isDead;
     readonly List<GameObject> spawnedOnDeath = new List<GameObject>();
 
     private void Start()
@@ -72,6 +74,10 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
         RBScorpion = gameObject.GetComponent<Rigidbody>();
         var playerObject = GameObject.FindGameObjectWithTag("Player");
         Player = playerObject != null ? playerObject.GetComponent<Behaviour>() : null;
+        if (feedback == null)
+        {
+            feedback = GetComponent<CombatFeedbackEmitter>();
+        }
 
         if (!ValidateReferences())
         {
@@ -83,7 +89,7 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
 
         CurrentHealth = MaxHealth;
         Explosion.SetActive(false);
-        HitEffect.SetActive(false);
+        feedback?.ResetFeedback();
         paceUp = chargeSpeed + 2;
         resetCharge = chargeClock;
         initialStun = StunnedClock;
@@ -148,6 +154,7 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
         chargeClock = initialChargeClock;
         isAttacking = initialIsAttacking;
         state = initialState;
+        isDead = false;
 
         if (RBScorpion != null)
         {
@@ -173,10 +180,7 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
             Explosion.SetActive(initialExplosionActive);
         }
 
-        if (HitEffect != null)
-        {
-            HitEffect.SetActive(false);
-        }
+        feedback?.ResetFeedback();
 
         if (StunEffect != null)
         {
@@ -210,6 +214,7 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
             RuntimeReferenceValidator.Require(Jaw2A, this, nameof(Jaw2A)) &
             RuntimeReferenceValidator.Require(Jaw2B, this, nameof(Jaw2B)) &
             RuntimeReferenceValidator.Require(Sting, this, nameof(Sting)) &
+            RuntimeReferenceValidator.Require(feedback, this, nameof(feedback)) &
             RuntimeReferenceValidator.Require(HitEffect, this, nameof(HitEffect)) &
             RuntimeReferenceValidator.Require(Explosion, this, nameof(Explosion)) &
             RuntimeReferenceValidator.Require(StunEffect, this, nameof(StunEffect)) &
@@ -304,7 +309,6 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
 
     private void Update()
     {
-        HitEffect.SetActive(false);
         Distance = Player.transform.position - RBScorpion.position;
         currentDistance = Mathf.Abs(Distance.magnitude);
 
@@ -402,7 +406,6 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
         RBScorpion.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
         RBScorpion.velocity = new Vector3(Distance.x, 0, Distance.z).normalized * speed + new Vector3(0, RBScorpion.velocity.y, 0);
 
-        HitEffect.SetActive(false);
         Scorpion.SetBool("Walk", true);
         Scorpion.SetBool("Backwards", false);
         Scorpion.SetBool("Attack", false);
@@ -433,7 +436,14 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
     public void TakeDamage(DamageEvent damageEvent)
     {
         transform.rotation = rotGoal;
-        HitEffect.SetActive(true);
+        if (damageEvent.Type == DamageType.Hazard)
+        {
+            feedback?.EmitHazard();
+        }
+        else
+        {
+            feedback?.EmitHit();
+        }
         CurrentHealth -= Mathf.RoundToInt(damageEvent.Amount);
         combo++;
         if (damageEvent.CanStun && (damageEvent.Type == DamageType.Projectile || damageEvent.Type == DamageType.Fire))
@@ -462,7 +472,14 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
     }
     private void Death()
     {
+        if (isDead)
+        {
+            return;
+        }
+
+        isDead = true;
         isAttacking = false;
+        feedback?.EmitDeath();
         Explosion.SetActive(true);
         Explosion.transform.parent = null;
         foreach (var item in drops)
@@ -486,6 +503,7 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
         {
             var Tree = OBJ.gameObject.GetComponent<LogSpawner>();
             Tree.DestroyTree(OBJ.transform);
+            feedback?.EmitHazard();
             TakeDamage(10);
             combo = 10;
         }

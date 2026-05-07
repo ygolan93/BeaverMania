@@ -55,6 +55,7 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
     public GameObject HitEffect;
     public GameObject SlashEffect;
     public GameObject Explosion;
+    [SerializeField] CombatFeedbackEmitter feedback;
 
     [Header("Sound")]
     public NPC_Audio Sound;
@@ -80,6 +81,7 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
     RigidbodyConstraints initialConstraints;
     bool initialUseGravity;
     readonly Dictionary<string, bool> initialAnimatorBools = new Dictionary<string, bool>();
+    bool isDead;
     readonly List<GameObject> spawnedOnDeath = new List<GameObject>();
     // Start is called before the first frame update    
     public void Start()
@@ -90,13 +92,17 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
         CurrentHealth = MaxHealth;
         PlayerTarget = GameObject.FindGameObjectWithTag("Player");
         PlayerHealth = PlayerTarget != null ? PlayerTarget.GetComponent<Behaviour>() : null;
+        if (feedback == null)
+        {
+            feedback = GetComponent<CombatFeedbackEmitter>();
+        }
 
         if (!ValidateReferences())
         {
             return;
         }
 
-        HitEffect.SetActive(false);
+        feedback?.ResetFeedback();
         SetState(WaspState.Patrol);
         RandoMovement();
         NPC.velocity = Vector3.forward;
@@ -157,6 +163,7 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
         Contact = initialContact;
         floating = initialFloating;
         state = initialState;
+        isDead = false;
         combo = 0;
         refreshPatrolMovement = false;
 
@@ -181,15 +188,7 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
             NPCHealthBar.SetNPCHealth(CurrentHealth);
         }
 
-        if (HitEffect != null)
-        {
-            HitEffect.SetActive(false);
-        }
-
-        if (SlashEffect != null)
-        {
-            SlashEffect.SetActive(false);
-        }
+        feedback?.ResetFeedback();
 
         if (BuzzSource != null)
         {
@@ -214,6 +213,7 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
             RuntimeReferenceValidator.Require(PlayerTarget, this, "Player tag") &
             RuntimeReferenceValidator.Require(PlayerHealth, this, nameof(PlayerHealth)) &
             RuntimeReferenceValidator.Require(NPCHealthBar, this, nameof(NPCHealthBar)) &
+            RuntimeReferenceValidator.Require(feedback, this, nameof(feedback)) &
             RuntimeReferenceValidator.Require(HitEffect, this, nameof(HitEffect)) &
             RuntimeReferenceValidator.Require(SlashEffect, this, nameof(SlashEffect)) &
             RuntimeReferenceValidator.Require(Explosion, this, nameof(Explosion)) &
@@ -281,12 +281,6 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
         else
         {
             StopFloat();
-        }
-
-        if (PlayerDistance > 3)
-        {
-            HitEffect.SetActive(false);
-            SlashEffect.SetActive(false);
         }
 
         if (PlayerDistance > 6)
@@ -382,7 +376,14 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
 
     private void Death()
     {
+        if (isDead)
+        {
+            return;
+        }
+
+        isDead = true;
         StopFloat();
+        feedback?.EmitDeath();
         PlayerHealth.Plattering = ("HA! gotcha");
         PlayerHealth.ChangeSpeech = 1;
         spawnedOnDeath.Add(Instantiate(Explosion, transform.position + new Vector3(0, 1, 0), transform.rotation));
@@ -574,31 +575,38 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
         Wasp.SetBool("Beat", true);
         Wasp.SetBool("Sting", false);
         CurrentHealth -= Mathf.RoundToInt(damageEvent.Amount);
-        var playerArsenal = PlayerTarget.GetComponent<Behaviour>().Arsenal;
-        var currentWeapon = PlayerTarget.GetComponent<Behaviour>().arsenalBrowser;
-        switch (playerArsenal[currentWeapon])
+        if (damageEvent.Type == DamageType.Hazard)
         {
+            feedback?.EmitHazard();
+            Sound.Beat();
+        }
+        else
+        {
+            var playerArsenal = PlayerTarget.GetComponent<Behaviour>().Arsenal;
+            var currentWeapon = PlayerTarget.GetComponent<Behaviour>().arsenalBrowser;
+            switch (playerArsenal[currentWeapon])
+            {
             case "Bare Hands":
                 {
-                    HitEffect.SetActive(true);
+                    feedback?.EmitHit();
                     Sound.Beat();
                     break;
                 }
             case "Hammers":
                 {
-                    HitEffect.SetActive(true);
+                    feedback?.EmitHit();
                     Sound.Beat();
                     break;
                 }
             case "Bow":
                 {
-                    HitEffect.SetActive(true);
+                    feedback?.EmitHit();
                     Sound.Beat();
                     break;
                 }
             case "ArmorSet":
                 {
-                    SlashEffect.SetActive(true);
+                    feedback?.EmitSlashHit();
                     Sound.LiteSwordDamage();
                     //var playerAnimator = PlayerTarget.GetComponent<Behaviour>().Otter;
                     //var currentClip = playerAnimator.GetComponent<AnimationClip>().ToString();
@@ -614,6 +622,7 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
                     //}
                     break;
                 }
+            }
         }
         combo++;
         if (damageEvent.CanStun && (damageEvent.Type == DamageType.Projectile || damageEvent.Type == DamageType.Fire))

@@ -42,10 +42,23 @@ public class Behaviour : MonoBehaviour
     [Header("Health")]
     float StopHurt = 0;
     [SerializeField] Rigidbody rb;
-    public float MaxHealth = 1000;
-    public float CurrentHealth;
-    public float MaxStamina = 100;
-    public float CurrentStamina;
+    [SerializeField] PlayerState state = new PlayerState();
+    public PlayerState State
+    {
+        get
+        {
+            if (state == null)
+            {
+                state = new PlayerState();
+            }
+
+            return state;
+        }
+    }
+    public float MaxHealth { get => State.maxHealth; set => State.maxHealth = value; }
+    public float CurrentHealth { get => State.currentHealth; set => State.currentHealth = value; }
+    public float MaxStamina { get => State.maxStamina; set => State.maxStamina = value; }
+    public float CurrentStamina { get => State.currentStamina; set => State.currentStamina = value; }
     readonly float StaminaClockInitial = 0.5f;
     float StaminaClock;
     public Health_Bar_Script HealthBar;
@@ -55,7 +68,7 @@ public class Behaviour : MonoBehaviour
     public bool Rolling;
     double HealthPercent;
     double StaminaPercent;
-    public int Lives;
+    public int Lives { get => State.lives; set => State.lives = value; }
     public GameObject ICON_1;
     public GameObject ICON_2;
     public GameObject ICON_3;
@@ -148,13 +161,12 @@ public class Behaviour : MonoBehaviour
     public string StaminaText;
     public string HealingText;
     public string AppleText;
-    public int GobletPickup = 0;
-    public int Apple;
-    public int Currency = 0;
-    public int NutCount;
+    public int GobletPickup { get => State.gobletPickup; set => State.gobletPickup = value; }
+    public int Apple { get => State.apple; set => State.apple = value; }
+    public int Currency { get => State.currency; set => State.currency = value; }
+    public int NutCount { get => State.nutCount; set => State.nutCount = value; }
     public string SeedText;
     public string Wallet;
-    public GameMaster GM;
     public GameObject AimIcon;
     public CinemachineFreeLook FreeLook;
     public CinemachineFreeLook CamForTraders;
@@ -327,7 +339,7 @@ public class Behaviour : MonoBehaviour
         {
             if (Lives > 0)
             {
-                transform.position = GM.lastCheckPointPos + new Vector3(1, 1, 1);
+                transform.position = CheckpointService.GetOrCreate().RespawnPosition(new Vector3(1, 1, 1));
                 Instantiate(PopUpEffect, transform.position, Quaternion.identity);
                 Lives--;
             }
@@ -419,7 +431,7 @@ public class Behaviour : MonoBehaviour
         }
         if (OBJ.gameObject.CompareTag("Life"))
         {
-            GM.lastCheckPointPos = OBJ.transform.position;
+            SaveCheckpoint(OBJ.transform.position);
             Plattering = ("Shroom!");
             ChangeSpeech = 1;
             if (CurrentHealth < MaxHealth)
@@ -682,10 +694,16 @@ public class Behaviour : MonoBehaviour
     {
         HealthBar.SetHealth(MaxHealth);
         CurrentHealth = MaxHealth;
-        transform.position = GM.lastCheckPointPos;
+        transform.position = CheckpointService.GetOrCreate().LastCheckpointPosition;
         Instantiate(PopUpEffect, transform.position, Quaternion.identity);
         Lives--;
     }
+    void SaveCheckpoint(Vector3 position)
+    {
+        State.checkpointPosition = position;
+        CheckpointService.GetOrCreate().SaveCheckpoint(position);
+    }
+
     public void RestartGame()
     {
         SceneTransitionService.ReloadActiveScene();
@@ -773,14 +791,6 @@ public class Behaviour : MonoBehaviour
     {
         Player = GetComponent<Rigidbody>();
 
-        var gmObject = GameObject.FindGameObjectWithTag("GM");
-        if (!RuntimeReferenceValidator.Require(gmObject, this, "GM tag"))
-        {
-            return false;
-        }
-
-        GM = gmObject.GetComponent<GameMaster>();
-
         bool valid = RuntimeReferenceValidator.Require(Player, this, nameof(Player)) &
             RuntimeReferenceValidator.Require(Load, this, nameof(Load)) &
             RuntimeReferenceValidator.Require(Root, this, nameof(Root)) &
@@ -795,7 +805,6 @@ public class Behaviour : MonoBehaviour
             RuntimeReferenceValidator.Require(ElectricEffect, this, nameof(ElectricEffect)) &
             RuntimeReferenceValidator.Require(MunitionDisplay, this, nameof(MunitionDisplay)) &
             RuntimeReferenceValidator.Require(LooseScreen, this, nameof(LooseScreen)) &
-            RuntimeReferenceValidator.Require(GM, this, nameof(GM)) &
             RuntimeReferenceValidator.Require(AimIcon, this, nameof(AimIcon)) &
             RuntimeReferenceValidator.Require(FreeLook, this, nameof(FreeLook)) &
             RuntimeReferenceValidator.Require(CamForTraders, this, nameof(CamForTraders)) &
@@ -834,6 +843,7 @@ public class Behaviour : MonoBehaviour
         CamForTraders.enabled = false;
         Instantiate(PopUpEffect, Root.position, Quaternion.identity);
         HideCursor();
+        SaveCheckpoint(transform.position);
         AimIcon.SetActive(false);
         MunitionDisplay.SetActive(false);
         //Enable/Disable Background music

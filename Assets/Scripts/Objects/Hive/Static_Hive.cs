@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-public class Static_Hive : MonoBehaviour, IDamageable
+public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
 {
     public int MaxHealth = 10000;
     public int CurrentHealth;
@@ -21,6 +21,17 @@ public class Static_Hive : MonoBehaviour, IDamageable
     public AudioSource Sound;
     public GameObject HitEffect;
 
+    Vector3 initialPosition;
+    Quaternion initialRotation;
+    int initialHealth;
+    bool initialHiveActive;
+    Transform initialExplosionParent;
+    Vector3 initialExplosionLocalPosition;
+    Quaternion initialExplosionLocalRotation;
+    bool initialExplosionActive;
+    bool deathResolved;
+    readonly List<GameObject> spawnedOnDeath = new List<GameObject>();
+
     //Start is called before the first frame update
     public void Start()
     {
@@ -31,6 +42,63 @@ public class Static_Hive : MonoBehaviour, IDamageable
 
         CurrentHealth = MaxHealth;
         Explosion.SetActive(false);
+        CaptureRuntimeState();
+    }
+
+    void CaptureRuntimeState()
+    {
+        initialPosition = transform.position;
+        initialRotation = transform.rotation;
+        initialHealth = CurrentHealth;
+        initialHiveActive = Hive.activeSelf;
+
+        if (Explosion != null)
+        {
+            initialExplosionParent = Explosion.transform.parent;
+            initialExplosionLocalPosition = Explosion.transform.localPosition;
+            initialExplosionLocalRotation = Explosion.transform.localRotation;
+            initialExplosionActive = Explosion.activeSelf;
+        }
+    }
+
+    public void RuntimeReset()
+    {
+        transform.SetPositionAndRotation(initialPosition, initialRotation);
+        CurrentHealth = initialHealth;
+        deathResolved = false;
+
+        if (Hive != null)
+        {
+            Hive.SetActive(initialHiveActive);
+        }
+
+        if (Explosion != null)
+        {
+            Explosion.transform.SetParent(initialExplosionParent);
+            Explosion.transform.localPosition = initialExplosionLocalPosition;
+            Explosion.transform.localRotation = initialExplosionLocalRotation;
+            Explosion.SetActive(initialExplosionActive);
+        }
+
+        if (HitEffect != null)
+        {
+            HitEffect.SetActive(false);
+        }
+
+        if (HiveBar != null)
+        {
+            HiveBar.SetNPCHealth(CurrentHealth);
+        }
+
+        for (int i = spawnedOnDeath.Count - 1; i >= 0; i--)
+        {
+            if (spawnedOnDeath[i] != null)
+            {
+                Destroy(spawnedOnDeath[i]);
+            }
+        }
+
+        spawnedOnDeath.Clear();
     }
 
     bool ValidateReferences()
@@ -55,7 +123,7 @@ public class Static_Hive : MonoBehaviour, IDamageable
     private void LateUpdate()
     {
         HitEffect.SetActive(false);
-        if (CurrentHealth <= 0)
+        if (CurrentHealth <= 0 && !deathResolved)
         {
             Death();
         }
@@ -63,18 +131,19 @@ public class Static_Hive : MonoBehaviour, IDamageable
 
     public void Death()
     {
+        deathResolved = true;
         Explosion.SetActive(true);
         Explosion.transform.parent = null;
         foreach (var OBJ in SpawnedObjects)
         {
-            Instantiate(OBJ, gameObject.transform.position, Quaternion.identity);
+            spawnedOnDeath.Add(Instantiate(OBJ, gameObject.transform.position, Quaternion.identity));
 
         }
         for (int i = 0; i < 30; i++)
         {
-            Instantiate(Wasp, gameObject.transform.position, Quaternion.identity);
+            spawnedOnDeath.Add(Instantiate(Wasp, gameObject.transform.position, Quaternion.identity).gameObject);
         }
-        Destroy(Hive);
+        Hive.SetActive(false);
     }
 
     public void TakeDamage(int Damage) => TakeDamage(new DamageEvent { Amount = Damage, Source = null, Point = transform.position, Type = DamageType.Generic, CanStun = false });

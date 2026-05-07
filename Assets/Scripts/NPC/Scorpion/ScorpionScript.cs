@@ -1,6 +1,7 @@
+using System.Collections.Generic;
 using UnityEngine;
 
-public class ScorpionScript : MonoBehaviour, IDamageable
+public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
 {
     [Header("Config")]
     [SerializeField] BossConfig bossConfig;
@@ -46,7 +47,24 @@ public class ScorpionScript : MonoBehaviour, IDamageable
     public GameObject StunEffect;
     public NPC_Audio Sound;
 
-
+    Vector3 initialPosition;
+    Quaternion initialRotation;
+    int initialHealth;
+    int initialCombo;
+    float initialStunnedClock;
+    float initialChargeClock;
+    bool initialIsAttacking;
+    EnemyState initialState;
+    Vector3 initialVelocity;
+    Vector3 initialAngularVelocity;
+    RigidbodyConstraints initialConstraints;
+    bool initialUseGravity;
+    Transform initialExplosionParent;
+    Vector3 initialExplosionLocalPosition;
+    Quaternion initialExplosionLocalRotation;
+    bool initialExplosionActive;
+    readonly Dictionary<string, bool> initialAnimatorBools = new Dictionary<string, bool>();
+    readonly List<GameObject> spawnedOnDeath = new List<GameObject>();
 
     private void Start()
     {
@@ -70,6 +88,115 @@ public class ScorpionScript : MonoBehaviour, IDamageable
         resetCharge = chargeClock;
         initialStun = StunnedClock;
         combo = 0;
+        CaptureRuntimeState();
+    }
+
+    void CaptureRuntimeState()
+    {
+        initialPosition = transform.position;
+        initialRotation = transform.rotation;
+        initialHealth = CurrentHealth;
+        initialCombo = combo;
+        initialStunnedClock = StunnedClock;
+        initialChargeClock = chargeClock;
+        initialIsAttacking = isAttacking;
+        initialState = state;
+
+        if (RBScorpion != null)
+        {
+            initialVelocity = RBScorpion.velocity;
+            initialAngularVelocity = RBScorpion.angularVelocity;
+            initialConstraints = RBScorpion.constraints;
+            initialUseGravity = RBScorpion.useGravity;
+        }
+
+        if (Explosion != null)
+        {
+            initialExplosionParent = Explosion.transform.parent;
+            initialExplosionLocalPosition = Explosion.transform.localPosition;
+            initialExplosionLocalRotation = Explosion.transform.localRotation;
+            initialExplosionActive = Explosion.activeSelf;
+        }
+
+        CaptureAnimatorBools();
+    }
+
+    void CaptureAnimatorBools()
+    {
+        initialAnimatorBools.Clear();
+        if (Scorpion == null)
+        {
+            return;
+        }
+
+        foreach (var parameter in Scorpion.parameters)
+        {
+            if (parameter.type == AnimatorControllerParameterType.Bool)
+            {
+                initialAnimatorBools[parameter.name] = Scorpion.GetBool(parameter.name);
+            }
+        }
+    }
+
+    public void RuntimeReset()
+    {
+        gameObject.SetActive(true);
+        transform.SetPositionAndRotation(initialPosition, initialRotation);
+        CurrentHealth = initialHealth;
+        combo = initialCombo;
+        StunnedClock = initialStunnedClock;
+        chargeClock = initialChargeClock;
+        isAttacking = initialIsAttacking;
+        state = initialState;
+
+        if (RBScorpion != null)
+        {
+            RBScorpion.velocity = initialVelocity;
+            RBScorpion.angularVelocity = initialAngularVelocity;
+            RBScorpion.constraints = initialConstraints;
+            RBScorpion.useGravity = initialUseGravity;
+        }
+
+        if (Scorpion != null)
+        {
+            foreach (var animatorBool in initialAnimatorBools)
+            {
+                Scorpion.SetBool(animatorBool.Key, animatorBool.Value);
+            }
+        }
+
+        if (Explosion != null)
+        {
+            Explosion.transform.SetParent(initialExplosionParent);
+            Explosion.transform.localPosition = initialExplosionLocalPosition;
+            Explosion.transform.localRotation = initialExplosionLocalRotation;
+            Explosion.SetActive(initialExplosionActive);
+        }
+
+        if (HitEffect != null)
+        {
+            HitEffect.SetActive(false);
+        }
+
+        if (StunEffect != null)
+        {
+            StunEffect.SetActive(false);
+        }
+
+        if (BossHealth != null)
+        {
+            BossHealth.SetNPCHealth(CurrentHealth);
+        }
+
+        for (int i = spawnedOnDeath.Count - 1; i >= 0; i--)
+        {
+            if (spawnedOnDeath[i] != null)
+            {
+                Destroy(spawnedOnDeath[i]);
+            }
+        }
+
+        spawnedOnDeath.Clear();
     }
 
     bool ValidateReferences()
@@ -340,7 +467,7 @@ public class ScorpionScript : MonoBehaviour, IDamageable
         Explosion.transform.parent = null;
         foreach (var item in drops)
         {
-            Instantiate(item, gameObject.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+            spawnedOnDeath.Add(Instantiate(item, gameObject.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity));
         }
         gameObject.SetActive(false);
     }

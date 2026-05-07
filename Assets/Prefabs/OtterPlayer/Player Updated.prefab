@@ -66570,6 +66570,7 @@ GameObject:
   - component: {fileID: 7624992565179513018}
   - component: {fileID: 7624992565179513016}
   - component: {fileID: 157913311816747088}
+  - component: {fileID: 157913311816747089}
   m_Layer: 3
   m_Name: Player Updated
   m_TagString: Player
@@ -66852,6 +66853,19 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier:
   owner: {fileID: 7624992565179513156}
+  runtimeResetService: {fileID: 157913311816747089}
+--- !u!114 &157913311816747089
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7624992565179513158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c64e666ce0249b09bc64c4b77ce67d8, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
 --- !u!114 &7624992565179513157
 MonoBehaviour:
   m_ObjectHideFlags: 0

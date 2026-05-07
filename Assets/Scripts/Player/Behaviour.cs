@@ -66,8 +66,6 @@ public class Behaviour : MonoBehaviour
     public bool TouchShroom;
     public bool hurt;
     public bool Rolling;
-    double HealthPercent;
-    double StaminaPercent;
     public int Lives { get => State.lives; set => State.lives = value; }
     public GameObject ICON_1;
     public GameObject ICON_2;
@@ -155,6 +153,7 @@ public class Behaviour : MonoBehaviour
     [SerializeField] GameObject MunitionDisplay;
     public float moveSpeed = 5.0f;
     public GameObject LooseScreen;
+    [SerializeField] LoseMenuController loseMenuController;
     public bool isAtTrader = false;
     public string LogCount;
     public string DebugText;
@@ -382,7 +381,7 @@ public class Behaviour : MonoBehaviour
         }
         if (OBJ.gameObject.CompareTag("Life"))
         {
-            HealingText = "Checkpoint saved";
+            State.checkpointMessageUntil = Time.time + 3f;
         }
         if (OBJ.gameObject.CompareTag("Bridge"))
         {
@@ -691,7 +690,7 @@ public class Behaviour : MonoBehaviour
         //MusicOP.StopMusic();
         GameFlowController.GetOrCreate().SetGameOver();
         ShowCursor();
-        LooseScreen.SetActive(true);
+        ShowLosePanel();
         GetInputReader().DisableGameplayInput();
     }
     public void HideLooseMenu()
@@ -700,8 +699,47 @@ public class Behaviour : MonoBehaviour
         GameFlowController.GetOrCreate().SetPlaying();
         HideCursor();
         GetInputReader().EnableGameplayInput();
-        LooseScreen.SetActive(false);
+        HideLosePanel();
     }
+
+    void ShowLosePanel()
+    {
+        if (loseMenuController == null && LooseScreen != null)
+        {
+            loseMenuController = LooseScreen.GetComponentInParent<LoseMenuController>();
+        }
+
+        if (loseMenuController != null)
+        {
+            loseMenuController.ShowLosePanel();
+            return;
+        }
+
+        if (LooseScreen != null)
+        {
+            LooseScreen.SetActive(true);
+        }
+    }
+
+    void HideLosePanel()
+    {
+        if (loseMenuController == null && LooseScreen != null)
+        {
+            loseMenuController = LooseScreen.GetComponentInParent<LoseMenuController>();
+        }
+
+        if (loseMenuController != null)
+        {
+            loseMenuController.HideLosePanel();
+            return;
+        }
+
+        if (LooseScreen != null)
+        {
+            LooseScreen.SetActive(false);
+        }
+    }
+
     public void RestartCheckpoint()
     {
         HealthBar.SetHealth(MaxHealth);
@@ -942,7 +980,7 @@ public class Behaviour : MonoBehaviour
         FallClock = InitialFall;
         InsertWalk = Walk;
         InsertRun = Run;
-        LooseScreen.SetActive(false);
+        HideLosePanel();
         HologramedBridge.SetActive(false);
         appleOBJ.SetActive(false);
         gobletOBJ.SetActive(false);
@@ -1039,15 +1077,7 @@ public class Behaviour : MonoBehaviour
         }
         //Update UI
         {
-            HealthPercent = System.Math.Round((CurrentHealth / MaxHealth) * 100f, 1);
-            DebugText = HealthPercent + "%";
-            StaminaPercent = System.Math.Round((CurrentStamina / MaxStamina) * 100f, 1);
-            StaminaText = StaminaPercent + "%";
-            Wallet = "COINS: " + Currency;
-            SeedText = "NUTS (R): " + NutCount;
-            AppleText = "APPLES (T): " + Apple;
-            GobletText = "GOBLETS (Y): " + GobletPickup;
-            ArrowText = "ARROWS (RM): " + arrowMunition;
+            State.arrowMunition = arrowMunition;
             if (Lives == 3)
             {
                 ICON_1.SetActive(true);
@@ -1131,7 +1161,6 @@ public class Behaviour : MonoBehaviour
                 HologramedBridge.SetActive(false);
                 Otter.SetBool("crouch", false);
                 ParryOFF();
-                HealingText = "";
             }
 
         }
@@ -1321,7 +1350,6 @@ public class Behaviour : MonoBehaviour
             {
                 CurrentStamina = MaxStamina;
                 GobletClock -= Time.deltaTime;
-                HealingText = "Boost time: " + Math.Round(GobletClock);
                 if (GobletClock <= 0)
                 {
                     GobletOFF();

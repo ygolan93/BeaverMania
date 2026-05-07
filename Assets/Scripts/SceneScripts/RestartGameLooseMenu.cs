@@ -1,11 +1,17 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class RestartGameLooseMenu : MonoBehaviour
+public sealed class RestartGameLooseMenu : MonoBehaviour
 {
+    [SerializeField] LoseMenuController loseMenuController;
+
     public void ResetartGame()
     {
-        SceneTransitionService.LoadLevel1();
+        if (loseMenuController != null)
+        {
+            loseMenuController.RestartGame();
+            return;
+        }
+
+        SceneTransitionService.ReloadActiveScene();
     }
 }

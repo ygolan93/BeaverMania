@@ -41,12 +41,11 @@ public class Carry : MonoBehaviour
     public void Update()
     {
         Vector3 SpawnPos = LogDrop.transform.position;
-        Goal.LogCount =("Log count: "+ i + "/9");
+        Goal.State.carriedLogs = i;
+        Goal.State.maxCarriedLogs = 9;
 
         if (Goal.grounded == true)
         {
-            if (i == 9)
-                Goal.LogCount = ("Log count: 9/9. Press LCtrl+Rmouse for bridge construction");
             if (Input.GetKeyUp(KeyCode.LeftControl) && i > 0)
             {
                 i--;

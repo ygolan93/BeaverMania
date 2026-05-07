@@ -18,4 +18,10 @@ public sealed class PlayerState
     public int nutCount;
     public int apple;
     public int gobletPickup;
+    public int arrowMunition;
+    public int carriedLogs;
+    public int maxCarriedLogs = 9;
+
+    [Header("HUD Events")]
+    public float checkpointMessageUntil;
 }

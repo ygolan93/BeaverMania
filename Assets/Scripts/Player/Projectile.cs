@@ -19,8 +19,7 @@ public class Projectile : MonoBehaviour
     void Start()
     {
         var mainCamera = Camera.main;
-        var playerObject = GameObject.FindGameObjectWithTag("Player");
-        Player = playerObject != null ? playerObject.GetComponent<Behaviour>() : null;
+        PlayerReference.TryGetPlayer(out Player);
 
         if (!ValidateReferences(mainCamera))
         {
@@ -98,46 +97,6 @@ public class Projectile : MonoBehaviour
             return;
         }
 
-        if (OBJ.gameObject.CompareTag("NPC"))
-        {
-            OBJ.gameObject.GetComponent<NPC_Basic>().TakeDamage(Damage);
-            OBJ.gameObject.GetComponent<NPC_Basic>().combo += OBJ.gameObject.GetComponent<NPC_Basic>().hit2stun;
-            if (isFireBall == true)
-            {
-                Explode();
-            }
-            if (isFireBall == false)
-            {
-                RockHit();
-            }
-            Player.Plattering = "Bam! Take that";
-            Player.ChangeSpeech = 1f;
-        }
-        if (OBJ.gameObject.CompareTag("Scorpion"))
-        {
-            OBJ.gameObject.GetComponent<ScorpionScript>().TakeDamage(Damage);
-            OBJ.gameObject.GetComponent<ScorpionScript>().combo += 3;
-            if (isFireBall == true)
-            {
-                Explode();
-            }
-            if (isFireBall == false)
-            {
-                RockHit();
-            }
-        }
-        if (OBJ.gameObject.CompareTag("Hive"))
-        {
-            OBJ.gameObject.GetComponent<Static_Hive>().TakeDamage(Damage);
-            if (isFireBall == true)
-            {
-                Explode();
-            }
-            if (isFireBall == false)
-            {
-                RockHit();
-            }
-        }
         if (OBJ.gameObject.CompareTag("Isle"))
         {
             if (isFireBall == true)

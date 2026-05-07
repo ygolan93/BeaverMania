@@ -72,8 +72,7 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
     {
         ApplyConfig();
         RBScorpion = gameObject.GetComponent<Rigidbody>();
-        var playerObject = GameObject.FindGameObjectWithTag("Player");
-        Player = playerObject != null ? playerObject.GetComponent<Behaviour>() : null;
+        PlayerReference.TryGetPlayer(out Player);
         if (feedback == null)
         {
             feedback = GetComponent<CombatFeedbackEmitter>();
@@ -501,8 +500,10 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
         }
         if (OBJ.gameObject.CompareTag("Bridge"))
         {
-            var Tree = OBJ.gameObject.GetComponent<LogSpawner>();
-            Tree.DestroyTree(OBJ.transform);
+            if (OBJ.gameObject.TryGetComponent(out LogSpawner tree))
+            {
+                tree.DestroyTree(OBJ.transform);
+            }
             feedback?.EmitHazard();
             TakeDamage(10);
             combo = 10;

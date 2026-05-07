@@ -435,11 +435,13 @@ public class Behaviour : MonoBehaviour
         }
         if (OBJ.gameObject.CompareTag("Strike"))
         {
-            if (CheckpointService.GetOrCreate().TryRespawn(this))
+            if (Lives > 0)
             {
+                transform.position = CheckpointService.GetOrCreate().RespawnPosition(new Vector3(1, 1, 1));
                 Instantiate(PopUpEffect, transform.position, Quaternion.identity);
+                Lives--;
             }
-            else
+            if (Lives == 0)
             {
                 ActivateLooseMenu();
             }
@@ -783,16 +785,16 @@ public class Behaviour : MonoBehaviour
 
     public void RestartCheckpoint()
     {
-        if (CheckpointService.GetOrCreate().TryRespawn(this))
-        {
-            Instantiate(PopUpEffect, transform.position, Quaternion.identity);
-        }
+        HealthBar.SetHealth(MaxHealth);
+        CurrentHealth = MaxHealth;
+        transform.position = CheckpointService.GetOrCreate().LastCheckpointPosition;
+        Instantiate(PopUpEffect, transform.position, Quaternion.identity);
+        Lives--;
     }
-
     void SaveCheckpoint(Vector3 position)
     {
         State.checkpointPosition = position;
-        CheckpointService.GetOrCreate().RegisterCheckpoint(position);
+        CheckpointService.GetOrCreate().SaveCheckpoint(position);
     }
 
     public void RestartGame()
@@ -894,21 +896,7 @@ public class Behaviour : MonoBehaviour
         return reader != null && !reader.IsGameplayInputEnabled;
     }
 
-    void HandleDeathState()
-    {
-        if (CurrentHealth > 0)
-        {
-            return;
-        }
-
-        if (!CheckpointService.GetOrCreate().TryRespawn(this))
-        {
-            ActivateLooseMenu();
-            return;
-        }
-
-        Instantiate(PopUpEffect, transform.position, Quaternion.identity);
-    }
+    void HandleDeathState() => Health.HandleDeathState();
 
     bool ValidateStartReferences()
     {
@@ -972,9 +960,7 @@ public class Behaviour : MonoBehaviour
         CamForTraders.enabled = false;
         Instantiate(PopUpEffect, Root.position, Quaternion.identity);
         HideCursor();
-        CheckpointService.GetOrCreate().ResetForNewRun(transform.position, 3);
-        State.checkpointPosition = transform.position;
-        Lives = CheckpointService.GetOrCreate().RemainingLives;
+        SaveCheckpoint(transform.position);
         AimIcon.SetActive(false);
         MunitionDisplay.SetActive(false);
         //Enable/Disable Background music
@@ -1016,6 +1002,7 @@ public class Behaviour : MonoBehaviour
         HoneyOFF();
         GoldOFF();
         ElectricEffect.SetActive(false);
+        Lives = 3;
         StaminaClock = StaminaClockInitial;
         JumpLimit = JumpNum;
         GobletJumpLimit = JumpNum + 2;

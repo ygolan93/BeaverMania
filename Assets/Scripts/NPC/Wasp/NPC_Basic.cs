@@ -1,8 +1,9 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 
-public class NPC_Basic : MonoBehaviour, IDamageable
+public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
 {
     enum WaspState
     {
@@ -64,6 +65,22 @@ public class NPC_Basic : MonoBehaviour, IDamageable
     public GameObject Wing;
     public GameObject Leg;
     public GameObject Reward;
+
+    Vector3 initialPosition;
+    Quaternion initialRotation;
+    int initialHealth;
+    float initialChangeNav;
+    float initialRecovery;
+    float initialChargeClock;
+    bool initialContact;
+    bool initialFloating;
+    WaspState initialState;
+    Vector3 initialVelocity;
+    Vector3 initialAngularVelocity;
+    RigidbodyConstraints initialConstraints;
+    bool initialUseGravity;
+    readonly Dictionary<string, bool> initialAnimatorBools = new Dictionary<string, bool>();
+    readonly List<GameObject> spawnedOnDeath = new List<GameObject>();
     // Start is called before the first frame update    
     public void Start()
     {
@@ -84,6 +101,110 @@ public class NPC_Basic : MonoBehaviour, IDamageable
         RandoMovement();
         NPC.velocity = Vector3.forward;
         BuzzSource.SetActive(true);
+        CaptureRuntimeState();
+    }
+
+    void CaptureRuntimeState()
+    {
+        initialPosition = transform.position;
+        initialRotation = transform.rotation;
+        initialHealth = CurrentHealth;
+        initialChangeNav = ChangeNav;
+        initialRecovery = Recovery;
+        initialChargeClock = ChargeClock;
+        initialContact = Contact;
+        initialFloating = floating;
+        initialState = state;
+
+        if (NPC != null)
+        {
+            initialVelocity = NPC.velocity;
+            initialAngularVelocity = NPC.angularVelocity;
+            initialConstraints = NPC.constraints;
+            initialUseGravity = NPC.useGravity;
+        }
+
+        CaptureAnimatorBools();
+    }
+
+    void CaptureAnimatorBools()
+    {
+        initialAnimatorBools.Clear();
+        if (Wasp == null)
+        {
+            return;
+        }
+
+        foreach (var parameter in Wasp.parameters)
+        {
+            if (parameter.type == AnimatorControllerParameterType.Bool)
+            {
+                initialAnimatorBools[parameter.name] = Wasp.GetBool(parameter.name);
+            }
+        }
+    }
+
+    public void RuntimeReset()
+    {
+        StopFloat();
+        gameObject.SetActive(true);
+        transform.SetPositionAndRotation(initialPosition, initialRotation);
+        SpawnPos = initialPosition;
+        CurrentHealth = initialHealth;
+        ChangeNav = initialChangeNav;
+        Recovery = initialRecovery;
+        ChargeClock = initialChargeClock;
+        Contact = initialContact;
+        floating = initialFloating;
+        state = initialState;
+        combo = 0;
+        refreshPatrolMovement = false;
+
+        if (NPC != null)
+        {
+            NPC.velocity = initialVelocity;
+            NPC.angularVelocity = initialAngularVelocity;
+            NPC.constraints = initialConstraints;
+            NPC.useGravity = initialUseGravity;
+        }
+
+        if (Wasp != null)
+        {
+            foreach (var animatorBool in initialAnimatorBools)
+            {
+                Wasp.SetBool(animatorBool.Key, animatorBool.Value);
+            }
+        }
+
+        if (NPCHealthBar != null)
+        {
+            NPCHealthBar.SetNPCHealth(CurrentHealth);
+        }
+
+        if (HitEffect != null)
+        {
+            HitEffect.SetActive(false);
+        }
+
+        if (SlashEffect != null)
+        {
+            SlashEffect.SetActive(false);
+        }
+
+        if (BuzzSource != null)
+        {
+            BuzzSource.SetActive(true);
+        }
+
+        for (int i = spawnedOnDeath.Count - 1; i >= 0; i--)
+        {
+            if (spawnedOnDeath[i] != null)
+            {
+                Destroy(spawnedOnDeath[i]);
+            }
+        }
+
+        spawnedOnDeath.Clear();
     }
 
     bool ValidateReferences()
@@ -264,20 +385,20 @@ public class NPC_Basic : MonoBehaviour, IDamageable
         StopFloat();
         PlayerHealth.Plattering = ("HA! gotcha");
         PlayerHealth.ChangeSpeech = 1;
-        Instantiate(Explosion, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Body, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Head, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Wing, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Wing, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Reward, transform.position + new Vector3(0, 7, 0), transform.rotation);
-        Instantiate(Reward, transform.position + new Vector3(0, 7, 0), transform.rotation);
-        GameObject.Destroy(gameObject);
+        spawnedOnDeath.Add(Instantiate(Explosion, transform.position + new Vector3(0, 1, 0), transform.rotation));
+        spawnedOnDeath.Add(Instantiate(Body, transform.position + new Vector3(0, 1, 0), transform.rotation));
+        spawnedOnDeath.Add(Instantiate(Head, transform.position + new Vector3(0, 1, 0), transform.rotation));
+        spawnedOnDeath.Add(Instantiate(Wing, transform.position + new Vector3(0, 1, 0), transform.rotation));
+        spawnedOnDeath.Add(Instantiate(Wing, transform.position + new Vector3(0, 1, 0), transform.rotation));
+        spawnedOnDeath.Add(Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation));
+        spawnedOnDeath.Add(Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation));
+        spawnedOnDeath.Add(Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation));
+        spawnedOnDeath.Add(Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation));
+        spawnedOnDeath.Add(Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation));
+        spawnedOnDeath.Add(Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation));
+        spawnedOnDeath.Add(Instantiate(Reward, transform.position + new Vector3(0, 7, 0), transform.rotation));
+        spawnedOnDeath.Add(Instantiate(Reward, transform.position + new Vector3(0, 7, 0), transform.rotation));
+        gameObject.SetActive(false);
     }
 
     private void OnCollisionEnter(Collision OBJ)

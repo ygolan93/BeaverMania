@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WaspSpawner : MonoBehaviour
+public class WaspSpawner : MonoBehaviour, IRuntimeResettable
 {
     public GameObject Wasp;
     public GameObject Hive;
@@ -13,6 +13,12 @@ public class WaspSpawner : MonoBehaviour
     int Counter;
     public float SpawnClock=15f;
    public float RealClock;
+
+    Vector3 initialPosition;
+    Quaternion initialRotation;
+    int initialCounter;
+    float initialRealClock;
+    readonly List<GameObject> spawnedWasps = new List<GameObject>();
     
     private void Start()
     { 
@@ -25,6 +31,34 @@ public class WaspSpawner : MonoBehaviour
         {
             return;
         }
+
+        CaptureRuntimeState();
+    }
+
+    void CaptureRuntimeState()
+    {
+        initialPosition = transform.position;
+        initialRotation = transform.rotation;
+        initialCounter = Counter;
+        initialRealClock = RealClock;
+    }
+
+    public void RuntimeReset()
+    {
+        transform.SetPositionAndRotation(initialPosition, initialRotation);
+        Counter = initialCounter;
+        RealClock = initialRealClock;
+        Distance = Vector3.zero;
+
+        for (int i = spawnedWasps.Count - 1; i >= 0; i--)
+        {
+            if (spawnedWasps[i] != null)
+            {
+                Destroy(spawnedWasps[i]);
+            }
+        }
+
+        spawnedWasps.Clear();
     }
 
     bool ValidateReferences()
@@ -44,7 +78,7 @@ public class WaspSpawner : MonoBehaviour
             if (Counter > 0)
             {
                Quaternion RotWasp = Quaternion.LookRotation(Distance);
-               Instantiate(Wasp, Hive.transform.position, RotWasp);
+               spawnedWasps.Add(Instantiate(Wasp, Hive.transform.position, RotWasp));
                 Counter--;
             }
             if (Counter <=0)

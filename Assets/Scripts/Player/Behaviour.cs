@@ -171,6 +171,7 @@ public class Behaviour : MonoBehaviour
     public CinemachineFreeLook FreeLook;
     public CinemachineFreeLook CamForTraders;
     public float ChangeSpeech = 1F;
+    GameInputReader inputReader;
 
     public void OnCollisionEnter(Collision OBJ)
     {
@@ -449,6 +450,7 @@ public class Behaviour : MonoBehaviour
             {
                 ShowCursor();
                 isAtTrader = true;
+                GetInputReader().EnableUiInput();
                 FreeLook.enabled = false;
                 CamForTraders.enabled = true;
                 CamForTraders.m_LookAt = OBJ.transform;
@@ -456,6 +458,7 @@ public class Behaviour : MonoBehaviour
             if (skip ==true)
             {
                 isAtTrader = false;
+                GetInputReader().EnableGameplayInput();
                 CamForTraders.enabled = false;
                 CamForTraders.m_LookAt = null;
                 FreeLook.enabled = true;
@@ -493,6 +496,7 @@ public class Behaviour : MonoBehaviour
         if (OBJ.gameObject.CompareTag("Trader"))
         {
             isAtTrader = false;
+            GetInputReader().EnableGameplayInput();
             CamForTraders.enabled = false;
             CamForTraders.m_LookAt = null;
             FreeLook.enabled = true;
@@ -669,12 +673,18 @@ public class Behaviour : MonoBehaviour
     {
         //show mouse icon
         CursorStateService.GetOrCreate().ShowCursor();
+        GetInputReader().EnableUiInput();
     }
     public void HideCursor()
     {
         //Lock and hide mouse icon
         FreeLook.m_LookAt = Root;
         CursorStateService.GetOrCreate().HideCursor();
+        var gameFlow = GameFlowController.Instance;
+        if (gameFlow == null || gameFlow.State == GameFlowState.Playing)
+        {
+            GetInputReader().EnableGameplayInput();
+        }
     }
     public void ActivateLooseMenu()
     {
@@ -682,12 +692,14 @@ public class Behaviour : MonoBehaviour
         GameFlowController.GetOrCreate().SetGameOver();
         ShowCursor();
         LooseScreen.SetActive(true);
+        GetInputReader().DisableGameplayInput();
     }
     public void HideLooseMenu()
     {
         //MusicOP.ResumeMusic();
         GameFlowController.GetOrCreate().SetPlaying();
         HideCursor();
+        GetInputReader().EnableGameplayInput();
         LooseScreen.SetActive(false);
     }
     public void RestartCheckpoint()
@@ -787,6 +799,39 @@ public class Behaviour : MonoBehaviour
         GoldBrick.SetActive(false);
         Physics.IgnoreLayerCollision(gameObject.layer, 7, false);
     }
+    GameInputReader GetInputReader()
+    {
+        if (inputReader == null)
+        {
+            inputReader = GameInputReader.GetOrCreate();
+        }
+
+        return inputReader;
+    }
+
+    bool IsGameplayInputBlocked()
+    {
+        var reader = GetInputReader();
+        return reader != null && !reader.IsGameplayInputEnabled;
+    }
+
+    void HandleDeathState()
+    {
+        if (CurrentHealth > 0)
+        {
+            return;
+        }
+
+        if (Lives > 0)
+        {
+            RestartCheckpoint();
+        }
+        if (Lives == 0)
+        {
+            ActivateLooseMenu();
+        }
+    }
+
     bool ValidateStartReferences()
     {
         Player = GetComponent<Rigidbody>();
@@ -838,6 +883,8 @@ public class Behaviour : MonoBehaviour
             return;
         }
 
+        inputReader = GameInputReader.GetOrCreate();
+        inputReader.EnableGameplayInput();
         arrowModel.SetActive(false);
         bowAim = new Vector3(-0.33f, 20f, -0.3f);
         CamForTraders.enabled = false;
@@ -914,6 +961,12 @@ public class Behaviour : MonoBehaviour
     [System.Obsolete]
     public void Update()
     {
+        HandleDeathState();
+        if (IsGameplayInputBlocked())
+        {
+            return;
+        }
+
         //Parry animations
         if (Defend == true)
         {
@@ -1037,17 +1090,7 @@ public class Behaviour : MonoBehaviour
                 JumpNum = JumpNumPreserve;
         }
         //Load Loose screen on death
-        if (CurrentHealth <= 0)
-        {
-            if (Lives > 0)
-            {
-                RestartCheckpoint();
-            }
-            if (Lives == 0)
-            {
-                ActivateLooseMenu();
-            }
-        }
+        HandleDeathState();
         //Limit Stamina decrease down to 0 only
         if (CurrentStamina <= 0)
         {
@@ -1416,6 +1459,11 @@ public class Behaviour : MonoBehaviour
     [Obsolete]
     public void LateUpdate()
     {
+        if (IsGameplayInputBlocked())
+        {
+            return;
+        }
+
         if (Input.GetKey(KeyCode.Mouse1))
         {
             RotateForward();
@@ -1433,6 +1481,11 @@ public class Behaviour : MonoBehaviour
     [System.Obsolete]
     public void FixedUpdate()
     {
+        if (IsGameplayInputBlocked())
+        {
+            return;
+        }
+
         //Camera vectors setup
         Vector3 cameraRelativeForward = Camera.main.transform.TransformDirection(Vector3.forward);
         Vector3 cameraRelativeBack = Camera.main.transform.TransformDirection(Vector3.back);

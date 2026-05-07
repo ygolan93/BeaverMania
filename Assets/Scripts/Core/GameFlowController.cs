@@ -9,7 +9,7 @@ public class GameFlowController : MonoBehaviour
 
     public static GameFlowController GetOrCreate()
     {
-        return RuntimeServices.GetOrCreate<GameFlowController>(ServiceLifetime.Scene);
+        return RuntimeServices.GetOrCreate<GameFlowController>(ServiceLifetime.Persistent);
     }
 
     private void Awake()
@@ -25,7 +25,7 @@ public class GameFlowController : MonoBehaviour
             return;
         }
 
-        if (!RuntimeServices.Register(this, ServiceLifetime.Scene))
+        if (!RuntimeServices.Register(this, ServiceLifetime.Persistent))
         {
             return;
         }
@@ -46,23 +46,81 @@ public class GameFlowController : MonoBehaviour
     {
         State = GameFlowState.Playing;
         Time.timeScale = 1f;
+        SetGameplayInput();
     }
 
-    public void SetPaused(bool paused)
+    public bool SetPaused(bool paused)
     {
+        if (State == GameFlowState.GameOver)
+        {
+            BuildSafeLogger.WarnOnce(
+                nameof(GameFlowController) + ".BlockedPauseDuringGameOver",
+                "Blocked pause state change during game over.",
+                this,
+                null,
+                null,
+                nameof(SetPaused));
+            return false;
+        }
+
         State = paused ? GameFlowState.Paused : GameFlowState.Playing;
         Time.timeScale = paused ? 0f : 1f;
+        if (paused)
+        {
+            SetUiInput();
+            return true;
+        }
+
+        SetGameplayInput();
+        return true;
     }
 
-    public void SetGameOver()
+    public bool SetGameOver()
     {
+        if (State == GameFlowState.GameOver)
+        {
+            BuildSafeLogger.WarnOnce(
+                nameof(GameFlowController) + ".BlockedDuplicateGameOver",
+                "Blocked duplicate game-over request.",
+                this,
+                null,
+                null,
+                nameof(SetGameOver));
+            return false;
+        }
+
         State = GameFlowState.GameOver;
         Time.timeScale = 0f;
+        SetInputDisabled();
+        return true;
+    }
+
+    public void SetShop()
+    {
+        State = GameFlowState.Shop;
+        Time.timeScale = 1f;
+        SetUiInput();
     }
 
     public void BeginSceneTransition()
     {
         State = GameFlowState.Transitioning;
         Time.timeScale = 1f;
+        SetInputDisabled();
+    }
+
+    void SetGameplayInput()
+    {
+        GameInputReader.GetOrCreate().EnableGameplayInput();
+    }
+
+    void SetUiInput()
+    {
+        GameInputReader.GetOrCreate().EnableUiInput();
+    }
+
+    void SetInputDisabled()
+    {
+        GameInputReader.GetOrCreate().DisableGameplayInput();
     }
 }

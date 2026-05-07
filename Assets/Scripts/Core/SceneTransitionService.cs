@@ -7,6 +7,7 @@ public class SceneTransitionService : MonoBehaviour
     public static SceneTransitionService Instance { get; private set; }
 
     internal bool isLoading;
+    string loadingSceneName;
 
     public static SceneTransitionService GetOrCreate()
     {
@@ -82,6 +83,7 @@ public class SceneTransitionService : MonoBehaviour
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         isLoading = false;
+        loadingSceneName = null;
     }
 
     private void LoadSceneInternal(string sceneName, bool showCursor)
@@ -91,7 +93,7 @@ public class SceneTransitionService : MonoBehaviour
 
     private void LoadSceneInternal(string sceneName, bool showCursor, bool resetSceneServices)
     {
-        if (!PrepareLoad(showCursor))
+        if (!PrepareLoad(sceneName, showCursor, resetSceneServices))
         {
             return;
         }
@@ -106,7 +108,7 @@ public class SceneTransitionService : MonoBehaviour
 
     private AsyncOperation LoadSceneAsyncInternal(string sceneName, bool showCursor)
     {
-        if (!PrepareLoad(showCursor))
+        if (!PrepareLoad(sceneName, showCursor, false))
         {
             return null;
         }
@@ -114,13 +116,37 @@ public class SceneTransitionService : MonoBehaviour
         return SceneManager.LoadSceneAsync(sceneName);
     }
 
-    private bool PrepareLoad(bool showCursor)
+    private bool PrepareLoad(string sceneName, bool showCursor, bool forceReload)
     {
+        if (string.IsNullOrEmpty(sceneName))
+        {
+            BuildSafeLogger.WarnOnce(
+                nameof(SceneTransitionService) + ".BlockedEmptySceneLoad",
+                "Blocked empty scene load request.",
+                this,
+                null,
+                null,
+                nameof(PrepareLoad));
+            return false;
+        }
+
         if (isLoading)
         {
             BuildSafeLogger.WarnOnce(
-                nameof(SceneTransitionService) + ".BlockedDuplicateSceneLoad",
-                "Blocked duplicate scene load request.",
+                nameof(SceneTransitionService) + ".BlockedDuplicateSceneLoad." + loadingSceneName,
+                "Blocked duplicate scene load request: " + sceneName + ".",
+                this,
+                null,
+                null,
+                nameof(PrepareLoad));
+            return false;
+        }
+
+        if (!forceReload && SceneManager.GetActiveScene().name == sceneName)
+        {
+            BuildSafeLogger.WarnOnce(
+                nameof(SceneTransitionService) + ".BlockedAlreadyActiveScene." + sceneName,
+                "Blocked scene load because scene is already active: " + sceneName + ".",
                 this,
                 null,
                 null,
@@ -129,37 +155,14 @@ public class SceneTransitionService : MonoBehaviour
         }
 
         isLoading = true;
+        loadingSceneName = sceneName;
         GameFlowController.GetOrCreate().BeginSceneTransition();
-        Time.timeScale = 1f;
 
         if (showCursor)
         {
             CursorStateService.GetOrCreate().ShowCursor();
         }
 
-        DisablePlayerInput();
         return true;
-    }
-
-    private void DisablePlayerInput()
-    {
-        var playerObject = GameObject.FindGameObjectWithTag("Player");
-        if (playerObject == null)
-        {
-            BuildSafeLogger.WarnOnce(
-                nameof(SceneTransitionService) + ".MissingPlayer",
-                "Cannot disable player input because Player tag was not found.",
-                this,
-                null,
-                "Player",
-                nameof(DisablePlayerInput));
-            return;
-        }
-
-        var player = playerObject.GetComponent<Behaviour>();
-        if (player != null)
-        {
-            player.enabled = false;
-        }
     }
 }

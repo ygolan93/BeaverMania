@@ -596,6 +596,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 488436994210877284}
+  - component: {fileID: 9213008124018772717}
   m_Layer: 10
   m_Name: Jaw_Right.002
   m_TagString: ScorpionDamage
@@ -14223,6 +14224,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5066925737560810639}
   - component: {fileID: 3877933947483839307}
+  - component: {fileID: 9213008124018772718}
   m_Layer: 10
   m_Name: Jaw_Left.001
   m_TagString: ScorpionDamage
@@ -15448,6 +15450,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7425133578424921306}
+  - component: {fileID: 9213008124018772719}
   m_Layer: 10
   m_Name: Jaw_Left.002
   m_TagString: ScorpionDamage
@@ -27655,6 +27658,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8895126728533923960}
   - component: {fileID: 2631068468930072073}
+  - component: {fileID: 9213008124018772720}
   m_Layer: 10
   m_Name: Jaw_Right.001
   m_TagString: ScorpionDamage
@@ -27702,6 +27706,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8246704633578321935}
   - component: {fileID: 747129927400765033}
+  - component: {fileID: 9213008124018772721}
   m_Layer: 10
   m_Name: StingTipRight
   m_TagString: ScorpionSting
@@ -40144,6 +40149,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7348824203352052240}
   - component: {fileID: 3574585947653929594}
+  - component: {fileID: 9213008124018772722}
   m_Layer: 10
   m_Name: Jaw_Right.002_end
   m_TagString: ScorpionDamage
@@ -41112,6 +41118,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5484639992963058287}
   - component: {fileID: 9083913364248970971}
+  - component: {fileID: 9213008124018772723}
   m_Layer: 10
   m_Name: Jaw_Left.002_end
   m_TagString: ScorpionDamage
@@ -69487,3 +69494,122 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 3044511001834101923, guid: 71d184d9fbae1f445a496f7f9163aedd, type: 3}
+--- !u!114 &9213008124018772717
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 215392670409516367}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8df536e3857d4982a926b11d2b0dfd3a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  owner: {fileID: 6003487228124988378}
+  damage: 15
+  damageType: 4
+  parryable: 1
+  hitCooldownSeconds: 0.5
+--- !u!114 &9213008124018772718
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2469635405668557095}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8df536e3857d4982a926b11d2b0dfd3a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  owner: {fileID: 6003487228124988378}
+  damage: 15
+  damageType: 4
+  parryable: 1
+  hitCooldownSeconds: 0.5
+--- !u!114 &9213008124018772719
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2706127914887153617}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8df536e3857d4982a926b11d2b0dfd3a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  owner: {fileID: 6003487228124988378}
+  damage: 15
+  damageType: 4
+  parryable: 1
+  hitCooldownSeconds: 0.5
+--- !u!114 &9213008124018772720
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3344543398322002191}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8df536e3857d4982a926b11d2b0dfd3a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  owner: {fileID: 6003487228124988378}
+  damage: 15
+  damageType: 4
+  parryable: 1
+  hitCooldownSeconds: 0.5
+--- !u!114 &9213008124018772721
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3355890401625801903}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8df536e3857d4982a926b11d2b0dfd3a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  owner: {fileID: 6003487228124988378}
+  damage: 30
+  damageType: 4
+  parryable: 1
+  hitCooldownSeconds: 0.5
+--- !u!114 &9213008124018772722
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4919099620363232559}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8df536e3857d4982a926b11d2b0dfd3a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  owner: {fileID: 6003487228124988378}
+  damage: 15
+  damageType: 4
+  parryable: 1
+  hitCooldownSeconds: 0.5
+--- !u!114 &9213008124018772723
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5159342246217625383}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8df536e3857d4982a926b11d2b0dfd3a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  owner: {fileID: 6003487228124988378}
+  damage: 15
+  damageType: 4
+  parryable: 1
+  hitCooldownSeconds: 0.5

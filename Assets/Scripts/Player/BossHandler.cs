@@ -76,31 +76,9 @@ public class BossHandler : MonoBehaviour
             player.FreeLook.m_LookAt = Boss.transform;   
         }
     }
+    [System.Obsolete("Scorpion boss damage is applied by BossHitbox components on prefab hitbox colliders.")]
     public void OnTriggerEnter(Collider OBJ)
     {
-        if (Boss.isAttacking==true)
-        {
-            if (OBJ.gameObject.CompareTag("ScorpionDamage"))
-            {
-                player.TakeDamage(15);
-                if (player.CurrentHealth <= 0)
-                {
-                    player.HandleFailure(PlayerFailureReason.BossDamage);
-                }
-                //bossSound.Sting();
-            }
-            if (OBJ.gameObject.CompareTag("ScorpionSting"))
-            {
-                player.TakeDamage(30);
-                if (player.CurrentHealth <= 0)
-                {
-                    player.HandleFailure(PlayerFailureReason.BossDamage);
-                }
-                //bossSound.Sting();
-            }
-
-        }
-
     }
 
 

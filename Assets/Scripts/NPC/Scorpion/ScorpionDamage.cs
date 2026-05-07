@@ -1,7 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+[System.Obsolete("Use BossHitbox on scorpion hitbox colliders. Kept only as a migration shim.")]
 public class ScorpionDamage : MonoBehaviour
 {
     [SerializeField] HazardDamageConfig damageConfig;
@@ -14,31 +13,18 @@ public class ScorpionDamage : MonoBehaviour
     private void Awake()
     {
         ApplyConfig();
-        var bossObject = GameObject.FindGameObjectWithTag("Boss");
-        BossAudio = bossObject != null ? bossObject.GetComponent<NPC_Audio>() : null;
-        Scorpion = bossObject != null ? bossObject.GetComponent<ScorpionScript>() : null;
-        Player = transform.GetComponent<Behaviour>();
 
-        if (!ValidateReferences())
+        if (Scorpion == null)
         {
-            return;
+            var bossObject = GameObject.FindGameObjectWithTag("Boss");
+            Scorpion = bossObject != null ? bossObject.GetComponent<ScorpionScript>() : null;
         }
     }
-
-    bool ValidateReferences()
-    {
-        return RuntimeReferenceValidator.Require(Player, this, nameof(Player)) &
-            RuntimeReferenceValidator.Require(BossAudio, this, nameof(BossAudio)) &
-            RuntimeReferenceValidator.Require(Scorpion, this, nameof(Scorpion));
-    }
-    float ParryChipDamage => damageConfig != null ? damageConfig.scorpionParryChipDamage : 6f;
-    int ParryCounterDamage => damageConfig != null ? damageConfig.scorpionParryCounterDamage : 10;
 
     void ApplyConfig()
     {
         if (damageConfig == null)
         {
-            BuildSafeLogger.WarnOnce(nameof(ScorpionDamage) + ".MissingConfig", "Missing hazard damage config; using prefab values.", this, nameof(damageConfig));
             return;
         }
 
@@ -46,68 +32,18 @@ public class ScorpionDamage : MonoBehaviour
         Sting = damageConfig.scorpionStingDamage;
     }
 
+    [System.Obsolete("Use BossHitbox on scorpion hitbox colliders.")]
     public void OnTriggerEnter(Collider OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Arena"))
+        var hitbox = OBJ.GetComponent<BossHitbox>();
+        if (hitbox == null)
         {
-            Scorpion = GameObject.FindGameObjectWithTag("Boss").GetComponent<ScorpionScript>();
+            return;
         }
-        if (OBJ.gameObject.CompareTag("ScorpionDamage"))
-        {
-            if (Scorpion.combo < Scorpion.comboLimit)
-            {
-                if (Player.isParried == false)
-                {
-                    if (CombatDebugGate.AllowsDamage(Player.gameObject))
-                    {
-                        Player.TakeDamage(JawClamp);
-                        if (Player.CurrentHealth <= 0)
-                        {
-                            Player.HandleFailure(PlayerFailureReason.BossDamage);
-                        }
-                    }
-                    BossAudio.Sting();
-                }
-                if (Player.isParried == true)
-                {
-                    Player.TakeDamage(ParryChipDamage);
-                    if (Player.CurrentHealth <= 0)
-                    {
-                        Player.HandleFailure(PlayerFailureReason.BossDamage);
-                    }
-                    Scorpion.TakeDamage(ParryCounterDamage);
-                    Scorpion.combo++;
-                }
-            }
 
-        }
-        if (OBJ.gameObject.CompareTag("ScorpionSting"))
+        if (hitbox.owner == null)
         {
-            if (Scorpion.combo < Scorpion.comboLimit)
-            {
-                if (Player.isParried == false)
-                {
-                    if (CombatDebugGate.AllowsDamage(Player.gameObject))
-                    {
-                        Player.TakeDamage(Sting);
-                        if (Player.CurrentHealth <= 0)
-                        {
-                            Player.HandleFailure(PlayerFailureReason.BossDamage);
-                        }
-                    }
-                    BossAudio.Sting();
-                }
-                if (Player.isParried == true)
-                {
-                    Player.TakeDamage(ParryChipDamage);
-                    if (Player.CurrentHealth <= 0)
-                    {
-                        Player.HandleFailure(PlayerFailureReason.BossDamage);
-                    }
-                    Scorpion.TakeDamage(ParryCounterDamage);
-                    Scorpion.combo++;
-                }
-            }
+            hitbox.owner = Scorpion;
         }
     }
 }

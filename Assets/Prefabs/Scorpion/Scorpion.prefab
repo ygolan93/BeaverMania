@@ -53838,6 +53838,7 @@ GameObject:
   - component: {fileID: 6003487228124988380}
   - component: {fileID: 3962957574859753933}
   - component: {fileID: 6003487228124988373}
+  - component: {fileID: 6003487228124988372}
   m_Layer: 10
   m_Name: Scorpion
   m_TagString: Scorpion
@@ -53909,6 +53910,31 @@ MonoBehaviour:
   Explosion: {fileID: 8530238590734212565}
   StunEffect: {fileID: 2948367004167687818}
   Sound: {fileID: 7866589409725028557}
+  feedback: {fileID: 6003487228124988372}
+--- !u!114 &6003487228124988372
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6003487228124988382}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5eddf2f5ce7442378a32f39e80880024, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  hitEffect:
+    target: {fileID: 3298826728073757572}
+    duration: 0.08
+  slashHitEffect:
+    target: {fileID: 0}
+    duration: 0.08
+  deathEffect:
+    target: {fileID: 8530238590734212565}
+    duration: 0.08
+  hazardEffect:
+    target: {fileID: 3298826728073757572}
+    duration: 0.08
 --- !u!114 &6003487228124988379
 MonoBehaviour:
   m_ObjectHideFlags: 0

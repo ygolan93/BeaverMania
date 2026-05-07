@@ -15354,6 +15354,7 @@ GameObject:
   - component: {fileID: 4992882469211511398}
   - component: {fileID: 8675218551507148661}
   - component: {fileID: 9001000000000000001}
+  - component: {fileID: 9001000000000000002}
   m_Layer: 10
   m_Name: LVL1 Wasp
   m_TagString: NPC
@@ -15453,6 +15454,7 @@ MonoBehaviour:
   HitEffect: {fileID: 7022265487677813612}
   SlashEffect: {fileID: 8559851003464421313}
   Explosion: {fileID: 1892078723244562, guid: 46876a2780737ec45a19d62f88e5ce56, type: 3}
+  feedback: {fileID: 9001000000000000002}
   Sound: {fileID: 7731927592017154948}
   BuzzSource: {fileID: 3110248994183801233}
   Body: {fileID: 3724478295433116455, guid: 7a893927e808bf64082005bcae3b4f22, type: 3}
@@ -15460,6 +15462,30 @@ MonoBehaviour:
   Wing: {fileID: 8956572691331247483, guid: 5d9e03612385e4843bf7e18348a81546, type: 3}
   Leg: {fileID: 8780894494686982430, guid: a9033b1178bcea14db0934d547c5b242, type: 3}
   Reward: {fileID: 7679416759401954559, guid: 9f5cfb054d2b7174882402aae5da7193, type: 3}
+--- !u!114 &9001000000000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2969994238874094856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5eddf2f5ce7442378a32f39e80880024, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  hitEffect:
+    target: {fileID: 7022265487677813612}
+    duration: 0.08
+  slashHitEffect:
+    target: {fileID: 8559851003464421313}
+    duration: 0.08
+  deathEffect:
+    target: {fileID: 0}
+    duration: 0.08
+  hazardEffect:
+    target: {fileID: 0}
+    duration: 0.08
 --- !u!114 &2735624339671731889
 MonoBehaviour:
   m_ObjectHideFlags: 0

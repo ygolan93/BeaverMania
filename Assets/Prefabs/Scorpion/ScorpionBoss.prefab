@@ -51334,6 +51334,7 @@ GameObject:
   - component: {fileID: 6107630362012945911}
   - component: {fileID: 3561575782887557094}
   - component: {fileID: 9002000000000000001}
+  - component: {fileID: 9002000000000000002}
   m_Layer: 10
   m_Name: ScorpionBoss
   m_TagString: Scorpion
@@ -51401,6 +51402,31 @@ MonoBehaviour:
   Explosion: {fileID: 8211043342563841022}
   StunEffect: {fileID: 3420684630745268385}
   Sound: {fileID: 3272819708306223537}
+  feedback: {fileID: 9002000000000000002}
+--- !u!114 &9002000000000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6107630362012945909}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5eddf2f5ce7442378a32f39e80880024, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  hitEffect:
+    target: {fileID: 3050568388787473839}
+    duration: 0.08
+  slashHitEffect:
+    target: {fileID: 0}
+    duration: 0.08
+  deathEffect:
+    target: {fileID: 8211043342563841022}
+    duration: 0.08
+  hazardEffect:
+    target: {fileID: 3050568388787473839}
+    duration: 0.08
 --- !u!114 &6107630362012945904
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -29,7 +29,7 @@ public class WayPoint : MonoBehaviour
         }
         else
         {
-            Debug.LogError("Index i is out of bounds.");
+            BuildSafeLogger.ErrorOnce("WayPoint.Start.IndexOutOfBounds", "Index i is out of bounds.", this);
         }
     }
 
@@ -91,12 +91,12 @@ public class WayPoint : MonoBehaviour
                 }
                 else
                 {
-                    Debug.LogWarning("Parsed index is out of bounds: " + i);
+                    BuildSafeLogger.WarnOnce("WayPoint.Trigger.ParsedIndexOutOfBounds", "Parsed index is out of bounds: " + i, this);
                 }
             }
             else
             {
-                Debug.LogWarning("Failed to parse waypoint name: " + OBJ.gameObject.name);
+                BuildSafeLogger.WarnOnce("WayPoint.Trigger.ParseFailed." + OBJ.gameObject.name, "Failed to parse waypoint name: " + OBJ.gameObject.name, this);
             }
         }
     }

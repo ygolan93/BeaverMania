@@ -1,10 +1,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public static class BuildSafeLogger
 {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
+    const string LoggingConfigAssetPath = "Assets/Config/LoggingConfig.asset";
     const string LoggingConfigResourcePath = "RuntimeConfig/LoggingConfig";
     static LoggingConfig loggingConfig;
     private static readonly HashSet<string> infoKeys = new HashSet<string>();
@@ -43,7 +47,26 @@ public static class BuildSafeLogger
     }
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-    static LoggingConfig Config => loggingConfig != null ? loggingConfig : (loggingConfig = Resources.Load<LoggingConfig>(LoggingConfigResourcePath)) ?? ScriptableObject.CreateInstance<LoggingConfig>();
+    static LoggingConfig Config
+    {
+        get
+        {
+            if (loggingConfig != null)
+            {
+                return loggingConfig;
+            }
+
+#if UNITY_EDITOR
+            loggingConfig = AssetDatabase.LoadAssetAtPath<LoggingConfig>(LoggingConfigAssetPath);
+            if (loggingConfig != null)
+            {
+                return loggingConfig;
+            }
+#endif
+
+            return (loggingConfig = Resources.Load<LoggingConfig>(LoggingConfigResourcePath)) ?? ScriptableObject.CreateInstance<LoggingConfig>();
+        }
+    }
 
     private static string ResolveKey(string key, string message, Object owner, string missingField, string missingTag, string missingMethod)
     {

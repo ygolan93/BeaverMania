@@ -21,12 +21,6 @@ public class AnimatedAttack : MonoBehaviour
         Collider[] hitEnemies = Physics.OverlapSphere(origin, range, enemyLayers);
         foreach (Collider enemy in hitEnemies)
         {
-            if (enemy.name != null)
-            {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-                Debug.Log("Hit " + enemy.name);
-#endif
-            }
             if (enemy.TryGetComponent(out IDamageable damageable))
             {
                 damageable.TakeDamage(new DamageEvent

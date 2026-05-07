@@ -10,7 +10,7 @@ public class MergeCollidersOnCollision : MonoBehaviour
     {
         if (collision.gameObject.tag == "Player")
         {
-            Debug.Log("Part added to bridge: " + collision.gameObject.name);
+            BuildSafeLogger.InfoOnce("MergeCollidersOnCollision.PartAdded", "Part added to bridge: " + collision.gameObject.name, this);
             MergeColliders(FirstPart, collision.gameObject);
         }
         

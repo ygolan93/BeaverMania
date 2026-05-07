@@ -83,11 +83,19 @@ public class BossHandler : MonoBehaviour
             if (OBJ.gameObject.CompareTag("ScorpionDamage"))
             {
                 player.TakeDamage(15);
+                if (player.CurrentHealth <= 0)
+                {
+                    player.HandleFailure(PlayerFailureReason.BossDamage);
+                }
                 //bossSound.Sting();
             }
             if (OBJ.gameObject.CompareTag("ScorpionSting"))
             {
                 player.TakeDamage(30);
+                if (player.CurrentHealth <= 0)
+                {
+                    player.HandleFailure(PlayerFailureReason.BossDamage);
+                }
                 //bossSound.Sting();
             }
 

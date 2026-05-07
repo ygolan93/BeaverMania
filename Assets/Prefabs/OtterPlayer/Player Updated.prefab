@@ -66569,6 +66569,7 @@ GameObject:
   - component: {fileID: 8668838197977538418}
   - component: {fileID: 7624992565179513018}
   - component: {fileID: 7624992565179513016}
+  - component: {fileID: 157913311816747088}
   m_Layer: 3
   m_Name: Player Updated
   m_TagString: Player
@@ -66838,6 +66839,19 @@ MonoBehaviour:
   FreeLook: {fileID: 1427810939599441655}
   CamForTraders: {fileID: 3156488547051756512}
   ChangeSpeech: 1
+--- !u!114 &157913311816747088
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7624992565179513158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4aa3be0aba8d4d7aa554c8a5d6996fc6, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  owner: {fileID: 7624992565179513156}
 --- !u!114 &7624992565179513157
 MonoBehaviour:
   m_ObjectHideFlags: 0

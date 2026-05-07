@@ -62,11 +62,38 @@ public class NPC_Basic : MonoBehaviour
         Wasp = GetComponent<Animator>();
         CurrentHealth = MaxHealth;
         PlayerTarget = GameObject.FindGameObjectWithTag("Player");
-        PlayerHealth = PlayerTarget.GetComponent<Behaviour>();
+        PlayerHealth = PlayerTarget != null ? PlayerTarget.GetComponent<Behaviour>() : null;
+
+        if (!ValidateReferences())
+        {
+            return;
+        }
+
         HitEffect.SetActive(false);
         RandoMovement();
         NPC.velocity = Vector3.forward;
         BuzzSource.SetActive(true);
+    }
+
+    bool ValidateReferences()
+    {
+        bool valid = RuntimeReferenceValidator.Require(NPC, this, nameof(NPC)) &
+            RuntimeReferenceValidator.Require(Wasp, this, nameof(Wasp)) &
+            RuntimeReferenceValidator.Require(PlayerTarget, this, "Player tag") &
+            RuntimeReferenceValidator.Require(PlayerHealth, this, nameof(PlayerHealth)) &
+            RuntimeReferenceValidator.Require(NPCHealthBar, this, nameof(NPCHealthBar)) &
+            RuntimeReferenceValidator.Require(HitEffect, this, nameof(HitEffect)) &
+            RuntimeReferenceValidator.Require(SlashEffect, this, nameof(SlashEffect)) &
+            RuntimeReferenceValidator.Require(Explosion, this, nameof(Explosion)) &
+            RuntimeReferenceValidator.Require(Sound, this, nameof(Sound)) &
+            RuntimeReferenceValidator.Require(BuzzSource, this, nameof(BuzzSource)) &
+            RuntimeReferenceValidator.Require(Body, this, nameof(Body)) &
+            RuntimeReferenceValidator.Require(Head, this, nameof(Head)) &
+            RuntimeReferenceValidator.Require(Wing, this, nameof(Wing)) &
+            RuntimeReferenceValidator.Require(Leg, this, nameof(Leg)) &
+            RuntimeReferenceValidator.Require(Reward, this, nameof(Reward));
+
+        return valid;
     }
 
     // Update is called once per frame

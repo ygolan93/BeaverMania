@@ -27,7 +27,7 @@ public class SceneTransitionService : MonoBehaviour
     public static void ReloadActiveScene()
     {
         var activeScene = SceneManager.GetActiveScene();
-        GetOrCreate().LoadSceneInternal(activeScene.name, activeScene.name == SceneNames.Menu);
+        GetOrCreate().LoadSceneInternal(activeScene.name, activeScene.name == SceneNames.Menu, true);
     }
 
     public static void LoadScene(string sceneName)

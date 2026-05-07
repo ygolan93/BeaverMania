@@ -1,9 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using TMPro;
-using UnityEngine.UI;
-public class DebugReference : MonoBehaviour
+using UnityEngine;
+
+public sealed class DebugReference : MonoBehaviour
 {
     public Behaviour Player;
     public ObjectiveUI PlayerObjective;
@@ -18,23 +16,35 @@ public class DebugReference : MonoBehaviour
     public TextMeshProUGUI GobletCount;
     public TextMeshProUGUI AppleCount;
     public TextMeshProUGUI ArrowMunition;
+
+    HudPresenter presenter;
+
     private void Start()
     {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
-        PlayerObjective = GameObject.FindGameObjectWithTag("Player").GetComponent<ObjectiveUI>();
+        presenter = GetComponent<HudPresenter>();
+        if (presenter == null)
+        {
+            presenter = gameObject.AddComponent<HudPresenter>();
+        }
+
+        presenter.Bind(Player, PlayerObjective, CheckpointService.GetOrCreate());
+        presenter.ObjectiveText = ObjectiveText;
+        presenter.DisplayText = DisplayText;
+        presenter.StaminaText = StaminaText;
+        presenter.LogCountText = LogCountText;
+        presenter.HealingDisplay = HealingDisplay;
+        presenter.CurrencyCount = CurrencyCount;
+        presenter.SeedCount = SeedCount;
+        presenter.GobletCount = GobletCount;
+        presenter.AppleCount = AppleCount;
+        presenter.ArrowMunition = ArrowMunition;
     }
 
-    void Update()
+    private void Update()
     {
-        ObjectiveText.text = PlayerObjective.Instruction;
-        DisplayText.text = Player.DebugText;
-        StaminaText.text = Player.StaminaText;
-        LogCountText.text = Player.LogCount;
-        CurrencyCount.text = Player.Wallet;
-        HealingDisplay.text = Player.HealingText;
-        SeedCount.text = Player.SeedText;
-        GobletCount.text = Player.GobletText;
-        AppleCount.text = Player.AppleText;
-        ArrowMunition.text = Player.ArrowText;
+        if (presenter != null)
+        {
+            presenter.RenderNow();
+        }
     }
 }

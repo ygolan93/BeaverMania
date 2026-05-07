@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using Cinemachine;
 using Cinemachine.Utility;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class Behaviour : MonoBehaviour
 {
@@ -43,10 +42,23 @@ public class Behaviour : MonoBehaviour
     [Header("Health")]
     float StopHurt = 0;
     [SerializeField] Rigidbody rb;
-    public float MaxHealth = 1000;
-    public float CurrentHealth;
-    public float MaxStamina = 100;
-    public float CurrentStamina;
+    [SerializeField] PlayerState state = new PlayerState();
+    public PlayerState State
+    {
+        get
+        {
+            if (state == null)
+            {
+                state = new PlayerState();
+            }
+
+            return state;
+        }
+    }
+    public float MaxHealth { get => State.maxHealth; set => State.maxHealth = value; }
+    public float CurrentHealth { get => State.currentHealth; set => State.currentHealth = value; }
+    public float MaxStamina { get => State.maxStamina; set => State.maxStamina = value; }
+    public float CurrentStamina { get => State.currentStamina; set => State.currentStamina = value; }
     readonly float StaminaClockInitial = 0.5f;
     float StaminaClock;
     public Health_Bar_Script HealthBar;
@@ -54,9 +66,7 @@ public class Behaviour : MonoBehaviour
     public bool TouchShroom;
     public bool hurt;
     public bool Rolling;
-    double HealthPercent;
-    double StaminaPercent;
-    public int Lives;
+    public int Lives { get => State.lives; set => State.lives = value; }
     public GameObject ICON_1;
     public GameObject ICON_2;
     public GameObject ICON_3;
@@ -143,23 +153,122 @@ public class Behaviour : MonoBehaviour
     [SerializeField] GameObject MunitionDisplay;
     public float moveSpeed = 5.0f;
     public GameObject LooseScreen;
+    [SerializeField] LoseMenuController loseMenuController;
     public bool isAtTrader = false;
     public string LogCount;
     public string DebugText;
     public string StaminaText;
     public string HealingText;
     public string AppleText;
-    public int GobletPickup = 0;
-    public int Apple;
-    public int Currency = 0;
-    public int NutCount;
+    public int GobletPickup { get => State.gobletPickup; set => State.gobletPickup = value; }
+    public int Apple { get => State.apple; set => State.apple = value; }
+    public int Currency { get => State.currency; set => State.currency = value; }
+    public int NutCount { get => State.nutCount; set => State.nutCount = value; }
     public string SeedText;
     public string Wallet;
-    public GameMaster GM;
     public GameObject AimIcon;
     public CinemachineFreeLook FreeLook;
     public CinemachineFreeLook CamForTraders;
     public float ChangeSpeech = 1F;
+    GameInputReader inputReader;
+    PlayerHealthController healthController;
+    PlayerInventory inventory;
+    PlayerInteractionController interactionController;
+    PlayerCombatController combatController;
+    PlayerMovementController movementController;
+
+
+    PlayerHealthController Health
+    {
+        get
+        {
+            if (healthController == null)
+            {
+                healthController = GetComponent<PlayerHealthController>();
+                if (healthController == null)
+                {
+                    healthController = gameObject.AddComponent<PlayerHealthController>();
+                }
+            }
+
+            return healthController;
+        }
+    }
+
+    PlayerInventory Inventory
+    {
+        get
+        {
+            if (inventory == null)
+            {
+                inventory = GetComponent<PlayerInventory>();
+                if (inventory == null)
+                {
+                    inventory = gameObject.AddComponent<PlayerInventory>();
+                }
+                inventory.Initialize(this);
+            }
+
+            return inventory;
+        }
+    }
+
+    PlayerInteractionController Interaction
+    {
+        get
+        {
+            if (interactionController == null)
+            {
+                interactionController = GetComponent<PlayerInteractionController>();
+                if (interactionController == null)
+                {
+                    interactionController = gameObject.AddComponent<PlayerInteractionController>();
+                }
+                interactionController.Initialize(this, inputReader);
+            }
+
+            return interactionController;
+        }
+    }
+
+    PlayerCombatController Combat
+    {
+        get
+        {
+            if (combatController == null)
+            {
+                combatController = GetComponent<PlayerCombatController>();
+                if (combatController == null)
+                {
+                    combatController = gameObject.AddComponent<PlayerCombatController>();
+                }
+                combatController.Initialize(this);
+            }
+
+            return combatController;
+        }
+    }
+
+    PlayerMovementController Movement
+    {
+        get
+        {
+            if (movementController == null)
+            {
+                movementController = GetComponent<PlayerMovementController>();
+                if (movementController == null)
+                {
+                    movementController = gameObject.AddComponent<PlayerMovementController>();
+                }
+                movementController.Initialize(this);
+            }
+
+            return movementController;
+        }
+    }
+
+    public void ToggleParryCounterAttack() => WhichAttack = !WhichAttack;
+    public void SetAppleModelActive(bool active) => appleOBJ.SetActive(active);
 
     public void OnCollisionEnter(Collision OBJ)
     {
@@ -178,18 +287,18 @@ public class Behaviour : MonoBehaviour
 
             if (OBJ.gameObject.CompareTag("Seed"))
             {
-                NutCount++;
+                Inventory.AddSeed();
                 Sound.PickItem();
             }
             if (OBJ.gameObject.CompareTag("Apple"))
             {
                 Sound.PickUp2();
-                Apple++;
+                Inventory.AddApple();
             }
             if (OBJ.gameObject.CompareTag("GobletKey"))
             {
                 Sound.PickUp2();
-                GobletPickup++;
+                Inventory.AddGoblet();
                 Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
                 Destroy(OBJ.gameObject);
             }
@@ -328,7 +437,7 @@ public class Behaviour : MonoBehaviour
         {
             if (Lives > 0)
             {
-                transform.position = GM.lastCheckPointPos + new Vector3(1, 1, 1);
+                transform.position = CheckpointService.GetOrCreate().RespawnPosition(new Vector3(1, 1, 1));
                 Instantiate(PopUpEffect, transform.position, Quaternion.identity);
                 Lives--;
             }
@@ -370,7 +479,7 @@ public class Behaviour : MonoBehaviour
         }
         if (OBJ.gameObject.CompareTag("Life"))
         {
-            HealingText = "Checkpoint saved";
+            State.checkpointMessageUntil = Time.time + 3f;
         }
         if (OBJ.gameObject.CompareTag("Bridge"))
         {
@@ -420,7 +529,7 @@ public class Behaviour : MonoBehaviour
         }
         if (OBJ.gameObject.CompareTag("Life"))
         {
-            GM.lastCheckPointPos = OBJ.transform.position;
+            SaveCheckpoint(OBJ.transform.position);
             Plattering = ("Shroom!");
             ChangeSpeech = 1;
             if (CurrentHealth < MaxHealth)
@@ -436,19 +545,11 @@ public class Behaviour : MonoBehaviour
             var skip = OBJ.gameObject.GetComponent<Trader>().skipPressed;
             if (skip ==false)
             {
-                ShowCursor();
-                isAtTrader = true;
-                FreeLook.enabled = false;
-                CamForTraders.enabled = true;
-                CamForTraders.m_LookAt = OBJ.transform;
+                Interaction.EnterTrader(OBJ);
             }
             if (skip ==true)
             {
-                isAtTrader = false;
-                CamForTraders.enabled = false;
-                CamForTraders.m_LookAt = null;
-                FreeLook.enabled = true;
-                FreeLook.m_LookAt.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Root.position), 0.5f);
+                Interaction.ExitTrader();
             }
         }
         if (OBJ.gameObject.CompareTag("House"))
@@ -481,11 +582,7 @@ public class Behaviour : MonoBehaviour
         }
         if (OBJ.gameObject.CompareTag("Trader"))
         {
-            isAtTrader = false;
-            CamForTraders.enabled = false;
-            CamForTraders.m_LookAt = null;
-            FreeLook.enabled = true;
-            FreeLook.m_LookAt.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Root.position), 0.5f);
+            Interaction.ExitTrader();
         }
         if (OBJ.gameObject.CompareTag("House"))
         {
@@ -499,32 +596,7 @@ public class Behaviour : MonoBehaviour
             scorpAttack = false;
         }
     }
-    public void TakeDamage(float Damage)
-    {
-        if (isParried == false)
-        {
-            CurrentHealth -= Damage;
-            HealthBar.SetHealth(CurrentHealth);
-            if (Damage > 0)
-            {
-                hurt = true;
-                heal = false;
-            }
-            if (Damage < 0)
-            {
-                hurt = false;
-                heal = true;
-            }
-        }
-        if (isParried == true)
-        {
-            WhichAttack = !WhichAttack;
-            DefendAnim = 0.3f;
-            Defend = true;
-            CurrentStamina -= Damage;
-            HealthBar.SetStamina(CurrentStamina);
-        }
-    }
+    public void TakeDamage(float Damage) => Health.TakeDamage(Damage);
     public void PlayerMove(Vector3 Direction)
     {
         movementInvoked = true;
@@ -654,44 +726,80 @@ public class Behaviour : MonoBehaviour
             i++;
         }
     }
-    public void ShowCursor()
-    {
-        //show mouse icon
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
-    }
-    public void HideCursor()
-    {
-        //Lock and hide mouse icon
-        FreeLook.m_LookAt = Root;
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-    }
+    public void ShowCursor() => Interaction.ShowCursor();
+    public void HideCursor() => Interaction.HideCursor();
     public void ActivateLooseMenu()
     {
         //MusicOP.StopMusic();
-        Time.timeScale = 0;
+        GameFlowController.GetOrCreate().SetGameOver();
         ShowCursor();
-        LooseScreen.SetActive(true);
+        ShowLosePanel();
+        GetInputReader().DisableGameplayInput();
     }
     public void HideLooseMenu()
     {
         //MusicOP.ResumeMusic();
-        Time.timeScale = 1;
+        GameFlowController.GetOrCreate().SetPlaying();
         HideCursor();
-        LooseScreen.SetActive(false);
+        GetInputReader().EnableGameplayInput();
+        HideLosePanel();
     }
+
+    void ShowLosePanel()
+    {
+        if (loseMenuController == null && LooseScreen != null)
+        {
+            loseMenuController = LooseScreen.GetComponentInParent<LoseMenuController>();
+        }
+
+        if (loseMenuController != null)
+        {
+            loseMenuController.ShowLosePanel();
+            return;
+        }
+
+        if (LooseScreen != null)
+        {
+            LooseScreen.SetActive(true);
+        }
+    }
+
+    void HideLosePanel()
+    {
+        if (loseMenuController == null && LooseScreen != null)
+        {
+            loseMenuController = LooseScreen.GetComponentInParent<LoseMenuController>();
+        }
+
+        if (loseMenuController != null)
+        {
+            loseMenuController.HideLosePanel();
+            return;
+        }
+
+        if (LooseScreen != null)
+        {
+            LooseScreen.SetActive(false);
+        }
+    }
+
     public void RestartCheckpoint()
     {
         HealthBar.SetHealth(MaxHealth);
         CurrentHealth = MaxHealth;
-        transform.position = GM.lastCheckPointPos;
+        transform.position = CheckpointService.GetOrCreate().LastCheckpointPosition;
         Instantiate(PopUpEffect, transform.position, Quaternion.identity);
         Lives--;
     }
+    void SaveCheckpoint(Vector3 position)
+    {
+        State.checkpointPosition = position;
+        CheckpointService.GetOrCreate().SaveCheckpoint(position);
+    }
+
     public void RestartGame()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        SceneTransitionService.ReloadActiveScene();
     }
     public void GobletON()
     {
@@ -772,21 +880,104 @@ public class Behaviour : MonoBehaviour
         GoldBrick.SetActive(false);
         Physics.IgnoreLayerCollision(gameObject.layer, 7, false);
     }
+    GameInputReader GetInputReader()
+    {
+        if (inputReader == null)
+        {
+            inputReader = GameInputReader.GetOrCreate();
+        }
+
+        return inputReader;
+    }
+
+    bool IsGameplayInputBlocked()
+    {
+        var reader = GetInputReader();
+        return reader != null && !reader.IsGameplayInputEnabled;
+    }
+
+    void HandleDeathState() => Health.HandleDeathState();
+
+    bool ValidateStartReferences()
+    {
+        Player = GetComponent<Rigidbody>();
+
+        bool valid = RuntimeReferenceValidator.Require(Player, this, nameof(Player)) &
+            RuntimeReferenceValidator.Require(Load, this, nameof(Load)) &
+            RuntimeReferenceValidator.Require(Root, this, nameof(Root)) &
+            RuntimeReferenceValidator.Require(Otter, this, nameof(Otter)) &
+            RuntimeReferenceValidator.Require(otterAction, this, nameof(otterAction)) &
+            RuntimeReferenceValidator.Require(arrowModel, this, nameof(arrowModel)) &
+            RuntimeReferenceValidator.Require(HealthBar, this, nameof(HealthBar)) &
+            RuntimeReferenceValidator.Require(HoneyJar, this, nameof(HoneyJar)) &
+            RuntimeReferenceValidator.Require(GoldBrick, this, nameof(GoldBrick)) &
+            RuntimeReferenceValidator.Require(PopUpEffect, this, nameof(PopUpEffect)) &
+            RuntimeReferenceValidator.Require(HealEffect, this, nameof(HealEffect)) &
+            RuntimeReferenceValidator.Require(ElectricEffect, this, nameof(ElectricEffect)) &
+            RuntimeReferenceValidator.Require(MunitionDisplay, this, nameof(MunitionDisplay)) &
+            RuntimeReferenceValidator.Require(LooseScreen, this, nameof(LooseScreen)) &
+            RuntimeReferenceValidator.Require(AimIcon, this, nameof(AimIcon)) &
+            RuntimeReferenceValidator.Require(FreeLook, this, nameof(FreeLook)) &
+            RuntimeReferenceValidator.Require(CamForTraders, this, nameof(CamForTraders)) &
+            RuntimeReferenceValidator.Require(HologramedBridge, this, nameof(HologramedBridge)) &
+            RuntimeReferenceValidator.Require(appleOBJ, this, nameof(appleOBJ)) &
+            RuntimeReferenceValidator.Require(gobletOBJ, this, nameof(gobletOBJ));
+
+        if (ArmorSet != null)
+        {
+            for (int i = 0; i < ArmorSet.Length; i++)
+            {
+                valid &= RuntimeReferenceValidator.Require(ArmorSet[i], this, $"{nameof(ArmorSet)}[{i}]");
+            }
+        }
+
+        if (Bow != null)
+        {
+            for (int i = 0; i < Bow.Length; i++)
+            {
+                valid &= RuntimeReferenceValidator.Require(Bow[i], this, $"{nameof(Bow)}[{i}]");
+            }
+        }
+
+        return valid;
+    }
+
     public void Start()
     {
+        if (!ValidateStartReferences())
+        {
+            return;
+        }
+
+        inputReader = GameInputReader.GetOrCreate();
+        inputReader.EnableGameplayInput();
+        Inventory.Initialize(this);
+        Interaction.Initialize(this, inputReader);
+        Combat.Initialize(this);
+        Movement.Initialize(this);
         arrowModel.SetActive(false);
         bowAim = new Vector3(-0.33f, 20f, -0.3f);
         CamForTraders.enabled = false;
         Instantiate(PopUpEffect, Root.position, Quaternion.identity);
         HideCursor();
+        SaveCheckpoint(transform.position);
         AimIcon.SetActive(false);
         MunitionDisplay.SetActive(false);
-        Player = GetComponent<Rigidbody>();
-        GM = GameObject.FindGameObjectWithTag("GM").GetComponent<GameMaster>();
         //Enable/Disable Background music
         if (seekMusic == true)
         {
-            Music = GameObject.Find("GameMusic").GetComponent<MusicPlaylist>();
+            var musicObject = GameObject.Find("GameMusic");
+            if (!RuntimeReferenceValidator.Require(musicObject, this, "GameMusic"))
+            {
+                return;
+            }
+
+            Music = musicObject.GetComponent<MusicPlaylist>();
+            if (!RuntimeReferenceValidator.Require(Music, this, nameof(Music)))
+            {
+                return;
+            }
+
             Music.transform.parent = Player.transform;
             Music.transform.position = new Vector3(0, 0, 0);
             var MusicSwitches = GameObject.FindGameObjectsWithTag("SwitchMusic");
@@ -805,10 +996,7 @@ public class Behaviour : MonoBehaviour
                 item.SetActive(false);
             }
         }
-        CurrentHealth = MaxHealth;
-        HealthBar.SetMaxHealth(CurrentHealth);
-        CurrentStamina = MaxStamina;
-        HealthBar.SetMaxStamina(CurrentStamina);
+        Health.Initialize(this);
         HealShape = HealEffect.shape;
         ParryOFF();
         HoneyOFF();
@@ -821,7 +1009,7 @@ public class Behaviour : MonoBehaviour
         FallClock = InitialFall;
         InsertWalk = Walk;
         InsertRun = Run;
-        LooseScreen.SetActive(false);
+        HideLosePanel();
         HologramedBridge.SetActive(false);
         appleOBJ.SetActive(false);
         gobletOBJ.SetActive(false);
@@ -840,6 +1028,12 @@ public class Behaviour : MonoBehaviour
     [System.Obsolete]
     public void Update()
     {
+        HandleDeathState();
+        if (IsGameplayInputBlocked())
+        {
+            return;
+        }
+
         //Parry animations
         if (Defend == true)
         {
@@ -876,51 +1070,10 @@ public class Behaviour : MonoBehaviour
         }
 
         //Reload Stamina Bar
-        if (isParried == false)
-        {
-            if (CurrentStamina > MaxStamina)
-            {
-                CurrentStamina = MaxStamina;
-            }
-            if (CurrentStamina < MaxStamina && !Input.GetKey(KeyCode.LeftControl))
-            {
-                if (!Input.GetKey(KeyCode.Mouse1) && isParried == false && !Input.GetKey(KeyCode.Mouse0) && !Input.GetKey(KeyCode.F))
-                {
-                    StaminaClock -= Time.deltaTime;
-                    if (StaminaClock <= 0)
-                    {
-                        CurrentStamina += 1;
-                        HealthBar.SetStamina(CurrentStamina);
-                    }
-                }
-                else
-                    StaminaClock = StaminaClockInitial;
-            }
-            else
-                StaminaClock = StaminaClockInitial;
-        }
-        else
-        {
-            if (ArmorEquipped==false)
-            {
-                CurrentStamina -= 0.05f;
-            }
-            if (ArmorEquipped==true)
-            {
-                CurrentStamina -= 0.001f;
-            }
-        }
+        Health.TickStamina();
         //Update UI
         {
-            HealthPercent = System.Math.Round((CurrentHealth / MaxHealth) * 100f, 1);
-            DebugText = HealthPercent + "%";
-            StaminaPercent = System.Math.Round((CurrentStamina / MaxStamina) * 100f, 1);
-            StaminaText = StaminaPercent + "%";
-            Wallet = "COINS: " + Currency;
-            SeedText = "NUTS (R): " + NutCount;
-            AppleText = "APPLES (T): " + Apple;
-            GobletText = "GOBLETS (Y): " + GobletPickup;
-            ArrowText = "ARROWS (RM): " + arrowMunition;
+            State.arrowMunition = arrowMunition;
             if (Lives == 3)
             {
                 ICON_1.SetActive(true);
@@ -963,23 +1116,9 @@ public class Behaviour : MonoBehaviour
                 JumpNum = JumpNumPreserve;
         }
         //Load Loose screen on death
-        if (CurrentHealth <= 0)
-        {
-            if (Lives > 0)
-            {
-                RestartCheckpoint();
-            }
-            if (Lives == 0)
-            {
-                ActivateLooseMenu();
-            }
-        }
+        HandleDeathState();
         //Limit Stamina decrease down to 0 only
-        if (CurrentStamina <= 0)
-        {
-            ParryOFF();
-            CurrentStamina = 0;
-        }
+        Health.ClampStaminaAndParry();
         //Crouch action - Place Logs
         {
             if (Input.GetKey(KeyCode.LeftControl)&& FreeLook.m_Lens.FieldOfView<20)
@@ -1014,7 +1153,6 @@ public class Behaviour : MonoBehaviour
                 HologramedBridge.SetActive(false);
                 Otter.SetBool("crouch", false);
                 ParryOFF();
-                HealingText = "";
             }
 
         }
@@ -1161,31 +1299,16 @@ public class Behaviour : MonoBehaviour
         }
         //Plant Seed action
         {
-            if (Input.GetKeyDown(KeyCode.R) && NutCount > 0)
+            if (Input.GetKeyDown(KeyCode.R))
             {
-                Otter.Play("Crouch");
-                Instantiate(Seed, AttackPoint.position, Quaternion.identity);
-                NutCount--;
+                Inventory.TryPlantSeed();
             }
         }
         //Eat Apple
         {
-            if (Input.GetKeyDown(KeyCode.T) && Apple > 0)
+            if (Input.GetKeyDown(KeyCode.T))
             {
-                appleOBJ.SetActive(true);
-                Otter.Play("Consume");
-                Sound.Eat();
-                if (MaxHealth - CurrentHealth > 500)
-                {
-                    TakeDamage(-500);
-                    HealthBar.SetHealth(CurrentHealth);
-                }
-                else
-                {
-                    CurrentHealth = MaxHealth;
-                    HealthBar.SetMaxHealth(MaxHealth);
-                }
-                Apple--;
+                Inventory.TryEatApple();
             }
             if (Input.GetKeyUp(KeyCode.T))
             {
@@ -1194,17 +1317,14 @@ public class Behaviour : MonoBehaviour
         }
         //Use Goblet
         {
-            if (Input.GetKeyDown(KeyCode.Y) && GobletPickup > 0)
+            if (Input.GetKeyDown(KeyCode.Y))
             {
-                Otter.Play("Consume");
-                Sound.Drink();
-                GobletON();
+                Inventory.TryUseGoblet();
             }
             if (GobletPicked == true)
             {
                 CurrentStamina = MaxStamina;
                 GobletClock -= Time.deltaTime;
-                HealingText = "Boost time: " + Math.Round(GobletClock);
                 if (GobletClock <= 0)
                 {
                     GobletOFF();
@@ -1342,6 +1462,11 @@ public class Behaviour : MonoBehaviour
     [Obsolete]
     public void LateUpdate()
     {
+        if (IsGameplayInputBlocked())
+        {
+            return;
+        }
+
         if (Input.GetKey(KeyCode.Mouse1))
         {
             RotateForward();
@@ -1359,6 +1484,11 @@ public class Behaviour : MonoBehaviour
     [System.Obsolete]
     public void FixedUpdate()
     {
+        if (IsGameplayInputBlocked())
+        {
+            return;
+        }
+
         //Camera vectors setup
         Vector3 cameraRelativeForward = Camera.main.transform.TransformDirection(Vector3.forward);
         Vector3 cameraRelativeBack = Camera.main.transform.TransformDirection(Vector3.back);
@@ -1475,23 +1605,7 @@ public class Behaviour : MonoBehaviour
 
         //Switch off hurt and heal effects automaticly
         {
-            if (hurt == true || heal == true)
-            {
-                StopHurt += Time.deltaTime;
-                if (StopHurt >= 0.2f)
-                {
-                    hurt = false;
-                    heal = false;
-                }
-            }
-            else
-            {
-                StopHurt = 0;
-            }
-            if (CurrentHealth >= MaxHealth)
-            {
-                heal = false;
-            }
+            Health.TickHurtHealEffects();
         }
         //Control player rigidbody's friction
         {

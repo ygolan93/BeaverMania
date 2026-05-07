@@ -1,21 +1,19 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class GameMaster : MonoBehaviour
 {
-    private static GameMaster instance;
-    public Vector3 lastCheckPointPos;
-    private void Awake()
+    public Vector3 LastCheckpointPosition
     {
-        if (instance == null)
-        {
-            instance = this;
-            DontDestroyOnLoad(instance);
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
+        get { return CheckpointService.GetOrCreate().LastCheckpointPosition; }
+    }
+
+    public void SaveCheckpoint(Vector3 position)
+    {
+        CheckpointService.GetOrCreate().SaveCheckpoint(position);
+    }
+
+    public Vector3 RespawnPosition(Vector3 offset)
+    {
+        return CheckpointService.GetOrCreate().RespawnPosition(offset);
     }
 }

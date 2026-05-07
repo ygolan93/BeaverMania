@@ -1,16 +1,33 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class DoNotDestroy : MonoBehaviour
 {
+    private static readonly System.Collections.Generic.HashSet<System.Type> PersistentTypes =
+        new System.Collections.Generic.HashSet<System.Type>();
+
+    private bool registered;
+
     private void Awake()
     {
-        GameObject[] musicObj = GameObject.FindGameObjectsWithTag("Music");
-        if (musicObj.Length>1)
+        var serviceType = GetType();
+        if (PersistentTypes.Contains(serviceType))
         {
-            Destroy(this.gameObject);
+            Destroy(gameObject);
+            return;
         }
-        DontDestroyOnLoad(this.gameObject);
+
+        PersistentTypes.Add(serviceType);
+        registered = true;
+        DontDestroyOnLoad(gameObject);
+    }
+
+    private void OnDestroy()
+    {
+        if (!registered || !Application.isPlaying)
+        {
+            return;
+        }
+
+        PersistentTypes.Remove(GetType());
     }
 }

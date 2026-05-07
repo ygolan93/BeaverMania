@@ -10,6 +10,7 @@ public class UIMenu : MonoBehaviour
     public Behaviour Player;
     public bool ActivePause = false;
     GameFlowController gameFlow;
+    GameInputReader inputReader;
     [SerializeField] Slider volumeSlider;
     [SerializeField] AudioSource Music;
 
@@ -23,6 +24,8 @@ public class UIMenu : MonoBehaviour
         }
 
         gameFlow = GameFlowController.GetOrCreate();
+        inputReader = GameInputReader.GetOrCreate();
+        inputReader.EnableGameplayInput();
         gameFlow.SetPlaying();
         Player = playerObject.GetComponent<Behaviour>();
         if (!RuntimeReferenceValidator.Require(Player, this, nameof(Player)) ||
@@ -52,7 +55,7 @@ public class UIMenu : MonoBehaviour
     }
     public void Pause()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (inputReader != null && inputReader.PausePressed)
         {
             ChangeBolean();
         }
@@ -81,6 +84,22 @@ public class UIMenu : MonoBehaviour
             gameFlow = GameFlowController.GetOrCreate();
         }
         gameFlow.SetPaused(ActivePause);
+        if (inputReader == null)
+        {
+            inputReader = GameInputReader.GetOrCreate();
+        }
+        if (ActivePause)
+        {
+            inputReader.EnableUiInput();
+        }
+        else if (Player != null && Player.isAtTrader)
+        {
+            inputReader.EnableUiInput();
+        }
+        else
+        {
+            inputReader.EnableGameplayInput();
+        }
     }
 
     public void RestartCheckpointFromMenu()

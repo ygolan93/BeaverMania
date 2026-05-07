@@ -5,6 +5,9 @@ using UnityEngine;
 
 public class NPC_Basic : MonoBehaviour
 {
+    [Header("Config")]
+    [SerializeField] EnemyAIConfig aiConfig;
+
     [Header("Body and animation")]
     public Rigidbody NPC;
     [SerializeField] Animator Wasp;
@@ -54,6 +57,7 @@ public class NPC_Basic : MonoBehaviour
     // Start is called before the first frame update    
     public void Start()
     {
+        ApplyConfig();
         SpawnPos = transform.position;
         Wasp = GetComponent<Animator>();
         CurrentHealth = MaxHealth;
@@ -84,7 +88,7 @@ public class NPC_Basic : MonoBehaviour
             {
                 rotGoal = Quaternion.LookRotation(NPC.velocity);
                 transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
-                if (Distance.magnitude >= 50)
+                if (Distance.magnitude >= AggroDistance)
                 {
                     if (ChangeNav <= 0)
                     {
@@ -98,14 +102,14 @@ public class NPC_Basic : MonoBehaviour
                     }
                 }
 
-                if (PlayerDistance < 50)
+                if (PlayerDistance < AggroDistance)
                 {
                     if (Contact == false)
                     {
                         BuzzSource.SetActive(true);
                         ChargeClock = 0.7f;
                         Physics.IgnoreCollision(AnotherWasp.GetComponent<Collider>(), transform.GetComponent<Collider>());
-                        NPC.velocity = (Distance.normalized * 50f);
+                        NPC.velocity = (Distance.normalized * AttackSpeed);
                         Wasp.SetBool("Sting", true);
                         ChangeNav = 0;
                     }
@@ -208,7 +212,7 @@ public class NPC_Basic : MonoBehaviour
     {
         BuzzSource.SetActive(true);
         Wasp.SetBool("Sting", false);
-        if ((transform.position - SpawnPos).magnitude > 30)
+        if ((transform.position - SpawnPos).magnitude > LeashDistance)
         {
             NPC.velocity = (SpawnPos - transform.position).normalized * 10;
         }
@@ -251,7 +255,7 @@ public class NPC_Basic : MonoBehaviour
         BuzzSource.SetActive(true);
         floating = false;
         Wasp.SetBool("Stunned", false);
-        Recovery = 10f;
+        Recovery = RecoverySeconds;
         NPC.constraints = RigidbodyConstraints.FreezeRotation;
         NPC.useGravity = false;
     }
@@ -262,7 +266,10 @@ public class NPC_Basic : MonoBehaviour
         if (PlayerHealth.isParried == false && PlayerHealth.Rolling == false)
         {
             Sound.Sting();
-            PlayerHealth.TakeDamage(Damage2Player);
+            if (CombatDebugGate.AllowsDamage(PlayerHealth.gameObject))
+            {
+                PlayerHealth.TakeDamage(Damage2Player);
+            }
         }
         Wasp.SetBool("Sting", false);
         if (PlayerHealth.isParried == true)
@@ -274,10 +281,29 @@ public class NPC_Basic : MonoBehaviour
 
     }
 
+    float AggroDistance => aiConfig != null ? aiConfig.aggroDistance : 50f;
+    float LeashDistance => aiConfig != null ? aiConfig.leashDistance : 30f;
+    float RecoverySeconds => aiConfig != null ? aiConfig.recoverySeconds : 10f;
+
+    void ApplyConfig()
+    {
+        if (aiConfig == null)
+        {
+            BuildSafeLogger.WarnOnce(nameof(NPC_Basic) + ".MissingConfig", "Missing enemy AI config; using prefab values.", this, nameof(aiConfig));
+            return;
+        }
+
+        MaxHealth = aiConfig.maxHealth;
+        hit2stun = aiConfig.hitToStun;
+        Damage2Player = aiConfig.damageToPlayer;
+        AttackSpeed = aiConfig.attackSpeed;
+        Recovery = aiConfig.recoverySeconds;
+    }
+
     public void RandoMovement()
     {
         BuzzSource.SetActive(true);
-        if ((SpawnPos - transform.position).magnitude < 20)
+        if ((SpawnPos - transform.position).magnitude < LeashDistance)
         {
             Recovered();
             a = Random.Range(-1, 1);

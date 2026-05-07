@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class ScorpionScript : MonoBehaviour
 {
+    [Header("Config")]
+    [SerializeField] BossConfig bossConfig;
+
     [Header("General Stats")]
     Rigidbody RBScorpion;
     [SerializeField] Animator Scorpion;
@@ -49,6 +52,7 @@ public class ScorpionScript : MonoBehaviour
 
     private void Start()
     {
+        ApplyConfig();
         RBScorpion = gameObject.GetComponent<Rigidbody>();
         Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
         //AnotherScorpion = GameObject.FindGameObjectWithTag("Scorpion");
@@ -61,6 +65,24 @@ public class ScorpionScript : MonoBehaviour
         resetCharge = chargeClock;
         initialStun = StunnedClock;
         combo = 0;
+    }
+
+    void ApplyConfig()
+    {
+        if (bossConfig == null)
+        {
+            BuildSafeLogger.WarnOnce(nameof(ScorpionScript) + ".MissingConfig", "Missing boss config; using prefab values.", this, nameof(bossConfig));
+            return;
+        }
+
+        MaxHealth = bossConfig.maxHealth;
+        comboLimit = bossConfig.comboLimit;
+        StunnedClock = bossConfig.stunSeconds;
+        chargeSpeed = bossConfig.chargeSpeed;
+        chargeClock = bossConfig.chargeClock;
+        lookDistance = bossConfig.lookDistance;
+        chargeDistance = bossConfig.chargeDistance;
+        attackDistance = bossConfig.attackDistance;
     }
 
     public void FixedUpdate()

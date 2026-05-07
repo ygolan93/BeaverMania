@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class ScorpionDamage : MonoBehaviour
 {
+    [SerializeField] HazardDamageConfig damageConfig;
     public float JawClamp;
     public float Sting;
     public Behaviour Player;
@@ -12,9 +13,25 @@ public class ScorpionDamage : MonoBehaviour
 
     private void Awake()
     {
+        ApplyConfig();
         BossAudio = GameObject.FindGameObjectWithTag("Boss").GetComponent<NPC_Audio>();
         Player = transform.GetComponent<Behaviour>();
     }
+    float ParryChipDamage => damageConfig != null ? damageConfig.scorpionParryChipDamage : 6f;
+    int ParryCounterDamage => damageConfig != null ? damageConfig.scorpionParryCounterDamage : 10;
+
+    void ApplyConfig()
+    {
+        if (damageConfig == null)
+        {
+            BuildSafeLogger.WarnOnce(nameof(ScorpionDamage) + ".MissingConfig", "Missing hazard damage config; using prefab values.", this, nameof(damageConfig));
+            return;
+        }
+
+        JawClamp = damageConfig.scorpionJawClampDamage;
+        Sting = damageConfig.scorpionStingDamage;
+    }
+
     public void OnTriggerEnter(Collider OBJ)
     {
         if (OBJ.gameObject.CompareTag("Arena"))
@@ -27,13 +44,16 @@ public class ScorpionDamage : MonoBehaviour
             {
                 if (Player.isParried == false)
                 {
-                    Player.TakeDamage(JawClamp);
+                    if (CombatDebugGate.AllowsDamage(Player.gameObject))
+                    {
+                        Player.TakeDamage(JawClamp);
+                    }
                     BossAudio.Sting();
                 }
                 if (Player.isParried == true)
                 {
-                    Player.TakeDamage(6);
-                    Scorpion.TakeDamage(10);
+                    Player.TakeDamage(ParryChipDamage);
+                    Scorpion.TakeDamage(ParryCounterDamage);
                     Scorpion.combo++;
                 }
             }
@@ -45,13 +65,16 @@ public class ScorpionDamage : MonoBehaviour
             {
                 if (Player.isParried == false)
                 {
-                    Player.TakeDamage(Sting);
+                    if (CombatDebugGate.AllowsDamage(Player.gameObject))
+                    {
+                        Player.TakeDamage(Sting);
+                    }
                     BossAudio.Sting();
                 }
                 if (Player.isParried == true)
                 {
-                    Player.TakeDamage(6f);
-                    Scorpion.TakeDamage(10);
+                    Player.TakeDamage(ParryChipDamage);
+                    Scorpion.TakeDamage(ParryCounterDamage);
                     Scorpion.combo++;
                 }
             }

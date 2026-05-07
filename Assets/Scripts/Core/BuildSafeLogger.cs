@@ -5,6 +5,8 @@ using UnityEngine.SceneManagement;
 public static class BuildSafeLogger
 {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
+    const string LoggingConfigResourcePath = "RuntimeConfig/LoggingConfig";
+    static LoggingConfig loggingConfig;
     private static readonly HashSet<string> infoKeys = new HashSet<string>();
     private static readonly HashSet<string> warnKeys = new HashSet<string>();
     private static readonly HashSet<string> errorKeys = new HashSet<string>();
@@ -13,7 +15,7 @@ public static class BuildSafeLogger
     public static void InfoOnce(string key, string message, Object owner = null, string missingField = null, string missingTag = null, string missingMethod = null)
     {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        if (infoKeys.Add(ResolveKey(key, message, owner, missingField, missingTag, missingMethod)))
+        if (Config.logInfo && infoKeys.Add(ResolveKey(key, message, owner, missingField, missingTag, missingMethod)))
         {
             Debug.Log(Format(message, owner, missingField, missingTag, missingMethod), owner);
         }
@@ -23,7 +25,7 @@ public static class BuildSafeLogger
     public static void WarnOnce(string key, string message, Object owner = null, string missingField = null, string missingTag = null, string missingMethod = null)
     {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        if (warnKeys.Add(ResolveKey(key, message, owner, missingField, missingTag, missingMethod)))
+        if (Config.logWarnings && warnKeys.Add(ResolveKey(key, message, owner, missingField, missingTag, missingMethod)))
         {
             Debug.LogWarning(Format(message, owner, missingField, missingTag, missingMethod), owner);
         }
@@ -33,7 +35,7 @@ public static class BuildSafeLogger
     public static void ErrorOnce(string key, string message, Object owner = null, string missingField = null, string missingTag = null, string missingMethod = null)
     {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        if (errorKeys.Add(ResolveKey(key, message, owner, missingField, missingTag, missingMethod)))
+        if (Config.logErrors && errorKeys.Add(ResolveKey(key, message, owner, missingField, missingTag, missingMethod)))
         {
             Debug.LogError(Format(message, owner, missingField, missingTag, missingMethod), owner);
         }
@@ -41,6 +43,8 @@ public static class BuildSafeLogger
     }
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
+    static LoggingConfig Config => loggingConfig != null ? loggingConfig : (loggingConfig = Resources.Load<LoggingConfig>(LoggingConfigResourcePath)) ?? ScriptableObject.CreateInstance<LoggingConfig>();
+
     private static string ResolveKey(string key, string message, Object owner, string missingField, string missingTag, string missingMethod)
     {
         if (!string.IsNullOrEmpty(key))
@@ -54,7 +58,11 @@ public static class BuildSafeLogger
     private static string Format(string message, Object owner, string missingField, string missingTag, string missingMethod)
     {
         var scene = SceneManager.GetActiveScene().name;
-        var formatted = "[" + (string.IsNullOrEmpty(scene) ? "<no scene>" : scene) + "] " + message + " Owner=" + OwnerName(owner);
+        var formatted = Config.includeSceneName ? "[" + (string.IsNullOrEmpty(scene) ? "<no scene>" : scene) + "] " + message : message;
+        if (Config.includeOwnerPath)
+        {
+            formatted += " Owner=" + OwnerName(owner);
+        }
 
         if (!string.IsNullOrEmpty(missingField))
         {

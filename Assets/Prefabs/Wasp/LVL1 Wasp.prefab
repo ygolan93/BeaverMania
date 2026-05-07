@@ -5031,8 +5031,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 74b9972fb60494746ad448b0cb071bc4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   Distance: {x: 0, y: 0, z: 0}
 --- !u!1 &630764799270797316
 GameObject:
@@ -15353,6 +15353,7 @@ GameObject:
   - component: {fileID: 7731927592017154948}
   - component: {fileID: 4992882469211511398}
   - component: {fileID: 8675218551507148661}
+  - component: {fileID: 9001000000000000001}
   m_Layer: 10
   m_Name: LVL1 Wasp
   m_TagString: NPC
@@ -15398,7 +15399,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
-  m_WarningMessage: 
+  m_WarningMessage:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
@@ -15428,8 +15429,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 04917a49b5936164d999be346f447d22, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
+  aiConfig: {fileID: 11400000, guid: 45f991efa30b476493801f9c8b94c778, type: 2}
   NPC: {fileID: 2735624339671731891}
   Wasp: {fileID: 8402721289759985096}
   Distance: {x: 0, y: 0, z: 0}
@@ -15468,8 +15470,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 31ea55b4c87a18340bd56bcc0c07b233, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   NPCslider: {fileID: 9053961203221591993}
 --- !u!114 &7731927592017154948
 MonoBehaviour:
@@ -15481,8 +15483,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f705a3743fe57ce4396e714e1f63ef8d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   audioClip:
   - {fileID: 8300000, guid: 26006051b5c98c644964fe770338f09d, type: 3}
   - {fileID: 8300000, guid: d902e14d51277a24d9a1de8ca3765e72, type: 3}
@@ -37060,8 +37062,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 03c8102322ad0d04fa6ae3f17887e967, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   isDynamic: 0
   text: SLASH!
   size: 1
@@ -37262,8 +37264,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 67db9e8f0e2ae9c40bc1e2b64352a6b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   m_Navigation:
     m_Mode: 3
     m_WrapAround: 0
@@ -37359,8 +37361,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   m_Material: {fileID: 0}
   m_Color: {r: 0, g: 0, b: 0, a: 0.38431373}
   m_RaycastTarget: 1
@@ -37450,8 +37452,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   m_UiScaleMode: 0
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
@@ -37473,8 +37475,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   m_IgnoreReversedGraphics: 1
   m_BlockingObjects: 0
   m_BlockingMask:
@@ -37536,8 +37538,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   m_Material: {fileID: 0}
   m_Color: {r: 0.90128887, g: 1, b: 0, a: 1}
   m_RaycastTarget: 1
@@ -37685,7 +37687,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3400547379593215131, guid: 29caf87e6282fd044adbb00bd35e129a, type: 3}
       propertyPath: LightsModule.light
-      value: 
+      value:
       objectReference: {fileID: 0}
     - target: {fileID: 3400547379593215131, guid: 29caf87e6282fd044adbb00bd35e129a, type: 3}
       propertyPath: LightsModule.ratio
@@ -37755,3 +37757,22 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 3400547379593215125, guid: 29caf87e6282fd044adbb00bd35e129a, type: 3}
   m_PrefabInstance: {fileID: 5639969712290697209}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &9001000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2969994238874094856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5279260caf244a48496eedb3918558b, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  debugConfig: {fileID: 11400000, guid: 3c4d0b1eb8254a47869c1dd912aca17b, type: 2}
+  requiredComponents:
+  - {fileID: 2735624339671731888}
+  - {fileID: 2735624339671731891}
+  requiredObjects:
+  - {fileID: 7022265487677813612}
+  - {fileID: 3110248994183801233}

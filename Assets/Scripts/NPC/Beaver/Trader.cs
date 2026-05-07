@@ -20,8 +20,18 @@ public class Trader : MonoBehaviour
     void Start()
     {
         FormalLook = transform.rotation;
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
-        PlayerRoot = GameObject.FindGameObjectWithTag("PlayerRoot").GetComponent<Transform>();
+
+        bool valid = RuntimeReferenceValidator.Require(Merchant, this, nameof(Merchant)) &
+            RuntimeReferenceValidator.Require(TradeText, this, nameof(TradeText)) &
+            RuntimeReferenceValidator.Require(DialoguePanel, this, nameof(DialoguePanel)) &
+            RuntimeReferenceValidator.Require(Shop, this, nameof(Shop)) &
+            RuntimeReferenceValidator.RequireTaggedComponent("Player", this, out Player) &
+            RuntimeReferenceValidator.RequireTaggedComponent("PlayerRoot", this, out PlayerRoot);
+
+        if (!valid)
+        {
+            return;
+        }
     }
 
     // Update is called once per frame

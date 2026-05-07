@@ -27,4 +27,58 @@ public static class RuntimeReferenceValidator
 
         return false;
     }
+
+    public static bool RequireTaggedComponent<T>(string tag, MonoBehaviour owner, out T component) where T : Component
+    {
+        component = null;
+
+        GameObject taggedObject = null;
+        try
+        {
+            taggedObject = GameObject.FindGameObjectWithTag(tag);
+        }
+        catch (UnityException)
+        {
+            BuildSafeLogger.ErrorOnce(
+                $"{OwnerName(owner)}.{tag}.InvalidTag",
+                $"Required tag '{tag}' is not defined for {OwnerName(owner)}.",
+                owner,
+                missingTag: tag);
+
+            if (owner != null)
+            {
+                owner.enabled = false;
+            }
+
+            return false;
+        }
+
+        if (!Require(taggedObject, owner, tag + " tag"))
+        {
+            return false;
+        }
+
+        component = taggedObject.GetComponent<T>();
+        if (component != null)
+        {
+            return true;
+        }
+
+        BuildSafeLogger.WarnOnce(
+            $"{OwnerName(owner)}.{tag}.{typeof(T).Name}",
+            $"Tagged object '{tag}' is missing required component {typeof(T).Name} for {OwnerName(owner)}.",
+            owner,
+            missingField: typeof(T).Name,
+            missingTag: tag);
+
+        if (owner != null)
+        {
+            owner.enabled = false;
+        }
+
+        return false;
+    }
+
+    static string OwnerName(MonoBehaviour owner) => owner != null ? owner.GetType().Name : "<null owner>";
+
 }

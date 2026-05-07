@@ -16,10 +16,33 @@ public class UIMenu : MonoBehaviour
     // Start is called before the first frame update
     private void Start()
     {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
+        var playerObject = GameObject.FindGameObjectWithTag("Player");
+        if (!RuntimeReferenceValidator.Require(playerObject, this, "Player tag"))
+        {
+            return;
+        }
+
+        Player = playerObject.GetComponent<Behaviour>();
+        if (!RuntimeReferenceValidator.Require(Player, this, nameof(Player)) ||
+            !RuntimeReferenceValidator.Require(PauseMenu, this, nameof(PauseMenu)) ||
+            !RuntimeReferenceValidator.Require(Question, this, nameof(Question)))
+        {
+            return;
+        }
+
         if (Player.seekMusic==true)
         {
-            Music = GameObject.FindGameObjectWithTag("Music").GetComponent<AudioSource>();
+            var musicObject = GameObject.FindGameObjectWithTag("Music");
+            if (!RuntimeReferenceValidator.Require(musicObject, this, "Music tag"))
+            {
+                return;
+            }
+
+            Music = musicObject.GetComponent<AudioSource>();
+            if (!RuntimeReferenceValidator.Require(Music, this, nameof(Music)))
+            {
+                return;
+            }
         }
         Player.HideCursor();
         PauseMenu.SetActive(false);

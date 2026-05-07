@@ -8,7 +8,14 @@ public class Shop : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
+        var playerObject = GameObject.FindGameObjectWithTag("Player");
+        if (!RuntimeReferenceValidator.Require(playerObject, this, "Player tag"))
+        {
+            return;
+        }
+
+        Player = playerObject.GetComponent<Behaviour>();
+        RuntimeReferenceValidator.Require(Player, this, nameof(Player));
     }
 
     // Update is called once per frame

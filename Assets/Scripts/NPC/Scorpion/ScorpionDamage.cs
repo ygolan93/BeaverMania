@@ -14,8 +14,22 @@ public class ScorpionDamage : MonoBehaviour
     private void Awake()
     {
         ApplyConfig();
-        BossAudio = GameObject.FindGameObjectWithTag("Boss").GetComponent<NPC_Audio>();
+        var bossObject = GameObject.FindGameObjectWithTag("Boss");
+        BossAudio = bossObject != null ? bossObject.GetComponent<NPC_Audio>() : null;
+        Scorpion = bossObject != null ? bossObject.GetComponent<ScorpionScript>() : null;
         Player = transform.GetComponent<Behaviour>();
+
+        if (!ValidateReferences())
+        {
+            return;
+        }
+    }
+
+    bool ValidateReferences()
+    {
+        return RuntimeReferenceValidator.Require(Player, this, nameof(Player)) &
+            RuntimeReferenceValidator.Require(BossAudio, this, nameof(BossAudio)) &
+            RuntimeReferenceValidator.Require(Scorpion, this, nameof(Scorpion));
     }
     float ParryChipDamage => damageConfig != null ? damageConfig.scorpionParryChipDamage : 6f;
     int ParryCounterDamage => damageConfig != null ? damageConfig.scorpionParryCounterDamage : 10;

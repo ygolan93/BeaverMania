@@ -18,10 +18,42 @@ public class Projectile : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Vector3 launchDirection = Camera.main.transform.TransformDirection(Vector3.forward);
+        var mainCamera = Camera.main;
+        var playerObject = GameObject.FindGameObjectWithTag("Player");
+        Player = playerObject != null ? playerObject.GetComponent<Behaviour>() : null;
+
+        if (!ValidateReferences(mainCamera))
+        {
+            return;
+        }
+
+        Vector3 launchDirection = mainCamera.transform.TransformDirection(Vector3.forward);
         Physics.IgnoreLayerCollision(1, 3);
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
         Ball.velocity = launchDirection * forwardVel + Vector3.up * upwardVel;
+    }
+
+    bool ValidateReferences(Camera mainCamera)
+    {
+        bool valid = RuntimeReferenceValidator.Require(mainCamera, this, nameof(mainCamera)) &
+            RuntimeReferenceValidator.Require(Player, this, nameof(Player)) &
+            RuntimeReferenceValidator.Require(Ball, this, nameof(Ball));
+
+        if (isFireBall)
+        {
+            valid &= RuntimeReferenceValidator.Require(Explosion, this, nameof(Explosion));
+        }
+
+        if (isArrow)
+        {
+            valid &= RuntimeReferenceValidator.Require(arrowPickup, this, nameof(arrowPickup));
+        }
+
+        if (!isFireBall)
+        {
+            valid &= RuntimeReferenceValidator.Require(Sound, this, nameof(Sound));
+        }
+
+        return valid;
     }
     private void Update()
     {

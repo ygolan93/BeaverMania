@@ -18,9 +18,25 @@ public class BossHandler : MonoBehaviour
     void Start()
     {
         player = gameObject.GetComponent<Behaviour>();
-        Boss = GameObject.Find("ScorpionBoss").GetComponent<ScorpionScript>();
+        var bossObject = GameObject.Find("ScorpionBoss");
+        Boss = bossObject != null ? bossObject.GetComponent<ScorpionScript>() : null;
+
+        if (!ValidateReferences())
+        {
+            return;
+        }
+
         //bossSound = Boss.GetComponent<NPC_Audio>();
         BossBar.SetActive(false);
+    }
+
+    bool ValidateReferences()
+    {
+        return RuntimeReferenceValidator.Require(player, this, nameof(player)) &
+            RuntimeReferenceValidator.Require(Boss, this, nameof(Boss)) &
+            RuntimeReferenceValidator.Require(ChatCollider, this, nameof(ChatCollider)) &
+            RuntimeReferenceValidator.Require(BossBar, this, nameof(BossBar)) &
+            RuntimeReferenceValidator.Require(BossPanel, this, nameof(BossPanel));
     }
 
 

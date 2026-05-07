@@ -24,8 +24,33 @@ public class Static_Hive : MonoBehaviour
     //Start is called before the first frame update
     public void Start()
     {
+        if (!ValidateReferences())
+        {
+            return;
+        }
+
         CurrentHealth = MaxHealth;
         Explosion.SetActive(false);
+    }
+
+    bool ValidateReferences()
+    {
+        bool valid = RuntimeReferenceValidator.Require(HiveBar, this, nameof(HiveBar)) &
+            RuntimeReferenceValidator.Require(Hive, this, nameof(Hive)) &
+            RuntimeReferenceValidator.Require(Wasp, this, nameof(Wasp)) &
+            RuntimeReferenceValidator.Require(Explosion, this, nameof(Explosion)) &
+            RuntimeReferenceValidator.Require(Sound, this, nameof(Sound)) &
+            RuntimeReferenceValidator.Require(HitEffect, this, nameof(HitEffect));
+
+        if (SpawnedObjects != null)
+        {
+            for (int i = 0; i < SpawnedObjects.Length; i++)
+            {
+                valid &= RuntimeReferenceValidator.Require(SpawnedObjects[i], this, $"{nameof(SpawnedObjects)}[{i}]");
+            }
+        }
+
+        return valid;
     }
     private void LateUpdate()
     {

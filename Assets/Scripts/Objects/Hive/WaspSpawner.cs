@@ -18,7 +18,20 @@ public class WaspSpawner : MonoBehaviour
     { 
         Counter=WaspCounter;
         RealClock = SpawnClock;
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
+        var playerObject = GameObject.FindGameObjectWithTag("Player");
+        Player = playerObject != null ? playerObject.GetComponent<Behaviour>() : null;
+
+        if (!ValidateReferences())
+        {
+            return;
+        }
+    }
+
+    bool ValidateReferences()
+    {
+        return RuntimeReferenceValidator.Require(Wasp, this, nameof(Wasp)) &
+            RuntimeReferenceValidator.Require(Hive, this, nameof(Hive)) &
+            RuntimeReferenceValidator.Require(Player, this, nameof(Player));
     }
 
 

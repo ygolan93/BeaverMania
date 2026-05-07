@@ -54,7 +54,14 @@ public class ScorpionScript : MonoBehaviour
     {
         ApplyConfig();
         RBScorpion = gameObject.GetComponent<Rigidbody>();
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
+        var playerObject = GameObject.FindGameObjectWithTag("Player");
+        Player = playerObject != null ? playerObject.GetComponent<Behaviour>() : null;
+
+        if (!ValidateReferences())
+        {
+            return;
+        }
+
         //AnotherScorpion = GameObject.FindGameObjectWithTag("Scorpion");
         Physics.IgnoreLayerCollision(10, 10);
 
@@ -65,6 +72,33 @@ public class ScorpionScript : MonoBehaviour
         resetCharge = chargeClock;
         initialStun = StunnedClock;
         combo = 0;
+    }
+
+    bool ValidateReferences()
+    {
+        bool valid = RuntimeReferenceValidator.Require(RBScorpion, this, nameof(RBScorpion)) &
+            RuntimeReferenceValidator.Require(Scorpion, this, nameof(Scorpion)) &
+            RuntimeReferenceValidator.Require(BossHealth, this, nameof(BossHealth)) &
+            RuntimeReferenceValidator.Require(Player, this, nameof(Player)) &
+            RuntimeReferenceValidator.Require(Jaw1A, this, nameof(Jaw1A)) &
+            RuntimeReferenceValidator.Require(Jaw1B, this, nameof(Jaw1B)) &
+            RuntimeReferenceValidator.Require(Jaw2A, this, nameof(Jaw2A)) &
+            RuntimeReferenceValidator.Require(Jaw2B, this, nameof(Jaw2B)) &
+            RuntimeReferenceValidator.Require(Sting, this, nameof(Sting)) &
+            RuntimeReferenceValidator.Require(HitEffect, this, nameof(HitEffect)) &
+            RuntimeReferenceValidator.Require(Explosion, this, nameof(Explosion)) &
+            RuntimeReferenceValidator.Require(StunEffect, this, nameof(StunEffect)) &
+            RuntimeReferenceValidator.Require(Sound, this, nameof(Sound));
+
+        if (drops != null)
+        {
+            for (int i = 0; i < drops.Length; i++)
+            {
+                valid &= RuntimeReferenceValidator.Require(drops[i], this, $"{nameof(drops)}[{i}]");
+            }
+        }
+
+        return valid;
     }
 
     void ApplyConfig()

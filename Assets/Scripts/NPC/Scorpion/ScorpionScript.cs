@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class ScorpionScript : MonoBehaviour, IDamageable
@@ -32,7 +30,7 @@ public class ScorpionScript : MonoBehaviour, IDamageable
     public Collider Jaw2A;
     public Collider Jaw2B;
     public Collider Sting;
-    public string state = "Idle";
+    [SerializeField] private EnemyState state = EnemyState.Idle;
 
     [Header("Mobility")]
     public float lookDistance;
@@ -119,59 +117,59 @@ public class ScorpionScript : MonoBehaviour, IDamageable
         attackDistance = bossConfig.attackDistance;
     }
 
+    public void SetState(EnemyState next)
+    {
+        if (state == next)
+        {
+            return;
+        }
+
+        if (state == EnemyState.Dead || (state == EnemyState.Stunned && next != EnemyState.Recover && next != EnemyState.Dead))
+        {
+            return;
+        }
+
+        state = next;
+
+        if (next == EnemyState.Recover)
+        {
+            Recovered();
+            state = EnemyState.Idle;
+        }
+        else if (next == EnemyState.Dead)
+        {
+            Death();
+        }
+    }
+
     public void FixedUpdate()
     {
         Distance = Player.transform.position - RBScorpion.position;
         currentDistance = Mathf.Abs(Distance.magnitude);
         switch (state)
         {
-            case "Idle":
-                {
-                    Idle();
-                    break;
-                }
-            case "Look":
-                {
-                    LookAtPlayer();
-                    break;
-                }
-            case "Charge":
-                {
-                    var speed = chargeSpeed;
-                    if (Input.GetKey(KeyCode.LeftShift))
-                    {
-                        speed = paceUp;
-                        Scorpion.speed = 1.05f;
-                    }
-                    else
-                    {
-                        speed = chargeSpeed;
-                        Scorpion.speed = 1;
-                    }
-
-                    Charge(speed);
-                    break;
-                }
-            case "Stop":
-                {
-                    StopAndAttack();
-                    break;
-                }
-            case "Reverse":
-                {
-                    Reverse();
-                    break;
-                }
-            case "Stunned":
-                {
-                    Stunned();
-                    break;
-                }
-            case "Recovered":
-                {
-                    Recovered();
-                    break;
-                }
+            case EnemyState.Idle:
+                Idle();
+                break;
+            case EnemyState.Detect:
+                LookAtPlayer();
+                break;
+            case EnemyState.Chase:
+                Scorpion.speed = 1;
+                Charge(chargeSpeed);
+                break;
+            case EnemyState.Patrol:
+                Reverse();
+                break;
+            case EnemyState.Attack:
+                StopAndAttack();
+                break;
+            case EnemyState.Stunned:
+                Stunned();
+                break;
+            case EnemyState.Recover:
+                Recovered();
+                break;
         }
 
 
@@ -180,102 +178,65 @@ public class ScorpionScript : MonoBehaviour, IDamageable
     private void Update()
     {
         HitEffect.SetActive(false);
-        if (combo >= comboLimit)
-        {
-            Stunned();
-            StunnedClock -= Time.deltaTime;
-            if (StunnedClock <= 0)
-            {
-                Recovered();
-            }
-        }
+        Distance = Player.transform.position - RBScorpion.position;
+        currentDistance = Mathf.Abs(Distance.magnitude);
+
         if (CurrentHealth <= 0)
         {
-            Death();
+            SetState(EnemyState.Dead);
+            return;
         }
-        if (combo<comboLimit)
-        {
-            if (combo==1)
-            {
-                state = "Look";
-            }
-            if (combo==3)
-            {
-                state = "Charge";
-            }
-            if (currentDistance > lookDistance)
-            {
-                state = "Idle";
-            }
-            if(currentDistance <= lookDistance)
-            {
-                if (combo<comboLimit-5)
-                {
-                    if (Input.GetKey(KeyCode.Mouse0) || Input.GetKey(KeyCode.Mouse1))
-                    {
-                        if (currentDistance<chargeDistance-10)
-                        {
-                            state = "Reverse";
-                        }
-                        else
-                        {
-                            state = "Look";
-                        }
-                        
-                    }
-                    else
-                    {
-                        if (currentDistance > chargeDistance)
-                        {
-                            state = "Look";
-                        }
-                        if (currentDistance <= chargeDistance)
-                        {
 
-                            if (chargeClock > 0)
-                            {
-                                state = "Charge";
-                                chargeClock -= Time.deltaTime;
-                            }
-                            if (chargeClock <= 0)
-                            {
-                                if (currentDistance > attackDistance)
-                                {
-                                    state = "Charge";
-                                }
-                                else
-                                {
-                                    state = "Stop";
-
-                                    if (Input.GetKeyUp(KeyCode.Mouse0) || Input.GetKeyUp(KeyCode.Mouse1))
-                                    {
-                                        chargeClock = resetCharge;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    state = "Charge";
-                }
-      
-            }
-            
-
-        }
         if (combo >= comboLimit)
         {
-            state = "Stunned";
+            SetState(EnemyState.Stunned);
             StunnedClock -= Time.deltaTime;
             if (StunnedClock <= 0)
             {
-                state = "Recovered";
+                SetState(EnemyState.Recover);
             }
+
+            return;
         }
 
+        if (currentDistance > lookDistance)
+        {
+            SetState(EnemyState.Idle);
+            return;
+        }
 
+        if (combo == 1)
+        {
+            SetState(EnemyState.Detect);
+        }
+
+        if (combo == 3 || combo >= comboLimit - 5)
+        {
+            SetState(EnemyState.Chase);
+            return;
+        }
+
+        if (currentDistance > chargeDistance)
+        {
+            SetState(EnemyState.Detect);
+            return;
+        }
+
+        if (chargeClock > 0)
+        {
+            SetState(EnemyState.Chase);
+            chargeClock -= Time.deltaTime;
+            return;
+        }
+
+        if (currentDistance > attackDistance)
+        {
+            SetState(EnemyState.Chase);
+            return;
+        }
+
+        SetState(EnemyState.Attack);
+        chargeClock = resetCharge;
     }
 
     private void Idle()
@@ -369,7 +330,7 @@ public class ScorpionScript : MonoBehaviour, IDamageable
         isAttacking = false;
         Scorpion.SetBool("Stunned", false);
         combo = 0;
-        StunnedClock = 10;
+        StunnedClock = initialStun;
         StunEffect.SetActive(false);
     }
     private void Death()
@@ -388,7 +349,7 @@ public class ScorpionScript : MonoBehaviour, IDamageable
     {
         if (OBJ.gameObject.CompareTag("Strike"))
         {
-            Death();
+            SetState(EnemyState.Dead);
         }
         if (OBJ.gameObject.CompareTag("Damage"))
         {

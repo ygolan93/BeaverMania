@@ -19,10 +19,33 @@ public class Dialogue : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
+        var playerObject = GameObject.FindGameObjectWithTag("Player");
+        if (!RuntimeReferenceValidator.Require(playerObject, this, "Player tag"))
+        {
+            return;
+        }
+
+        Player = playerObject.GetComponent<Behaviour>();
         //Boss = GameObject.FindGameObjectWithTag("Boss").GetComponent<BossScript>();
-        PlayerObjective = GameObject.FindGameObjectWithTag("Player").GetComponent<ObjectiveUI>();
-        panel = gameObject.transform.parent.GetComponent<Transform>();
+        PlayerObjective = playerObject.GetComponent<ObjectiveUI>();
+        panel = transform.parent;
+
+        bool valid = RuntimeReferenceValidator.Require(Player, this, nameof(Player)) &
+            RuntimeReferenceValidator.Require(PlayerObjective, this, nameof(PlayerObjective)) &
+            RuntimeReferenceValidator.Require(panel, this, nameof(panel)) &
+            RuntimeReferenceValidator.Require(textComponent, this, nameof(textComponent)) &
+            RuntimeReferenceValidator.Require(SkipButton, this, nameof(SkipButton));
+
+        if (!isBoss)
+        {
+            valid &= RuntimeReferenceValidator.Require(Merchant, this, nameof(Merchant));
+        }
+
+        if (!valid)
+        {
+            return;
+        }
+
         SkipButton.SetActive(true);
         textComponent.text = string.Empty;
         StartDialogue();

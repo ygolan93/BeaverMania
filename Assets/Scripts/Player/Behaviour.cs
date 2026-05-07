@@ -772,8 +772,66 @@ public class Behaviour : MonoBehaviour
         GoldBrick.SetActive(false);
         Physics.IgnoreLayerCollision(gameObject.layer, 7, false);
     }
+    bool ValidateStartReferences()
+    {
+        Player = GetComponent<Rigidbody>();
+
+        var gmObject = GameObject.FindGameObjectWithTag("GM");
+        if (!RuntimeReferenceValidator.Require(gmObject, this, "GM tag"))
+        {
+            return false;
+        }
+
+        GM = gmObject.GetComponent<GameMaster>();
+
+        bool valid = RuntimeReferenceValidator.Require(Player, this, nameof(Player)) &
+            RuntimeReferenceValidator.Require(Load, this, nameof(Load)) &
+            RuntimeReferenceValidator.Require(Root, this, nameof(Root)) &
+            RuntimeReferenceValidator.Require(Otter, this, nameof(Otter)) &
+            RuntimeReferenceValidator.Require(otterAction, this, nameof(otterAction)) &
+            RuntimeReferenceValidator.Require(arrowModel, this, nameof(arrowModel)) &
+            RuntimeReferenceValidator.Require(HealthBar, this, nameof(HealthBar)) &
+            RuntimeReferenceValidator.Require(HoneyJar, this, nameof(HoneyJar)) &
+            RuntimeReferenceValidator.Require(GoldBrick, this, nameof(GoldBrick)) &
+            RuntimeReferenceValidator.Require(PopUpEffect, this, nameof(PopUpEffect)) &
+            RuntimeReferenceValidator.Require(HealEffect, this, nameof(HealEffect)) &
+            RuntimeReferenceValidator.Require(ElectricEffect, this, nameof(ElectricEffect)) &
+            RuntimeReferenceValidator.Require(MunitionDisplay, this, nameof(MunitionDisplay)) &
+            RuntimeReferenceValidator.Require(LooseScreen, this, nameof(LooseScreen)) &
+            RuntimeReferenceValidator.Require(GM, this, nameof(GM)) &
+            RuntimeReferenceValidator.Require(AimIcon, this, nameof(AimIcon)) &
+            RuntimeReferenceValidator.Require(FreeLook, this, nameof(FreeLook)) &
+            RuntimeReferenceValidator.Require(CamForTraders, this, nameof(CamForTraders)) &
+            RuntimeReferenceValidator.Require(HologramedBridge, this, nameof(HologramedBridge)) &
+            RuntimeReferenceValidator.Require(appleOBJ, this, nameof(appleOBJ)) &
+            RuntimeReferenceValidator.Require(gobletOBJ, this, nameof(gobletOBJ));
+
+        if (ArmorSet != null)
+        {
+            for (int i = 0; i < ArmorSet.Length; i++)
+            {
+                valid &= RuntimeReferenceValidator.Require(ArmorSet[i], this, $"{nameof(ArmorSet)}[{i}]");
+            }
+        }
+
+        if (Bow != null)
+        {
+            for (int i = 0; i < Bow.Length; i++)
+            {
+                valid &= RuntimeReferenceValidator.Require(Bow[i], this, $"{nameof(Bow)}[{i}]");
+            }
+        }
+
+        return valid;
+    }
+
     public void Start()
     {
+        if (!ValidateStartReferences())
+        {
+            return;
+        }
+
         arrowModel.SetActive(false);
         bowAim = new Vector3(-0.33f, 20f, -0.3f);
         CamForTraders.enabled = false;
@@ -781,12 +839,21 @@ public class Behaviour : MonoBehaviour
         HideCursor();
         AimIcon.SetActive(false);
         MunitionDisplay.SetActive(false);
-        Player = GetComponent<Rigidbody>();
-        GM = GameObject.FindGameObjectWithTag("GM").GetComponent<GameMaster>();
         //Enable/Disable Background music
         if (seekMusic == true)
         {
-            Music = GameObject.Find("GameMusic").GetComponent<MusicPlaylist>();
+            var musicObject = GameObject.Find("GameMusic");
+            if (!RuntimeReferenceValidator.Require(musicObject, this, "GameMusic"))
+            {
+                return;
+            }
+
+            Music = musicObject.GetComponent<MusicPlaylist>();
+            if (!RuntimeReferenceValidator.Require(Music, this, nameof(Music)))
+            {
+                return;
+            }
+
             Music.transform.parent = Player.transform;
             Music.transform.position = new Vector3(0, 0, 0);
             var MusicSwitches = GameObject.FindGameObjectsWithTag("SwitchMusic");

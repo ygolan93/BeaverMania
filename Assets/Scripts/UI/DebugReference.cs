@@ -20,8 +20,29 @@ public class DebugReference : MonoBehaviour
     public TextMeshProUGUI ArrowMunition;
     private void Start()
     {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
-        PlayerObjective = GameObject.FindGameObjectWithTag("Player").GetComponent<ObjectiveUI>();
+        var playerObject = GameObject.FindGameObjectWithTag("Player");
+        if (!RuntimeReferenceValidator.Require(playerObject, this, "Player tag"))
+        {
+            return;
+        }
+
+        Player = playerObject.GetComponent<Behaviour>();
+        PlayerObjective = playerObject.GetComponent<ObjectiveUI>();
+        if (!RuntimeReferenceValidator.Require(Player, this, nameof(Player)) ||
+            !RuntimeReferenceValidator.Require(PlayerObjective, this, nameof(PlayerObjective)) ||
+            !RuntimeReferenceValidator.Require(ObjectiveText, this, nameof(ObjectiveText)) ||
+            !RuntimeReferenceValidator.Require(DisplayText, this, nameof(DisplayText)) ||
+            !RuntimeReferenceValidator.Require(StaminaText, this, nameof(StaminaText)) ||
+            !RuntimeReferenceValidator.Require(LogCountText, this, nameof(LogCountText)) ||
+            !RuntimeReferenceValidator.Require(HealingDisplay, this, nameof(HealingDisplay)) ||
+            !RuntimeReferenceValidator.Require(CurrencyCount, this, nameof(CurrencyCount)) ||
+            !RuntimeReferenceValidator.Require(SeedCount, this, nameof(SeedCount)) ||
+            !RuntimeReferenceValidator.Require(GobletCount, this, nameof(GobletCount)) ||
+            !RuntimeReferenceValidator.Require(AppleCount, this, nameof(AppleCount)) ||
+            !RuntimeReferenceValidator.Require(ArrowMunition, this, nameof(ArrowMunition)))
+        {
+            return;
+        }
     }
 
     void Update()

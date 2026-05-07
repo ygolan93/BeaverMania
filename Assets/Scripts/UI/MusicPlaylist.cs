@@ -15,12 +15,12 @@ public class MusicPlaylist : MonoBehaviour
         MusicSource = GetComponent<AudioSource>();
         if (MusicSource == null)
         {
-            Debug.LogError("No AudioSource component found on the GameObject.");
+            BuildSafeLogger.ErrorOnce("MusicPlaylist.MissingAudioSource", "No AudioSource component found on the GameObject.", this, missingField: nameof(MusicSource));
             return;
         }
         if (MusicClip.Length == 0)
         {
-            Debug.LogError("No music clips assigned in the MusicClip array.");
+            BuildSafeLogger.ErrorOnce("MusicPlaylist.NoMusicClips", "No music clips assigned in the MusicClip array.", this, missingField: nameof(MusicClip));
             return;
         }
         StartPlaylist();
@@ -81,7 +81,7 @@ public class MusicPlaylist : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("Invalid song index: " + newSongIndex);
+            BuildSafeLogger.WarnOnce("MusicPlaylist.InvalidSongIndex." + newSongIndex, "Invalid song index: " + newSongIndex, this);
         }
     }
 }

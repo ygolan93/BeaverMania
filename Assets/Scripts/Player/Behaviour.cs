@@ -486,7 +486,7 @@ public class Behaviour : MonoBehaviour, IDamageable
             }
             else
             {
-                Debug.LogWarning("The game object's name is not a valid integer: " + OBJ.gameObject.name);
+                BuildSafeLogger.WarnOnce("Behaviour.SwitchMusic.InvalidName." + OBJ.gameObject.name, "The game object's name is not a valid integer: " + OBJ.gameObject.name, this);
             }
 
         }

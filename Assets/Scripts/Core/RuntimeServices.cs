@@ -27,6 +27,7 @@ public static class RuntimeServices
 
     public static T GetOrCreate<T>(ServiceLifetime lifetime) where T : Component
     {
+        var serviceType = typeof(T);
         T service;
         if (TryGet(out service))
         {
@@ -40,7 +41,12 @@ public static class RuntimeServices
             return service;
         }
 
-        return new GameObject(typeof(T).Name).AddComponent<T>();
+        BuildSafeLogger.WarnOnce(
+            serviceType.FullName + ".MissingService",
+            "Missing runtime service; creating fallback " + serviceType.Name + ".",
+            null,
+            serviceType.Name);
+        return new GameObject(serviceType.Name).AddComponent<T>();
     }
 
     public static bool Register<T>(T service, ServiceLifetime lifetime) where T : UnityEngine.Object
@@ -54,6 +60,11 @@ public static class RuntimeServices
         Registration existing;
         if (Services.TryGetValue(serviceType, out existing) && existing.Service != null && existing.Service != service)
         {
+            BuildSafeLogger.WarnOnce(
+                serviceType.FullName + ".DuplicateManager",
+                "Duplicate manager/service rejected: " + serviceType.Name + ".",
+                service as UnityEngine.Object,
+                serviceType.Name);
             var component = service as Component;
             if (component != null)
             {

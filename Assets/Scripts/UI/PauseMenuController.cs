@@ -116,22 +116,22 @@ public class PauseMenuController : MonoBehaviour
 
     public void ShowPausePanel()
     {
-        SetPanel(PauseMenu, true);
+        SetPanel(PauseMenu, true, this, nameof(PauseMenu));
     }
 
     public void HidePausePanel()
     {
-        SetPanel(PauseMenu, false);
+        SetPanel(PauseMenu, false, this, nameof(PauseMenu));
     }
 
     public void ShowQuestionPanel()
     {
-        SetPanel(Question, true);
+        SetPanel(Question, true, this, nameof(Question));
     }
 
     public void HideQuestionPanel()
     {
-        SetPanel(Question, false);
+        SetPanel(Question, false, this, nameof(Question));
     }
 
     void SetPaused(bool paused)
@@ -156,11 +156,18 @@ public class PauseMenuController : MonoBehaviour
         inputReader.EnableGameplayInput();
     }
 
-    static void SetPanel(GameObject panel, bool active)
+    static void SetPanel(GameObject panel, bool active, PauseMenuController owner, string fieldName)
     {
         if (panel != null)
         {
             panel.SetActive(active);
+            return;
         }
+
+        BuildSafeLogger.WarnOnce(
+            nameof(PauseMenuController) + ".NullPanel." + fieldName,
+            "UI panel is null; cannot set active=" + active + ".",
+            owner,
+            fieldName);
     }
 }

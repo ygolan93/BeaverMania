@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-public class NPC_Basic : MonoBehaviour
+public class NPC_Basic : MonoBehaviour, IDamageable
 {
     [Header("Config")]
     [SerializeField] EnemyAIConfig aiConfig;
@@ -343,7 +343,9 @@ public class NPC_Basic : MonoBehaviour
             NPC.velocity = (SpawnPos - transform.position).normalized * 5;
     }
 
-    public void TakeDamage(int Damage)
+    public void TakeDamage(int Damage) => TakeDamage(new DamageEvent { Amount = Damage, Source = null, Point = transform.position, Type = DamageType.Generic, CanStun = false });
+
+    public void TakeDamage(DamageEvent damageEvent)
     {
         BuzzSource.SetActive(false);
         rotGoal = Quaternion.LookRotation(Distance);
@@ -351,7 +353,7 @@ public class NPC_Basic : MonoBehaviour
         NPC.useGravity = true;
         Wasp.SetBool("Beat", true);
         Wasp.SetBool("Sting", false);
-        CurrentHealth -= Damage;
+        CurrentHealth -= Mathf.RoundToInt(damageEvent.Amount);
         var playerArsenal = PlayerTarget.GetComponent<Behaviour>().Arsenal;
         var currentWeapon = PlayerTarget.GetComponent<Behaviour>().arsenalBrowser;
         switch (playerArsenal[currentWeapon])
@@ -394,6 +396,10 @@ public class NPC_Basic : MonoBehaviour
                 }
         }
         combo++;
+        if (damageEvent.CanStun && (damageEvent.Type == DamageType.Projectile || damageEvent.Type == DamageType.Fire))
+        {
+            combo += hit2stun;
+        }
         NPCHealthBar.SetNPCHealth(CurrentHealth);
     }
 }

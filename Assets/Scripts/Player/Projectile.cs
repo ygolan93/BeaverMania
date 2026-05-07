@@ -85,6 +85,19 @@ public class Projectile : MonoBehaviour
     }
     private void OnCollisionEnter(Collision OBJ)
     {
+        if (TryDamage(OBJ.gameObject, OBJ.contactCount > 0 ? OBJ.GetContact(0).point : transform.position))
+        {
+            if (isFireBall == true)
+            {
+                Explode();
+            }
+            if (isFireBall == false)
+            {
+                RockHit();
+            }
+            return;
+        }
+
         if (OBJ.gameObject.CompareTag("NPC"))
         {
             OBJ.gameObject.GetComponent<NPC_Basic>().TakeDamage(Damage);
@@ -136,5 +149,30 @@ public class Projectile : MonoBehaviour
                 RockHit();
             }
         }
+    }
+
+    bool TryDamage(GameObject target, Vector3 point)
+    {
+        if (!target.TryGetComponent(out IDamageable damageable))
+        {
+            return false;
+        }
+
+        damageable.TakeDamage(new DamageEvent
+        {
+            Amount = Damage,
+            Source = Player != null ? Player.gameObject : gameObject,
+            Point = point,
+            Type = isFireBall ? DamageType.Fire : DamageType.Projectile,
+            CanStun = true
+        });
+
+        if (target.CompareTag("NPC") && Player != null)
+        {
+            Player.Plattering = "Bam! Take that";
+            Player.ChangeSpeech = 1f;
+        }
+
+        return true;
     }
 }

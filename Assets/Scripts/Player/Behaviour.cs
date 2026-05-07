@@ -171,6 +171,104 @@ public class Behaviour : MonoBehaviour
     public CinemachineFreeLook CamForTraders;
     public float ChangeSpeech = 1F;
     GameInputReader inputReader;
+    PlayerHealthController healthController;
+    PlayerInventory inventory;
+    PlayerInteractionController interactionController;
+    PlayerCombatController combatController;
+    PlayerMovementController movementController;
+
+
+    PlayerHealthController Health
+    {
+        get
+        {
+            if (healthController == null)
+            {
+                healthController = GetComponent<PlayerHealthController>();
+                if (healthController == null)
+                {
+                    healthController = gameObject.AddComponent<PlayerHealthController>();
+                }
+            }
+
+            return healthController;
+        }
+    }
+
+    PlayerInventory Inventory
+    {
+        get
+        {
+            if (inventory == null)
+            {
+                inventory = GetComponent<PlayerInventory>();
+                if (inventory == null)
+                {
+                    inventory = gameObject.AddComponent<PlayerInventory>();
+                }
+                inventory.Initialize(this);
+            }
+
+            return inventory;
+        }
+    }
+
+    PlayerInteractionController Interaction
+    {
+        get
+        {
+            if (interactionController == null)
+            {
+                interactionController = GetComponent<PlayerInteractionController>();
+                if (interactionController == null)
+                {
+                    interactionController = gameObject.AddComponent<PlayerInteractionController>();
+                }
+                interactionController.Initialize(this, inputReader);
+            }
+
+            return interactionController;
+        }
+    }
+
+    PlayerCombatController Combat
+    {
+        get
+        {
+            if (combatController == null)
+            {
+                combatController = GetComponent<PlayerCombatController>();
+                if (combatController == null)
+                {
+                    combatController = gameObject.AddComponent<PlayerCombatController>();
+                }
+                combatController.Initialize(this);
+            }
+
+            return combatController;
+        }
+    }
+
+    PlayerMovementController Movement
+    {
+        get
+        {
+            if (movementController == null)
+            {
+                movementController = GetComponent<PlayerMovementController>();
+                if (movementController == null)
+                {
+                    movementController = gameObject.AddComponent<PlayerMovementController>();
+                }
+                movementController.Initialize(this);
+            }
+
+            return movementController;
+        }
+    }
+
+    public void ToggleParryCounterAttack() => WhichAttack = !WhichAttack;
+    public void SetAppleModelActive(bool active) => appleOBJ.SetActive(active);
 
     public void OnCollisionEnter(Collision OBJ)
     {
@@ -189,18 +287,18 @@ public class Behaviour : MonoBehaviour
 
             if (OBJ.gameObject.CompareTag("Seed"))
             {
-                NutCount++;
+                Inventory.AddSeed();
                 Sound.PickItem();
             }
             if (OBJ.gameObject.CompareTag("Apple"))
             {
                 Sound.PickUp2();
-                Apple++;
+                Inventory.AddApple();
             }
             if (OBJ.gameObject.CompareTag("GobletKey"))
             {
                 Sound.PickUp2();
-                GobletPickup++;
+                Inventory.AddGoblet();
                 Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
                 Destroy(OBJ.gameObject);
             }
@@ -447,21 +545,11 @@ public class Behaviour : MonoBehaviour
             var skip = OBJ.gameObject.GetComponent<Trader>().skipPressed;
             if (skip ==false)
             {
-                ShowCursor();
-                isAtTrader = true;
-                GetInputReader().EnableUiInput();
-                FreeLook.enabled = false;
-                CamForTraders.enabled = true;
-                CamForTraders.m_LookAt = OBJ.transform;
+                Interaction.EnterTrader(OBJ);
             }
             if (skip ==true)
             {
-                isAtTrader = false;
-                GetInputReader().EnableGameplayInput();
-                CamForTraders.enabled = false;
-                CamForTraders.m_LookAt = null;
-                FreeLook.enabled = true;
-                FreeLook.m_LookAt.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Root.position), 0.5f);
+                Interaction.ExitTrader();
             }
         }
         if (OBJ.gameObject.CompareTag("House"))
@@ -494,12 +582,7 @@ public class Behaviour : MonoBehaviour
         }
         if (OBJ.gameObject.CompareTag("Trader"))
         {
-            isAtTrader = false;
-            GetInputReader().EnableGameplayInput();
-            CamForTraders.enabled = false;
-            CamForTraders.m_LookAt = null;
-            FreeLook.enabled = true;
-            FreeLook.m_LookAt.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Root.position), 0.5f);
+            Interaction.ExitTrader();
         }
         if (OBJ.gameObject.CompareTag("House"))
         {
@@ -513,32 +596,7 @@ public class Behaviour : MonoBehaviour
             scorpAttack = false;
         }
     }
-    public void TakeDamage(float Damage)
-    {
-        if (isParried == false)
-        {
-            CurrentHealth -= Damage;
-            HealthBar.SetHealth(CurrentHealth);
-            if (Damage > 0)
-            {
-                hurt = true;
-                heal = false;
-            }
-            if (Damage < 0)
-            {
-                hurt = false;
-                heal = true;
-            }
-        }
-        if (isParried == true)
-        {
-            WhichAttack = !WhichAttack;
-            DefendAnim = 0.3f;
-            Defend = true;
-            CurrentStamina -= Damage;
-            HealthBar.SetStamina(CurrentStamina);
-        }
-    }
+    public void TakeDamage(float Damage) => Health.TakeDamage(Damage);
     public void PlayerMove(Vector3 Direction)
     {
         movementInvoked = true;
@@ -668,23 +726,8 @@ public class Behaviour : MonoBehaviour
             i++;
         }
     }
-    public void ShowCursor()
-    {
-        //show mouse icon
-        CursorStateService.GetOrCreate().ShowCursor();
-        GetInputReader().EnableUiInput();
-    }
-    public void HideCursor()
-    {
-        //Lock and hide mouse icon
-        FreeLook.m_LookAt = Root;
-        CursorStateService.GetOrCreate().HideCursor();
-        var gameFlow = GameFlowController.Instance;
-        if (gameFlow == null || gameFlow.State == GameFlowState.Playing)
-        {
-            GetInputReader().EnableGameplayInput();
-        }
-    }
+    public void ShowCursor() => Interaction.ShowCursor();
+    public void HideCursor() => Interaction.HideCursor();
     public void ActivateLooseMenu()
     {
         //MusicOP.StopMusic();
@@ -853,22 +896,7 @@ public class Behaviour : MonoBehaviour
         return reader != null && !reader.IsGameplayInputEnabled;
     }
 
-    void HandleDeathState()
-    {
-        if (CurrentHealth > 0)
-        {
-            return;
-        }
-
-        if (Lives > 0)
-        {
-            RestartCheckpoint();
-        }
-        if (Lives == 0)
-        {
-            ActivateLooseMenu();
-        }
-    }
+    void HandleDeathState() => Health.HandleDeathState();
 
     bool ValidateStartReferences()
     {
@@ -923,6 +951,10 @@ public class Behaviour : MonoBehaviour
 
         inputReader = GameInputReader.GetOrCreate();
         inputReader.EnableGameplayInput();
+        Inventory.Initialize(this);
+        Interaction.Initialize(this, inputReader);
+        Combat.Initialize(this);
+        Movement.Initialize(this);
         arrowModel.SetActive(false);
         bowAim = new Vector3(-0.33f, 20f, -0.3f);
         CamForTraders.enabled = false;
@@ -964,10 +996,7 @@ public class Behaviour : MonoBehaviour
                 item.SetActive(false);
             }
         }
-        CurrentHealth = MaxHealth;
-        HealthBar.SetMaxHealth(CurrentHealth);
-        CurrentStamina = MaxStamina;
-        HealthBar.SetMaxStamina(CurrentStamina);
+        Health.Initialize(this);
         HealShape = HealEffect.shape;
         ParryOFF();
         HoneyOFF();
@@ -1041,40 +1070,7 @@ public class Behaviour : MonoBehaviour
         }
 
         //Reload Stamina Bar
-        if (isParried == false)
-        {
-            if (CurrentStamina > MaxStamina)
-            {
-                CurrentStamina = MaxStamina;
-            }
-            if (CurrentStamina < MaxStamina && !Input.GetKey(KeyCode.LeftControl))
-            {
-                if (!Input.GetKey(KeyCode.Mouse1) && isParried == false && !Input.GetKey(KeyCode.Mouse0) && !Input.GetKey(KeyCode.F))
-                {
-                    StaminaClock -= Time.deltaTime;
-                    if (StaminaClock <= 0)
-                    {
-                        CurrentStamina += 1;
-                        HealthBar.SetStamina(CurrentStamina);
-                    }
-                }
-                else
-                    StaminaClock = StaminaClockInitial;
-            }
-            else
-                StaminaClock = StaminaClockInitial;
-        }
-        else
-        {
-            if (ArmorEquipped==false)
-            {
-                CurrentStamina -= 0.05f;
-            }
-            if (ArmorEquipped==true)
-            {
-                CurrentStamina -= 0.001f;
-            }
-        }
+        Health.TickStamina();
         //Update UI
         {
             State.arrowMunition = arrowMunition;
@@ -1122,11 +1118,7 @@ public class Behaviour : MonoBehaviour
         //Load Loose screen on death
         HandleDeathState();
         //Limit Stamina decrease down to 0 only
-        if (CurrentStamina <= 0)
-        {
-            ParryOFF();
-            CurrentStamina = 0;
-        }
+        Health.ClampStaminaAndParry();
         //Crouch action - Place Logs
         {
             if (Input.GetKey(KeyCode.LeftControl)&& FreeLook.m_Lens.FieldOfView<20)
@@ -1307,31 +1299,16 @@ public class Behaviour : MonoBehaviour
         }
         //Plant Seed action
         {
-            if (Input.GetKeyDown(KeyCode.R) && NutCount > 0)
+            if (Input.GetKeyDown(KeyCode.R))
             {
-                Otter.Play("Crouch");
-                Instantiate(Seed, AttackPoint.position, Quaternion.identity);
-                NutCount--;
+                Inventory.TryPlantSeed();
             }
         }
         //Eat Apple
         {
-            if (Input.GetKeyDown(KeyCode.T) && Apple > 0)
+            if (Input.GetKeyDown(KeyCode.T))
             {
-                appleOBJ.SetActive(true);
-                Otter.Play("Consume");
-                Sound.Eat();
-                if (MaxHealth - CurrentHealth > 500)
-                {
-                    TakeDamage(-500);
-                    HealthBar.SetHealth(CurrentHealth);
-                }
-                else
-                {
-                    CurrentHealth = MaxHealth;
-                    HealthBar.SetMaxHealth(MaxHealth);
-                }
-                Apple--;
+                Inventory.TryEatApple();
             }
             if (Input.GetKeyUp(KeyCode.T))
             {
@@ -1340,11 +1317,9 @@ public class Behaviour : MonoBehaviour
         }
         //Use Goblet
         {
-            if (Input.GetKeyDown(KeyCode.Y) && GobletPickup > 0)
+            if (Input.GetKeyDown(KeyCode.Y))
             {
-                Otter.Play("Consume");
-                Sound.Drink();
-                GobletON();
+                Inventory.TryUseGoblet();
             }
             if (GobletPicked == true)
             {
@@ -1630,23 +1605,7 @@ public class Behaviour : MonoBehaviour
 
         //Switch off hurt and heal effects automaticly
         {
-            if (hurt == true || heal == true)
-            {
-                StopHurt += Time.deltaTime;
-                if (StopHurt >= 0.2f)
-                {
-                    hurt = false;
-                    heal = false;
-                }
-            }
-            else
-            {
-                StopHurt = 0;
-            }
-            if (CurrentHealth >= MaxHealth)
-            {
-                heal = false;
-            }
+            Health.TickHurtHealEffects();
         }
         //Control player rigidbody's friction
         {

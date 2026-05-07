@@ -657,27 +657,25 @@ public class Behaviour : MonoBehaviour
     public void ShowCursor()
     {
         //show mouse icon
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        CursorStateService.GetOrCreate().ShowCursor();
     }
     public void HideCursor()
     {
         //Lock and hide mouse icon
         FreeLook.m_LookAt = Root;
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        CursorStateService.GetOrCreate().HideCursor();
     }
     public void ActivateLooseMenu()
     {
         //MusicOP.StopMusic();
-        Time.timeScale = 0;
+        GameFlowController.GetOrCreate().SetGameOver();
         ShowCursor();
         LooseScreen.SetActive(true);
     }
     public void HideLooseMenu()
     {
         //MusicOP.ResumeMusic();
-        Time.timeScale = 1;
+        GameFlowController.GetOrCreate().SetPlaying();
         HideCursor();
         LooseScreen.SetActive(false);
     }
@@ -691,6 +689,7 @@ public class Behaviour : MonoBehaviour
     }
     public void RestartGame()
     {
+        GameFlowController.GetOrCreate().BeginSceneTransition();
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
     public void GobletON()

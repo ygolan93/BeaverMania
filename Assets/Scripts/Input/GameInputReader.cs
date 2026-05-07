@@ -30,19 +30,7 @@ public class GameInputReader : MonoBehaviour
 
     public static GameInputReader GetOrCreate()
     {
-        if (Instance != null)
-        {
-            return Instance;
-        }
-
-        Instance = FindObjectOfType<GameInputReader>();
-        if (Instance != null)
-        {
-            return Instance;
-        }
-
-        var gameObject = new GameObject(nameof(GameInputReader));
-        return gameObject.AddComponent<GameInputReader>();
+        return RuntimeServices.GetOrCreate<GameInputReader>(ServiceLifetime.Scene);
     }
 
     public void EnableGameplayInput()
@@ -70,6 +58,11 @@ public class GameInputReader : MonoBehaviour
             return;
         }
 
+        if (!RuntimeServices.Register(this, ServiceLifetime.Scene))
+        {
+            return;
+        }
+
         Instance = this;
     }
 
@@ -78,6 +71,7 @@ public class GameInputReader : MonoBehaviour
         if (Instance == this)
         {
             Instance = null;
+            RuntimeServices.Unregister(this);
         }
     }
 

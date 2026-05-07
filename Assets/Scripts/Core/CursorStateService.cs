@@ -14,6 +14,11 @@ public class CursorStateService : MonoBehaviour
     {
         if (Instance != null && Instance != this)
         {
+            BuildSafeLogger.WarnOnce(
+                nameof(CursorStateService) + ".DuplicateManager",
+                "Duplicate manager destroyed: " + nameof(CursorStateService) + ".",
+                this,
+                nameof(CursorStateService));
             Destroy(gameObject);
             return;
         }

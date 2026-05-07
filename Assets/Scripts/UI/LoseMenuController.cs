@@ -39,6 +39,13 @@ public sealed class LoseMenuController : MonoBehaviour
         if (LosePanel != null)
         {
             LosePanel.SetActive(active);
+            return;
         }
+
+        BuildSafeLogger.WarnOnce(
+            nameof(LoseMenuController) + ".NullPanel." + nameof(LosePanel),
+            "UI panel is null; cannot set active=" + active + ".",
+            this,
+            nameof(LosePanel));
     }
 }

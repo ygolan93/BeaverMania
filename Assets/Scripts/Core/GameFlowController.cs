@@ -16,6 +16,11 @@ public class GameFlowController : MonoBehaviour
     {
         if (Instance != null && Instance != this)
         {
+            BuildSafeLogger.WarnOnce(
+                nameof(GameFlowController) + ".DuplicateManager",
+                "Duplicate manager destroyed: " + nameof(GameFlowController) + ".",
+                this,
+                nameof(GameFlowController));
             Destroy(gameObject);
             return;
         }

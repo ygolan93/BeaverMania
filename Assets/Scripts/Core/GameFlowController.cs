@@ -9,19 +9,7 @@ public class GameFlowController : MonoBehaviour
 
     public static GameFlowController GetOrCreate()
     {
-        if (Instance != null)
-        {
-            return Instance;
-        }
-
-        Instance = FindObjectOfType<GameFlowController>();
-        if (Instance != null)
-        {
-            return Instance;
-        }
-
-        var gameObject = new GameObject(nameof(GameFlowController));
-        return gameObject.AddComponent<GameFlowController>();
+        return RuntimeServices.GetOrCreate<GameFlowController>(ServiceLifetime.Scene);
     }
 
     private void Awake()
@@ -29,6 +17,11 @@ public class GameFlowController : MonoBehaviour
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
+            return;
+        }
+
+        if (!RuntimeServices.Register(this, ServiceLifetime.Scene))
+        {
             return;
         }
 
@@ -40,6 +33,7 @@ public class GameFlowController : MonoBehaviour
         if (Instance == this)
         {
             Instance = null;
+            RuntimeServices.Unregister(this);
         }
     }
 

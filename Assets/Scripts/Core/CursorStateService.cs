@@ -7,19 +7,7 @@ public class CursorStateService : MonoBehaviour
 
     public static CursorStateService GetOrCreate()
     {
-        if (Instance != null)
-        {
-            return Instance;
-        }
-
-        Instance = FindObjectOfType<CursorStateService>();
-        if (Instance != null)
-        {
-            return Instance;
-        }
-
-        var gameObject = new GameObject(nameof(CursorStateService));
-        return gameObject.AddComponent<CursorStateService>();
+        return RuntimeServices.GetOrCreate<CursorStateService>(ServiceLifetime.Persistent);
     }
 
     private void Awake()
@@ -27,6 +15,11 @@ public class CursorStateService : MonoBehaviour
         if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
+            return;
+        }
+
+        if (!RuntimeServices.Register(this, ServiceLifetime.Persistent))
+        {
             return;
         }
 
@@ -38,6 +31,7 @@ public class CursorStateService : MonoBehaviour
         if (Instance == this)
         {
             Instance = null;
+            RuntimeServices.Unregister(this);
         }
     }
 

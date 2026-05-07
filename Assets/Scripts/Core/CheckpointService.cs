@@ -9,19 +9,7 @@ public sealed class CheckpointService : MonoBehaviour
 
     public static CheckpointService GetOrCreate()
     {
-        if (Instance != null)
-        {
-            return Instance;
-        }
-
-        Instance = FindObjectOfType<CheckpointService>();
-        if (Instance != null)
-        {
-            return Instance;
-        }
-
-        var gameObject = new GameObject(nameof(CheckpointService));
-        return gameObject.AddComponent<CheckpointService>();
+        return RuntimeServices.GetOrCreate<CheckpointService>(ServiceLifetime.Scene);
     }
 
     private void Awake()
@@ -32,8 +20,12 @@ public sealed class CheckpointService : MonoBehaviour
             return;
         }
 
+        if (!RuntimeServices.Register(this, ServiceLifetime.Scene))
+        {
+            return;
+        }
+
         Instance = this;
-        DontDestroyOnLoad(gameObject);
     }
 
     private void OnDestroy()
@@ -41,6 +33,7 @@ public sealed class CheckpointService : MonoBehaviour
         if (Instance == this)
         {
             Instance = null;
+            RuntimeServices.Unregister(this);
         }
     }
 

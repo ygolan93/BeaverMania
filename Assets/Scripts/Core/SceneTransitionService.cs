@@ -10,19 +10,7 @@ public class SceneTransitionService : MonoBehaviour
 
     public static SceneTransitionService GetOrCreate()
     {
-        if (Instance != null)
-        {
-            return Instance;
-        }
-
-        Instance = FindObjectOfType<SceneTransitionService>();
-        if (Instance != null)
-        {
-            return Instance;
-        }
-
-        var gameObject = new GameObject(nameof(SceneTransitionService));
-        return gameObject.AddComponent<SceneTransitionService>();
+        return RuntimeServices.GetOrCreate<SceneTransitionService>(ServiceLifetime.Persistent);
     }
 
     public static void LoadMenu()
@@ -32,7 +20,7 @@ public class SceneTransitionService : MonoBehaviour
 
     public static void LoadLevel1()
     {
-        GetOrCreate().LoadSceneInternal(SceneNames.Level1, false);
+        GetOrCreate().LoadSceneInternal(SceneNames.Level1, false, true);
     }
 
     public static void ReloadActiveScene()
@@ -59,8 +47,12 @@ public class SceneTransitionService : MonoBehaviour
             return;
         }
 
+        if (!RuntimeServices.Register(this, ServiceLifetime.Persistent))
+        {
+            return;
+        }
+
         Instance = this;
-        DontDestroyOnLoad(gameObject);
     }
 
     private void OnEnable()
@@ -78,6 +70,7 @@ public class SceneTransitionService : MonoBehaviour
         if (Instance == this)
         {
             Instance = null;
+            RuntimeServices.Unregister(this);
         }
     }
 
@@ -88,9 +81,19 @@ public class SceneTransitionService : MonoBehaviour
 
     private void LoadSceneInternal(string sceneName, bool showCursor)
     {
+        LoadSceneInternal(sceneName, showCursor, false);
+    }
+
+    private void LoadSceneInternal(string sceneName, bool showCursor, bool resetSceneServices)
+    {
         if (!PrepareLoad(showCursor))
         {
             return;
+        }
+
+        if (resetSceneServices)
+        {
+            RuntimeServices.ResetSceneServices();
         }
 
         SceneManager.LoadScene(sceneName);

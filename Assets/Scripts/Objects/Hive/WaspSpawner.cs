@@ -7,6 +7,7 @@ public class WaspSpawner : MonoBehaviour, IRuntimeResettable
     public GameObject Wasp;
     public GameObject Hive;
     public Behaviour Player;
+    Transform playerTransform;
     public Vector3 Distance;
     [SerializeField] float SpawnDistance;
     public int WaspCounter=3;
@@ -19,13 +20,16 @@ public class WaspSpawner : MonoBehaviour, IRuntimeResettable
     int initialCounter;
     float initialRealClock;
     readonly List<GameObject> spawnedWasps = new List<GameObject>();
+    readonly List<Collider> spawnedWaspColliders = new List<Collider>();
     
     private void Start()
     { 
         Counter=WaspCounter;
         RealClock = SpawnClock;
-        var playerObject = GameObject.FindGameObjectWithTag("Player");
-        Player = playerObject != null ? playerObject.GetComponent<Behaviour>() : null;
+        if (PlayerReference.TryGetPlayer(out Player))
+        {
+            playerTransform = Player.transform;
+        }
 
         if (!ValidateReferences())
         {
@@ -59,6 +63,7 @@ public class WaspSpawner : MonoBehaviour, IRuntimeResettable
         }
 
         spawnedWasps.Clear();
+        spawnedWaspColliders.Clear();
     }
 
     bool ValidateReferences()
@@ -71,14 +76,14 @@ public class WaspSpawner : MonoBehaviour, IRuntimeResettable
 
     public void Update()
     {
-         Distance = Player.transform.position - gameObject.transform.position;
+         Distance = playerTransform.position - gameObject.transform.position;
 
         if (Mathf.Abs(Distance.magnitude) < SpawnDistance )
         {
             if (Counter > 0)
             {
                Quaternion RotWasp = Quaternion.LookRotation(Distance);
-               spawnedWasps.Add(Instantiate(Wasp, Hive.transform.position, RotWasp));
+               SpawnWasp(RotWasp);
                 Counter--;
             }
             if (Counter <=0)
@@ -98,5 +103,26 @@ public class WaspSpawner : MonoBehaviour, IRuntimeResettable
             Counter = 0;
             RealClock = 0;
         }
+    }
+
+    void SpawnWasp(Quaternion rotation)
+    {
+        var wasp = Instantiate(Wasp, Hive.transform.position, rotation);
+        spawnedWasps.Add(wasp);
+
+        if (!wasp.TryGetComponent(out Collider waspCollider))
+        {
+            return;
+        }
+
+        for (int i = 0; i < spawnedWaspColliders.Count; i++)
+        {
+            if (spawnedWaspColliders[i] != null)
+            {
+                Physics.IgnoreCollision(waspCollider, spawnedWaspColliders[i]);
+            }
+        }
+
+        spawnedWaspColliders.Add(waspCollider);
     }
 }

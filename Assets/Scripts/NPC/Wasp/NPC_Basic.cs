@@ -22,6 +22,7 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
     [SerializeField] Animator Wasp;
     [Header("Movement")]
     GameObject PlayerTarget;
+    Transform playerTransform;
     Behaviour PlayerHealth;
     public Vector3 Distance;
     public Quaternion rotGoal;
@@ -90,8 +91,11 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
         SpawnPos = transform.position;
         Wasp = GetComponent<Animator>();
         CurrentHealth = MaxHealth;
-        PlayerTarget = GameObject.FindGameObjectWithTag("Player");
-        PlayerHealth = PlayerTarget != null ? PlayerTarget.GetComponent<Behaviour>() : null;
+        if (PlayerReference.TryGetPlayer(out PlayerHealth))
+        {
+            PlayerTarget = PlayerHealth.gameObject;
+            playerTransform = PlayerHealth.transform;
+        }
         if (feedback == null)
         {
             feedback = GetComponent<CombatFeedbackEmitter>();
@@ -230,7 +234,7 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
 
     void Update()
     {
-        Distance = PlayerTarget.transform.position - transform.position;
+        Distance = playerTransform.position - transform.position;
         PlayerDistance = Distance.magnitude;
         ChangeNav -= Time.deltaTime;
 
@@ -347,11 +351,6 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
         {
             ChargeClock = 0.7f;
             ChangeNav = 0;
-            var other = GameObject.FindGameObjectWithTag("NPC");
-            if (other != null && other != gameObject)
-            {
-                Physics.IgnoreCollision(other.GetComponent<Collider>(), GetComponent<Collider>());
-            }
         }
         else if (next == WaspState.Patrol)
         {
@@ -411,7 +410,7 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
                 Sting();
             }
             Contact = true;
-            if (OBJ.gameObject.GetComponent<Behaviour>().isParried== true)
+            if (PlayerHealth.isParried == true)
             {
                 TakeDamage(20);
                 combo += 10;
@@ -582,8 +581,8 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
         }
         else
         {
-            var playerArsenal = PlayerTarget.GetComponent<Behaviour>().Arsenal;
-            var currentWeapon = PlayerTarget.GetComponent<Behaviour>().arsenalBrowser;
+            var playerArsenal = PlayerHealth.Arsenal;
+            var currentWeapon = PlayerHealth.arsenalBrowser;
             switch (playerArsenal[currentWeapon])
             {
             case "Bare Hands":
@@ -608,7 +607,7 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
                 {
                     feedback?.EmitSlashHit();
                     Sound.LiteSwordDamage();
-                    //var playerAnimator = PlayerTarget.GetComponent<Behaviour>().Otter;
+                    //var playerAnimator = PlayerHealth.Otter;
                     //var currentClip = playerAnimator.GetComponent<AnimationClip>().ToString();
                     //if (currentClip=="Sword1" || currentClip == "Sword2")
                     //{

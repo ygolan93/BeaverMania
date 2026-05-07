@@ -18,8 +18,6 @@ public class BossHandler : MonoBehaviour
     void Start()
     {
         player = gameObject.GetComponent<Behaviour>();
-        var bossObject = GameObject.Find("ScorpionBoss");
-        Boss = bossObject != null ? bossObject.GetComponent<ScorpionScript>() : null;
 
         if (!ValidateReferences())
         {
@@ -42,7 +40,7 @@ public class BossHandler : MonoBehaviour
 
     private void Update()
     {
-        if (Boss.transform==null)
+        if (Boss == null)
         {
             BossBar.SetActive(false);
         }

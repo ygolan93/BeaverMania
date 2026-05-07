@@ -475,9 +475,6 @@ public class Behaviour : MonoBehaviour, IDamageable
             TouchShroom = false;
         }
     }
-    float ScorpionJawDamage => hazardDamageConfig != null ? hazardDamageConfig.scorpionJawClampDamage : 15f;
-    float ScorpionStingDamage => hazardDamageConfig != null ? hazardDamageConfig.scorpionStingDamage : 30f;
-
     public void OnTriggerEnter(Collider OBJ)
     {
         if (OBJ.gameObject.CompareTag("SwitchMusic"))
@@ -505,41 +502,6 @@ public class Behaviour : MonoBehaviour, IDamageable
         {   
             Player.transform.SetParent(OBJ.gameObject.transform, true);
             OnPlatform = true;
-        }
-        if (OBJ.gameObject.CompareTag("ScorpionDamage"))
-        {
-            if (isParried == false)
-            {
-                if (scorpAttack == true)
-                {
-                    if (CombatDebugGate.AllowsDamage(gameObject))
-                    {
-                        TakeDamage(ScorpionJawDamage);
-                        if (CurrentHealth <= 0)
-                        {
-                            HandleFailure(PlayerFailureReason.BossDamage);
-                        }
-                    }
-                }
-            }
-            else
-            {
-
-            }
-        }
-        if (OBJ.gameObject.CompareTag("ScorpionSting"))
-        {
-            if (scorpAttack == true && isParried==false)
-            {
-                if (CombatDebugGate.AllowsDamage(gameObject))
-                {
-                    TakeDamage(ScorpionStingDamage);
-                    if (CurrentHealth <= 0)
-                    {
-                        HandleFailure(PlayerFailureReason.BossDamage);
-                    }
-                }
-            }
         }
     }
     public void OnTriggerStay(Collider OBJ)

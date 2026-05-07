@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
 public class UIMenu : MonoBehaviour
 {
@@ -96,8 +95,7 @@ public class UIMenu : MonoBehaviour
 
     public void MainMenu()
     {
-        GameFlowController.GetOrCreate().BeginSceneTransition();
-        SceneManager.LoadScene("Menu");
+        SceneTransitionService.LoadMenu();
     }
     public void Volume()
     {

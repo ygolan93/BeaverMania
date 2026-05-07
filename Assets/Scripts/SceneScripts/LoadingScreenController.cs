@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
 public class LoadingScreenController : MonoBehaviour
 {
@@ -32,7 +31,11 @@ public class LoadingScreenController : MonoBehaviour
     System.Collections.IEnumerator LoadSceneAsync(string sceneName)
     {
         // Create an operation to load the scene asynchronously
-        AsyncOperation operation = SceneManager.LoadSceneAsync(sceneName);
+        AsyncOperation operation = SceneTransitionService.LoadSceneAsync(sceneName);
+        if (operation == null)
+        {
+            yield break;
+        }
 
         // Reset the fill amount to zero at the start of loading
         if (loadingBar != null)

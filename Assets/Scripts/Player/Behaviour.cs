@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using Cinemachine;
 using Cinemachine.Utility;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class Behaviour : MonoBehaviour
 {
@@ -689,8 +688,7 @@ public class Behaviour : MonoBehaviour
     }
     public void RestartGame()
     {
-        GameFlowController.GetOrCreate().BeginSceneTransition();
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        SceneTransitionService.ReloadActiveScene();
     }
     public void GobletON()
     {

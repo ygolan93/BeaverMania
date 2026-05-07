@@ -16,6 +16,11 @@ public sealed class CheckpointService : MonoBehaviour
     {
         if (Instance != null && Instance != this)
         {
+            BuildSafeLogger.WarnOnce(
+                nameof(CheckpointService) + ".DuplicateManager",
+                "Duplicate manager destroyed: " + nameof(CheckpointService) + ".",
+                this,
+                nameof(CheckpointService));
             Destroy(gameObject);
             return;
         }

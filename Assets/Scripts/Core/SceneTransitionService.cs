@@ -43,6 +43,11 @@ public class SceneTransitionService : MonoBehaviour
     {
         if (Instance != null && Instance != this)
         {
+            BuildSafeLogger.WarnOnce(
+                nameof(SceneTransitionService) + ".DuplicateManager",
+                "Duplicate manager destroyed: " + nameof(SceneTransitionService) + ".",
+                this,
+                nameof(SceneTransitionService));
             Destroy(gameObject);
             return;
         }
@@ -113,6 +118,13 @@ public class SceneTransitionService : MonoBehaviour
     {
         if (isLoading)
         {
+            BuildSafeLogger.WarnOnce(
+                nameof(SceneTransitionService) + ".BlockedDuplicateSceneLoad",
+                "Blocked duplicate scene load request.",
+                this,
+                null,
+                null,
+                nameof(PrepareLoad));
             return false;
         }
 
@@ -134,6 +146,13 @@ public class SceneTransitionService : MonoBehaviour
         var playerObject = GameObject.FindGameObjectWithTag("Player");
         if (playerObject == null)
         {
+            BuildSafeLogger.WarnOnce(
+                nameof(SceneTransitionService) + ".MissingPlayer",
+                "Cannot disable player input because Player tag was not found.",
+                this,
+                null,
+                "Player",
+                nameof(DisablePlayerInput));
             return;
         }
 

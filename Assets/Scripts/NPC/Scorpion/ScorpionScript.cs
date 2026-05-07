@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ScorpionScript : MonoBehaviour
+public class ScorpionScript : MonoBehaviour, IDamageable
 {
     [Header("Config")]
     [SerializeField] BossConfig bossConfig;
@@ -340,12 +340,18 @@ public class ScorpionScript : MonoBehaviour
         Scorpion.SetBool("Attack", false);
     }
 
-    public void TakeDamage(int Damage)
+    public void TakeDamage(int Damage) => TakeDamage(new DamageEvent { Amount = Damage, Source = null, Point = transform.position, Type = DamageType.Generic, CanStun = false });
+
+    public void TakeDamage(DamageEvent damageEvent)
     {
         transform.rotation = rotGoal;
         HitEffect.SetActive(true);
-        CurrentHealth -= Damage;
+        CurrentHealth -= Mathf.RoundToInt(damageEvent.Amount);
         combo++;
+        if (damageEvent.CanStun && (damageEvent.Type == DamageType.Projectile || damageEvent.Type == DamageType.Fire))
+        {
+            combo += 3;
+        }
         Sound.Beat();
         BossHealth.SetNPCHealth(CurrentHealth);
     }

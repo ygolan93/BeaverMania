@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-public class Static_Hive : MonoBehaviour
+public class Static_Hive : MonoBehaviour, IDamageable
 {
     public int MaxHealth = 10000;
     public int CurrentHealth;
@@ -77,10 +77,12 @@ public class Static_Hive : MonoBehaviour
         Destroy(Hive);
     }
 
-    public void TakeDamage(int Damage)
+    public void TakeDamage(int Damage) => TakeDamage(new DamageEvent { Amount = Damage, Source = null, Point = transform.position, Type = DamageType.Generic, CanStun = false });
+
+    public void TakeDamage(DamageEvent damageEvent)
     {
         HitEffect.SetActive(true);
-        CurrentHealth -= Damage;
+        CurrentHealth -= Mathf.RoundToInt(damageEvent.Amount);
         Sound.Play();
         HiveBar.SetNPCHealth(CurrentHealth);
     }

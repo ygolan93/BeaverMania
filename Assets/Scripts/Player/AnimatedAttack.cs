@@ -25,6 +25,19 @@ public class AnimatedAttack : MonoBehaviour
             {
                 Debug.Log("Hit " + enemy.name);
             }
+            if (enemy.TryGetComponent(out IDamageable damageable))
+            {
+                damageable.TakeDamage(new DamageEvent
+                {
+                    Amount = Damage,
+                    Source = Player != null ? Player.gameObject : gameObject,
+                    Point = enemy.ClosestPoint(origin),
+                    Type = DamageType.Melee,
+                    CanStun = true
+                });
+                continue;
+            }
+
             switch (enemy.tag)
             {
                 case "NPC":

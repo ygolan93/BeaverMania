@@ -5,7 +5,7 @@ using Cinemachine;
 using Cinemachine.Utility;
 using UnityEngine;
 
-public class Behaviour : MonoBehaviour
+public class Behaviour : MonoBehaviour, IDamageable
 {
     [Header("Config")]
     [SerializeField] HazardDamageConfig hazardDamageConfig;
@@ -626,7 +626,8 @@ public class Behaviour : MonoBehaviour
             scorpAttack = false;
         }
     }
-    public void TakeDamage(float Damage) => Health.TakeDamage(Damage);
+    public void TakeDamage(float Damage) => TakeDamage(new DamageEvent { Amount = Damage, Source = null, Point = transform.position, Type = DamageType.Generic, CanStun = false });
+    public void TakeDamage(DamageEvent damageEvent) => Health.TakeDamage(damageEvent.Amount);
     public void HandleFailure(PlayerFailureReason reason) => Failure.HandleFailure(reason);
     public void PlayerMove(Vector3 Direction)
     {

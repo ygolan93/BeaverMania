@@ -10,6 +10,7 @@ public class UIMenu : MonoBehaviour
     public GameObject Question;
     public Behaviour Player;
     public bool ActivePause = false;
+    GameFlowController gameFlow;
     [SerializeField] Slider volumeSlider;
     [SerializeField] AudioSource Music;
 
@@ -22,6 +23,8 @@ public class UIMenu : MonoBehaviour
             return;
         }
 
+        gameFlow = GameFlowController.GetOrCreate();
+        gameFlow.SetPlaying();
         Player = playerObject.GetComponent<Behaviour>();
         if (!RuntimeReferenceValidator.Require(Player, this, nameof(Player)) ||
             !RuntimeReferenceValidator.Require(PauseMenu, this, nameof(PauseMenu)) ||
@@ -58,7 +61,6 @@ public class UIMenu : MonoBehaviour
         if (ActivePause == true)
         {
             PauseMenu.SetActive(true);
-            Time.timeScale = 0;
             Player.ShowCursor();
         }
 
@@ -66,7 +68,6 @@ public class UIMenu : MonoBehaviour
         if (ActivePause == false)
         {
             PauseMenu.SetActive(false);
-            Time.timeScale = 1f;
             Question.SetActive(false);
             if (Player.isAtTrader == false)
                 Player.HideCursor();
@@ -76,6 +77,11 @@ public class UIMenu : MonoBehaviour
     public void ChangeBolean()
     {
         ActivePause = !ActivePause;
+        if (gameFlow == null)
+        {
+            gameFlow = GameFlowController.GetOrCreate();
+        }
+        gameFlow.SetPaused(ActivePause);
     }
 
     public void RestartCheckpointFromMenu()
@@ -90,6 +96,7 @@ public class UIMenu : MonoBehaviour
 
     public void MainMenu()
     {
+        GameFlowController.GetOrCreate().BeginSceneTransition();
         SceneManager.LoadScene("Menu");
     }
     public void Volume()

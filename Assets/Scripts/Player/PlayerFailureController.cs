@@ -43,6 +43,13 @@ public class PlayerFailureController : MonoBehaviour
 
         isResolvingFailure = true;
 
+        if (reason == PlayerFailureReason.CompatibilityRestart)
+        {
+            RestartCheckpointForCompatibility();
+            isResolvingFailure = false;
+            return;
+        }
+
         if (owner.Lives > 1)
         {
             owner.Lives--;
@@ -55,6 +62,19 @@ public class PlayerFailureController : MonoBehaviour
 
         owner.Lives = 0;
         owner.ActivateLooseMenu();
+        isResolvingFailure = false;
+    }
+
+    void RestartCheckpointForCompatibility()
+    {
+        owner.RestoreHealth();
+        owner.MoveToCheckpoint();
+        if (owner.Lives > 0)
+        {
+            owner.Lives--;
+        }
+
+        ResetRuntimeState();
     }
 
     void ResetRuntimeState()

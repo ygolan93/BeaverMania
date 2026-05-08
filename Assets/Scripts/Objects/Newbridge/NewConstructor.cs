@@ -132,7 +132,7 @@ public class NewConstructor : MonoBehaviour
         }
         if (bridgeParts.Length==8)
         {
-            Debug.Log("Reached bridge limit! Use a nut to extend");
+            BuildSafeLogger.InfoOnce("NewConstructor.BridgeLimitReached", "Reached bridge limit! Use a nut to extend", this);
         }
         
     }

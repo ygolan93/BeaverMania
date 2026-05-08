@@ -5,8 +5,11 @@ using Cinemachine;
 using Cinemachine.Utility;
 using UnityEngine;
 
-public class Behaviour : MonoBehaviour
+public class Behaviour : MonoBehaviour, IDamageable
 {
+    [Header("Config")]
+    [SerializeField] HazardDamageConfig hazardDamageConfig;
+
     [Header("Movement and animation")]
     public Rigidbody Player;
     public bool grounded;
@@ -176,6 +179,7 @@ public class Behaviour : MonoBehaviour
     PlayerInteractionController interactionController;
     PlayerCombatController combatController;
     PlayerMovementController movementController;
+    PlayerFailureController failureController;
 
 
     PlayerHealthController Health
@@ -264,6 +268,24 @@ public class Behaviour : MonoBehaviour
             }
 
             return movementController;
+        }
+    }
+
+    PlayerFailureController Failure
+    {
+        get
+        {
+            if (failureController == null)
+            {
+                failureController = GetComponent<PlayerFailureController>();
+                if (failureController == null)
+                {
+                    failureController = gameObject.AddComponent<PlayerFailureController>();
+                }
+                failureController.Initialize(this);
+            }
+
+            return failureController;
         }
     }
 
@@ -435,16 +457,7 @@ public class Behaviour : MonoBehaviour
         }
         if (OBJ.gameObject.CompareTag("Strike"))
         {
-            if (Lives > 0)
-            {
-                transform.position = CheckpointService.GetOrCreate().RespawnPosition(new Vector3(1, 1, 1));
-                Instantiate(PopUpEffect, transform.position, Quaternion.identity);
-                Lives--;
-            }
-            if (Lives == 0)
-            {
-                ActivateLooseMenu();
-            }
+            HandleFailure(PlayerFailureReason.Strike);
         }
     }
     public void OnCollisionExit(Collision OBJ)
@@ -473,7 +486,7 @@ public class Behaviour : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning("The game object's name is not a valid integer: " + OBJ.gameObject.name);
+                BuildSafeLogger.WarnOnce("Behaviour.SwitchMusic.InvalidName." + OBJ.gameObject.name, "The game object's name is not a valid integer: " + OBJ.gameObject.name, this);
             }
 
         }
@@ -489,27 +502,6 @@ public class Behaviour : MonoBehaviour
         {   
             Player.transform.SetParent(OBJ.gameObject.transform, true);
             OnPlatform = true;
-        }
-        if (OBJ.gameObject.CompareTag("ScorpionDamage"))
-        {
-            if (isParried == false)
-            {
-                if (scorpAttack == true)
-                {
-                    TakeDamage(15);
-                }
-            }
-            else
-            {
-
-            }
-        }
-        if (OBJ.gameObject.CompareTag("ScorpionSting"))
-        {
-            if (scorpAttack == true && isParried==false)
-            {
-                TakeDamage(30);
-            }
         }
     }
     public void OnTriggerStay(Collider OBJ)
@@ -596,7 +588,9 @@ public class Behaviour : MonoBehaviour
             scorpAttack = false;
         }
     }
-    public void TakeDamage(float Damage) => Health.TakeDamage(Damage);
+    public void TakeDamage(float Damage) => TakeDamage(new DamageEvent { Amount = Damage, Source = null, Point = transform.position, Type = DamageType.Generic, CanStun = false });
+    public void TakeDamage(DamageEvent damageEvent) => Health.TakeDamage(damageEvent.Amount);
+    public void HandleFailure(PlayerFailureReason reason) => Failure.HandleFailure(reason);
     public void PlayerMove(Vector3 Direction)
     {
         movementInvoked = true;
@@ -731,17 +725,19 @@ public class Behaviour : MonoBehaviour
     public void ActivateLooseMenu()
     {
         //MusicOP.StopMusic();
-        GameFlowController.GetOrCreate().SetGameOver();
+        if (!GameFlowController.GetOrCreate().SetGameOver())
+        {
+            return;
+        }
+
         ShowCursor();
         ShowLosePanel();
-        GetInputReader().DisableGameplayInput();
     }
     public void HideLooseMenu()
     {
         //MusicOP.ResumeMusic();
         GameFlowController.GetOrCreate().SetPlaying();
         HideCursor();
-        GetInputReader().EnableGameplayInput();
         HideLosePanel();
     }
 
@@ -783,13 +779,18 @@ public class Behaviour : MonoBehaviour
         }
     }
 
-    public void RestartCheckpoint()
+    public void RestartCheckpoint() => HandleFailure(PlayerFailureReason.CompatibilityRestart);
+
+    public void RestoreHealth()
     {
-        HealthBar.SetHealth(MaxHealth);
         CurrentHealth = MaxHealth;
+        HealthBar.SetHealth(CurrentHealth);
+    }
+
+    public void MoveToCheckpoint()
+    {
         transform.position = CheckpointService.GetOrCreate().LastCheckpointPosition;
         Instantiate(PopUpEffect, transform.position, Quaternion.identity);
-        Lives--;
     }
     void SaveCheckpoint(Vector3 position)
     {
@@ -950,11 +951,12 @@ public class Behaviour : MonoBehaviour
         }
 
         inputReader = GameInputReader.GetOrCreate();
-        inputReader.EnableGameplayInput();
+        GameFlowController.GetOrCreate().SetPlaying();
         Inventory.Initialize(this);
         Interaction.Initialize(this, inputReader);
         Combat.Initialize(this);
         Movement.Initialize(this);
+        Failure.Initialize(this);
         arrowModel.SetActive(false);
         bowAim = new Vector3(-0.33f, 20f, -0.3f);
         CamForTraders.enabled = false;

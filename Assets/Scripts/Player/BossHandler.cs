@@ -18,15 +18,29 @@ public class BossHandler : MonoBehaviour
     void Start()
     {
         player = gameObject.GetComponent<Behaviour>();
-        Boss = GameObject.Find("ScorpionBoss").GetComponent<ScorpionScript>();
+
+        if (!ValidateReferences())
+        {
+            return;
+        }
+
         //bossSound = Boss.GetComponent<NPC_Audio>();
         BossBar.SetActive(false);
+    }
+
+    bool ValidateReferences()
+    {
+        return RuntimeReferenceValidator.Require(player, this, nameof(player)) &
+            RuntimeReferenceValidator.Require(Boss, this, nameof(Boss)) &
+            RuntimeReferenceValidator.Require(ChatCollider, this, nameof(ChatCollider)) &
+            RuntimeReferenceValidator.Require(BossBar, this, nameof(BossBar)) &
+            RuntimeReferenceValidator.Require(BossPanel, this, nameof(BossPanel));
     }
 
 
     private void Update()
     {
-        if (Boss.transform==null)
+        if (Boss == null)
         {
             BossBar.SetActive(false);
         }
@@ -60,23 +74,9 @@ public class BossHandler : MonoBehaviour
             player.FreeLook.m_LookAt = Boss.transform;   
         }
     }
+    [System.Obsolete("Scorpion boss damage is applied by BossHitbox components on prefab hitbox colliders.")]
     public void OnTriggerEnter(Collider OBJ)
     {
-        if (Boss.isAttacking==true)
-        {
-            if (OBJ.gameObject.CompareTag("ScorpionDamage"))
-            {
-                player.TakeDamage(15);
-                //bossSound.Sting();
-            }
-            if (OBJ.gameObject.CompareTag("ScorpionSting"))
-            {
-                player.TakeDamage(30);
-                //bossSound.Sting();
-            }
-
-        }
-
     }
 
 

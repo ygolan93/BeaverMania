@@ -16,7 +16,19 @@ public class FallDamage : MonoBehaviour
     {
         Player = gameObject.GetComponent<Behaviour>();
         RB_Player = gameObject.GetComponent<Rigidbody>();
+
+        if (!ValidateReferences())
+        {
+            return;
+        }
+
         fallReader = 0;
+    }
+
+    bool ValidateReferences()
+    {
+        return RuntimeReferenceValidator.Require(Player, this, nameof(Player)) &
+            RuntimeReferenceValidator.Require(RB_Player, this, nameof(RB_Player));
     }
 
     private void FixedUpdate()
@@ -45,6 +57,10 @@ public class FallDamage : MonoBehaviour
             if (fallReader >= damageVelocity)
             {
                 Player.TakeDamage(fallDamageFactor * fallReader);
+                if (Player.CurrentHealth <= 0)
+                {
+                    Player.HandleFailure(PlayerFailureReason.FallDamage);
+                }
             }
 
         }

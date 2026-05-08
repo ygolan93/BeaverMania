@@ -21,10 +21,19 @@ public class AnimatedAttack : MonoBehaviour
         Collider[] hitEnemies = Physics.OverlapSphere(origin, range, enemyLayers);
         foreach (Collider enemy in hitEnemies)
         {
-            if (enemy.name != null)
+            if (enemy.TryGetComponent(out IDamageable damageable))
             {
-                Debug.Log("Hit " + enemy.name);
+                damageable.TakeDamage(new DamageEvent
+                {
+                    Amount = Damage,
+                    Source = Player != null ? Player.gameObject : gameObject,
+                    Point = enemy.ClosestPoint(origin),
+                    Type = DamageType.Melee,
+                    CanStun = true
+                });
+                continue;
             }
+
             switch (enemy.tag)
             {
                 case "NPC":

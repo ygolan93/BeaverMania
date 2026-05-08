@@ -13,6 +13,20 @@ public class PauseMenuController : MonoBehaviour
     [SerializeField] Slider volumeSlider;
     [SerializeField] AudioSource Music;
 
+    protected virtual void OnEnable()
+    {
+        inputReader = GameInputReader.GetOrCreate();
+        inputReader.PausePressedEvent += HandlePausePressed;
+    }
+
+    protected virtual void OnDisable()
+    {
+        if (inputReader != null)
+        {
+            inputReader.PausePressedEvent -= HandlePausePressed;
+        }
+    }
+
     protected virtual void Start()
     {
         var playerObject = GameObject.FindGameObjectWithTag("Player");
@@ -22,8 +36,6 @@ public class PauseMenuController : MonoBehaviour
         }
 
         gameFlow = GameFlowController.GetOrCreate();
-        inputReader = GameInputReader.GetOrCreate();
-        inputReader.EnableGameplayInput();
         gameFlow.SetPlaying();
         Player = playerObject.GetComponent<Behaviour>();
         if (!RuntimeReferenceValidator.Require(Player, this, nameof(Player)) ||
@@ -60,11 +72,6 @@ public class PauseMenuController : MonoBehaviour
 
     public void Pause()
     {
-        if (inputReader != null && inputReader.PausePressed)
-        {
-            ChangeBolean();
-        }
-
         if (ActivePause)
         {
             ShowPausePanel();
@@ -84,6 +91,11 @@ public class PauseMenuController : MonoBehaviour
     {
         ActivePause = !ActivePause;
         SetPaused(ActivePause);
+    }
+
+    void HandlePausePressed()
+    {
+        ChangeBolean();
     }
 
     public void RestartCheckpointFromMenu()
@@ -141,19 +153,10 @@ public class PauseMenuController : MonoBehaviour
             gameFlow = GameFlowController.GetOrCreate();
         }
 
-        gameFlow.SetPaused(paused);
-        if (inputReader == null)
+        if (!gameFlow.SetPaused(paused))
         {
-            inputReader = GameInputReader.GetOrCreate();
+            ActivePause = false;
         }
-
-        if (paused || (Player != null && Player.isAtTrader))
-        {
-            inputReader.EnableUiInput();
-            return;
-        }
-
-        inputReader.EnableGameplayInput();
     }
 
     static void SetPanel(GameObject panel, bool active, PauseMenuController owner, string fieldName)

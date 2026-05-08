@@ -36,7 +36,16 @@ public class BeaverNPC : MonoBehaviour
         Beaver = GetComponent<Rigidbody>();
         BeaverAnimator = GetComponent<Animator>();
         beavers = GameObject.FindGameObjectsWithTag("FriendlyNPC");
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
+
+        bool valid = RuntimeReferenceValidator.Require(Beaver, this, nameof(Beaver)) &
+            RuntimeReferenceValidator.Require(BeaverAnimator, this, nameof(BeaverAnimator)) &
+            RuntimeReferenceValidator.RequireTaggedComponent("Player", this, out Player);
+
+        if (!valid)
+        {
+            return;
+        }
+
         awakePos = transform.position;
         moving = true;
         onward = true;

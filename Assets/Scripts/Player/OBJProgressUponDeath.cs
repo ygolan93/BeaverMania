@@ -9,7 +9,8 @@ public class OBJProgressUponDeath : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<ObjectiveUI>();
+        RuntimeReferenceValidator.Require(OBJ, this, nameof(OBJ));
+        RuntimeReferenceValidator.RequireTaggedComponent("Player", this, out Player);
     }
 
     // Update is called once per frame

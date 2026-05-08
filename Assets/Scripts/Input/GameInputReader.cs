@@ -30,21 +30,21 @@ public class GameInputReader : MonoBehaviour
 
     public static GameInputReader GetOrCreate()
     {
-        return RuntimeServices.GetOrCreate<GameInputReader>(ServiceLifetime.Scene);
+        return RuntimeServices.GetOrCreate<GameInputReader>(ServiceLifetime.Persistent);
     }
 
-    public void EnableGameplayInput()
+    internal void EnableGameplayInput()
     {
         Mode = InputMode.Gameplay;
     }
 
-    public void DisableGameplayInput()
+    internal void DisableGameplayInput()
     {
         Mode = InputMode.Disabled;
         ClearGameplayInput();
     }
 
-    public void EnableUiInput()
+    internal void EnableUiInput()
     {
         Mode = InputMode.Ui;
         ClearGameplayInput();
@@ -58,7 +58,7 @@ public class GameInputReader : MonoBehaviour
             return;
         }
 
-        if (!RuntimeServices.Register(this, ServiceLifetime.Scene))
+        if (!RuntimeServices.Register(this, ServiceLifetime.Persistent))
         {
             return;
         }

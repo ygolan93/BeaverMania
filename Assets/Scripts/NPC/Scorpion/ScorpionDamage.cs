@@ -1,9 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+[System.Obsolete("Use BossHitbox on scorpion hitbox colliders. Kept only as a migration shim.")]
 public class ScorpionDamage : MonoBehaviour
 {
+    [SerializeField] HazardDamageConfig damageConfig;
     public float JawClamp;
     public float Sting;
     public Behaviour Player;
@@ -12,49 +12,38 @@ public class ScorpionDamage : MonoBehaviour
 
     private void Awake()
     {
-        BossAudio = GameObject.FindGameObjectWithTag("Boss").GetComponent<NPC_Audio>();
-        Player = transform.GetComponent<Behaviour>();
+        ApplyConfig();
+
+        if (Scorpion == null)
+        {
+            var bossObject = GameObject.FindGameObjectWithTag("Boss");
+            Scorpion = bossObject != null ? bossObject.GetComponent<ScorpionScript>() : null;
+        }
     }
+
+    void ApplyConfig()
+    {
+        if (damageConfig == null)
+        {
+            return;
+        }
+
+        JawClamp = damageConfig.scorpionJawClampDamage;
+        Sting = damageConfig.scorpionStingDamage;
+    }
+
+    [System.Obsolete("Use BossHitbox on scorpion hitbox colliders.")]
     public void OnTriggerEnter(Collider OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Arena"))
+        var hitbox = OBJ.GetComponent<BossHitbox>();
+        if (hitbox == null)
         {
-            Scorpion = GameObject.FindGameObjectWithTag("Boss").GetComponent<ScorpionScript>();
+            return;
         }
-        if (OBJ.gameObject.CompareTag("ScorpionDamage"))
-        {
-            if (Scorpion.combo < Scorpion.comboLimit)
-            {
-                if (Player.isParried == false)
-                {
-                    Player.TakeDamage(JawClamp);
-                    BossAudio.Sting();
-                }
-                if (Player.isParried == true)
-                {
-                    Player.TakeDamage(6);
-                    Scorpion.TakeDamage(10);
-                    Scorpion.combo++;
-                }
-            }
 
-        }
-        if (OBJ.gameObject.CompareTag("ScorpionSting"))
+        if (hitbox.owner == null)
         {
-            if (Scorpion.combo < Scorpion.comboLimit)
-            {
-                if (Player.isParried == false)
-                {
-                    Player.TakeDamage(Sting);
-                    BossAudio.Sting();
-                }
-                if (Player.isParried == true)
-                {
-                    Player.TakeDamage(6f);
-                    Scorpion.TakeDamage(10);
-                    Scorpion.combo++;
-                }
-            }
+            hitbox.owner = Scorpion;
         }
     }
 }

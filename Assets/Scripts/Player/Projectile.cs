@@ -18,10 +18,41 @@ public class Projectile : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Vector3 launchDirection = Camera.main.transform.TransformDirection(Vector3.forward);
+        var mainCamera = Camera.main;
+        PlayerReference.TryGetPlayer(out Player);
+
+        if (!ValidateReferences(mainCamera))
+        {
+            return;
+        }
+
+        Vector3 launchDirection = mainCamera.transform.TransformDirection(Vector3.forward);
         Physics.IgnoreLayerCollision(1, 3);
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
         Ball.velocity = launchDirection * forwardVel + Vector3.up * upwardVel;
+    }
+
+    bool ValidateReferences(Camera mainCamera)
+    {
+        bool valid = RuntimeReferenceValidator.Require(mainCamera, this, nameof(mainCamera)) &
+            RuntimeReferenceValidator.Require(Player, this, nameof(Player)) &
+            RuntimeReferenceValidator.Require(Ball, this, nameof(Ball));
+
+        if (isFireBall)
+        {
+            valid &= RuntimeReferenceValidator.Require(Explosion, this, nameof(Explosion));
+        }
+
+        if (isArrow)
+        {
+            valid &= RuntimeReferenceValidator.Require(arrowPickup, this, nameof(arrowPickup));
+        }
+
+        if (!isFireBall)
+        {
+            valid &= RuntimeReferenceValidator.Require(Sound, this, nameof(Sound));
+        }
+
+        return valid;
     }
     private void Update()
     {
@@ -53,10 +84,8 @@ public class Projectile : MonoBehaviour
     }
     private void OnCollisionEnter(Collision OBJ)
     {
-        if (OBJ.gameObject.CompareTag("NPC"))
+        if (TryDamage(OBJ.gameObject, OBJ.contactCount > 0 ? OBJ.GetContact(0).point : transform.position))
         {
-            OBJ.gameObject.GetComponent<NPC_Basic>().TakeDamage(Damage);
-            OBJ.gameObject.GetComponent<NPC_Basic>().combo += OBJ.gameObject.GetComponent<NPC_Basic>().hit2stun;
             if (isFireBall == true)
             {
                 Explode();
@@ -65,34 +94,9 @@ public class Projectile : MonoBehaviour
             {
                 RockHit();
             }
-            Player.Plattering = "Bam! Take that";
-            Player.ChangeSpeech = 1f;
+            return;
         }
-        if (OBJ.gameObject.CompareTag("Scorpion"))
-        {
-            OBJ.gameObject.GetComponent<ScorpionScript>().TakeDamage(Damage);
-            OBJ.gameObject.GetComponent<ScorpionScript>().combo += 3;
-            if (isFireBall == true)
-            {
-                Explode();
-            }
-            if (isFireBall == false)
-            {
-                RockHit();
-            }
-        }
-        if (OBJ.gameObject.CompareTag("Hive"))
-        {
-            OBJ.gameObject.GetComponent<Static_Hive>().TakeDamage(Damage);
-            if (isFireBall == true)
-            {
-                Explode();
-            }
-            if (isFireBall == false)
-            {
-                RockHit();
-            }
-        }
+
         if (OBJ.gameObject.CompareTag("Isle"))
         {
             if (isFireBall == true)
@@ -104,5 +108,30 @@ public class Projectile : MonoBehaviour
                 RockHit();
             }
         }
+    }
+
+    bool TryDamage(GameObject target, Vector3 point)
+    {
+        if (!target.TryGetComponent(out IDamageable damageable))
+        {
+            return false;
+        }
+
+        damageable.TakeDamage(new DamageEvent
+        {
+            Amount = Damage,
+            Source = Player != null ? Player.gameObject : gameObject,
+            Point = point,
+            Type = isFireBall ? DamageType.Fire : DamageType.Projectile,
+            CanStun = true
+        });
+
+        if (target.CompareTag("NPC") && Player != null)
+        {
+            Player.Plattering = "Bam! Take that";
+            Player.ChangeSpeech = 1f;
+        }
+
+        return true;
     }
 }

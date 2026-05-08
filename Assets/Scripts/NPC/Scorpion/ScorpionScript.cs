@@ -1,9 +1,11 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ScorpionScript : MonoBehaviour
+public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
 {
+    [Header("Config")]
+    [SerializeField] BossConfig bossConfig;
+
     [Header("General Stats")]
     Rigidbody RBScorpion;
     [SerializeField] Animator Scorpion;
@@ -29,7 +31,7 @@ public class ScorpionScript : MonoBehaviour
     public Collider Jaw2A;
     public Collider Jaw2B;
     public Collider Sting;
-    public string state = "Idle";
+    [SerializeField] private EnemyState state = EnemyState.Idle;
 
     [Header("Mobility")]
     public float lookDistance;
@@ -44,23 +46,231 @@ public class ScorpionScript : MonoBehaviour
     public GameObject Explosion;
     public GameObject StunEffect;
     public NPC_Audio Sound;
+    [SerializeField] CombatFeedbackEmitter feedback;
 
-
+    Vector3 initialPosition;
+    Quaternion initialRotation;
+    int initialHealth;
+    int initialCombo;
+    float initialStunnedClock;
+    float initialChargeClock;
+    bool initialIsAttacking;
+    EnemyState initialState;
+    Vector3 initialVelocity;
+    Vector3 initialAngularVelocity;
+    RigidbodyConstraints initialConstraints;
+    bool initialUseGravity;
+    Transform initialExplosionParent;
+    Vector3 initialExplosionLocalPosition;
+    Quaternion initialExplosionLocalRotation;
+    bool initialExplosionActive;
+    readonly Dictionary<string, bool> initialAnimatorBools = new Dictionary<string, bool>();
+    bool isDead;
+    readonly List<GameObject> spawnedOnDeath = new List<GameObject>();
 
     private void Start()
     {
+        ApplyConfig();
         RBScorpion = gameObject.GetComponent<Rigidbody>();
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
+        PlayerReference.TryGetPlayer(out Player);
+        if (feedback == null)
+        {
+            feedback = GetComponent<CombatFeedbackEmitter>();
+        }
+
+        if (!ValidateReferences())
+        {
+            return;
+        }
+
         //AnotherScorpion = GameObject.FindGameObjectWithTag("Scorpion");
         Physics.IgnoreLayerCollision(10, 10);
 
         CurrentHealth = MaxHealth;
         Explosion.SetActive(false);
-        HitEffect.SetActive(false);
+        feedback?.ResetFeedback();
         paceUp = chargeSpeed + 2;
         resetCharge = chargeClock;
         initialStun = StunnedClock;
         combo = 0;
+        CaptureRuntimeState();
+    }
+
+    void CaptureRuntimeState()
+    {
+        initialPosition = transform.position;
+        initialRotation = transform.rotation;
+        initialHealth = CurrentHealth;
+        initialCombo = combo;
+        initialStunnedClock = StunnedClock;
+        initialChargeClock = chargeClock;
+        initialIsAttacking = isAttacking;
+        initialState = state;
+
+        if (RBScorpion != null)
+        {
+            initialVelocity = RBScorpion.velocity;
+            initialAngularVelocity = RBScorpion.angularVelocity;
+            initialConstraints = RBScorpion.constraints;
+            initialUseGravity = RBScorpion.useGravity;
+        }
+
+        if (Explosion != null)
+        {
+            initialExplosionParent = Explosion.transform.parent;
+            initialExplosionLocalPosition = Explosion.transform.localPosition;
+            initialExplosionLocalRotation = Explosion.transform.localRotation;
+            initialExplosionActive = Explosion.activeSelf;
+        }
+
+        CaptureAnimatorBools();
+    }
+
+    void CaptureAnimatorBools()
+    {
+        initialAnimatorBools.Clear();
+        if (Scorpion == null)
+        {
+            return;
+        }
+
+        foreach (var parameter in Scorpion.parameters)
+        {
+            if (parameter.type == AnimatorControllerParameterType.Bool)
+            {
+                initialAnimatorBools[parameter.name] = Scorpion.GetBool(parameter.name);
+            }
+        }
+    }
+
+    public void RuntimeReset()
+    {
+        gameObject.SetActive(true);
+        transform.SetPositionAndRotation(initialPosition, initialRotation);
+        CurrentHealth = initialHealth;
+        combo = initialCombo;
+        StunnedClock = initialStunnedClock;
+        chargeClock = initialChargeClock;
+        isAttacking = initialIsAttacking;
+        state = initialState;
+        isDead = false;
+
+        if (RBScorpion != null)
+        {
+            RBScorpion.velocity = initialVelocity;
+            RBScorpion.angularVelocity = initialAngularVelocity;
+            RBScorpion.constraints = initialConstraints;
+            RBScorpion.useGravity = initialUseGravity;
+        }
+
+        if (Scorpion != null)
+        {
+            foreach (var animatorBool in initialAnimatorBools)
+            {
+                Scorpion.SetBool(animatorBool.Key, animatorBool.Value);
+            }
+        }
+
+        if (Explosion != null)
+        {
+            Explosion.transform.SetParent(initialExplosionParent);
+            Explosion.transform.localPosition = initialExplosionLocalPosition;
+            Explosion.transform.localRotation = initialExplosionLocalRotation;
+            Explosion.SetActive(initialExplosionActive);
+        }
+
+        feedback?.ResetFeedback();
+
+        if (StunEffect != null)
+        {
+            StunEffect.SetActive(false);
+        }
+
+        if (BossHealth != null)
+        {
+            BossHealth.SetNPCHealth(CurrentHealth);
+        }
+
+        for (int i = spawnedOnDeath.Count - 1; i >= 0; i--)
+        {
+            if (spawnedOnDeath[i] != null)
+            {
+                Destroy(spawnedOnDeath[i]);
+            }
+        }
+
+        spawnedOnDeath.Clear();
+    }
+
+    bool ValidateReferences()
+    {
+        bool valid = RuntimeReferenceValidator.Require(RBScorpion, this, nameof(RBScorpion)) &
+            RuntimeReferenceValidator.Require(Scorpion, this, nameof(Scorpion)) &
+            RuntimeReferenceValidator.Require(BossHealth, this, nameof(BossHealth)) &
+            RuntimeReferenceValidator.Require(Player, this, nameof(Player)) &
+            RuntimeReferenceValidator.Require(Jaw1A, this, nameof(Jaw1A)) &
+            RuntimeReferenceValidator.Require(Jaw1B, this, nameof(Jaw1B)) &
+            RuntimeReferenceValidator.Require(Jaw2A, this, nameof(Jaw2A)) &
+            RuntimeReferenceValidator.Require(Jaw2B, this, nameof(Jaw2B)) &
+            RuntimeReferenceValidator.Require(Sting, this, nameof(Sting)) &
+            RuntimeReferenceValidator.Require(feedback, this, nameof(feedback)) &
+            RuntimeReferenceValidator.Require(HitEffect, this, nameof(HitEffect)) &
+            RuntimeReferenceValidator.Require(Explosion, this, nameof(Explosion)) &
+            RuntimeReferenceValidator.Require(StunEffect, this, nameof(StunEffect)) &
+            RuntimeReferenceValidator.Require(Sound, this, nameof(Sound));
+
+        if (drops != null)
+        {
+            for (int i = 0; i < drops.Length; i++)
+            {
+                valid &= RuntimeReferenceValidator.Require(drops[i], this, $"{nameof(drops)}[{i}]");
+            }
+        }
+
+        return valid;
+    }
+
+    void ApplyConfig()
+    {
+        if (bossConfig == null)
+        {
+            BuildSafeLogger.WarnOnce(nameof(ScorpionScript) + ".MissingConfig", "Missing boss config; using prefab values.", this, nameof(bossConfig));
+            return;
+        }
+
+        MaxHealth = bossConfig.maxHealth;
+        comboLimit = bossConfig.comboLimit;
+        StunnedClock = bossConfig.stunSeconds;
+        chargeSpeed = bossConfig.chargeSpeed;
+        chargeClock = bossConfig.chargeClock;
+        lookDistance = bossConfig.lookDistance;
+        chargeDistance = bossConfig.chargeDistance;
+        attackDistance = bossConfig.attackDistance;
+    }
+
+    public void SetState(EnemyState next)
+    {
+        if (state == next)
+        {
+            return;
+        }
+
+        if (state == EnemyState.Dead || (state == EnemyState.Stunned && next != EnemyState.Recover && next != EnemyState.Dead))
+        {
+            return;
+        }
+
+        state = next;
+
+        if (next == EnemyState.Recover)
+        {
+            Recovered();
+            state = EnemyState.Idle;
+        }
+        else if (next == EnemyState.Dead)
+        {
+            Death();
+        }
     }
 
     public void FixedUpdate()
@@ -69,53 +279,28 @@ public class ScorpionScript : MonoBehaviour
         currentDistance = Mathf.Abs(Distance.magnitude);
         switch (state)
         {
-            case "Idle":
-                {
-                    Idle();
-                    break;
-                }
-            case "Look":
-                {
-                    LookAtPlayer();
-                    break;
-                }
-            case "Charge":
-                {
-                    var speed = chargeSpeed;
-                    if (Input.GetKey(KeyCode.LeftShift))
-                    {
-                        speed = paceUp;
-                        Scorpion.speed = 1.05f;
-                    }
-                    else
-                    {
-                        speed = chargeSpeed;
-                        Scorpion.speed = 1;
-                    }
-
-                    Charge(speed);
-                    break;
-                }
-            case "Stop":
-                {
-                    StopAndAttack();
-                    break;
-                }
-            case "Reverse":
-                {
-                    Reverse();
-                    break;
-                }
-            case "Stunned":
-                {
-                    Stunned();
-                    break;
-                }
-            case "Recovered":
-                {
-                    Recovered();
-                    break;
-                }
+            case EnemyState.Idle:
+                Idle();
+                break;
+            case EnemyState.Detect:
+                LookAtPlayer();
+                break;
+            case EnemyState.Chase:
+                Scorpion.speed = 1;
+                Charge(chargeSpeed);
+                break;
+            case EnemyState.Patrol:
+                Reverse();
+                break;
+            case EnemyState.Attack:
+                StopAndAttack();
+                break;
+            case EnemyState.Stunned:
+                Stunned();
+                break;
+            case EnemyState.Recover:
+                Recovered();
+                break;
         }
 
 
@@ -123,103 +308,65 @@ public class ScorpionScript : MonoBehaviour
 
     private void Update()
     {
-        HitEffect.SetActive(false);
-        if (combo >= comboLimit)
-        {
-            Stunned();
-            StunnedClock -= Time.deltaTime;
-            if (StunnedClock <= 0)
-            {
-                Recovered();
-            }
-        }
+        Distance = Player.transform.position - RBScorpion.position;
+        currentDistance = Mathf.Abs(Distance.magnitude);
+
         if (CurrentHealth <= 0)
         {
-            Death();
+            SetState(EnemyState.Dead);
+            return;
         }
-        if (combo<comboLimit)
-        {
-            if (combo==1)
-            {
-                state = "Look";
-            }
-            if (combo==3)
-            {
-                state = "Charge";
-            }
-            if (currentDistance > lookDistance)
-            {
-                state = "Idle";
-            }
-            if(currentDistance <= lookDistance)
-            {
-                if (combo<comboLimit-5)
-                {
-                    if (Input.GetKey(KeyCode.Mouse0) || Input.GetKey(KeyCode.Mouse1))
-                    {
-                        if (currentDistance<chargeDistance-10)
-                        {
-                            state = "Reverse";
-                        }
-                        else
-                        {
-                            state = "Look";
-                        }
-                        
-                    }
-                    else
-                    {
-                        if (currentDistance > chargeDistance)
-                        {
-                            state = "Look";
-                        }
-                        if (currentDistance <= chargeDistance)
-                        {
 
-                            if (chargeClock > 0)
-                            {
-                                state = "Charge";
-                                chargeClock -= Time.deltaTime;
-                            }
-                            if (chargeClock <= 0)
-                            {
-                                if (currentDistance > attackDistance)
-                                {
-                                    state = "Charge";
-                                }
-                                else
-                                {
-                                    state = "Stop";
-
-                                    if (Input.GetKeyUp(KeyCode.Mouse0) || Input.GetKeyUp(KeyCode.Mouse1))
-                                    {
-                                        chargeClock = resetCharge;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    state = "Charge";
-                }
-      
-            }
-            
-
-        }
         if (combo >= comboLimit)
         {
-            state = "Stunned";
+            SetState(EnemyState.Stunned);
             StunnedClock -= Time.deltaTime;
             if (StunnedClock <= 0)
             {
-                state = "Recovered";
+                SetState(EnemyState.Recover);
             }
+
+            return;
         }
 
+        if (currentDistance > lookDistance)
+        {
+            SetState(EnemyState.Idle);
+            return;
+        }
 
+        if (combo == 1)
+        {
+            SetState(EnemyState.Detect);
+        }
+
+        if (combo == 3 || combo >= comboLimit - 5)
+        {
+            SetState(EnemyState.Chase);
+            return;
+        }
+
+        if (currentDistance > chargeDistance)
+        {
+            SetState(EnemyState.Detect);
+            return;
+        }
+
+        if (chargeClock > 0)
+        {
+            SetState(EnemyState.Chase);
+            chargeClock -= Time.deltaTime;
+            return;
+        }
+
+        if (currentDistance > attackDistance)
+        {
+            SetState(EnemyState.Chase);
+            return;
+        }
+
+        SetState(EnemyState.Attack);
+        chargeClock = resetCharge;
     }
 
     private void Idle()
@@ -258,7 +405,6 @@ public class ScorpionScript : MonoBehaviour
         RBScorpion.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
         RBScorpion.velocity = new Vector3(Distance.x, 0, Distance.z).normalized * speed + new Vector3(0, RBScorpion.velocity.y, 0);
 
-        HitEffect.SetActive(false);
         Scorpion.SetBool("Walk", true);
         Scorpion.SetBool("Backwards", false);
         Scorpion.SetBool("Attack", false);
@@ -284,12 +430,25 @@ public class ScorpionScript : MonoBehaviour
         Scorpion.SetBool("Attack", false);
     }
 
-    public void TakeDamage(int Damage)
+    public void TakeDamage(int Damage) => TakeDamage(new DamageEvent { Amount = Damage, Source = null, Point = transform.position, Type = DamageType.Generic, CanStun = false });
+
+    public void TakeDamage(DamageEvent damageEvent)
     {
         transform.rotation = rotGoal;
-        HitEffect.SetActive(true);
-        CurrentHealth -= Damage;
+        if (damageEvent.Type == DamageType.Hazard)
+        {
+            feedback?.EmitHazard();
+        }
+        else
+        {
+            feedback?.EmitHit();
+        }
+        CurrentHealth -= Mathf.RoundToInt(damageEvent.Amount);
         combo++;
+        if (damageEvent.CanStun && (damageEvent.Type == DamageType.Projectile || damageEvent.Type == DamageType.Fire))
+        {
+            combo += 3;
+        }
         Sound.Beat();
         BossHealth.SetNPCHealth(CurrentHealth);
     }
@@ -307,17 +466,24 @@ public class ScorpionScript : MonoBehaviour
         isAttacking = false;
         Scorpion.SetBool("Stunned", false);
         combo = 0;
-        StunnedClock = 10;
+        StunnedClock = initialStun;
         StunEffect.SetActive(false);
     }
     private void Death()
     {
+        if (isDead)
+        {
+            return;
+        }
+
+        isDead = true;
         isAttacking = false;
+        feedback?.EmitDeath();
         Explosion.SetActive(true);
         Explosion.transform.parent = null;
         foreach (var item in drops)
         {
-            Instantiate(item, gameObject.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+            spawnedOnDeath.Add(Instantiate(item, gameObject.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity));
         }
         gameObject.SetActive(false);
     }
@@ -326,7 +492,7 @@ public class ScorpionScript : MonoBehaviour
     {
         if (OBJ.gameObject.CompareTag("Strike"))
         {
-            Death();
+            SetState(EnemyState.Dead);
         }
         if (OBJ.gameObject.CompareTag("Damage"))
         {
@@ -334,8 +500,11 @@ public class ScorpionScript : MonoBehaviour
         }
         if (OBJ.gameObject.CompareTag("Bridge"))
         {
-            var Tree = OBJ.gameObject.GetComponent<LogSpawner>();
-            Tree.DestroyTree(OBJ.transform);
+            if (OBJ.gameObject.TryGetComponent(out LogSpawner tree))
+            {
+                tree.DestroyTree(OBJ.transform);
+            }
+            feedback?.EmitHazard();
             TakeDamage(10);
             combo = 10;
         }

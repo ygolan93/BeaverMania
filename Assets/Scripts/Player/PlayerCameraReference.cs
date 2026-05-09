@@ -76,9 +76,10 @@ public sealed class PlayerCameraReference
             return true;
         }
 
-        if (IsCameraValid(Camera.main))
+        Camera mainCamera = Camera.main;
+        if (IsCameraValid(mainCamera))
         {
-            Cache(Camera.main, Source.MainCamera);
+            Cache(mainCamera, Source.MainCamera);
             return true;
         }
 
@@ -104,8 +105,9 @@ public sealed class PlayerCameraReference
             case Source.SerializedCamera:
                 return cachedCamera == camera && IsCameraValid(cachedCamera);
             case Source.FreeLookState:
+                Camera mainCamera = Camera.main;
                 return !TryGetBrainOutputCamera(out _)
-                    && !IsCameraValid(Camera.main)
+                    && !IsCameraValid(mainCamera)
                     && IsFreeLookValid()
                     && cachedTransform == freeLook.VirtualCameraGameObject.transform;
             case Source.BrainCamera:

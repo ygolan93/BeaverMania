@@ -310,83 +310,86 @@ public class Behaviour : MonoBehaviour, IDamageable
 
     public void OnCollisionEnter(Collision OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Part")&& Load.CanCarry == true && grounded==true && !Input.GetKey(KeyCode.Mouse0)&& !Input.GetKey(KeyCode.Mouse1))
+        GameObject otherObject = OBJ.gameObject;
+        Transform otherTransform = OBJ.transform;
+
+        if (otherObject.CompareTag(PlayerTags.Part) && Load.CanCarry == true && grounded == true && !Input.GetKey(KeyCode.Mouse0) && !Input.GetKey(KeyCode.Mouse1))
         {
             Otter.Play("Crouch");
             Sound.PickItem();
-            Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
-            Destroy(OBJ.gameObject);
+            Instantiate(PickUpEffect, otherTransform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+            Destroy(otherObject);
         }
-        if ( OBJ.gameObject.CompareTag("Seed") || OBJ.gameObject.CompareTag("Apple") || OBJ.gameObject.CompareTag("GobletKey"))
+        if (IsBasicPickup(otherObject))
         {
             Otter.Play("Crouch");
-            Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
-            Destroy(OBJ.gameObject);
+            Instantiate(PickUpEffect, otherTransform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+            Destroy(otherObject);
 
-            if (OBJ.gameObject.CompareTag("Seed"))
+            if (otherObject.CompareTag(PlayerTags.Seed))
             {
                 Inventory.AddSeed();
                 Sound.PickItem();
             }
-            if (OBJ.gameObject.CompareTag("Apple"))
+            if (otherObject.CompareTag(PlayerTags.Apple))
             {
                 Sound.PickUp2();
                 Inventory.AddApple();
             }
-            if (OBJ.gameObject.CompareTag("GobletKey"))
+            if (otherObject.CompareTag(PlayerTags.GobletKey))
             {
                 Sound.PickUp2();
                 Inventory.AddGoblet();
-                Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
-                Destroy(OBJ.gameObject);
+                Instantiate(PickUpEffect, otherTransform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+                Destroy(otherObject);
             }
 
         }
-        if (OBJ.gameObject.CompareTag("Isle") || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("stairs") || OBJ.gameObject.CompareTag("Tile"))
+        if (IsLandingSurface(otherObject))
         {
             FallClock = InitialFall;
             if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.D))
             {
-                if (OBJ.gameObject.CompareTag("stairs"))
+                if (otherObject.CompareTag(PlayerTags.Stairs))
                 {
                     Player.velocity += new Vector3(0, 1, 0);
                     Player.drag = 0;
                 }
             }
         }
-        if (OBJ.gameObject.CompareTag("Coin"))
+        if (otherObject.CompareTag(PlayerTags.Coin))
         {
-            Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+            Instantiate(PickUpEffect, otherTransform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
             Sound.Coin();
         }
-        if (arrowMunition<Arrows.Length && bowEquipped==true)
+        if (arrowMunition < Arrows.Length && bowEquipped == true)
         {
-            if (OBJ.gameObject.CompareTag("Arrow"))
+            if (otherObject.CompareTag(PlayerTags.Arrow))
             {
                 Otter.Play("Crouch");
                 Sound.PickUp2();
                 arrowMunition++;
-                Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+                Instantiate(PickUpEffect, otherTransform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
                 if (bowEquipped == true)
                 {
                     CountArrows();
                 }
-                Destroy(OBJ.gameObject);
+                Destroy(otherObject);
             }
-            if (OBJ.gameObject.CompareTag("ArrowBundle"))
+            if (otherObject.CompareTag(PlayerTags.ArrowBundle))
             {
                 Otter.Play("Crouch");
                 Sound.PickUp2();
-                Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+                Instantiate(PickUpEffect, otherTransform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
                 if (arrowMunition + 10 < Arrows.Length)
                 {
                     arrowMunition += 10;
                 }
                 else
                 {
-                    for (int i = 0; i <(arrowMunition-10); i++)
+                    for (int i = 0; i < (arrowMunition - 10); i++)
                     {
-                        Instantiate(ArrowPickup, OBJ.transform.position+new Vector3(0,i* 0.3f, 0), Quaternion.Euler(0,0,90));
+                        Instantiate(ArrowPickup, otherTransform.position + new Vector3(0, i * 0.3f, 0), Quaternion.Euler(0, 0, 90));
                     }
                     arrowMunition = Arrows.Length;
                 }
@@ -394,7 +397,7 @@ public class Behaviour : MonoBehaviour, IDamageable
                 {
                     CountArrows();
                 }
-                Destroy(OBJ.gameObject);
+                Destroy(otherObject);
             }
 
         }
@@ -402,16 +405,14 @@ public class Behaviour : MonoBehaviour, IDamageable
     }
     public void OnCollisionStay(Collision OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Isle") || 
-            OBJ.gameObject.CompareTag("Bridge") || 
-            OBJ.gameObject.CompareTag("Tile") || 
-            OBJ.gameObject.CompareTag("House") || 
-            OBJ.gameObject.CompareTag("stairs") || 
-            OBJ.gameObject.CompareTag("Tile"))
+        GameObject otherObject = OBJ.gameObject;
+        Transform otherTransform = OBJ.transform;
+
+        if (IsGroundSurface(otherObject))
         {
             grounded = true;
         }
-        if (OBJ.gameObject.CompareTag("Weapon"))
+        if (otherObject.CompareTag(PlayerTags.Weapon))
         {
             Plattering = ("Hammers!");
             ChangeSpeech = 1;
@@ -419,23 +420,23 @@ public class Behaviour : MonoBehaviour, IDamageable
             Arsenal.Add("Hammers");
             ArsenalCounter++;
             Sound.PickItem();
-            Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
-            Destroy(OBJ.gameObject);
+            Instantiate(PickUpEffect, otherTransform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+            Destroy(otherObject);
         }
-        if (OBJ.gameObject.CompareTag("Bow"))
+        if (otherObject.CompareTag(PlayerTags.Bow))
         {
             Plattering = ("Booya!");
             ChangeSpeech = 1;
             Otter.Play("Crouch");
-            Arsenal.Add("Bow");
+            Arsenal.Add(PlayerTags.Bow);
             ArsenalCounter++;
             Sound.PickItem();
             arrowMunition = 5;
             CountArrows();
-            Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
-            Destroy(OBJ.gameObject);
+            Instantiate(PickUpEffect, otherTransform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+            Destroy(otherObject);
         }
-        if (OBJ.gameObject.CompareTag("Armor"))
+        if (otherObject.CompareTag(PlayerTags.Armor))
         {
             Plattering = ("Oh my!");
             ChangeSpeech = 1;
@@ -443,104 +444,107 @@ public class Behaviour : MonoBehaviour, IDamageable
             Arsenal.Add("ArmorSet");
             ArsenalCounter++;
             Sound.PickItem();
-            Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
-            Destroy(OBJ.gameObject);
+            Instantiate(PickUpEffect, otherTransform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+            Destroy(otherObject);
         }
-        if (OBJ.gameObject.CompareTag("Honey") && Honeypicked == false)
+        if (otherObject.CompareTag(PlayerTags.Honey) && Honeypicked == false)
         {
             Otter.Play("Crouch");
             HoneyON();
             Sound.PickItem();
-            Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
-            Destroy(OBJ.gameObject);
+            Instantiate(PickUpEffect, otherTransform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+            Destroy(otherObject);
         }
-        if (OBJ.gameObject.CompareTag("Gold") && GoldPicked == false)
+        if (otherObject.CompareTag(PlayerTags.Gold) && GoldPicked == false)
         {
             Otter.Play("Crouch");
             GoldON();
-            Destroy(OBJ.gameObject);
+            Destroy(otherObject);
             
         }
-        if (OBJ.gameObject.CompareTag("NPC") && isParried == true 
-            || OBJ.gameObject.CompareTag("Scorpion") && isParried == true 
-            || OBJ.gameObject.CompareTag("Scorpion") && Input.GetKey(KeyCode.Mouse0) 
-            || OBJ.gameObject.CompareTag("Scorpion") && Input.GetKey(KeyCode.Mouse1))
+        if ((otherObject.CompareTag(PlayerTags.Npc) && isParried == true)
+            || (otherObject.CompareTag(PlayerTags.Scorpion) && isParried == true)
+            || (otherObject.CompareTag(PlayerTags.Scorpion) && Input.GetKey(KeyCode.Mouse0))
+            || (otherObject.CompareTag(PlayerTags.Scorpion) && Input.GetKey(KeyCode.Mouse1)))
         {
             Plattering = "Get off me ya nasty bastards!";
             ChangeSpeech = 3;
-            Vector3 ParryDirection = OBJ.transform.position - transform.position;
+            Vector3 ParryDirection = otherTransform.position - transform.position;
             if (SafeRotation.TryPlanarLookRotation(ParryDirection, out Quaternion parryRotation))
             {
                 transform.rotation = parryRotation;
             }
         }
-        if (OBJ.gameObject.CompareTag("Strike"))
+        if (otherObject.CompareTag(PlayerTags.Strike))
         {
             HandleFailure(PlayerFailureReason.Strike);
         }
     }
     public void OnCollisionExit(Collision OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Isle") || 
-            OBJ.gameObject.CompareTag("Bridge") || 
-            OBJ.gameObject.CompareTag("House") || 
-            OBJ.gameObject.CompareTag("stairs") || 
-            OBJ.gameObject.CompareTag("Tile"))
+        GameObject otherObject = OBJ.gameObject;
+
+        if (IsGroundSurface(otherObject))
         {
             grounded = false;
         }
-        if (OBJ.gameObject.CompareTag("Life"))
+        if (otherObject.CompareTag(PlayerTags.Life))
         {
             TouchShroom = false;
         }
     }
     public void OnTriggerEnter(Collider OBJ)
     {
-        if (OBJ.gameObject.CompareTag("SwitchMusic"))
+        GameObject otherObject = OBJ.gameObject;
+
+        if (otherObject.CompareTag(PlayerTags.SwitchMusic))
         {
-            OBJ.gameObject.SetActive(false);
-            if (int.TryParse(OBJ.gameObject.name, out int songIndex))
+            otherObject.SetActive(false);
+            if (int.TryParse(otherObject.name, out int songIndex))
             {
                 Music.ChangeSong(songIndex);
             }
             else
             {
-                BuildSafeLogger.WarnOnce("Behaviour.SwitchMusic.InvalidName." + OBJ.gameObject.name, "The game object's name is not a valid integer: " + OBJ.gameObject.name, this);
+                BuildSafeLogger.WarnOnce("Behaviour.SwitchMusic.InvalidName." + otherObject.name, "The game object's name is not a valid integer: " + otherObject.name, this);
             }
 
         }
-        if (OBJ.gameObject.CompareTag("Life"))
+        if (otherObject.CompareTag(PlayerTags.Life))
         {
             State.checkpointMessageUntil = Time.time + 3f;
         }
-        if (OBJ.gameObject.CompareTag("Bridge"))
+        if (otherObject.CompareTag(PlayerTags.Bridge))
         {
             Player.velocity += new Vector3(0, 1, 0);
         }
-        if (OBJ.gameObject.CompareTag("Tile"))
+        if (otherObject.CompareTag(PlayerTags.Tile))
         {   
-            Player.transform.SetParent(OBJ.gameObject.transform, true);
+            Player.transform.SetParent(otherObject.transform, true);
             OnPlatform = true;
         }
     }
     public void OnTriggerStay(Collider OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Scorpion"))
+        GameObject otherObject = OBJ.gameObject;
+        Transform otherTransform = OBJ.transform;
+
+        if (otherObject.CompareTag(PlayerTags.Scorpion) && otherObject.TryGetComponent(out ScorpionScript scorpion))
         {
-            scorpAttack = OBJ.gameObject.GetComponent<ScorpionScript>().isAttacking;
+            scorpAttack = scorpion.isAttacking;
         }
-        if (OBJ.gameObject.CompareTag("Tile"))
+        if (otherObject.CompareTag(PlayerTags.Tile))
         {
             OnPlatform = true;
-            Player.transform.parent = OBJ.gameObject.transform;
+            Player.transform.parent = otherObject.transform;
         }
-        if (OBJ.gameObject.CompareTag("stairs"))
+        if (otherObject.CompareTag(PlayerTags.Stairs))
         {
             step = true;
         }
-        if (OBJ.gameObject.CompareTag("Life"))
+        if (otherObject.CompareTag(PlayerTags.Life))
         {
-            SaveCheckpoint(OBJ.transform.position);
+            SaveCheckpoint(otherTransform.position);
             Plattering = ("Shroom!");
             ChangeSpeech = 1;
             if (CurrentHealth < MaxHealth)
@@ -551,58 +555,87 @@ public class Behaviour : MonoBehaviour, IDamageable
             if (CurrentHealth >= MaxHealth)
                 TouchShroom = false;
         }
-        if (OBJ.gameObject.CompareTag("Trader"))
+        if (otherObject.CompareTag(PlayerTags.Trader))
         {
-            var skip = OBJ.gameObject.GetComponent<Trader>().skipPressed;
-            if (skip ==false)
+            if (otherObject.TryGetComponent(out Trader trader))
             {
-                Interaction.EnterTrader(OBJ);
-            }
-            if (skip ==true)
-            {
-                Interaction.ExitTrader();
+                if (trader.skipPressed == false)
+                {
+                    Interaction.EnterTrader(OBJ);
+                }
+                if (trader.skipPressed == true)
+                {
+                    Interaction.ExitTrader();
+                }
             }
         }
-        if (OBJ.gameObject.CompareTag("House"))
+        if (otherObject.CompareTag(PlayerTags.House))
         {
             TrySetFreeLookOrbits(FreeLook, 1f, 2f, 1f);
         }
-        if (OBJ.gameObject.CompareTag("What Is this?"))
+        if (otherObject.CompareTag(PlayerTags.WhatIsThis))
         {
             Plattering = "Ah shit. what happened here?";
         }
     }
     public void OnTriggerExit(Collider OBJ)
     {
-        if (OBJ.gameObject.CompareTag("stairs"))
+        GameObject otherObject = OBJ.gameObject;
+
+        if (otherObject.CompareTag(PlayerTags.Stairs))
         {
             step = false;
         }
-        if (OBJ.gameObject.CompareTag("Tile"))
+        if (otherObject.CompareTag(PlayerTags.Tile))
         {
             grounded = false;
             OnPlatform = false;
             Player.transform.parent = null;
             Player.transform.localScale = new(1, 1, 1);
         }
-        if (OBJ.gameObject.CompareTag("Life"))
+        if (otherObject.CompareTag(PlayerTags.Life))
         {
             TouchShroom = false;
         }
-        if (OBJ.gameObject.CompareTag("Trader"))
+        if (otherObject.CompareTag(PlayerTags.Trader))
         {
             Interaction.ExitTrader();
         }
-        if (OBJ.gameObject.CompareTag("House"))
+        if (otherObject.CompareTag(PlayerTags.House))
         {
             TrySetFreeLookOrbits(FreeLook, 4f, 6f, 5f);
             //FreeLook.m_Lens.FieldOfView = 25;
         }
-        if (OBJ.gameObject.CompareTag("Scorpion"))
+        if (otherObject.CompareTag(PlayerTags.Scorpion))
         {
             scorpAttack = false;
         }
     }
+
+    static bool IsBasicPickup(GameObject otherObject)
+    {
+        return otherObject.CompareTag(PlayerTags.Seed)
+            || otherObject.CompareTag(PlayerTags.Apple)
+            || otherObject.CompareTag(PlayerTags.GobletKey);
+    }
+
+    static bool IsLandingSurface(GameObject otherObject)
+    {
+        return otherObject.CompareTag(PlayerTags.Isle)
+            || otherObject.CompareTag(PlayerTags.Bridge)
+            || otherObject.CompareTag(PlayerTags.Stairs)
+            || otherObject.CompareTag(PlayerTags.Tile);
+    }
+
+    static bool IsGroundSurface(GameObject otherObject)
+    {
+        return otherObject.CompareTag(PlayerTags.Isle)
+            || otherObject.CompareTag(PlayerTags.Bridge)
+            || otherObject.CompareTag(PlayerTags.Stairs)
+            || otherObject.CompareTag(PlayerTags.Tile)
+            || otherObject.CompareTag(PlayerTags.House);
+    }
+
     public void TakeDamage(float Damage) => TakeDamage(new DamageEvent { Amount = Damage, Source = null, Point = transform.position, Type = DamageType.Generic, CanStun = false });
     public void TakeDamage(DamageEvent damageEvent) => Health.TakeDamage(damageEvent.Amount);
     public void HandleFailure(PlayerFailureReason reason)
@@ -938,30 +971,35 @@ public class Behaviour : MonoBehaviour, IDamageable
         {
             if (HammerHeld == false)
             {
-                Otter.SetBool("Parry", true);
-                Otter.SetBool("HammerParry", false);
+                SetParryAnimatorState(true, false, false);
             }
             if (HammerHeld == true)
             {
-                Otter.SetBool("HammerParry", true);
-                Otter.SetBool("Parry", false);
-                Otter.SetBool("shieldParry", false);
+                SetParryAnimatorState(false, true, false);
             }
             if (ArmorEquipped == true)
             {
-                Otter.SetBool("shieldParry", true);
-                Otter.SetBool("Parry", false);
-                Otter.SetBool("HammerParry", false);
+                SetParryAnimatorState(false, false, true);
             }
         }
         isParried = true;
     }
     public void ParryOFF()
     {
-        Otter.SetBool("Parry", false);
-        Otter.SetBool("HammerParry", false);
-        Otter.SetBool("shieldParry", false);
+        ClearParryAnimatorState();
         isParried = false;
+    }
+
+    void SetParryAnimatorState(bool parry, bool hammerParry, bool shieldParry)
+    {
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Parry, parry);
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.HammerParry, hammerParry);
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.ShieldParry, shieldParry);
+    }
+
+    void ClearParryAnimatorState()
+    {
+        SetParryAnimatorState(false, false, false);
     }
     public void HoneyON()
     {
@@ -1028,9 +1066,14 @@ public class Behaviour : MonoBehaviour, IDamageable
             && Otter != null;
     }
 
+    Vector2 GetMovementInput()
+    {
+        return new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+    }
+
     bool HasMovementInput()
     {
-        return new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).sqrMagnitude > Mathf.Epsilon;
+        return GetMovementInput().sqrMagnitude > Mathf.Epsilon;
     }
 
     public void ResetMovementRuntimeState()
@@ -1078,21 +1121,49 @@ public class Behaviour : MonoBehaviour, IDamageable
     {
         Player = GetComponent<Rigidbody>();
 
-        bool valid = RuntimeReferenceValidator.Require(Player, this, nameof(Player)) &
+        bool valid = ValidateMovementReferences() &
+            ValidateHealthReferences() &
+            ValidateCombatReferences() &
+            ValidateUiReferences() &
+            ValidateInventoryVisualReferences();
+
+        ValidateCameraReferences();
+        return valid;
+    }
+
+    bool ValidateMovementReferences()
+    {
+        return RuntimeReferenceValidator.Require(Player, this, nameof(Player)) &
             RuntimeReferenceValidator.Require(Load, this, nameof(Load)) &
             RuntimeReferenceValidator.Require(Root, this, nameof(Root)) &
             RuntimeReferenceValidator.Require(Otter, this, nameof(Otter)) &
-            RuntimeReferenceValidator.Require(otterAction, this, nameof(otterAction)) &
-            RuntimeReferenceValidator.Require(arrowModel, this, nameof(arrowModel)) &
-            RuntimeReferenceValidator.Require(HealthBar, this, nameof(HealthBar)) &
-            RuntimeReferenceValidator.Require(HoneyJar, this, nameof(HoneyJar)) &
-            RuntimeReferenceValidator.Require(GoldBrick, this, nameof(GoldBrick)) &
-            RuntimeReferenceValidator.Require(PopUpEffect, this, nameof(PopUpEffect)) &
+            RuntimeReferenceValidator.Require(otterAction, this, nameof(otterAction));
+    }
+
+    bool ValidateHealthReferences()
+    {
+        return RuntimeReferenceValidator.Require(HealthBar, this, nameof(HealthBar)) &
             RuntimeReferenceValidator.Require(HealEffect, this, nameof(HealEffect)) &
-            RuntimeReferenceValidator.Require(ElectricEffect, this, nameof(ElectricEffect)) &
+            RuntimeReferenceValidator.Require(ElectricEffect, this, nameof(ElectricEffect));
+    }
+
+    bool ValidateCombatReferences()
+    {
+        return RuntimeReferenceValidator.Require(arrowModel, this, nameof(arrowModel));
+    }
+
+    bool ValidateUiReferences()
+    {
+        return RuntimeReferenceValidator.Require(PopUpEffect, this, nameof(PopUpEffect)) &
             RuntimeReferenceValidator.Require(MunitionDisplay, this, nameof(MunitionDisplay)) &
             RuntimeReferenceValidator.Require(LooseScreen, this, nameof(LooseScreen)) &
-            RuntimeReferenceValidator.Require(AimIcon, this, nameof(AimIcon)) &
+            RuntimeReferenceValidator.Require(AimIcon, this, nameof(AimIcon));
+    }
+
+    bool ValidateInventoryVisualReferences()
+    {
+        bool valid = RuntimeReferenceValidator.Require(HoneyJar, this, nameof(HoneyJar)) &
+            RuntimeReferenceValidator.Require(GoldBrick, this, nameof(GoldBrick)) &
             RuntimeReferenceValidator.Require(HologramedBridge, this, nameof(HologramedBridge)) &
             RuntimeReferenceValidator.Require(appleOBJ, this, nameof(appleOBJ)) &
             RuntimeReferenceValidator.Require(gobletOBJ, this, nameof(gobletOBJ));
@@ -1113,10 +1184,13 @@ public class Behaviour : MonoBehaviour, IDamageable
             }
         }
 
+        return valid;
+    }
+
+    void ValidateCameraReferences()
+    {
         WarnMissingCameraReference(FreeLook, nameof(FreeLook));
         WarnMissingCameraReference(CamForTraders, nameof(CamForTraders));
-
-        return valid;
     }
 
     bool TrySetFreeLookOrbits(CinemachineFreeLook cam, float top, float mid, float bottom)
@@ -1269,13 +1343,36 @@ public class Behaviour : MonoBehaviour, IDamageable
             return;
         }
 
+        InitializeRuntimeServices();
+        InitializePlayerControllers();
+        InitializeStartupPresentation();
+        if (!InitializeMusicState())
+        {
+            return;
+        }
+
+        InitializePlayerRuntimeState();
+        InitializeEquipmentVisuals();
+        TrySetFreeLookOrbits(FreeLook, 4f, 6f, 5f);
+    }
+
+    void InitializeRuntimeServices()
+    {
         inputReader = GameInputReader.GetOrCreate();
         GameFlowController.GetOrCreate().TrySetPlayingFromSceneStartup(nameof(Behaviour));
+    }
+
+    void InitializePlayerControllers()
+    {
         Inventory.Initialize(this);
         Interaction.Initialize(this, inputReader);
         Combat.Initialize(this);
         Movement.Initialize(this);
         Failure.Initialize(this);
+    }
+
+    void InitializeStartupPresentation()
+    {
         arrowModel.SetActive(false);
         bowAim = new Vector3(-0.33f, 20f, -0.3f);
         TrySetTraderCameraEnabled(false);
@@ -1287,39 +1384,47 @@ public class Behaviour : MonoBehaviour, IDamageable
         SaveCheckpoint(transform.position);
         AimIcon.SetActive(false);
         MunitionDisplay.SetActive(false);
-        //Enable/Disable Background music
+    }
+
+    bool InitializeMusicState()
+    {
+        // Enable/disable background music switches without adding runtime service ownership.
         if (seekMusic == true)
         {
             var musicObject = GameObject.Find("GameMusic");
             if (!RuntimeReferenceValidator.Require(musicObject, this, "GameMusic"))
             {
-                return;
+                return false;
             }
 
             Music = musicObject.GetComponent<MusicPlaylist>();
             if (!RuntimeReferenceValidator.Require(Music, this, nameof(Music)))
             {
-                return;
+                return false;
             }
 
             Music.transform.parent = Player.transform;
             Music.transform.position = new Vector3(0, 0, 0);
-            var MusicSwitches = GameObject.FindGameObjectsWithTag("SwitchMusic");
-            foreach (var item in MusicSwitches)
-            {
-                item.SetActive(true);
-            }
+            SetMusicSwitchesActive(true);
+            return true;
+        }
 
-        }
-        else
+        Music = null;
+        SetMusicSwitchesActive(false);
+        return true;
+    }
+
+    void SetMusicSwitchesActive(bool active)
+    {
+        var musicSwitches = GameObject.FindGameObjectsWithTag(PlayerTags.SwitchMusic);
+        foreach (var item in musicSwitches)
         {
-            Music = null;
-            var MusicSwitches = GameObject.FindGameObjectsWithTag("SwitchMusic");
-            foreach (var item in MusicSwitches)
-            {
-                item.SetActive(false);
-            }
+            item.SetActive(active);
         }
+    }
+
+    void InitializePlayerRuntimeState()
+    {
         Health.Initialize(this);
         HealShape = HealEffect.shape;
         ParryOFF();
@@ -1334,6 +1439,10 @@ public class Behaviour : MonoBehaviour, IDamageable
         InsertWalk = Walk;
         InsertRun = Run;
         HideLosePanel();
+    }
+
+    void InitializeEquipmentVisuals()
+    {
         HologramedBridge.SetActive(false);
         appleOBJ.SetActive(false);
         gobletOBJ.SetActive(false);
@@ -1345,8 +1454,73 @@ public class Behaviour : MonoBehaviour, IDamageable
         {
             Bow[i].SetActive(false);
         }
-        TrySetFreeLookOrbits(FreeLook, 4f, 6f, 5f);
     }
+
+
+    void HandleParryAnimationTimer()
+    {
+        if (Defend != true)
+        {
+            return;
+        }
+
+        DefendAnim -= Time.deltaTime;
+        if (DefendAnim > 0)
+        {
+            if (WhichAttack == true)
+                Otter.Play("AttackA");
+            if (WhichAttack == false)
+                Otter.Play("AttackB");
+            return;
+        }
+
+        Defend = false;
+        Otter.StopPlayback();
+    }
+
+    void HandleGlowAttackEffect()
+    {
+        if (!Input.GetKey(KeyCode.Mouse0))
+        {
+            otterAction.TurnOffGlow();
+        }
+    }
+
+    void UpdateSpeechTimer()
+    {
+        if (Plattering != "")
+        {
+            ChangeSpeech -= Time.deltaTime;
+            if (ChangeSpeech <= 0)
+            {
+                Plattering = "";
+            }
+        }
+    }
+
+    void UpdateLifeIcons()
+    {
+        State.arrowMunition = arrowMunition;
+        if (Lives == 3)
+        {
+            ICON_1.SetActive(true);
+            ICON_2.SetActive(true);
+            ICON_3.SetActive(true);
+        }
+        if (Lives == 2)
+        {
+            ICON_1.SetActive(false);
+            ICON_2.SetActive(true);
+            ICON_3.SetActive(true);
+        }
+        if (Lives == 1)
+        {
+            ICON_1.SetActive(false);
+            ICON_2.SetActive(false);
+            ICON_3.SetActive(true);
+        }
+    }
+
     [System.Obsolete]
     public void Update()
     {
@@ -1362,65 +1536,13 @@ public class Behaviour : MonoBehaviour, IDamageable
             return;
         }
 
-        //Parry animations
-        if (Defend == true)
-        {
-            DefendAnim -= Time.deltaTime;
-            if (DefendAnim > 0)
-            {
-                if (WhichAttack == true)
-                    Otter.Play("AttackA");
-                if (WhichAttack == false)
-                    Otter.Play("AttackB");
-            }
-            else
-            {
-                Defend = false;
-                Otter.StopPlayback();
-            }
-
-        }
-
-        //Turn off glow attack effect
-        if (!Input.GetKey(KeyCode.Mouse0))
-        {
-            otterAction.TurnOffGlow();
-        }
-
-        //Update UI text
-        if (Plattering != "")
-        {
-            ChangeSpeech -= Time.deltaTime;
-            if (ChangeSpeech <= 0)
-            {
-                Plattering = "";
-            }
-        }
+        HandleParryAnimationTimer();
+        HandleGlowAttackEffect();
+        UpdateSpeechTimer();
 
         //Reload Stamina Bar
         Health.TickStamina();
-        //Update UI
-        {
-            State.arrowMunition = arrowMunition;
-            if (Lives == 3)
-            {
-                ICON_1.SetActive(true);
-                ICON_2.SetActive(true);
-                ICON_3.SetActive(true);
-            }
-            if (Lives == 2)
-            {
-                ICON_1.SetActive(false);
-                ICON_2.SetActive(true);
-                ICON_3.SetActive(true);
-            }
-            if (Lives == 1)
-            {
-                ICON_1.SetActive(false);
-                ICON_2.SetActive(false);
-                ICON_3.SetActive(true);
-            }
-        }
+        UpdateLifeIcons();
         //Jump action
         {
             if (Input.GetKeyDown(KeyCode.Space) && JumpNum > 0)
@@ -1564,7 +1686,7 @@ public class Behaviour : MonoBehaviour, IDamageable
                                 break;
                             }
 
-                        case "Bow":
+                        case PlayerTags.Bow:
                             {
                                 Otter.Play("Equip");
                                 CountArrows();
@@ -1961,7 +2083,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         //Basic movement setup
         if (hasGameplayCamera)
         {
-            Vector2 input = Vector2.ClampMagnitude(new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")), 1f);
+            Vector2 input = Vector2.ClampMagnitude(GetMovementInput(), 1f);
             Vector3 move = (XZForward * input.y + XZRight * input.x).normalized;
 
             if (move.sqrMagnitude >= Mathf.Epsilon)

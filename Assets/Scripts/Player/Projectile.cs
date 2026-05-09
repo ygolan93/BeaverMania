@@ -113,7 +113,7 @@ public class Projectile : MonoBehaviour
             return;
         }
 
-        if (OBJ.gameObject.CompareTag("Isle"))
+        if (OBJ.gameObject.CompareTag(PlayerTags.Isle))
         {
             if (isFireBall == true)
             {
@@ -142,7 +142,7 @@ public class Projectile : MonoBehaviour
             CanStun = true
         });
 
-        if (target.CompareTag("NPC") && Player != null)
+        if (target.CompareTag(PlayerTags.Npc) && Player != null)
         {
             Player.Plattering = "Bam! Take that";
             Player.ChangeSpeech = 1f;

@@ -10,7 +10,7 @@ public class OBJProgressUponDeath : MonoBehaviour
     void Start()
     {
         RuntimeReferenceValidator.Require(OBJ, this, nameof(OBJ));
-        RuntimeReferenceValidator.RequireTaggedComponent("Player", this, out Player);
+        RuntimeReferenceValidator.RequireTaggedComponent(PlayerTags.Player, this, out Player);
     }
 
     // Update is called once per frame

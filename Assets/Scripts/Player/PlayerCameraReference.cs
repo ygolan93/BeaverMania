@@ -84,7 +84,7 @@ public sealed class PlayerCameraReference
 
         if (IsFreeLookValid())
         {
-            Cache(freeLook.VirtualCameraGameObject.transform, null, Source.FreeLook);
+            Cache(freeLook.VirtualCameraGameObject.transform, null, Source.FreeLookState);
             return true;
         }
 
@@ -137,7 +137,7 @@ public sealed class PlayerCameraReference
 
     Quaternion GetCachedBasisRotation()
     {
-        if (cachedSource == Source.FreeLook && freeLook != null)
+        if (cachedSource == Source.FreeLookState && freeLook != null)
         {
             return freeLook.State.FinalOrientation;
         }

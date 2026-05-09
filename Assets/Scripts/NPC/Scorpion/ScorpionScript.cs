@@ -388,7 +388,7 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
     {
         isAttacking = false;
         RBScorpion.velocity = new Vector3(0, RBScorpion.velocity.y, 0);
-        rotGoal = SafeRotation.LookRotationOrCurrent(new Vector3(Distance.x, 0, Distance.z), transform.rotation);
+        rotGoal = SafeRotation.PlanarLookRotationOrCurrent(Distance, transform.rotation);
         RBScorpion.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
         if (transform.rotation != rotGoal)
         {
@@ -406,7 +406,7 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
     public void Charge(float speed)
     {
         isAttacking = true;
-        rotGoal = SafeRotation.LookRotationOrCurrent(new Vector3(Distance.x, 0, Distance.z), transform.rotation);
+        rotGoal = SafeRotation.PlanarLookRotationOrCurrent(Distance, transform.rotation);
         RBScorpion.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
         RBScorpion.velocity = new Vector3(Distance.x, 0, Distance.z).normalized * speed + new Vector3(0, RBScorpion.velocity.y, 0);
 
@@ -421,13 +421,13 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
         Scorpion.SetBool("Walk", false);
         Scorpion.SetBool("Backwards", false);
         Scorpion.SetBool("Attack", true);
-        rotGoal = SafeRotation.LookRotationOrCurrent(new Vector3(Distance.x, 0, Distance.z), transform.rotation);
+        rotGoal = SafeRotation.PlanarLookRotationOrCurrent(Distance, transform.rotation);
         RBScorpion.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
     }
     private void Reverse()
     {
         isAttacking = true;
-        rotGoal = SafeRotation.LookRotationOrCurrent(new Vector3(Distance.x, 0, Distance.z), transform.rotation);
+        rotGoal = SafeRotation.PlanarLookRotationOrCurrent(Distance, transform.rotation);
         RBScorpion.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
         RBScorpion.velocity = new Vector3(-Distance.x, 0, -Distance.z).normalized * 5 + new Vector3(0, RBScorpion.velocity.y, 0);
         Scorpion.SetBool("Walk", false);

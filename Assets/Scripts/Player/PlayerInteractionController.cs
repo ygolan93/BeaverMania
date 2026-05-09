@@ -19,7 +19,7 @@ public class PlayerInteractionController : MonoBehaviour
 
     public void HideCursor()
     {
-        owner.FreeLook.m_LookAt = owner.Root;
+        owner.TrySetFreeLookLookAt(owner.Root);
         CursorStateService.GetOrCreate().HideCursor();
         var gameFlow = GameFlowController.Instance;
         if (gameFlow == null || gameFlow.State == GameFlowState.Playing)
@@ -36,9 +36,9 @@ public class PlayerInteractionController : MonoBehaviour
             ShowCursor();
             owner.isAtTrader = true;
             GameFlowController.GetOrCreate().SetShop();
-            owner.FreeLook.enabled = false;
-            owner.CamForTraders.enabled = true;
-            owner.CamForTraders.m_LookAt = trader.transform;
+            owner.TrySetFreeLookEnabled(false);
+            owner.TrySetTraderCameraEnabled(true);
+            owner.TrySetTraderCameraLookAt(trader.transform);
             return;
         }
 
@@ -49,10 +49,10 @@ public class PlayerInteractionController : MonoBehaviour
     {
         owner.isAtTrader = false;
         GameFlowController.GetOrCreate().SetPlaying();
-        owner.CamForTraders.enabled = false;
-        owner.CamForTraders.m_LookAt = null;
-        owner.FreeLook.enabled = true;
-        owner.FreeLook.m_LookAt.rotation = Quaternion.Slerp(owner.transform.rotation, SafeRotation.LookRotationOrCurrent(owner.Root.position, owner.transform.rotation), 0.5f);
+        owner.TrySetTraderCameraEnabled(false);
+        owner.TrySetTraderCameraLookAt(null);
+        owner.TrySetFreeLookEnabled(true);
+        owner.TryRotateFreeLookLookAtTowardRoot();
     }
 
     GameInputReader GetInputReader()

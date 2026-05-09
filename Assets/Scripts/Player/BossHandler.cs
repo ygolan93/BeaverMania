@@ -55,10 +55,7 @@ public class BossHandler : MonoBehaviour
         BossPanel.SetActive(false);
         Boss.isAttacking = true;
         BossBar.SetActive(true);
-        player.FreeLook.m_Orbits[1].m_Radius = 6;
-        player.FreeLook.m_XAxis.m_MaxSpeed = 300;
-        player.FreeLook.m_YAxis.m_MaxSpeed = 2;
-        player.FreeLook.m_LookAt = player.Root;
+        player.TryConfigureFreeLookForBoss(6f, 300f, 2f, player.Root);
     }
     public void OnTriggerStay(Collider OBJ)
     {
@@ -68,10 +65,7 @@ public class BossHandler : MonoBehaviour
             player.isAtTrader = true;
             Boss.isAttacking = false;
             BossPanel.SetActive(true);
-            player.FreeLook.m_Orbits[1].m_Radius = 15;
-            player.FreeLook.m_XAxis.m_MaxSpeed = 0;
-            player.FreeLook.m_YAxis.m_MaxSpeed = 0;
-            player.FreeLook.m_LookAt = Boss.transform;   
+            player.TryConfigureFreeLookForBoss(15f, 0f, 0f, Boss.transform);
         }
     }
     [System.Obsolete("Scorpion boss damage is applied by BossHitbox components on prefab hitbox colliders.")]

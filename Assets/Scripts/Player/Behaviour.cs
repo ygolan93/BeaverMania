@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Cinemachine;
 using Cinemachine.Utility;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Behaviour : MonoBehaviour, IDamageable
 {
@@ -171,6 +172,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     public string Wallet;
     public GameObject AimIcon;
     public CinemachineFreeLook FreeLook;
+    [SerializeField] PlayerCameraReference cameraReference = new PlayerCameraReference();
     public CinemachineFreeLook CamForTraders;
     public float ChangeSpeech = 1F;
     GameInputReader inputReader;
@@ -180,7 +182,21 @@ public class Behaviour : MonoBehaviour, IDamageable
     PlayerCombatController combatController;
     PlayerMovementController movementController;
     PlayerFailureController failureController;
+    bool wasGameplayBlocked;
 
+    PlayerCameraReference GameplayCamera
+    {
+        get
+        {
+            if (cameraReference == null)
+            {
+                cameraReference = new PlayerCameraReference();
+            }
+
+            cameraReference.Configure(this, FreeLook);
+            return cameraReference;
+        }
+    }
 
     PlayerHealthController Health
     {
@@ -452,8 +468,11 @@ public class Behaviour : MonoBehaviour, IDamageable
         {
             Plattering = "Get off me ya nasty bastards!";
             ChangeSpeech = 3;
-            var ParryDirection = new Vector3((OBJ.transform.position - transform.position).x, 0, (OBJ.transform.position - transform.position).z);
-            transform.rotation = SafeRotation.LookRotationOrCurrent(ParryDirection, transform.rotation);
+            Vector3 ParryDirection = OBJ.transform.position - transform.position;
+            if (SafeRotation.TryPlanarLookRotation(ParryDirection, out Quaternion parryRotation))
+            {
+                transform.rotation = parryRotation;
+            }
         }
         if (OBJ.gameObject.CompareTag("Strike"))
         {
@@ -546,9 +565,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         }
         if (OBJ.gameObject.CompareTag("House"))
         {
-            FreeLook.m_Orbits[0].m_Radius = 1f;
-            FreeLook.m_Orbits[1].m_Radius = 2f;
-            FreeLook.m_Orbits[2].m_Radius =1f;
+            TrySetFreeLookOrbits(FreeLook, 1f, 2f, 1f);
         }
         if (OBJ.gameObject.CompareTag("What Is this?"))
         {
@@ -578,9 +595,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         }
         if (OBJ.gameObject.CompareTag("House"))
         {
-            FreeLook.m_Orbits[0].m_Radius = 4;
-            FreeLook.m_Orbits[1].m_Radius = 6;
-            FreeLook.m_Orbits[2].m_Radius = 5;
+            TrySetFreeLookOrbits(FreeLook, 4f, 6f, 5f);
             //FreeLook.m_Lens.FieldOfView = 25;
         }
         if (OBJ.gameObject.CompareTag("Scorpion"))
@@ -590,73 +605,101 @@ public class Behaviour : MonoBehaviour, IDamageable
     }
     public void TakeDamage(float Damage) => TakeDamage(new DamageEvent { Amount = Damage, Source = null, Point = transform.position, Type = DamageType.Generic, CanStun = false });
     public void TakeDamage(DamageEvent damageEvent) => Health.TakeDamage(damageEvent.Amount);
-    public void HandleFailure(PlayerFailureReason reason) => Failure.HandleFailure(reason);
+    public void HandleFailure(PlayerFailureReason reason)
+    {
+        ResetMovementRuntimeState();
+        Failure.HandleFailure(reason);
+    }
     public void PlayerMove(Vector3 Direction)
     {
+        if (HandleGameplayBlocked())
+        {
+            return;
+        }
+
+        if (!CanProcessPlayerGameplay())
+        {
+            ResetMovementRuntimeState();
+            return;
+        }
+
+        if (!SafeRotation.IsFinite(Direction))
+        {
+            return;
+        }
+
         movementInvoked = true;
         //Regular walk
         if (keepLooking==false)
         {
-            rotGoal = SafeRotation.LookRotationOrCurrent(Direction, transform.rotation);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
-            Otter.SetBool("walk", true);
+            if (SafeRotation.TryLookRotation(Direction, out rotGoal))
+            {
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            }
+            PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Walk, true);
         }
         //Strafe
         if (keepLooking == true)
         {
-            Vector3 forwardFace = Camera.main.transform.TransformDirection(Vector3.forward);
-            rotGoal = SafeRotation.LookRotationOrCurrent(new Vector3(forwardFace.x, 0, forwardFace.z), transform.rotation);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
-            Otter.SetBool("walk", false);
+            if (!GameplayCamera.TryGetPlanarBasis(out Vector3 forwardFace, out _))
+            {
+                return;
+            }
+
+            if (SafeRotation.TryLookRotation(forwardFace, out rotGoal))
+            {
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            }
+            PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Walk, false);
             if (Input.GetKey(KeyCode.W))
             {
-                Otter.SetBool("strafeForward", true);
+                PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.StrafeForward, true);
             }
             if (Input.GetKey(KeyCode.S))
             {
-                Otter.SetBool("strafeBack", true);
+                PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.StrafeBack, true);
             }
             if (Input.GetKey(KeyCode.A))
             {
-                Otter.SetBool("strafeLeft", true);
+                PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.StrafeLeft, true);
             }
             if (Input.GetKey(KeyCode.D))
             {
-                Otter.SetBool("strafeRight", true);
+                PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.StrafeRight, true);
             }
         }
         //Stairs
         if (step==true)
         {
-            Otter.SetBool("climb", true);
+            PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Climb, true);
         }
         else
         {
-            Otter.SetBool("climb", false);
+            PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Climb, false);
         }
         //Sprint
         if (grounded == true)
         {
-            if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey && Rolling == false && keepLooking==false)
+            if (Input.GetKey(KeyCode.LeftShift) && HasMovementInput() && Rolling == false && keepLooking==false)
             {
                 if (ArmorEquipped==true)
                 {
-                    Otter.SetBool("armor", true);
+                    PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Armor, true);
                 }
                 if (ArmorEquipped == false)
                 {
-                    Otter.SetBool("armor", false);
+                    PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Armor, false);
                 }
                 if (step==false)
                 {
-                    Otter.SetBool("run", true);
+                    PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Run, true);
                     speed = Run;
                     steer = 0.12f;
                 }
             }
             else
             {
-                Otter.SetBool("run", false);
+                PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Run, false);
                 speed = Walk;
                 steer = 0.1f;
             }
@@ -667,14 +710,32 @@ public class Behaviour : MonoBehaviour, IDamageable
     }
     public void PlayerRoll(Vector3 Direction)
     {
-        rotGoal = SafeRotation.LookRotationOrCurrent(new Vector3(Direction.x, 0, Direction.z), transform.rotation);
-        transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.11f);
+        if (HandleGameplayBlocked())
+        {
+            return;
+        }
+
+        if (!CanProcessPlayerGameplay())
+        {
+            ResetMovementRuntimeState();
+            return;
+        }
+
+        if (!SafeRotation.IsFinite(Direction))
+        {
+            return;
+        }
+
+        if (SafeRotation.TryPlanarLookRotation(Direction, out rotGoal))
+        {
+            transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.11f);
+        }
         //Evading Roll action
         {
             if (Input.GetKey(KeyCode.LeftControl) && CurrentStamina > 0 && grounded == true)
             {
                 Rolling = true;
-                Otter.SetBool("roll", true);
+                PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Roll, true);
                 CurrentStamina -= 0.1f;
                 speed = 7;
                 if (HealthBar != null)
@@ -686,7 +747,7 @@ public class Behaviour : MonoBehaviour, IDamageable
             if (!Input.GetKey(KeyCode.LeftControl) || CurrentStamina <= 0 || grounded == false)
             {
                 Rolling = false;
-                Otter.SetBool("roll", false);
+                PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Roll, false);
             }
 
         }
@@ -695,8 +756,32 @@ public class Behaviour : MonoBehaviour, IDamageable
     [Obsolete]
     public void RotateForward()
     {
-        Vector3 camForward = Camera.main.transform.TransformDirection(Vector3.forward);
-        Quaternion direction = SafeRotation.LookRotationOrCurrent(camForward, Spine.rotation);
+        if (Spine == null)
+        {
+            return;
+        }
+
+        if (HandleGameplayBlocked())
+        {
+            return;
+        }
+
+        if (!CanProcessPlayerGameplay())
+        {
+            ResetMovementRuntimeState();
+            return;
+        }
+
+        if (!GameplayCamera.TryGetPlanarBasis(out Vector3 camForward, out _))
+        {
+            return;
+        }
+
+        if (!SafeRotation.TryLookRotation(camForward, out Quaternion direction))
+        {
+            return;
+        }
+
         if (bowEquipped==false)
         {
             Spine.rotation = direction;
@@ -728,6 +813,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     public void ActivateLooseMenu()
     {
         //MusicOP.StopMusic();
+        ResetMovementRuntimeState();
         if (!GameFlowController.GetOrCreate().SetGameOver())
         {
             return;
@@ -909,10 +995,81 @@ public class Behaviour : MonoBehaviour, IDamageable
         return inputReader;
     }
 
-    bool IsGameplayInputBlocked()
+    bool IsGameplayActive()
     {
         var reader = GetInputReader();
-        return reader != null && !reader.IsGameplayInputEnabled;
+        return reader != null && reader.IsGameplayInputEnabled;
+    }
+
+    bool HandleGameplayBlocked()
+    {
+        if (IsGameplayActive())
+        {
+            wasGameplayBlocked = false;
+            return false;
+        }
+
+        if (!wasGameplayBlocked)
+        {
+            ResetMovementRuntimeState();
+            wasGameplayBlocked = true;
+        }
+
+        return true;
+    }
+
+    bool CanProcessPlayerGameplay()
+    {
+        var flow = GameFlowController.GetOrCreate();
+        return IsGameplayActive()
+            && flow != null
+            && flow.State == GameFlowState.Playing
+            && Player != null
+            && Otter != null;
+    }
+
+    bool HasMovementInput()
+    {
+        return new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).sqrMagnitude > Mathf.Epsilon;
+    }
+
+    public void ResetMovementRuntimeState()
+    {
+        Rolling = false;
+        movementInvoked = false;
+        neutralAndMoving = false;
+        keepLooking = false;
+        speed = Walk;
+        steer = 0.1f;
+
+        if (Player != null)
+        {
+            Player.velocity = new Vector3(0f, Player.velocity.y, 0f);
+        }
+
+        SetMovementAnimatorIdle();
+    }
+
+    public void SetMovementAnimatorIdle()
+    {
+        ClearMovementAnimatorBools();
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Aim, false);
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Draw, false);
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Crouch, false);
+    }
+
+    void ClearMovementAnimatorBools()
+    {
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Walk, false);
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Run, false);
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Midair, false);
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Roll, false);
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Moving, false);
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.StrafeForward, false);
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.StrafeBack, false);
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.StrafeLeft, false);
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.StrafeRight, false);
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Climb, false);
     }
 
     void HandleDeathState() => Health.HandleDeathState();
@@ -936,8 +1093,6 @@ public class Behaviour : MonoBehaviour, IDamageable
             RuntimeReferenceValidator.Require(MunitionDisplay, this, nameof(MunitionDisplay)) &
             RuntimeReferenceValidator.Require(LooseScreen, this, nameof(LooseScreen)) &
             RuntimeReferenceValidator.Require(AimIcon, this, nameof(AimIcon)) &
-            RuntimeReferenceValidator.Require(FreeLook, this, nameof(FreeLook)) &
-            RuntimeReferenceValidator.Require(CamForTraders, this, nameof(CamForTraders)) &
             RuntimeReferenceValidator.Require(HologramedBridge, this, nameof(HologramedBridge)) &
             RuntimeReferenceValidator.Require(appleOBJ, this, nameof(appleOBJ)) &
             RuntimeReferenceValidator.Require(gobletOBJ, this, nameof(gobletOBJ));
@@ -958,7 +1113,153 @@ public class Behaviour : MonoBehaviour, IDamageable
             }
         }
 
+        WarnMissingCameraReference(FreeLook, nameof(FreeLook));
+        WarnMissingCameraReference(CamForTraders, nameof(CamForTraders));
+
         return valid;
+    }
+
+    bool TrySetFreeLookOrbits(CinemachineFreeLook cam, float top, float mid, float bottom)
+    {
+        if (!WarnMissingCameraReference(cam, nameof(FreeLook)))
+        {
+            return false;
+        }
+
+        if (cam.m_Orbits == null || cam.m_Orbits.Length < 3)
+        {
+            BuildSafeLogger.WarnOnce(
+                nameof(Behaviour) + ".InvalidFreeLookOrbits",
+                "FreeLook camera does not have the expected three orbit rigs.",
+                this,
+                nameof(FreeLook));
+            return false;
+        }
+
+        cam.m_Orbits[0].m_Radius = top;
+        cam.m_Orbits[1].m_Radius = mid;
+        cam.m_Orbits[2].m_Radius = bottom;
+        return true;
+    }
+
+    public bool TrySetFreeLookEnabled(bool enabled)
+    {
+        if (!WarnMissingCameraReference(FreeLook, nameof(FreeLook)))
+        {
+            return false;
+        }
+
+        FreeLook.enabled = enabled;
+        return true;
+    }
+
+    public bool TrySetFreeLookLookAt(Transform lookAt)
+    {
+        if (!WarnMissingCameraReference(FreeLook, nameof(FreeLook)))
+        {
+            return false;
+        }
+
+        FreeLook.m_LookAt = lookAt;
+        return true;
+    }
+
+    public bool TryConfigureFreeLookForBoss(float middleOrbitRadius, float xAxisMaxSpeed, float yAxisMaxSpeed, Transform lookAt)
+    {
+        if (!WarnMissingCameraReference(FreeLook, nameof(FreeLook)))
+        {
+            return false;
+        }
+
+        if (FreeLook.m_Orbits == null || FreeLook.m_Orbits.Length < 2)
+        {
+            BuildSafeLogger.WarnOnce(
+                nameof(Behaviour) + ".InvalidFreeLookBossOrbit",
+                "FreeLook camera does not have the expected middle orbit rig; boss camera changes will be skipped.",
+                this,
+                nameof(FreeLook));
+            return false;
+        }
+
+        FreeLook.m_Orbits[1].m_Radius = middleOrbitRadius;
+        FreeLook.m_XAxis.m_MaxSpeed = xAxisMaxSpeed;
+        FreeLook.m_YAxis.m_MaxSpeed = yAxisMaxSpeed;
+        FreeLook.m_LookAt = lookAt;
+        return true;
+    }
+
+    public bool TryRotateFreeLookLookAtTowardRoot()
+    {
+        if (!WarnMissingCameraReference(FreeLook, nameof(FreeLook)))
+        {
+            return false;
+        }
+
+        if (FreeLook.m_LookAt == null)
+        {
+            BuildSafeLogger.WarnOnce(
+                nameof(Behaviour) + ".MissingFreeLookLookAt",
+                "FreeLook camera does not have a LookAt target; camera rotation reset will be skipped.",
+                this,
+                nameof(FreeLook));
+            return false;
+        }
+
+        FreeLook.m_LookAt.rotation = Quaternion.Slerp(transform.rotation, SafeRotation.LookRotationOrCurrent(Root.position, transform.rotation), 0.5f);
+        return true;
+    }
+
+    public bool TrySetTraderCameraEnabled(bool enabled)
+    {
+        if (!WarnMissingCameraReference(CamForTraders, nameof(CamForTraders)))
+        {
+            return false;
+        }
+
+        CamForTraders.enabled = enabled;
+        return true;
+    }
+
+    public bool TrySetTraderCameraLookAt(Transform lookAt)
+    {
+        if (!WarnMissingCameraReference(CamForTraders, nameof(CamForTraders)))
+        {
+            return false;
+        }
+
+        CamForTraders.m_LookAt = lookAt;
+        return true;
+    }
+
+    bool WarnMissingCameraReference(CinemachineFreeLook cam, string fieldName)
+    {
+        if (cam != null)
+        {
+            return true;
+        }
+
+        BuildSafeLogger.WarnOnce(
+            nameof(Behaviour) + ".MissingCameraReference." + fieldName,
+            fieldName + " is not assigned; camera-specific behaviour will be skipped.",
+            this,
+            fieldName);
+        return false;
+    }
+
+    void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        GameplayCamera.Invalidate();
+    }
+
+    void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        GameplayCamera.Invalidate();
     }
 
     public void Start()
@@ -977,7 +1278,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         Failure.Initialize(this);
         arrowModel.SetActive(false);
         bowAim = new Vector3(-0.33f, 20f, -0.3f);
-        CamForTraders.enabled = false;
+        TrySetTraderCameraEnabled(false);
         if (PopUpEffect != null && Root != null)
         {
             Instantiate(PopUpEffect, Root.position, Quaternion.identity);
@@ -1044,16 +1345,20 @@ public class Behaviour : MonoBehaviour, IDamageable
         {
             Bow[i].SetActive(false);
         }
-        FreeLook.m_Orbits[0].m_Radius = 4;
-        FreeLook.m_Orbits[1].m_Radius = 6;
-        FreeLook.m_Orbits[2].m_Radius = 5;
+        TrySetFreeLookOrbits(FreeLook, 4f, 6f, 5f);
     }
     [System.Obsolete]
     public void Update()
     {
         HandleDeathState();
-        if (IsGameplayInputBlocked())
+        if (HandleGameplayBlocked())
         {
+            return;
+        }
+
+        if (!CanProcessPlayerGameplay())
+        {
+            ResetMovementRuntimeState();
             return;
         }
 
@@ -1121,7 +1426,7 @@ public class Behaviour : MonoBehaviour, IDamageable
             if (Input.GetKeyDown(KeyCode.Space) && JumpNum > 0)
             {
                 Rolling = false;
-                Otter.SetBool("roll", false);
+                PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Roll, false);
                 if (Player.transform.parent != null)
                 {
                     Player.transform.parent = null;
@@ -1144,9 +1449,9 @@ public class Behaviour : MonoBehaviour, IDamageable
         Health.ClampStaminaAndParry();
         //Crouch action - Place Logs
         {
-            if (Input.GetKey(KeyCode.LeftControl)&& FreeLook.m_Lens.FieldOfView<20)
+            if (FreeLook != null && Input.GetKey(KeyCode.LeftControl) && FreeLook.m_Lens.FieldOfView < 20)
             {
-                FreeLook.m_LookAt = Face;
+                TrySetFreeLookLookAt(Face);
             }
 
             if (Input.GetKey(KeyCode.LeftControl) && grounded == true && Rolling == false && !Input.GetKey(KeyCode.Space))
@@ -1156,7 +1461,7 @@ public class Behaviour : MonoBehaviour, IDamageable
                 if (!Input.GetKey(KeyCode.W) || !Input.GetKey(KeyCode.Mouse0))
                 {
                     speed = 0;
-                    Otter.SetBool("crouch", true);
+                    PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Crouch, true);
                 }
                 if (Honeypicked == true)
                 {
@@ -1174,7 +1479,7 @@ public class Behaviour : MonoBehaviour, IDamageable
             {
                 Physics.IgnoreLayerCollision(gameObject.layer, 7, false);
                 HologramedBridge.SetActive(false);
-                Otter.SetBool("crouch", false);
+                PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Crouch, false);
                 ParryOFF();
             }
 
@@ -1209,7 +1514,7 @@ public class Behaviour : MonoBehaviour, IDamageable
                                 //Turn off Hammers
                                 HammerHeld = false;
                                 GroundAttack = 50;
-                                Otter.SetBool("armor", false);
+                                PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Armor, false);
                                 RightHandWeapon.SetActive(false);
                                 LeftHandWeapon.SetActive(false);
 
@@ -1237,7 +1542,7 @@ public class Behaviour : MonoBehaviour, IDamageable
                                 //Turn on Hammers
                                 HammerHeld = true;
                                 GroundAttack = 450;
-                                Otter.SetBool("armor", false);
+                                PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Armor, false);
                                 RightHandWeapon.SetActive(true);
                                 LeftHandWeapon.SetActive(true);
 
@@ -1266,7 +1571,7 @@ public class Behaviour : MonoBehaviour, IDamageable
                                 //Turn off Hammers
                                 HammerHeld = false;
                                 GroundAttack = 50;
-                                Otter.SetBool("armor", false);
+                                PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Armor, false);
                                 RightHandWeapon.SetActive(false);
                                 LeftHandWeapon.SetActive(false);
 
@@ -1292,7 +1597,7 @@ public class Behaviour : MonoBehaviour, IDamageable
                                 Otter.Play("Equip");
                                 //Turn off Hammers
                                 HammerHeld = false;
-                                Otter.SetBool("armor", false);
+                                PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Armor, false);
                                 RightHandWeapon.SetActive(false);
                                 LeftHandWeapon.SetActive(false);
 
@@ -1307,7 +1612,7 @@ public class Behaviour : MonoBehaviour, IDamageable
                                 //Turn on Armor Set
                                 ArmorEquipped = true;
                                 GroundAttack = 150;
-                                Otter.SetBool("armor", true);
+                                PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Armor, true);
                                 for (int item = 0; item < ArmorSet.Length; item++)
                                 {
                                     ArmorSet[item].SetActive(true);
@@ -1391,13 +1696,13 @@ public class Behaviour : MonoBehaviour, IDamageable
                     }
                     if (ArmorEquipped==false)
                     {
-                        Otter.SetBool("fight", true); //Airkick leveitation without sword
-                        Otter.SetBool("slash", false);
+                        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Fight, true); //Airkick leveitation without sword
+                        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Slash, false);
                     }
                     if (ArmorEquipped == true)
                     {
-                        Otter.SetBool("fight", false); 
-                        Otter.SetBool("slash", true);//Airkick leveitation with sword
+                        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Fight, false);
+                        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Slash, true);//Airkick leveitation with sword
                     }
 
                     if (grounded == false)
@@ -1429,20 +1734,20 @@ public class Behaviour : MonoBehaviour, IDamageable
                         else
                         {
                             Player.useGravity = true;
-                            Otter.SetBool("fight", false);
+                            PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Fight, false);
                         }      
                     }
                     if (grounded == true)
                     {
                         if (ArmorEquipped == false)
                         {
-                            Otter.SetBool("fight", true);
-                            Otter.SetBool("slash", false);
+                            PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Fight, true);
+                            PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Slash, false);
                         }
                         if (ArmorEquipped == true)
                         {
-                            Otter.SetBool("fight", false);
-                            Otter.SetBool("slash", true);
+                            PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Fight, false);
+                            PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Slash, true);
                         }
                         if (Otter.GetCurrentAnimatorStateInfo(1).IsName("AttackA"))
                         {
@@ -1466,8 +1771,8 @@ public class Behaviour : MonoBehaviour, IDamageable
                 else
                 {
                     Player.useGravity = true;
-                    Otter.SetBool("slash", false);
-                    Otter.SetBool("fight", false);
+                    PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Slash, false);
+                    PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Fight, false);
                     
                     InitiateAir = 0.5f;
                     GroundAttack = 50;
@@ -1488,8 +1793,14 @@ public class Behaviour : MonoBehaviour, IDamageable
     [Obsolete]
     public void LateUpdate()
     {
-        if (IsGameplayInputBlocked())
+        if (HandleGameplayBlocked())
         {
+            return;
+        }
+
+        if (!CanProcessPlayerGameplay())
+        {
+            ResetMovementRuntimeState();
             return;
         }
 
@@ -1510,42 +1821,30 @@ public class Behaviour : MonoBehaviour, IDamageable
     [System.Obsolete]
     public void FixedUpdate()
     {
-        if (IsGameplayInputBlocked())
+        if (HandleGameplayBlocked())
         {
             return;
         }
 
-        //Camera vectors setup
-        Vector3 cameraRelativeForward = Camera.main.transform.TransformDirection(Vector3.forward);
-        Vector3 cameraRelativeBack = Camera.main.transform.TransformDirection(Vector3.back);
-        Vector3 cameraRelativeRight = Camera.main.transform.TransformDirection(Vector3.right);
-        Vector3 cameraRelativeLeft = Camera.main.transform.TransformDirection(Vector3.left);
+        if (!CanProcessPlayerGameplay())
+        {
+            ResetMovementRuntimeState();
+            return;
+        }
 
-        //Horizontal camera vectors
-        Vector3 XZForward = new(cameraRelativeForward.x, 0, cameraRelativeForward.z);
-        Vector3 XZBack = new(cameraRelativeBack.x, 0, cameraRelativeBack.z);
-        Vector3 XZRight = new(cameraRelativeRight.x, 0, cameraRelativeRight.z);
-        Vector3 XZLeft = new(cameraRelativeLeft.x, 0, cameraRelativeLeft.z);
+        //Camera vectors setup
+        bool hasGameplayCamera = GameplayCamera.TryGetPlanarBasis(out Vector3 XZForward, out Vector3 XZRight);
 
         //Switch off additional animations if not invoked
         {
-            Otter.SetBool("walk", false);
-            Otter.SetBool("strafeForward", false);
-            Otter.SetBool("strafeBack", false);
-            Otter.SetBool("strafeLeft", false);
-            Otter.SetBool("strafeRight", false);
-            Otter.SetBool("climb", false);
-            Otter.SetBool("run", false);
-            Otter.SetBool("midair", false);
-            Otter.SetBool("roll", false);
-            Otter.SetBool("aim", false);
-            //Otter.SetBool("draw", false);
+            ClearMovementAnimatorBools();
+            PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Aim, false);
             Rolling = false;
             movementInvoked = false;
             //keepLooking = false;
         }
         //Stoning action
-        if (bowEquipped == false)
+        if (hasGameplayCamera && bowEquipped == false)
         {
             if (Input.GetKey(KeyCode.Mouse1)
                 && CurrentStamina > 0
@@ -1554,19 +1853,21 @@ public class Behaviour : MonoBehaviour, IDamageable
             {
                 Stone.SetActive(true);
                 AimIcon.SetActive(true);
-                Otter.SetBool("aim", true);
+                PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Aim, true);
                 Otter.Play("Aim");
                 if (Input.GetKeyDown(KeyCode.Mouse1))
                 {
-                    rotGoal = SafeRotation.LookRotationOrCurrent(cameraRelativeForward, transform.rotation);
-                    transform.rotation = rotGoal;
+                    if (SafeRotation.TryPlanarLookRotation(XZForward, out rotGoal))
+                    {
+                        transform.rotation = rotGoal;
+                    }
                     Otter.Play("Crouch");
                 }
                 keepLooking = true;
             }
             if (Input.GetKeyUp(KeyCode.Mouse1) && Stone.active && CurrentStamina > 0)
             {
-                Otter.SetBool("slash", false);
+                PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Slash, false);
                 Otter.Play("Throw");
                 Instantiate(Ball, AttackPoint.position + new Vector3(0, 0.6f, 0), Spine.rotation);
                 CurrentStamina -= 20;
@@ -1582,12 +1883,14 @@ public class Behaviour : MonoBehaviour, IDamageable
             }
         }
         //Bow action       
-        if (bowEquipped == true)
+        if (hasGameplayCamera && bowEquipped == true)
         {
             if (Input.GetKeyDown(KeyCode.Mouse1) && !Input.GetKeyUp(KeyCode.Mouse1))
             {
-                rotGoal = SafeRotation.LookRotationOrCurrent(cameraRelativeForward, transform.rotation);
-                transform.rotation = rotGoal;
+                if (SafeRotation.TryPlanarLookRotation(XZForward, out rotGoal))
+                {
+                    transform.rotation = rotGoal;
+                }
                 if (arrowMunition > 0 &&
                 CurrentStamina > 0)
                 {
@@ -1598,14 +1901,14 @@ public class Behaviour : MonoBehaviour, IDamageable
                     keepLooking = true;
                     arrowModel.SetActive(true);
                     bowString.SetActive(false);
-                    Otter.SetBool("draw", true);
+                    PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Draw, true);
                     stringLine.enabled = true;
                     stringLine.useWorldSpace = false;
                 }
                 else
                 {
                     arrowReady = false;
-                    Otter.SetBool("draw", false);
+                    PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Draw, false);
                     Sound.Error();
                     if (CurrentStamina <= 0)
                     {
@@ -1620,8 +1923,13 @@ public class Behaviour : MonoBehaviour, IDamageable
             }
             if (arrowReady == true && Input.GetKeyUp(KeyCode.Mouse1) && CurrentStamina > 0)
             {
+                if (!SafeRotation.TryPlanarLookRotation(XZForward, out Quaternion arrowRotation))
+                {
+                    return;
+                }
+
                 Sound.ArrowShoot();
-                Instantiate(Arrow, Spine.position + new Vector3(0,1.4f * cameraRelativeForward.normalized.y, 1.4f * cameraRelativeForward.normalized.z), SafeRotation.LookRotationOrCurrent(cameraRelativeForward, transform.rotation)* Quaternion.Euler(90, 0, 0));
+                Instantiate(Arrow, Spine.position + XZForward * 1.4f, arrowRotation * Quaternion.Euler(90, 0, 0));
                 CurrentStamina -= 30;
                 if (HealthBar != null)
                 {
@@ -1630,7 +1938,7 @@ public class Behaviour : MonoBehaviour, IDamageable
                 arrowModel.SetActive(false);
                 stringLine.enabled = false;
                 bowString.SetActive(true);
-                Otter.SetBool("draw", false);
+                PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Draw, false);
                 arrowReady = false;
             }
         }
@@ -1651,82 +1959,31 @@ public class Behaviour : MonoBehaviour, IDamageable
             }
         }
         //Basic movement setup
+        if (hasGameplayCamera)
         {
-            //No Crouch = Regular Movement
-            if (!Input.GetKey(KeyCode.LeftControl))
+            Vector2 input = Vector2.ClampMagnitude(new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")), 1f);
+            Vector3 move = (XZForward * input.y + XZRight * input.x).normalized;
+
+            if (move.sqrMagnitude >= Mathf.Epsilon)
             {
-                HealQue = 3;
-                if (Input.GetKey(KeyCode.W))
+                //No Crouch = Regular Movement
+                if (!Input.GetKey(KeyCode.LeftControl))
                 {
-                    PlayerMove(XZForward);
+                    HealQue = 3;
+                    PlayerMove(move);
                 }
-                if (Input.GetKey(KeyCode.S))
+                //Movement + Crouch = Roll & Evade
+                else if (CurrentStamina > 0)
                 {
-                    PlayerMove(XZBack);
-                }
-                if (Input.GetKey(KeyCode.D))
-                {
-                    //Otter.Play("Walk Right");
-                    PlayerMove(XZRight);
-                }
-                if (Input.GetKey(KeyCode.A))
-                {
-                    //Otter.Play("Walk Left");
-                    PlayerMove(XZLeft);
-                }
-                if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.D))
-                {
-                    PlayerMove(XZForward + XZRight);
-                }
-                if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.A))
-                {
-                    PlayerMove(XZForward + XZLeft);
-                }
-                if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.D))
-                {
-                    PlayerMove(XZBack + XZRight);
-                }
-                if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.A))
-                {
-                    PlayerMove(XZBack + XZLeft);
+                    HealQue = 3;
+                    PlayerRoll(move);
                 }
             }
-            //Movement + Crouch = Roll & Evade
-            if (Input.GetKey(KeyCode.LeftControl) && CurrentStamina > 0)
+            else
             {
-                HealQue = 3;
-                if (Input.GetKey(KeyCode.W))
-                {
-                    PlayerRoll(XZForward);
-                }
-                if (Input.GetKey(KeyCode.S))
-                {
-                    PlayerRoll(XZBack);
-                }
-                if (Input.GetKey(KeyCode.D))
-                {
-                    PlayerRoll(XZRight);
-                }
-                if (Input.GetKey(KeyCode.A))
-                {
-                    PlayerRoll(XZLeft);
-                }
-                if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.D))
-                {
-                    PlayerRoll(XZForward + XZRight);
-                }
-                if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.A))
-                {
-                    PlayerRoll(XZForward + XZLeft);
-                }
-                if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.D))
-                {
-                    PlayerRoll(XZBack + XZRight);
-                }
-                if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.A))
-                {
-                    PlayerRoll(XZBack + XZLeft);
-                }
+                speed = Walk;
+                steer = 0.1f;
+                PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Run, false);
             }
         }
        
@@ -1738,22 +1995,22 @@ public class Behaviour : MonoBehaviour, IDamageable
             {
                 if (JumpNum < JumpLimit)
                 {
-                    Otter.SetBool("midair", true);
+                    PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Midair, true);
                 }
                 if (JumpNum == JumpLimit)
                 {
-                    Otter.SetBool("midair", false);
+                    PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Midair, false);
                     FallClock -= Time.deltaTime;
                     if (FallClock <= 0)
                     {
-                        Otter.SetBool("midair", true);
+                        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Midair, true);
                     }
                 }
             }
             if (grounded == true)
             {
                 JumpNum = JumpLimit;
-                Otter.SetBool("midair", false);
+                PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Midair, false);
                 levitation = 10;
                 Otter.speed = AnimSpeed;
                 if (movementInvoked == false && Player.velocity.magnitude >= 6)
@@ -1775,15 +2032,17 @@ public class Behaviour : MonoBehaviour, IDamageable
             {
                 if (isParried == false)
                 {
-                    rotGoal = SafeRotation.LookRotationOrCurrent(new Vector3(Player.velocity.x, 0, Player.velocity.z), transform.rotation);
-                    transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.5f);
+                    if (SafeRotation.TryPlanarLookRotation(Player.velocity, out rotGoal))
+                    {
+                        transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.5f);
+                    }
                 }
-                Otter.SetBool("moving", true);
+                PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Moving, true);
                 SlideEffect.enableEmission = true;
             }
             if (neutralAndMoving == false)
             {
-                Otter.SetBool("moving", false);
+                PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Moving, false);
                 SlideEffect.enableEmission = false;
             }
         }

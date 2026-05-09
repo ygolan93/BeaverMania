@@ -87,7 +87,9 @@ public static class RuntimeServices
             "Missing runtime service; creating fallback " + serviceType.Name + ".",
             null,
             serviceType.Name);
-        var service = new GameObject(serviceType.Name).AddComponent<T>();
+        var owner = new GameObject(serviceType.Name);
+        owner.AddComponent<RuntimeServiceOwnerMarker>().MarkFallbackCreated();
+        var service = owner.AddComponent<T>();
         Register(service, lifetime);
         return service;
     }
@@ -221,12 +223,16 @@ public static class RuntimeServices
             var component = registration.Service as Component;
             if (component != null)
             {
-                UnityEngine.Object.Destroy(component.gameObject);
+                var owner = component.GetComponent<RuntimeServiceOwnerMarker>();
+                if (owner != null && owner.DestroyOnSceneServiceReset)
+                {
+                    UnityEngine.Object.Destroy(component.gameObject);
+                }
+
+                continue;
             }
-            else
-            {
-                UnityEngine.Object.Destroy(registration.Service);
-            }
+
+            UnityEngine.Object.Destroy(registration.Service);
         }
     }
 }

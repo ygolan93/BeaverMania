@@ -52,7 +52,7 @@ public class PlayerInteractionController : MonoBehaviour
         owner.CamForTraders.enabled = false;
         owner.CamForTraders.m_LookAt = null;
         owner.FreeLook.enabled = true;
-        owner.FreeLook.m_LookAt.rotation = Quaternion.Slerp(owner.transform.rotation, Quaternion.LookRotation(owner.Root.position), 0.5f);
+        owner.FreeLook.m_LookAt.rotation = Quaternion.Slerp(owner.transform.rotation, SafeRotation.LookRotationOrCurrent(owner.Root.position, owner.transform.rotation), 0.5f);
     }
 
     GameInputReader GetInputReader()

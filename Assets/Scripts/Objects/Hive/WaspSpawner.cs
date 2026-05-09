@@ -82,7 +82,7 @@ public class WaspSpawner : MonoBehaviour, IRuntimeResettable
         {
             if (Counter > 0)
             {
-               Quaternion RotWasp = Quaternion.LookRotation(Distance);
+               Quaternion RotWasp = SafeRotation.LookRotationOrCurrent(Distance, transform.rotation);
                SpawnWasp(RotWasp);
                 Counter--;
             }

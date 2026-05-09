@@ -46,8 +46,8 @@ public class Trader : MonoBehaviour
             DialoguePanel.SetActive(true);
             if (Rotate == true)
             {
-                Player.rotGoal = Quaternion.LookRotation(Player.transform.position - Merchant.transform.position);
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(PlayerDistance), 0.1f);
+                Player.rotGoal = SafeRotation.LookRotationOrCurrent(Player.transform.position - Merchant.transform.position, Player.transform.rotation);
+                transform.rotation = Quaternion.Slerp(transform.rotation, SafeRotation.LookRotationOrCurrent(PlayerDistance, transform.rotation), 0.1f);
             }
         }
 

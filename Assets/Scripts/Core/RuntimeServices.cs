@@ -15,10 +15,16 @@ public static class RuntimeServices
     public static bool TryGet<T>(out T service) where T : UnityEngine.Object
     {
         Registration registration;
-        if (Services.TryGetValue(typeof(T), out registration) && registration.Service != null)
+        if (Services.TryGetValue(typeof(T), out registration))
         {
-            service = (T)registration.Service;
-            return true;
+            if (registration.Service != null)
+            {
+                service = (T)registration.Service;
+                return true;
+            }
+
+            Services.Remove(typeof(T));
+            BuildSafeLogger.InfoOnce(typeof(T).FullName + ".RemovedStaleService", "Removed stale runtime service registration: " + typeof(T).Name + ".");
         }
 
         service = null;
@@ -46,7 +52,9 @@ public static class RuntimeServices
             "Missing runtime service; creating fallback " + serviceType.Name + ".",
             null,
             serviceType.Name);
-        return new GameObject(serviceType.Name).AddComponent<T>();
+        service = new GameObject(serviceType.Name).AddComponent<T>();
+        Register(service, lifetime);
+        return service;
     }
 
     public static bool Register<T>(T service, ServiceLifetime lifetime) where T : UnityEngine.Object
@@ -58,6 +66,12 @@ public static class RuntimeServices
 
         var serviceType = typeof(T);
         Registration existing;
+        if (Services.TryGetValue(serviceType, out existing) && existing.Service == null)
+        {
+            Services.Remove(serviceType);
+            BuildSafeLogger.InfoOnce(serviceType.FullName + ".RemovedStaleService", "Removed stale runtime service registration: " + serviceType.Name + ".");
+        }
+
         if (Services.TryGetValue(serviceType, out existing) && existing.Service != null && existing.Service != service)
         {
             BuildSafeLogger.WarnOnce(
@@ -90,6 +104,10 @@ public static class RuntimeServices
             UnityEngine.Object.DontDestroyOnLoad(serviceComponent.gameObject);
         }
 
+        BuildSafeLogger.InfoOnce(
+            serviceType.FullName + ".Registered." + lifetime,
+            "Registered " + lifetime + " runtime service: " + serviceType.Name + ".",
+            service as UnityEngine.Object);
         return true;
     }
 
@@ -107,12 +125,35 @@ public static class RuntimeServices
         }
     }
 
+    public static string GetDiagnostics()
+    {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        var lines = new List<string>();
+        foreach (var service in Services)
+        {
+            var component = service.Value.Service as Component;
+            string scope = component != null && component.gameObject.scene.name == "DontDestroyOnLoad" ? "persistent-object" : "scene-local-object";
+            lines.Add(service.Key.Name + " lifetime=" + service.Value.Lifetime + " state=" + (service.Value.Service == null ? "stale" : scope));
+        }
+
+        return string.Join("\n", lines.ToArray());
+#else
+        return string.Empty;
+#endif
+    }
+
     public static void ResetSceneServices()
     {
         var sceneServiceTypes = new List<Type>();
 
         foreach (var service in Services)
         {
+            if (service.Value.Service == null)
+            {
+                sceneServiceTypes.Add(service.Key);
+                continue;
+            }
+
             if (service.Value.Lifetime == ServiceLifetime.Scene)
             {
                 sceneServiceTypes.Add(service.Key);

@@ -46,7 +46,7 @@ public class Grapple : MonoBehaviour
 
     void ExecuteGrapple()
     {
-        Player.transform.rotation = Quaternion.LookRotation(grapplePoint);
+        Player.transform.rotation = SafeRotation.LookRotationOrCurrent(grapplePoint, Player.transform.rotation);
     }
     void StopGrapple()
     {

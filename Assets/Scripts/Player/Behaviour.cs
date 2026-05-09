@@ -605,7 +605,11 @@ public class Behaviour : MonoBehaviour, IDamageable
     }
     public void TakeDamage(float Damage) => TakeDamage(new DamageEvent { Amount = Damage, Source = null, Point = transform.position, Type = DamageType.Generic, CanStun = false });
     public void TakeDamage(DamageEvent damageEvent) => Health.TakeDamage(damageEvent.Amount);
-    public void HandleFailure(PlayerFailureReason reason) => Failure.HandleFailure(reason);
+    public void HandleFailure(PlayerFailureReason reason)
+    {
+        ResetMovementRuntimeState();
+        Failure.HandleFailure(reason);
+    }
     public void PlayerMove(Vector3 Direction)
     {
         if (HandleGameplayBlocked())
@@ -809,6 +813,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     public void ActivateLooseMenu()
     {
         //MusicOP.StopMusic();
+        ResetMovementRuntimeState();
         if (!GameFlowController.GetOrCreate().SetGameOver())
         {
             return;
@@ -1042,23 +1047,29 @@ public class Behaviour : MonoBehaviour, IDamageable
             Player.velocity = new Vector3(0f, Player.velocity.y, 0f);
         }
 
+        SetMovementAnimatorIdle();
+    }
+
+    public void SetMovementAnimatorIdle()
+    {
         ClearMovementAnimatorBools();
         PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Aim, false);
         PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Draw, false);
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Crouch, false);
     }
 
     void ClearMovementAnimatorBools()
     {
-        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Roll, false);
-        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Run, false);
         PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Walk, false);
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Run, false);
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Midair, false);
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Roll, false);
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Moving, false);
         PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.StrafeForward, false);
         PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.StrafeBack, false);
         PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.StrafeLeft, false);
         PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.StrafeRight, false);
         PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Climb, false);
-        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Midair, false);
-        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Moving, false);
     }
 
     void HandleDeathState() => Health.HandleDeathState();

@@ -69,6 +69,12 @@ public sealed class PlayerCameraReference
             return true;
         }
 
+        if (TryGetBrainOutputCamera(out var brainCamera))
+        {
+            Cache(brainCamera, Source.BrainCamera);
+            return true;
+        }
+
         if (freeLook != null && freeLook.enabled)
         {
             var freeLookObject = freeLook.VirtualCameraGameObject;
@@ -77,13 +83,6 @@ public sealed class PlayerCameraReference
                 Cache(freeLookObject.transform, null, Source.FreeLook);
                 return true;
             }
-        }
-
-        var brain = UnityEngine.Object.FindObjectOfType<CinemachineBrain>();
-        if (brain != null && brain.enabled && brain.gameObject.activeInHierarchy && IsCameraValid(brain.OutputCamera))
-        {
-            Cache(brain.OutputCamera, Source.BrainCamera);
-            return true;
         }
 
         if (IsCameraValid(Camera.main))
@@ -108,7 +107,8 @@ public sealed class PlayerCameraReference
             case Source.SerializedCamera:
                 return cachedCamera == camera && IsCameraValid(cachedCamera);
             case Source.FreeLook:
-                return freeLook != null
+                return !TryGetBrainOutputCamera(out _)
+                    && freeLook != null
                     && freeLook.enabled
                     && freeLook.VirtualCameraGameObject != null
                     && cachedTransform == freeLook.VirtualCameraGameObject.transform
@@ -138,6 +138,19 @@ public sealed class PlayerCameraReference
         cachedTransform = null;
         cachedCamera = null;
         cachedSource = Source.None;
+    }
+
+    static bool TryGetBrainOutputCamera(out Camera outputCamera)
+    {
+        var brain = UnityEngine.Object.FindObjectOfType<CinemachineBrain>();
+        if (brain != null && brain.enabled && brain.gameObject.activeInHierarchy && IsCameraValid(brain.OutputCamera))
+        {
+            outputCamera = brain.OutputCamera;
+            return true;
+        }
+
+        outputCamera = null;
+        return false;
     }
 
     static bool IsCameraValid(Camera candidate)

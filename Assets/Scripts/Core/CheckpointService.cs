@@ -9,6 +9,12 @@ public sealed class CheckpointService : MonoBehaviour
 
     public static CheckpointService GetOrCreate()
     {
+        CheckpointService service;
+        if (RuntimeServices.TryGetOrFind(ServiceLifetime.Scene, out service))
+        {
+            return service;
+        }
+
         return RuntimeServices.GetOrCreate<CheckpointService>(ServiceLifetime.Scene);
     }
 

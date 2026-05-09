@@ -32,6 +32,11 @@ public static class PrefabIntegrationValidator
         new FocusPrefabRule(PersistentBootstrapPrefab, typeof(RuntimeBootstrapOwner), RuntimeBootstrapOwnerId)
     };
 
+    static readonly RequiredReferenceRule[] RequiredReferenceRules =
+    {
+        new RequiredReferenceRule(PersistentBootstrapPrefab, typeof(MusicPlaylist), nameof(MusicPlaylist.MusicSource))
+    };
+
     [MenuItem(MenuRoot + "Run Prefab Integration Validation")]
     public static void RunPrefabIntegrationValidationMenu()
     {
@@ -72,6 +77,7 @@ public static class PrefabIntegrationValidator
         if (validateSerializedReferences)
         {
             ValidateSerializedObjectReferences(context);
+            ValidateRequiredPrefabReferences(context);
         }
 
         if (validateDuplicateServices || validateServiceLocations)
@@ -163,6 +169,36 @@ public static class PrefabIntegrationValidator
             foreach (var reference in refs)
             {
                 context.AddError("MissingSerializedObjectReference", prefabPath, reference);
+            }
+        }
+    }
+
+    static void ValidateRequiredPrefabReferences(ValidationContext context)
+    {
+        foreach (var rule in RequiredReferenceRules.OrderBy(rule => rule.PrefabPath, StringComparer.Ordinal))
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(rule.PrefabPath);
+            if (prefab == null)
+            {
+                context.AddError("MissingRequiredReference", rule.PrefabPath, rule.ComponentType.FullName + "." + rule.PropertyName + " prefab not found");
+                continue;
+            }
+
+            var components = prefab.GetComponentsInChildren(rule.ComponentType, true).Cast<Component>().Where(component => component != null).ToArray();
+            if (components.Length == 0)
+            {
+                context.AddError("MissingRequiredReference", rule.PrefabPath, rule.ComponentType.FullName + "." + rule.PropertyName + " component not found");
+                continue;
+            }
+
+            foreach (var component in components.OrderBy(component => TransformPath(component.transform), StringComparer.Ordinal))
+            {
+                var serializedObject = new SerializedObject(component);
+                var property = serializedObject.FindProperty(rule.PropertyName);
+                if (property == null || property.propertyType != SerializedPropertyType.ObjectReference || property.objectReferenceValue == null)
+                {
+                    context.AddError("MissingRequiredReference", rule.PrefabPath, rule.ComponentType.FullName + "." + rule.PropertyName + " at " + TransformPath(component.transform));
+                }
             }
         }
     }
@@ -302,6 +338,20 @@ public static class PrefabIntegrationValidator
             PrefabPath = prefabPath;
             MarkerType = markerType;
             RequiredOwnerId = requiredOwnerId;
+        }
+    }
+
+    sealed class RequiredReferenceRule
+    {
+        public readonly string PrefabPath;
+        public readonly Type ComponentType;
+        public readonly string PropertyName;
+
+        public RequiredReferenceRule(string prefabPath, Type componentType, string propertyName)
+        {
+            PrefabPath = prefabPath;
+            ComponentType = componentType;
+            PropertyName = propertyName;
         }
     }
 

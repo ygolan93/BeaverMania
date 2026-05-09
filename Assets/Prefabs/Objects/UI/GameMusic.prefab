@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 4968688398559378346}
   - component: {fileID: 4968688398559378347}
   - component: {fileID: 4968688398559378348}
+  - component: {fileID: 4968688398559378349}
   m_Layer: 5
   m_Name: GameMusic
   m_TagString: Music
@@ -159,7 +160,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7724bd1507218364691562fd02f6ed08, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MusicSource: {fileID: 0}
+  MusicSource: {fileID: 4968688398559378340}
   MusicClip:
   - {fileID: 8300000, guid: 7c8d4d947ba8f9d469c91537db6ba07d, type: 3}
   - {fileID: 8300000, guid: 2da5c51ac6d91b74bb99eb339e2097dc, type: 3}
@@ -225,3 +226,23 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier:
   config: {fileID: 11400000, guid: 8db2a0ec65f8404a940e01a7e59e8c34, type: 2}
+--- !u!114 &4968688398559378349
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4968688398559378331}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49b9e682cc2d4b438ad8dd6a5e8f5b91, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  ownerId: runtime-bootstrap
+  lifetime: 0
+  ownedServices:
+  - {fileID: 4968688398559378344}
+  - {fileID: 4968688398559378345}
+  - {fileID: 4968688398559378346}
+  - {fileID: 4968688398559378347}
+  - {fileID: 4968688398559378348}

@@ -5,9 +5,10 @@ using UnityEngine;
 public class WaspSpawner : MonoBehaviour, IRuntimeResettable
 {
     public GameObject Wasp;
-    public GameObject Hive;
+    [SerializeField] GameObject Hive;
     public Behaviour Player;
     Transform playerTransform;
+    private bool initialized;
     public Vector3 Distance;
     [SerializeField] float SpawnDistance;
     public int WaspCounter=3;
@@ -26,17 +27,28 @@ public class WaspSpawner : MonoBehaviour, IRuntimeResettable
     { 
         Counter=WaspCounter;
         RealClock = SpawnClock;
-        if (PlayerReference.TryGetPlayer(out Player))
+        if (Hive == null)
+        {
+            Hive = gameObject;
+        }
+
+        if (Player == null)
+        {
+            PlayerReference.TryGetPlayer(out Player);
+        }
+
+        if (Player != null)
         {
             playerTransform = Player.transform;
         }
 
-        if (!ValidateReferences())
+        bool validReferences = ValidateReferences();
+        if (validReferences && playerTransform != null)
         {
-            return;
+            CaptureRuntimeState();
         }
 
-        CaptureRuntimeState();
+        initialized = validReferences && playerTransform != null;
     }
 
     void CaptureRuntimeState()
@@ -76,6 +88,11 @@ public class WaspSpawner : MonoBehaviour, IRuntimeResettable
 
     public void Update()
     {
+        if (!initialized)
+        {
+            return;
+        }
+
          Distance = playerTransform.position - gameObject.transform.position;
 
         if (Mathf.Abs(Distance.magnitude) < SpawnDistance )

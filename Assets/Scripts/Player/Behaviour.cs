@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Cinemachine;
 using Cinemachine.Utility;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Behaviour : MonoBehaviour, IDamageable
 {
@@ -1169,6 +1170,22 @@ public class Behaviour : MonoBehaviour, IDamageable
         return false;
     }
 
+    void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        GameplayCamera.Invalidate();
+    }
+
+    void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        GameplayCamera.Invalidate();
+    }
+
     public void Start()
     {
         if (!ValidateStartReferences())
@@ -1725,10 +1742,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         }
 
         //Camera vectors setup
-        if (!GameplayCamera.TryGetPlanarBasis(out Vector3 XZForward, out Vector3 XZRight))
-        {
-            return;
-        }
+        bool hasGameplayCamera = GameplayCamera.TryGetPlanarBasis(out Vector3 XZForward, out Vector3 XZRight);
 
         //Switch off additional animations if not invoked
         {
@@ -1739,7 +1753,7 @@ public class Behaviour : MonoBehaviour, IDamageable
             //keepLooking = false;
         }
         //Stoning action
-        if (bowEquipped == false)
+        if (hasGameplayCamera && bowEquipped == false)
         {
             if (Input.GetKey(KeyCode.Mouse1)
                 && CurrentStamina > 0
@@ -1776,7 +1790,7 @@ public class Behaviour : MonoBehaviour, IDamageable
             }
         }
         //Bow action       
-        if (bowEquipped == true)
+        if (hasGameplayCamera && bowEquipped == true)
         {
             if (Input.GetKeyDown(KeyCode.Mouse1) && !Input.GetKeyUp(KeyCode.Mouse1))
             {
@@ -1845,6 +1859,7 @@ public class Behaviour : MonoBehaviour, IDamageable
             }
         }
         //Basic movement setup
+        if (hasGameplayCamera)
         {
             Vector2 input = Vector2.ClampMagnitude(new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")), 1f);
             Vector3 move = (XZForward * input.y + XZRight * input.x).normalized;

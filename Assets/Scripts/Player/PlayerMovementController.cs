@@ -16,8 +16,21 @@ public class PlayerMovementController : MonoBehaviour
         return owner != null;
     }
 
+    public bool CanMove()
+    {
+        return ValidateOwnerReferences() && owner.enabled && owner.Player.gameObject.activeInHierarchy;
+    }
+
     public bool ValidateOwnerReferences()
     {
         return HasOwner() && owner.Player != null;
+    }
+
+    public void ResetRuntimeState()
+    {
+        if (HasOwner())
+        {
+            owner.ResetMovementRuntimeState();
+        }
     }
 }

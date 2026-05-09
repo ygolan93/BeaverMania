@@ -44,7 +44,7 @@ public class AnimatedAttack : MonoBehaviour
 
             switch (enemy.tag)
             {
-                case "NPC":
+                case PlayerTags.Npc:
                     {
                         var Wasp = enemy.gameObject.GetComponent<NPC_Basic>();
                         if (Wasp != null)
@@ -62,7 +62,7 @@ public class AnimatedAttack : MonoBehaviour
                         }
                         break;
                     }
-                case "Scorpion":
+                case PlayerTags.Scorpion:
                     {
                         var Scorpion = enemy.gameObject.GetComponent<ScorpionScript>();
                         if (Scorpion != null)
@@ -100,7 +100,7 @@ public class AnimatedAttack : MonoBehaviour
                     CauseDamage(AttackPoint.position, 0.7f, 50);
                     break;
                 }
-            case "Bow":
+            case PlayerTags.Bow:
                 {
                     CauseDamage(AttackPoint.position, 1f, 50);
                     break;

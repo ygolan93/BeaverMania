@@ -1,22 +1,25 @@
 # Runtime Services
 
-`RuntimeServices` owns singleton-style registrations by component type. Persistent services must live only on `Assets/Prefabs/Objects/UI/GameMusic.prefab`, the runtime bootstrap owner prefab. Player prefabs must keep only player-local or scene-local systems.
+`RuntimeServices` registers singleton-style services by component type. Ownership is prefab-based, not scene-name-based.
 
-| Service | Lifetime | Owner prefab | Notes |
-| --- | --- | --- | --- |
-| `SceneTransitionService` | Persistent (`RuntimeBootstrapOwner`) | `Assets/Prefabs/Objects/UI/GameMusic.prefab` | Global scene loading and scene-service reset coordinator. |
-| `CursorStateService` | Persistent (`RuntimeBootstrapOwner`) | `Assets/Prefabs/Objects/UI/GameMusic.prefab` | Global cursor visibility/lock owner. |
-| `GameFlowController` | Persistent (`RuntimeBootstrapOwner`) | `Assets/Prefabs/Objects/UI/GameMusic.prefab` | Global boot/play/pause/game-over state owner. |
-| `GameInputReader` | Persistent (`RuntimeBootstrapOwner`) | `Assets/Prefabs/Objects/UI/GameMusic.prefab` | Global input polling and input-mode owner. |
-| `DebugBootstrapper` | Persistent (`RuntimeBootstrapOwner`) | `Assets/Prefabs/Objects/UI/GameMusic.prefab` | Development/debug runtime feature bootstrapper. |
-| `CheckpointService` | Scene-local | `Assets/Prefabs/OtterPlayer/Otter_Shapekeys/Player.prefab` | Player/scene checkpoint state; destroyed on scene reset. |
+## Service lifetime table
 
-## Prefab rules
+| Service | Lifetime | Owner prefab | Required refs | Optional refs | Notes |
+| --- | --- | --- | --- | --- | --- |
+| `SceneTransitionService` | `Persistent` | `Assets/Prefabs/Objects/UI/GameMusic.prefab` | `RuntimeBootstrapOwner.ownedServices` entry. | None. | Global scene loading and scene-service reset coordinator. |
+| `CursorStateService` | `Persistent` | `Assets/Prefabs/Objects/UI/GameMusic.prefab` | `RuntimeBootstrapOwner.ownedServices` entry. | None. | Global cursor visibility/lock owner. |
+| `GameFlowController` | `Persistent` | `Assets/Prefabs/Objects/UI/GameMusic.prefab` | `RuntimeBootstrapOwner.ownedServices` entry. | UI listeners may be scene-provided. | Global boot/play/pause/game-over state owner. |
+| `GameInputReader` | `Persistent` | `Assets/Prefabs/Objects/UI/GameMusic.prefab` | `RuntimeBootstrapOwner.ownedServices` entry. | None. | Global input polling and input-mode owner. |
+| `DebugBootstrapper` | `Persistent` | `Assets/Prefabs/Objects/UI/GameMusic.prefab` | `RuntimeBootstrapOwner.ownedServices` entry; `DebugQAConfig` when debug tools are enabled. | Individual debug tools may be disabled by config. | Development/debug runtime feature bootstrapper. |
+| `CheckpointService` | `Scene` | `Assets/Prefabs/OtterPlayer/Otter_Shapekeys/Player.prefab` | Player root/local checkpoint state. | Respawn offset callers. | Player/scene checkpoint state; destroyed on scene reset. |
 
-- Runtime bootstrap prefabs must include exactly one `RuntimeBootstrapOwner` with a stable, unique `ownerId` and `ownedServices` references to the services it owns.
-- `RuntimeBootstrapOwner.ownerId` values must be unique across prefabs; `Tools/Runtime Services/Validate Prefab Registrations` reports duplicate owner ids.
-- `DoNotDestroy` is legacy compatibility only. Do not use it as the sole ownership marker for new runtime services; attach `RuntimeBootstrapOwner` instead.
-- Do not add persistent `RuntimeServices.Register(..., ServiceLifetime.Persistent)` components to player prefabs.
-- Keep `GameFlowController` and `GameInputReader` off `Assets/Prefabs/OtterPlayer/Otter_Shapekeys/Player.prefab` and `Assets/Prefabs/OtterPlayer/Player Updated.prefab`.
-- Keep player-specific systems, including scene-local `CheckpointService`, on the player prefab that owns that state.
-- Use `Tools/Runtime Services/Validate Prefab Registrations` before committing prefab ownership changes.
+## Rules
+
+- Persistent services must live only on `Assets/Prefabs/Objects/UI/GameMusic.prefab`.
+- `RuntimeBootstrapOwner.ownerId` must be stable and globally unique; current id is `runtime-bootstrap`.
+- `RuntimeBootstrapOwner.ownedServices` must list every persistent service component owned by `GameMusic.prefab`.
+- `DoNotDestroy` is legacy compatibility only; do not use it as the sole ownership marker for new runtime services.
+- Do not add persistent `RuntimeServices.Register(..., ServiceLifetime.Persistent)` components to player, enemy, hive, or UI canvas prefabs.
+- Keep `GameFlowController` and `GameInputReader` off both player prefabs.
+- Keep player/scene-local systems, including `CheckpointService`, on the prefab that owns the state.
+- Run `Tools/Runtime Services/Validate Prefab Registrations` before committing prefab ownership changes.

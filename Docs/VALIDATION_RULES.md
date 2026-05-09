@@ -44,6 +44,7 @@ The validator scans all project prefabs with `AssetDatabase.FindAssets("t:Prefab
 ## Reference validation
 
 - Required refs: non-null serialized components/objects needed for startup, gameplay, damage, input, UI navigation, spawning, or scene transition.
+- Failed required-reference validation must prevent ticking behavior.
 - Optional refs: null-safe, feature-gated, scene-provided, or cosmetic refs.
 - `PrefabRuntimeHardening` should cover required refs that can be validated on `Awake` without scene dependencies.
 - Do not add validation for refs intentionally resolved from the active scene.

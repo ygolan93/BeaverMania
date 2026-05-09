@@ -30,6 +30,11 @@ public sealed class PlayerCameraReference
         this.freeLook = freeLook;
     }
 
+    public void Invalidate()
+    {
+        ClearCache();
+    }
+
     public bool TryGetPlanarBasis(out Vector3 forward, out Vector3 right)
     {
         if (!IsCachedValid() && !TryResolve())

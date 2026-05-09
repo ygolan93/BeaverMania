@@ -12,7 +12,11 @@ public class MusicPlaylist : MonoBehaviour
 
     private void Start()
     {
-        MusicSource = GetComponent<AudioSource>();
+        if (MusicSource == null)
+        {
+            MusicSource = GetComponent<AudioSource>();
+        }
+
         if (MusicSource == null)
         {
             BuildSafeLogger.ErrorOnce("MusicPlaylist.MissingAudioSource", "No AudioSource component found on the GameObject.", this, missingField: nameof(MusicSource));

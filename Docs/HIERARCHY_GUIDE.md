@@ -31,6 +31,14 @@ See also: [Hierarchy and Reference Checklist](HierarchyAndReferenceChecklist.md)
 - `_Sockets` — stable attachment/spawn/IK/weapon/camera anchors.
 - `_Debug` — debug-only helpers and validation markers.
 
+
+## Additive script folder rules
+
+- `Assets/Scripts/AI` is reserved for new AI-specific scripts; do not move existing scripts into it as part of hierarchy cleanup.
+- `Assets/Scripts/Runtime` is reserved for new runtime-ownership helpers only.
+- `Assets/Scripts/Validation/Editor` is reserved for new validation and editor-only tooling only.
+- Folder additions are additive: create the folder and Unity `.meta` file, then leave existing scripts in place unless a migration is explicitly scoped.
+
 ## Reference rules
 
 - Prefer serialized refs, typed components, interfaces, and `TryGetComponent` over tags or hierarchy names.

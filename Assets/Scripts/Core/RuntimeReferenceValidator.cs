@@ -13,18 +13,30 @@ public static class RuntimeReferenceValidator
         bool isTag = fieldName != null && fieldName.EndsWith(" tag");
         string missingTag = isTag ? fieldName.Substring(0, fieldName.Length - 4) : null;
         string missingField = isTag ? null : fieldName;
-        BuildSafeLogger.WarnOnce(
-            $"{ownerName}.{fieldName}",
-            $"Missing required reference '{fieldName}' on {ownerName}.",
+        BuildSafeLogger.ErrorOnce(
+            $"{ownerName}.{fieldName}.Required",
+            $"Missing required reference '{fieldName}' on {ownerName}; disabling affected component.",
             owner,
             missingField,
             missingTag);
 
-        if (owner != null)
+        DisableOwner(owner);
+        return false;
+    }
+
+    public static bool Optional(Object value, MonoBehaviour owner, string fieldName)
+    {
+        if (value != null)
         {
-            owner.enabled = false;
+            return true;
         }
 
+        string ownerName = OwnerName(owner);
+        BuildSafeLogger.WarnOnce(
+            $"{ownerName}.{fieldName}.Optional",
+            $"Missing optional reference '{fieldName}' on {ownerName}.",
+            owner,
+            fieldName);
         return false;
     }
 
@@ -45,11 +57,7 @@ public static class RuntimeReferenceValidator
                 owner,
                 missingTag: tag);
 
-            if (owner != null)
-            {
-                owner.enabled = false;
-            }
-
+            DisableOwner(owner);
             return false;
         }
 
@@ -64,19 +72,23 @@ public static class RuntimeReferenceValidator
             return true;
         }
 
-        BuildSafeLogger.WarnOnce(
-            $"{OwnerName(owner)}.{tag}.{typeof(T).Name}",
-            $"Tagged object '{tag}' is missing required component {typeof(T).Name} for {OwnerName(owner)}.",
+        BuildSafeLogger.ErrorOnce(
+            $"{OwnerName(owner)}.{tag}.{typeof(T).Name}.Required",
+            $"Tagged object '{tag}' is missing required component {typeof(T).Name} for {OwnerName(owner)}; disabling affected component.",
             owner,
             missingField: typeof(T).Name,
             missingTag: tag);
 
+        DisableOwner(owner);
+        return false;
+    }
+
+    static void DisableOwner(MonoBehaviour owner)
+    {
         if (owner != null)
         {
             owner.enabled = false;
         }
-
-        return false;
     }
 
     static string OwnerName(MonoBehaviour owner) => owner != null ? owner.GetType().Name : "<null owner>";

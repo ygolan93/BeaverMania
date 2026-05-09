@@ -14,7 +14,7 @@ public class RotateUI : MonoBehaviour
     private void Update()
     {
         Distance = CameraTarget.transform.position - transform.position;
-        Quaternion rotGoal = Quaternion.LookRotation(Distance);
+        Quaternion rotGoal = SafeRotation.LookRotationOrCurrent(Distance, transform.rotation);
         if (Distance.magnitude>0.5f)
         transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.1f);
 

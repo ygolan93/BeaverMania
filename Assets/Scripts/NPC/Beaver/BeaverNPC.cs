@@ -118,7 +118,7 @@ public class BeaverNPC : MonoBehaviour
         if (wait>0&&moving==false)
         {
             transform.gameObject.layer = LayerMask.NameToLayer("IgnoreOtherBeavers".ToString());
-            rotGoal = Quaternion.LookRotation(Direction);
+            rotGoal = SafeRotation.LookRotationOrCurrent(Direction, transform.rotation);
             transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
             BeaverAnimator.SetBool("Walk", false);
             wait -= Time.deltaTime;
@@ -141,7 +141,7 @@ public class BeaverNPC : MonoBehaviour
             BeaverAnimator.SetBool("Walk", true);
             Wander = wayPoints[currentPoint].position - transform.position;
             Wander.y = 0;
-            rotGoal = Quaternion.LookRotation(Wander);
+            rotGoal = SafeRotation.LookRotationOrCurrent(Wander, transform.rotation);
             transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
             Beaver.velocity = Wander.normalized * speed;
         }

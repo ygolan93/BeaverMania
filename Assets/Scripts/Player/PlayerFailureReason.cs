@@ -4,5 +4,6 @@ public enum PlayerFailureReason
     Strike,
     FallDamage,
     BossDamage,
-    CompatibilityRestart
+    CompatibilityRestart,
+    DebugForcedGameOver
 }

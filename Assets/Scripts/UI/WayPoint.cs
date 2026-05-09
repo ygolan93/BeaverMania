@@ -47,7 +47,7 @@ public class WayPoint : MonoBehaviour
 
         if (target != null)
         {
-            Arrow.gameObject.transform.rotation = Quaternion.LookRotation(target.position - transform.position);
+            Arrow.gameObject.transform.rotation = SafeRotation.LookRotationOrCurrent(target.position - transform.position, transform.rotation);
         }
 
         // Waypoint Mark

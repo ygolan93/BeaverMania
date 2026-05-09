@@ -8,6 +8,10 @@ public class SceneTransitionService : MonoBehaviour
 
     internal bool isLoading;
     string loadingSceneName;
+    CursorLockMode previousCursorLockState;
+    bool previousCursorVisible;
+    InputMode previousInputMode;
+    GameFlowState previousFlowState;
 
     public static SceneTransitionService GetOrCreate()
     {
@@ -82,8 +86,12 @@ public class SceneTransitionService : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        isLoading = false;
-        loadingSceneName = null;
+        if (!isLoading)
+        {
+            return;
+        }
+
+        CompleteLoad(scene.name, true);
     }
 
     private void LoadSceneInternal(string sceneName, bool showCursor)
@@ -98,12 +106,26 @@ public class SceneTransitionService : MonoBehaviour
             return;
         }
 
-        if (resetSceneServices)
+        try
         {
-            RuntimeServices.ResetSceneServices();
-        }
+            if (resetSceneServices)
+            {
+                RuntimeServices.ResetSceneServices();
+            }
 
-        SceneManager.LoadScene(sceneName);
+            SceneManager.LoadScene(sceneName);
+        }
+        catch (System.Exception exception)
+        {
+            BuildSafeLogger.ErrorOnce(
+                nameof(SceneTransitionService) + ".LoadSceneFailed." + sceneName,
+                "Scene load failed: " + sceneName + " (" + exception.GetType().Name + ").",
+                this,
+                null,
+                null,
+                nameof(LoadSceneInternal));
+            CompleteLoad(sceneName, false);
+        }
     }
 
     private AsyncOperation LoadSceneAsyncInternal(string sceneName, bool showCursor)
@@ -113,7 +135,28 @@ public class SceneTransitionService : MonoBehaviour
             return null;
         }
 
-        return SceneManager.LoadSceneAsync(sceneName);
+        try
+        {
+            var operation = SceneManager.LoadSceneAsync(sceneName);
+            if (operation == null)
+            {
+                CompleteLoad(sceneName, false);
+            }
+
+            return operation;
+        }
+        catch (System.Exception exception)
+        {
+            BuildSafeLogger.ErrorOnce(
+                nameof(SceneTransitionService) + ".LoadSceneAsyncFailed." + sceneName,
+                "Async scene load failed: " + sceneName + " (" + exception.GetType().Name + ").",
+                this,
+                null,
+                null,
+                nameof(LoadSceneAsyncInternal));
+            CompleteLoad(sceneName, false);
+            return null;
+        }
     }
 
     private bool PrepareLoad(string sceneName, bool showCursor, bool forceReload)
@@ -134,7 +177,19 @@ public class SceneTransitionService : MonoBehaviour
         {
             BuildSafeLogger.WarnOnce(
                 nameof(SceneTransitionService) + ".BlockedDuplicateSceneLoad." + loadingSceneName,
-                "Blocked duplicate scene load request: " + sceneName + ".",
+                "Blocked duplicate scene load request: " + sceneName + ". Current request: " + loadingSceneName + ".",
+                this,
+                null,
+                null,
+                nameof(PrepareLoad));
+            return false;
+        }
+
+        if (!IsSceneLoadable(sceneName))
+        {
+            BuildSafeLogger.ErrorOnce(
+                nameof(SceneTransitionService) + ".BlockedInvalidSceneLoad." + sceneName,
+                "Blocked invalid scene load request: " + sceneName + ".",
                 this,
                 null,
                 null,
@@ -154,6 +209,7 @@ public class SceneTransitionService : MonoBehaviour
             return false;
         }
 
+        CaptureRuntimeState();
         isLoading = true;
         loadingSceneName = sceneName;
         GameFlowController.GetOrCreate().BeginSceneTransition();
@@ -163,6 +219,108 @@ public class SceneTransitionService : MonoBehaviour
             CursorStateService.GetOrCreate().ShowCursor();
         }
 
+        BuildSafeLogger.InfoOnce(
+            nameof(SceneTransitionService) + ".BeginLoad." + sceneName,
+            "Beginning scene transition: " + sceneName + ".",
+            this,
+            null,
+            null,
+            nameof(PrepareLoad));
         return true;
+    }
+
+    void CaptureRuntimeState()
+    {
+        previousCursorLockState = Cursor.lockState;
+        previousCursorVisible = Cursor.visible;
+        var inputReader = GameInputReader.GetOrCreate();
+        previousInputMode = inputReader.Mode;
+        previousFlowState = GameFlowController.GetOrCreate().State;
+    }
+
+    void CompleteLoad(string sceneName, bool success)
+    {
+        isLoading = false;
+        loadingSceneName = null;
+        Time.timeScale = 1f;
+
+        if (success)
+        {
+            var isMenu = sceneName == SceneNames.Menu;
+            if (isMenu)
+            {
+                CursorStateService.GetOrCreate().ShowCursor();
+                GameInputReader.GetOrCreate().EnableUiInput();
+            }
+            else
+            {
+                CursorStateService.GetOrCreate().HideCursor();
+                GameFlowController.GetOrCreate().SetPlaying();
+            }
+        }
+        else
+        {
+            Cursor.lockState = previousCursorLockState;
+            Cursor.visible = previousCursorVisible;
+            RestoreInputMode(previousInputMode);
+        }
+
+        BuildSafeLogger.InfoOnce(
+            nameof(SceneTransitionService) + ".CompleteLoad." + sceneName + "." + success,
+            "Completed scene transition: " + sceneName + " success=" + success + ".",
+            this,
+            null,
+            null,
+            nameof(CompleteLoad));
+    }
+
+    void RestoreInputMode(InputMode mode)
+    {
+        var flow = GameFlowController.GetOrCreate();
+        if (previousFlowState == GameFlowState.Paused)
+        {
+            flow.SetPaused(true);
+            return;
+        }
+
+        if (previousFlowState == GameFlowState.GameOver)
+        {
+            flow.SetGameOver();
+            return;
+        }
+
+        var inputReader = GameInputReader.GetOrCreate();
+        switch (mode)
+        {
+            case InputMode.Ui:
+                inputReader.EnableUiInput();
+                break;
+            case InputMode.Disabled:
+                inputReader.DisableGameplayInput();
+                break;
+            default:
+                flow.SetPlaying();
+                break;
+        }
+    }
+
+    bool IsSceneLoadable(string sceneName)
+    {
+        if (SceneManager.GetSceneByName(sceneName).IsValid())
+        {
+            return true;
+        }
+
+        for (int i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
+        {
+            string path = SceneUtility.GetScenePathByBuildIndex(i);
+            string name = System.IO.Path.GetFileNameWithoutExtension(path);
+            if (name == sceneName)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

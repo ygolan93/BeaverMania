@@ -110,7 +110,10 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
         SetState(WaspState.Patrol);
         RandoMovement();
         NPC.velocity = Vector3.forward;
-        BuzzSource.SetActive(true);
+        if (BuzzSource != null)
+        {
+            BuzzSource.SetActive(true);
+        }
         CaptureRuntimeState();
     }
 
@@ -234,6 +237,17 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
 
     void Update()
     {
+        if (playerTransform == null)
+        {
+            if (!PlayerReference.TryGetPlayer(out PlayerHealth) || PlayerHealth == null)
+            {
+                return;
+            }
+
+            PlayerTarget = PlayerHealth.gameObject;
+            playerTransform = PlayerHealth.transform;
+        }
+
         Distance = playerTransform.position - transform.position;
         PlayerDistance = Distance.magnitude;
         ChangeNav -= Time.deltaTime;
@@ -306,8 +320,16 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
                 RotateTowardVelocity();
                 if (refreshPatrolMovement)
                 {
-                    BuzzSource.SetActive(true);
-                    Wasp.SetBool("Sting", false);
+                    if (BuzzSource != null)
+                    {
+                        BuzzSource.SetActive(true);
+                    }
+
+                    if (Wasp != null)
+                    {
+                        Wasp.SetBool("Sting", false);
+                    }
+
                     RandoMovement();
                     refreshPatrolMovement = false;
                 }
@@ -318,14 +340,33 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
                 break;
             case WaspState.Chase:
                 RotateTowardVelocity();
-                BuzzSource.SetActive(true);
-                Wasp.SetBool("Sting", true);
-                NPC.velocity = Distance.normalized * AttackSpeed;
+                if (BuzzSource != null)
+                {
+                    BuzzSource.SetActive(true);
+                }
+
+                if (Wasp != null)
+                {
+                    Wasp.SetBool("Sting", true);
+                }
+
+                if (NPC != null)
+                {
+                    NPC.velocity = Distance.normalized * AttackSpeed;
+                }
                 break;
             case WaspState.ContactRecover:
-                Wasp.SetBool("Sting", false);
-                NPC.AddForce(new Vector3(-Distance.x, 0.01f, -Distance.z).normalized * 0.1f);
-                transform.rotation = Quaternion.LookRotation(Distance);
+                if (Wasp != null)
+                {
+                    Wasp.SetBool("Sting", false);
+                }
+
+                if (NPC != null)
+                {
+                    NPC.AddForce(new Vector3(-Distance.x, 0.01f, -Distance.z).normalized * 0.1f);
+                }
+
+                transform.rotation = SafeRotation.LookRotationOrCurrent(Distance, transform.rotation);
                 break;
             case WaspState.Stunned:
                 Stunned();
@@ -364,12 +405,12 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
 
     void RotateTowardVelocity()
     {
-        if (NPC.velocity.sqrMagnitude <= 0.001f)
+        if (NPC == null || NPC.velocity.sqrMagnitude <= 0.001f)
         {
             return;
         }
 
-        rotGoal = Quaternion.LookRotation(NPC.velocity);
+        rotGoal = SafeRotation.LookRotationOrCurrent(NPC.velocity, transform.rotation);
         transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
     }
 
@@ -383,8 +424,11 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
         isDead = true;
         StopFloat();
         feedback?.EmitDeath();
-        PlayerHealth.Plattering = ("HA! gotcha");
-        PlayerHealth.ChangeSpeech = 1;
+        if (PlayerHealth != null)
+        {
+            PlayerHealth.Plattering = ("HA! gotcha");
+            PlayerHealth.ChangeSpeech = 1;
+        }
         spawnedOnDeath.Add(Instantiate(Explosion, transform.position + new Vector3(0, 1, 0), transform.rotation));
         spawnedOnDeath.Add(Instantiate(Body, transform.position + new Vector3(0, 1, 0), transform.rotation));
         spawnedOnDeath.Add(Instantiate(Head, transform.position + new Vector3(0, 1, 0), transform.rotation));
@@ -410,7 +454,7 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
                 Sting();
             }
             Contact = true;
-            if (PlayerHealth.isParried == true)
+            if (PlayerHealth != null && PlayerHealth.isParried == true)
             {
                 TakeDamage(20);
                 combo += 10;
@@ -422,24 +466,44 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
         }
         if (OBJ.gameObject.CompareTag("Damage"))
         {
-            Wasp.SetBool("Beat", true);
+            if (Wasp != null)
+            {
+                Wasp.SetBool("Beat", true);
+            }
+
             TakeDamage(15);
-            Sound.Beat();
+            if (Sound != null)
+            {
+                Sound.Beat();
+            }
             combo = hit2stun;
         }
         if (OBJ.gameObject.CompareTag("Isle"))
         {
             Contact = true;
-            NPC.velocity += new Vector3(Random.Range(-1, 1), 1, Random.Range(-1,1));
+            if (NPC != null)
+            {
+                NPC.velocity += new Vector3(Random.Range(-1, 1), 1, Random.Range(-1,1));
+            }
         }
     }
     public void TurnBack()
     {
-        BuzzSource.SetActive(true);
-        Wasp.SetBool("Sting", false);
+        if (BuzzSource != null)
+        {
+            BuzzSource.SetActive(true);
+        }
+        if (Wasp != null)
+        {
+            Wasp.SetBool("Sting", false);
+        }
+
         if ((transform.position - SpawnPos).magnitude > LeashDistance)
         {
-            NPC.velocity = (SpawnPos - transform.position).normalized * 10;
+            if (NPC != null)
+            {
+                NPC.velocity = (SpawnPos - transform.position).normalized * 10;
+            }
         }
     }
 
@@ -485,43 +549,77 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
    public void Stunned()
     {
         StopFloat();
-        BuzzSource.SetActive(false);
+        if (BuzzSource != null)
+        {
+            BuzzSource.SetActive(false);
+        }
+
         floating = false;
-        NPC.constraints = RigidbodyConstraints.None;
-        NPC.useGravity = true;
-        Wasp.SetBool("Stunned", true);
-        Wasp.SetBool("Sting", false);
+        if (NPC != null)
+        {
+            NPC.constraints = RigidbodyConstraints.None;
+            NPC.useGravity = true;
+        }
+
+        if (Wasp != null)
+        {
+            Wasp.SetBool("Stunned", true);
+            Wasp.SetBool("Sting", false);
+        }
     }
 
     void Recovered()
     {
-        BuzzSource.SetActive(true);
+        if (BuzzSource != null)
+        {
+            BuzzSource.SetActive(true);
+        }
         floating = false;
-        Wasp.SetBool("Stunned", false);
+        if (Wasp != null)
+        {
+            Wasp.SetBool("Stunned", false);
+        }
+
         Recovery = RecoverySeconds;
-        NPC.constraints = RigidbodyConstraints.FreezeRotation;
-        NPC.useGravity = false;
+        if (NPC != null)
+        {
+            NPC.constraints = RigidbodyConstraints.FreezeRotation;
+            NPC.useGravity = false;
+        }
     }
     public void Sting()
     {
         floating = false;
         Recovered();
+        if (PlayerHealth == null)
+        {
+            return;
+        }
+
         if (PlayerHealth.isParried == false && PlayerHealth.Rolling == false)
         {
-            Sound.Sting();
+            if (Sound != null)
+            {
+                Sound.Sting();
+            }
+
             if (CombatDebugGate.AllowsDamage(PlayerHealth.gameObject))
             {
                 PlayerHealth.TakeDamage(Damage2Player);
             }
         }
-        Wasp.SetBool("Sting", false);
+
+        if (Wasp != null)
+        {
+            Wasp.SetBool("Sting", false);
+        }
+
         if (PlayerHealth.isParried == true)
         {
             PlayerHealth.TakeDamage(0.01f);
             TakeDamage(1);
             combo = 3;
         }
-
     }
 
     void OnDisable()
@@ -550,84 +648,102 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
 
     public void RandoMovement()
     {
-        BuzzSource.SetActive(true);
+        if (BuzzSource != null)
+        {
+            BuzzSource.SetActive(true);
+        }
         if ((SpawnPos - transform.position).magnitude < LeashDistance)
         {
             Recovered();
             a = Random.Range(-1, 1);
             b = Random.Range(-0.1f, 0.1f);
             c = Random.Range(-1, 1);
-            NPC.velocity = new Vector3(a, b, c);
+            if (NPC != null)
+            {
+                NPC.velocity = new Vector3(a, b, c);
+            }
         }
-        else 
+        else if (NPC != null)
+        {
             NPC.velocity = (SpawnPos - transform.position).normalized * 5;
+        }
     }
 
     public void TakeDamage(int Damage) => TakeDamage(new DamageEvent { Amount = Damage, Source = null, Point = transform.position, Type = DamageType.Generic, CanStun = false });
 
     public void TakeDamage(DamageEvent damageEvent)
     {
-        BuzzSource.SetActive(false);
-        rotGoal = Quaternion.LookRotation(Distance);
+        if (BuzzSource != null)
+        {
+            BuzzSource.SetActive(false);
+        }
+
+        rotGoal = SafeRotation.LookRotationOrCurrent(Distance, transform.rotation);
         transform.rotation = rotGoal;
-        NPC.useGravity = true;
-        Wasp.SetBool("Beat", true);
-        Wasp.SetBool("Sting", false);
+        if (NPC != null)
+        {
+            NPC.useGravity = true;
+        }
+
+        if (Wasp != null)
+        {
+            Wasp.SetBool("Beat", true);
+            Wasp.SetBool("Sting", false);
+        }
+
         CurrentHealth -= Mathf.RoundToInt(damageEvent.Amount);
         if (damageEvent.Type == DamageType.Hazard)
         {
             feedback?.EmitHazard();
-            Sound.Beat();
+            if (Sound != null)
+            {
+                Sound.Beat();
+            }
         }
         else
         {
-            var playerArsenal = PlayerHealth.Arsenal;
-            var currentWeapon = PlayerHealth.arsenalBrowser;
-            switch (playerArsenal[currentWeapon])
+            var playerArsenal = PlayerHealth != null ? PlayerHealth.Arsenal : null;
+            var currentWeapon = PlayerHealth != null ? PlayerHealth.arsenalBrowser : 0;
+            if (playerArsenal == null || playerArsenal.Count == 0)
             {
-            case "Bare Hands":
+                feedback?.EmitHit();
+                if (Sound != null)
                 {
-                    feedback?.EmitHit();
                     Sound.Beat();
-                    break;
                 }
-            case "Hammers":
+            }
+            else
+            {
+                switch (playerArsenal[Mathf.Clamp(currentWeapon, 0, playerArsenal.Count - 1)])
                 {
-                    feedback?.EmitHit();
-                    Sound.Beat();
-                    break;
-                }
-            case "Bow":
-                {
-                    feedback?.EmitHit();
-                    Sound.Beat();
-                    break;
-                }
-            case "ArmorSet":
-                {
-                    feedback?.EmitSlashHit();
-                    Sound.LiteSwordDamage();
-                    //var playerAnimator = PlayerHealth.Otter;
-                    //var currentClip = playerAnimator.GetComponent<AnimationClip>().ToString();
-                    //if (currentClip=="Sword1" || currentClip == "Sword2")
-                    //{
-                    //    HitEffect.SetActive(true);
-                    //    Sound.LiteSwordDamage();
-                    //}
-                    //if(currentClip=="NewSwordJump")
-                    //{
-                    //    Sound.HeavySwordDamage();
-                    //    //Sound.Beat();
-                    //}
-                    break;
+                    case "ArmorSet":
+                        feedback?.EmitSlashHit();
+                        if (Sound != null)
+                        {
+                            Sound.LiteSwordDamage();
+                        }
+                        break;
+                    default:
+                        feedback?.EmitHit();
+                        if (Sound != null)
+                        {
+                            Sound.Beat();
+                        }
+                        break;
                 }
             }
         }
+
         combo++;
         if (damageEvent.CanStun && (damageEvent.Type == DamageType.Projectile || damageEvent.Type == DamageType.Fire))
         {
             combo += hit2stun;
         }
-        NPCHealthBar.SetNPCHealth(CurrentHealth);
+
+        if (NPCHealthBar != null)
+        {
+            NPCHealthBar.SetNPCHealth(CurrentHealth);
+        }
     }
+
 }

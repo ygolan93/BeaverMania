@@ -12,19 +12,40 @@ public class PlayerHealthController : MonoBehaviour
     {
         owner = behaviour;
         staminaClock = StaminaClockInitial;
+        if (owner == null)
+        {
+            return;
+        }
+
         owner.CurrentHealth = owner.MaxHealth;
-        owner.HealthBar.SetMaxHealth(owner.CurrentHealth);
+        if (owner.HealthBar != null)
+        {
+            owner.HealthBar.SetMaxHealth(owner.CurrentHealth);
+        }
+
         owner.CurrentStamina = owner.MaxStamina;
-        owner.HealthBar.SetMaxStamina(owner.CurrentStamina);
+        if (owner.HealthBar != null)
+        {
+            owner.HealthBar.SetMaxStamina(owner.CurrentStamina);
+        }
+
         owner.Lives = 3;
     }
 
     public void TakeDamage(float damage)
     {
+        if (owner == null)
+        {
+            return;
+        }
+
         if (!owner.isParried)
         {
             owner.CurrentHealth -= damage;
-            owner.HealthBar.SetHealth(owner.CurrentHealth);
+            if (owner.HealthBar != null)
+            {
+                owner.HealthBar.SetHealth(owner.CurrentHealth);
+            }
             owner.hurt = damage > 0;
             owner.heal = damage < 0;
             return;
@@ -34,11 +55,19 @@ public class PlayerHealthController : MonoBehaviour
         owner.DefendAnim = 0.3f;
         owner.Defend = true;
         owner.CurrentStamina -= damage;
-        owner.HealthBar.SetStamina(owner.CurrentStamina);
+        if (owner.HealthBar != null)
+        {
+            owner.HealthBar.SetStamina(owner.CurrentStamina);
+        }
     }
 
     public void TickStamina()
     {
+        if (owner == null)
+        {
+            return;
+        }
+
         if (!owner.isParried)
         {
             if (owner.CurrentStamina > owner.MaxStamina)
@@ -54,7 +83,10 @@ public class PlayerHealthController : MonoBehaviour
                     if (staminaClock <= 0)
                     {
                         owner.CurrentStamina += 1;
-                        owner.HealthBar.SetStamina(owner.CurrentStamina);
+                        if (owner.HealthBar != null)
+                        {
+                            owner.HealthBar.SetStamina(owner.CurrentStamina);
+                        }
                     }
                 }
                 else
@@ -75,6 +107,11 @@ public class PlayerHealthController : MonoBehaviour
 
     public void ClampStaminaAndParry()
     {
+        if (owner == null)
+        {
+            return;
+        }
+
         if (owner.CurrentStamina > 0)
         {
             return;
@@ -86,6 +123,11 @@ public class PlayerHealthController : MonoBehaviour
 
     public void HandleDeathState()
     {
+        if (owner == null)
+        {
+            return;
+        }
+
         if (owner.CurrentHealth > 0)
         {
             return;
@@ -96,6 +138,11 @@ public class PlayerHealthController : MonoBehaviour
 
     public void TickHurtHealEffects()
     {
+        if (owner == null)
+        {
+            return;
+        }
+
         if (owner.hurt || owner.heal)
         {
             stopHurt += Time.deltaTime;

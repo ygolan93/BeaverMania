@@ -16,7 +16,7 @@ public class Testscript : MonoBehaviour
     public void RotatePlayer(Vector3 Target)
     {
             Player.velocity = (Target  + new Vector3(0, Player.velocity.y, 0));
-            rotGoal = Quaternion.LookRotation(Target);
+            rotGoal = SafeRotation.LookRotationOrCurrent(Target, transform.rotation);
             transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.2f);
     }
     // Update is called once per frame

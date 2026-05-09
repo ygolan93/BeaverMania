@@ -60,7 +60,7 @@ public class Projectile : MonoBehaviour
         if (clock<=0)
         {
             Destroy(gameObject);
-            if (isArrow==true)
+            if (isArrow==true && arrowPickup != null)
             {
                 Instantiate(arrowPickup, transform.position, Quaternion.identity);
             }
@@ -71,6 +71,12 @@ public class Projectile : MonoBehaviour
 
     public void Explode()
     {
+        if (Explosion == null)
+        {
+            Destroy(transform.gameObject);
+            return;
+        }
+
         var explode = Instantiate(Explosion, transform.position, transform.rotation);
         explode.transform.localScale += new Vector3(1, 1, 1);
         Destroy(transform.gameObject);
@@ -78,12 +84,22 @@ public class Projectile : MonoBehaviour
 
     public void RockHit()
     {
+        if (Sound == null)
+        {
+            return;
+        }
+
         Sound.PlayOneShot(Sound.clip);
         Sound.volume = 0.2f;
         Sound.pitch = 0.8f;
     }
     private void OnCollisionEnter(Collision OBJ)
     {
+        if (OBJ == null || OBJ.gameObject == null)
+        {
+            return;
+        }
+
         if (TryDamage(OBJ.gameObject, OBJ.contactCount > 0 ? OBJ.GetContact(0).point : transform.position))
         {
             if (isFireBall == true)
@@ -112,7 +128,7 @@ public class Projectile : MonoBehaviour
 
     bool TryDamage(GameObject target, Vector3 point)
     {
-        if (!target.TryGetComponent(out IDamageable damageable))
+        if (target == null || !target.TryGetComponent(out IDamageable damageable))
         {
             return false;
         }

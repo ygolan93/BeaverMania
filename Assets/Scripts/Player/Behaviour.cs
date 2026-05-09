@@ -453,7 +453,7 @@ public class Behaviour : MonoBehaviour, IDamageable
             Plattering = "Get off me ya nasty bastards!";
             ChangeSpeech = 3;
             var ParryDirection = new Vector3((OBJ.transform.position - transform.position).x, 0, (OBJ.transform.position - transform.position).z);
-            transform.rotation = Quaternion.LookRotation(ParryDirection);
+            transform.rotation = SafeRotation.LookRotationOrCurrent(ParryDirection, transform.rotation);
         }
         if (OBJ.gameObject.CompareTag("Strike"))
         {
@@ -597,7 +597,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         //Regular walk
         if (keepLooking==false)
         {
-            rotGoal = Quaternion.LookRotation(Direction);
+            rotGoal = SafeRotation.LookRotationOrCurrent(Direction, transform.rotation);
             transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
             Otter.SetBool("walk", true);
         }
@@ -605,7 +605,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         if (keepLooking == true)
         {
             Vector3 forwardFace = Camera.main.transform.TransformDirection(Vector3.forward);
-            rotGoal = Quaternion.LookRotation(new Vector3(forwardFace.x, 0, forwardFace.z));
+            rotGoal = SafeRotation.LookRotationOrCurrent(new Vector3(forwardFace.x, 0, forwardFace.z), transform.rotation);
             transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
             Otter.SetBool("walk", false);
             if (Input.GetKey(KeyCode.W))
@@ -667,7 +667,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     }
     public void PlayerRoll(Vector3 Direction)
     {
-        rotGoal = Quaternion.LookRotation(new Vector3(Direction.x, 0, Direction.z));
+        rotGoal = SafeRotation.LookRotationOrCurrent(new Vector3(Direction.x, 0, Direction.z), transform.rotation);
         transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.11f);
         //Evading Roll action
         {
@@ -677,7 +677,10 @@ public class Behaviour : MonoBehaviour, IDamageable
                 Otter.SetBool("roll", true);
                 CurrentStamina -= 0.1f;
                 speed = 7;
-                HealthBar.SetStamina(CurrentStamina);
+                if (HealthBar != null)
+                {
+                    HealthBar.SetStamina(CurrentStamina);
+                }
                 Player.velocity = (Direction.normalized * 6) + new Vector3(0, Player.velocity.y, 0);
             }
             if (!Input.GetKey(KeyCode.LeftControl) || CurrentStamina <= 0 || grounded == false)
@@ -693,7 +696,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     public void RotateForward()
     {
         Vector3 camForward = Camera.main.transform.TransformDirection(Vector3.forward);
-        Quaternion direction = Quaternion.LookRotation(camForward);
+        Quaternion direction = SafeRotation.LookRotationOrCurrent(camForward, Spine.rotation);
         if (bowEquipped==false)
         {
             Spine.rotation = direction;
@@ -784,18 +787,33 @@ public class Behaviour : MonoBehaviour, IDamageable
     public void RestoreHealth()
     {
         CurrentHealth = MaxHealth;
-        HealthBar.SetHealth(CurrentHealth);
+        if (HealthBar != null)
+        {
+            HealthBar.SetHealth(CurrentHealth);
+        }
     }
 
     public void MoveToCheckpoint()
     {
-        transform.position = CheckpointService.GetOrCreate().LastCheckpointPosition;
-        Instantiate(PopUpEffect, transform.position, Quaternion.identity);
+        var checkpoint = CheckpointService.GetOrCreate();
+        if (checkpoint != null)
+        {
+            transform.position = checkpoint.LastCheckpointPosition;
+        }
+
+        if (PopUpEffect != null)
+        {
+            Instantiate(PopUpEffect, transform.position, Quaternion.identity);
+        }
     }
     void SaveCheckpoint(Vector3 position)
     {
         State.checkpointPosition = position;
-        CheckpointService.GetOrCreate().SaveCheckpoint(position);
+        var checkpoint = CheckpointService.GetOrCreate();
+        if (checkpoint != null)
+        {
+            checkpoint.SaveCheckpoint(position);
+        }
     }
 
     public void RestartGame()
@@ -960,7 +978,10 @@ public class Behaviour : MonoBehaviour, IDamageable
         arrowModel.SetActive(false);
         bowAim = new Vector3(-0.33f, 20f, -0.3f);
         CamForTraders.enabled = false;
-        Instantiate(PopUpEffect, Root.position, Quaternion.identity);
+        if (PopUpEffect != null && Root != null)
+        {
+            Instantiate(PopUpEffect, Root.position, Quaternion.identity);
+        }
         HideCursor();
         SaveCheckpoint(transform.position);
         AimIcon.SetActive(false);
@@ -1364,7 +1385,10 @@ public class Behaviour : MonoBehaviour, IDamageable
                     {
                         CurrentStamina -= 0.1f;
                     }
-                    HealthBar.SetStamina(CurrentStamina);
+                    if (HealthBar != null)
+                    {
+                        HealthBar.SetStamina(CurrentStamina);
+                    }
                     if (ArmorEquipped==false)
                     {
                         Otter.SetBool("fight", true); //Airkick leveitation without sword
@@ -1534,7 +1558,7 @@ public class Behaviour : MonoBehaviour, IDamageable
                 Otter.Play("Aim");
                 if (Input.GetKeyDown(KeyCode.Mouse1))
                 {
-                    rotGoal = Quaternion.LookRotation(cameraRelativeForward);
+                    rotGoal = SafeRotation.LookRotationOrCurrent(cameraRelativeForward, transform.rotation);
                     transform.rotation = rotGoal;
                     Otter.Play("Crouch");
                 }
@@ -1546,7 +1570,10 @@ public class Behaviour : MonoBehaviour, IDamageable
                 Otter.Play("Throw");
                 Instantiate(Ball, AttackPoint.position + new Vector3(0, 0.6f, 0), Spine.rotation);
                 CurrentStamina -= 20;
-                HealthBar.SetStamina(CurrentStamina);
+                if (HealthBar != null)
+                {
+                    HealthBar.SetStamina(CurrentStamina);
+                }
             }
             if (!Input.GetKey(KeyCode.Mouse1))
             {
@@ -1559,7 +1586,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         {
             if (Input.GetKeyDown(KeyCode.Mouse1) && !Input.GetKeyUp(KeyCode.Mouse1))
             {
-                rotGoal = Quaternion.LookRotation(cameraRelativeForward);
+                rotGoal = SafeRotation.LookRotationOrCurrent(cameraRelativeForward, transform.rotation);
                 transform.rotation = rotGoal;
                 if (arrowMunition > 0 &&
                 CurrentStamina > 0)
@@ -1594,9 +1621,12 @@ public class Behaviour : MonoBehaviour, IDamageable
             if (arrowReady == true && Input.GetKeyUp(KeyCode.Mouse1) && CurrentStamina > 0)
             {
                 Sound.ArrowShoot();
-                Instantiate(Arrow, Spine.position + new Vector3(0,1.4f * cameraRelativeForward.normalized.y, 1.4f * cameraRelativeForward.normalized.z), Quaternion.LookRotation(cameraRelativeForward)* Quaternion.Euler(90, 0, 0));
+                Instantiate(Arrow, Spine.position + new Vector3(0,1.4f * cameraRelativeForward.normalized.y, 1.4f * cameraRelativeForward.normalized.z), SafeRotation.LookRotationOrCurrent(cameraRelativeForward, transform.rotation)* Quaternion.Euler(90, 0, 0));
                 CurrentStamina -= 30;
-                HealthBar.SetStamina(CurrentStamina);
+                if (HealthBar != null)
+                {
+                    HealthBar.SetStamina(CurrentStamina);
+                }
                 arrowModel.SetActive(false);
                 stringLine.enabled = false;
                 bowString.SetActive(true);
@@ -1745,7 +1775,7 @@ public class Behaviour : MonoBehaviour, IDamageable
             {
                 if (isParried == false)
                 {
-                    rotGoal = Quaternion.LookRotation(new Vector3(Player.velocity.x, 0, Player.velocity.z));
+                    rotGoal = SafeRotation.LookRotationOrCurrent(new Vector3(Player.velocity.x, 0, Player.velocity.z), transform.rotation);
                     transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.5f);
                 }
                 Otter.SetBool("moving", true);

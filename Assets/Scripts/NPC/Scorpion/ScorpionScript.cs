@@ -308,6 +308,11 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
 
     private void Update()
     {
+        if (Player == null || RBScorpion == null)
+        {
+            return;
+        }
+
         Distance = Player.transform.position - RBScorpion.position;
         currentDistance = Mathf.Abs(Distance.magnitude);
 
@@ -383,7 +388,7 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
     {
         isAttacking = false;
         RBScorpion.velocity = new Vector3(0, RBScorpion.velocity.y, 0);
-        rotGoal = Quaternion.LookRotation(new Vector3(Distance.x, 0, Distance.z));
+        rotGoal = SafeRotation.LookRotationOrCurrent(new Vector3(Distance.x, 0, Distance.z), transform.rotation);
         RBScorpion.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
         if (transform.rotation != rotGoal)
         {
@@ -401,7 +406,7 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
     public void Charge(float speed)
     {
         isAttacking = true;
-        rotGoal = Quaternion.LookRotation(new Vector3(Distance.x, 0, Distance.z));
+        rotGoal = SafeRotation.LookRotationOrCurrent(new Vector3(Distance.x, 0, Distance.z), transform.rotation);
         RBScorpion.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
         RBScorpion.velocity = new Vector3(Distance.x, 0, Distance.z).normalized * speed + new Vector3(0, RBScorpion.velocity.y, 0);
 
@@ -416,13 +421,13 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
         Scorpion.SetBool("Walk", false);
         Scorpion.SetBool("Backwards", false);
         Scorpion.SetBool("Attack", true);
-        rotGoal = Quaternion.LookRotation(new Vector3(Distance.x, 0, Distance.z));
+        rotGoal = SafeRotation.LookRotationOrCurrent(new Vector3(Distance.x, 0, Distance.z), transform.rotation);
         RBScorpion.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
     }
     private void Reverse()
     {
         isAttacking = true;
-        rotGoal = Quaternion.LookRotation(new Vector3(Distance.x, 0, Distance.z));
+        rotGoal = SafeRotation.LookRotationOrCurrent(new Vector3(Distance.x, 0, Distance.z), transform.rotation);
         RBScorpion.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
         RBScorpion.velocity = new Vector3(-Distance.x, 0, -Distance.z).normalized * 5 + new Vector3(0, RBScorpion.velocity.y, 0);
         Scorpion.SetBool("Walk", false);
@@ -449,8 +454,15 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
         {
             combo += 3;
         }
-        Sound.Beat();
-        BossHealth.SetNPCHealth(CurrentHealth);
+        if (Sound != null)
+        {
+            Sound.Beat();
+        }
+
+        if (BossHealth != null)
+        {
+            BossHealth.SetNPCHealth(CurrentHealth);
+        }
     }
     private void Stunned()
     {
@@ -479,11 +491,21 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
         isDead = true;
         isAttacking = false;
         feedback?.EmitDeath();
-        Explosion.SetActive(true);
-        Explosion.transform.parent = null;
-        foreach (var item in drops)
+        if (Explosion != null)
         {
-            spawnedOnDeath.Add(Instantiate(item, gameObject.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity));
+            Explosion.SetActive(true);
+            Explosion.transform.parent = null;
+        }
+
+        if (drops != null)
+        {
+            foreach (var item in drops)
+            {
+                if (item != null)
+                {
+                    spawnedOnDeath.Add(Instantiate(item, gameObject.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity));
+                }
+            }
         }
         gameObject.SetActive(false);
     }

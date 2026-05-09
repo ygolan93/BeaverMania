@@ -7,6 +7,15 @@ public static class RuntimeServicePrefabValidator
 {
     const string MenuPath = "Tools/Runtime Services/Validate Prefab Registrations";
     const string RegisterCall = "RuntimeServices.Register";
+    const string GameMusicPrefabPath = "Assets/Prefabs/Objects/UI/GameMusic.prefab";
+
+    static readonly System.Type[] PersistentServiceTypes =
+    {
+        typeof(SceneTransitionService),
+        typeof(CursorStateService),
+        typeof(GameFlowController),
+        typeof(GameInputReader)
+    };
 
     [MenuItem(MenuPath)]
     public static void ValidatePrefabRegistrationsMenu()
@@ -73,6 +82,16 @@ public static class RuntimeServicePrefabValidator
             .Where(entry => entry.Value.Count > 1)
             .OrderBy(entry => entry.Key)
             .ToArray();
+        var gameMusicPersistentServices = prefabPathsByType
+            .Where(entry => IsPersistentServiceType(entry.Key) && entry.Value.Contains(GameMusicPrefabPath))
+            .OrderBy(entry => entry.Key.FullName)
+            .ToArray();
+        var persistentServicePrefabCounts = prefabPathsByType
+            .Where(entry => IsPersistentServiceType(entry.Key))
+            .SelectMany(entry => entry.Value)
+            .Distinct()
+            .OrderBy(path => path)
+            .ToArray();
 
         foreach (var duplicate in duplicateTypes)
         {
@@ -86,7 +105,19 @@ public static class RuntimeServicePrefabValidator
                 + duplicate.Key + "\n" + string.Join("\n", duplicate.Value.ToArray()));
         }
 
-        if (duplicateTypes.Length > 0 || duplicateOwnerIds.Length > 0)
+        foreach (var gameMusicService in gameMusicPersistentServices)
+        {
+            Debug.LogError("Persistent runtime service component is not allowed on GameMusic prefab: "
+                + gameMusicService.Key.FullName + "\n" + GameMusicPrefabPath);
+        }
+
+        if (persistentServicePrefabCounts.Length != 1)
+        {
+            Debug.LogError("Persistent runtime service components must be isolated to exactly one prefab.\n"
+                + string.Join("\n", persistentServicePrefabCounts));
+        }
+
+        if (duplicateTypes.Length > 0 || duplicateOwnerIds.Length > 0 || gameMusicPersistentServices.Length > 0 || persistentServicePrefabCounts.Length != 1)
         {
             return false;
         }
@@ -103,5 +134,10 @@ public static class RuntimeServicePrefabValidator
     {
         var script = MonoScript.FromMonoBehaviour(component);
         return script != null && script.text.Contains(RegisterCall);
+    }
+
+    static bool IsPersistentServiceType(System.Type type)
+    {
+        return PersistentServiceTypes.Contains(type);
     }
 }

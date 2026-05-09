@@ -1064,7 +1064,74 @@ public class Behaviour : MonoBehaviour, IDamageable
         return true;
     }
 
-    bool TrySetTraderCameraEnabled(bool enabled)
+    public bool TrySetFreeLookEnabled(bool enabled)
+    {
+        if (!WarnMissingCameraReference(FreeLook, nameof(FreeLook)))
+        {
+            return false;
+        }
+
+        FreeLook.enabled = enabled;
+        return true;
+    }
+
+    public bool TrySetFreeLookLookAt(Transform lookAt)
+    {
+        if (!WarnMissingCameraReference(FreeLook, nameof(FreeLook)))
+        {
+            return false;
+        }
+
+        FreeLook.m_LookAt = lookAt;
+        return true;
+    }
+
+    public bool TryConfigureFreeLookForBoss(float middleOrbitRadius, float xAxisMaxSpeed, float yAxisMaxSpeed, Transform lookAt)
+    {
+        if (!WarnMissingCameraReference(FreeLook, nameof(FreeLook)))
+        {
+            return false;
+        }
+
+        if (FreeLook.m_Orbits == null || FreeLook.m_Orbits.Length < 2)
+        {
+            BuildSafeLogger.WarnOnce(
+                nameof(Behaviour) + ".InvalidFreeLookBossOrbit",
+                "FreeLook camera does not have the expected middle orbit rig; boss camera changes will be skipped.",
+                this,
+                nameof(FreeLook));
+            return false;
+        }
+
+        FreeLook.m_Orbits[1].m_Radius = middleOrbitRadius;
+        FreeLook.m_XAxis.m_MaxSpeed = xAxisMaxSpeed;
+        FreeLook.m_YAxis.m_MaxSpeed = yAxisMaxSpeed;
+        FreeLook.m_LookAt = lookAt;
+        return true;
+    }
+
+    public bool TryRotateFreeLookLookAtTowardRoot()
+    {
+        if (!WarnMissingCameraReference(FreeLook, nameof(FreeLook)))
+        {
+            return false;
+        }
+
+        if (FreeLook.m_LookAt == null)
+        {
+            BuildSafeLogger.WarnOnce(
+                nameof(Behaviour) + ".MissingFreeLookLookAt",
+                "FreeLook camera does not have a LookAt target; camera rotation reset will be skipped.",
+                this,
+                nameof(FreeLook));
+            return false;
+        }
+
+        FreeLook.m_LookAt.rotation = Quaternion.Slerp(transform.rotation, SafeRotation.LookRotationOrCurrent(Root.position, transform.rotation), 0.5f);
+        return true;
+    }
+
+    public bool TrySetTraderCameraEnabled(bool enabled)
     {
         if (!WarnMissingCameraReference(CamForTraders, nameof(CamForTraders)))
         {
@@ -1072,6 +1139,17 @@ public class Behaviour : MonoBehaviour, IDamageable
         }
 
         CamForTraders.enabled = enabled;
+        return true;
+    }
+
+    public bool TrySetTraderCameraLookAt(Transform lookAt)
+    {
+        if (!WarnMissingCameraReference(CamForTraders, nameof(CamForTraders)))
+        {
+            return false;
+        }
+
+        CamForTraders.m_LookAt = lookAt;
         return true;
     }
 
@@ -1274,7 +1352,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         {
             if (FreeLook != null && Input.GetKey(KeyCode.LeftControl) && FreeLook.m_Lens.FieldOfView < 20)
             {
-                FreeLook.m_LookAt = Face;
+                TrySetFreeLookLookAt(Face);
             }
 
             if (Input.GetKey(KeyCode.LeftControl) && grounded == true && Rolling == false && !Input.GetKey(KeyCode.Space))

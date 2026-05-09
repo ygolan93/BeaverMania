@@ -11,7 +11,7 @@ public sealed class PlayerCameraReference
     {
         None,
         SerializedCamera,
-        FreeLook,
+        FreeLookState,
         BrainCamera,
         MainCamera
     }
@@ -45,8 +45,9 @@ public sealed class PlayerCameraReference
             return false;
         }
 
-        forward = Flatten(cachedTransform.forward);
-        right = Flatten(cachedTransform.right);
+        var basisRotation = GetBasisRotation();
+        forward = Flatten(basisRotation * Vector3.forward);
+        right = Flatten(basisRotation * Vector3.right);
         if (forward.sqrMagnitude < MinPlanarSqrMagnitude || right.sqrMagnitude < MinPlanarSqrMagnitude)
         {
             ClearCache();
@@ -75,19 +76,15 @@ public sealed class PlayerCameraReference
             return true;
         }
 
-        if (freeLook != null && freeLook.enabled)
-        {
-            var freeLookObject = freeLook.VirtualCameraGameObject;
-            if (freeLookObject != null && freeLookObject.activeInHierarchy)
-            {
-                Cache(freeLookObject.transform, null, Source.FreeLook);
-                return true;
-            }
-        }
-
         if (IsCameraValid(Camera.main))
         {
             Cache(Camera.main, Source.MainCamera);
+            return true;
+        }
+
+        if (IsFreeLookValid())
+        {
+            Cache(freeLook.transform, null, Source.FreeLookState);
             return true;
         }
 
@@ -106,13 +103,11 @@ public sealed class PlayerCameraReference
         {
             case Source.SerializedCamera:
                 return cachedCamera == camera && IsCameraValid(cachedCamera);
-            case Source.FreeLook:
+            case Source.FreeLookState:
                 return !TryGetBrainOutputCamera(out _)
-                    && freeLook != null
-                    && freeLook.enabled
-                    && freeLook.VirtualCameraGameObject != null
-                    && cachedTransform == freeLook.VirtualCameraGameObject.transform
-                    && cachedTransform.gameObject.activeInHierarchy;
+                    && !IsCameraValid(Camera.main)
+                    && IsFreeLookValid()
+                    && cachedTransform == freeLook.transform;
             case Source.BrainCamera:
             case Source.MainCamera:
                 return IsCameraValid(cachedCamera);
@@ -138,6 +133,21 @@ public sealed class PlayerCameraReference
         cachedTransform = null;
         cachedCamera = null;
         cachedSource = Source.None;
+    }
+
+    Quaternion GetBasisRotation()
+    {
+        if (cachedSource == Source.FreeLookState && IsFreeLookValid())
+        {
+            return freeLook.State.FinalOrientation;
+        }
+
+        return cachedTransform.rotation;
+    }
+
+    bool IsFreeLookValid()
+    {
+        return freeLook != null && freeLook.enabled && freeLook.gameObject.activeInHierarchy;
     }
 
     static bool TryGetBrainOutputCamera(out Camera outputCamera)

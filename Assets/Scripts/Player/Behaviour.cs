@@ -725,6 +725,11 @@ public class Behaviour : MonoBehaviour, IDamageable
     [Obsolete]
     public void RotateForward()
     {
+        if (Spine == null)
+        {
+            return;
+        }
+
         if (!CanProcessPlayerGameplay())
         {
             ResetBlockedGameplayInputState();

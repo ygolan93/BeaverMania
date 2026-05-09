@@ -1730,80 +1730,41 @@ public class Behaviour : MonoBehaviour, IDamageable
         }
         //Basic movement setup
         {
-            //No Crouch = Regular Movement
-            if (!Input.GetKey(KeyCode.LeftControl))
+            Vector2 input = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+
+            if (Input.GetKey(KeyCode.A))
             {
-                HealQue = 3;
-                if (Input.GetKey(KeyCode.W))
-                {
-                    PlayerMove(XZForward);
-                }
-                if (Input.GetKey(KeyCode.S))
-                {
-                    PlayerMove(XZBack);
-                }
-                if (Input.GetKey(KeyCode.D))
-                {
-                    //Otter.Play("Walk Right");
-                    PlayerMove(XZRight);
-                }
-                if (Input.GetKey(KeyCode.A))
-                {
-                    //Otter.Play("Walk Left");
-                    PlayerMove(XZLeft);
-                }
-                if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.D))
-                {
-                    PlayerMove(XZForward + XZRight);
-                }
-                if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.A))
-                {
-                    PlayerMove(XZForward + XZLeft);
-                }
-                if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.D))
-                {
-                    PlayerMove(XZBack + XZRight);
-                }
-                if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.A))
-                {
-                    PlayerMove(XZBack + XZLeft);
-                }
+                input.x -= 1f;
             }
-            //Movement + Crouch = Roll & Evade
-            if (Input.GetKey(KeyCode.LeftControl) && CurrentStamina > 0)
+            if (Input.GetKey(KeyCode.D))
             {
-                HealQue = 3;
-                if (Input.GetKey(KeyCode.W))
+                input.x += 1f;
+            }
+            if (Input.GetKey(KeyCode.S))
+            {
+                input.y -= 1f;
+            }
+            if (Input.GetKey(KeyCode.W))
+            {
+                input.y += 1f;
+            }
+
+            input = Vector2.ClampMagnitude(input, 1f);
+            Vector3 move = XZForward * input.y + XZRight * input.x;
+
+            if (move.sqrMagnitude >= Mathf.Epsilon)
+            {
+                //No Crouch = Regular Movement
+                if (!Input.GetKey(KeyCode.LeftControl))
                 {
-                    PlayerRoll(XZForward);
+                    HealQue = 3;
+                    PlayerMove(move);
                 }
-                if (Input.GetKey(KeyCode.S))
+                //Movement + Crouch = Roll & Evade
+                else if (CurrentStamina > 0)
                 {
-                    PlayerRoll(XZBack);
-                }
-                if (Input.GetKey(KeyCode.D))
-                {
-                    PlayerRoll(XZRight);
-                }
-                if (Input.GetKey(KeyCode.A))
-                {
-                    PlayerRoll(XZLeft);
-                }
-                if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.D))
-                {
-                    PlayerRoll(XZForward + XZRight);
-                }
-                if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.A))
-                {
-                    PlayerRoll(XZForward + XZLeft);
-                }
-                if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.D))
-                {
-                    PlayerRoll(XZBack + XZRight);
-                }
-                if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.A))
-                {
-                    PlayerRoll(XZBack + XZLeft);
+                    HealQue = 3;
+                    PlayerRoll(move);
                 }
             }
         }

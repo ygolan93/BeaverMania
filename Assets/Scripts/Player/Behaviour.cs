@@ -182,6 +182,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     PlayerCombatController combatController;
     PlayerMovementController movementController;
     PlayerFailureController failureController;
+    bool wasGameplayBlocked;
 
     PlayerCameraReference GameplayCamera
     {
@@ -607,6 +608,11 @@ public class Behaviour : MonoBehaviour, IDamageable
     public void HandleFailure(PlayerFailureReason reason) => Failure.HandleFailure(reason);
     public void PlayerMove(Vector3 Direction)
     {
+        if (HandleGameplayBlocked())
+        {
+            return;
+        }
+
         if (!CanProcessPlayerGameplay())
         {
             ResetMovementRuntimeState();
@@ -670,7 +676,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         //Sprint
         if (grounded == true)
         {
-            if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey && Rolling == false && keepLooking==false)
+            if (Input.GetKey(KeyCode.LeftShift) && HasMovementInput() && Rolling == false && keepLooking==false)
             {
                 if (ArmorEquipped==true)
                 {
@@ -700,6 +706,11 @@ public class Behaviour : MonoBehaviour, IDamageable
     }
     public void PlayerRoll(Vector3 Direction)
     {
+        if (HandleGameplayBlocked())
+        {
+            return;
+        }
+
         if (!CanProcessPlayerGameplay())
         {
             ResetMovementRuntimeState();
@@ -742,6 +753,11 @@ public class Behaviour : MonoBehaviour, IDamageable
     public void RotateForward()
     {
         if (Spine == null)
+        {
+            return;
+        }
+
+        if (HandleGameplayBlocked())
         {
             return;
         }
@@ -974,16 +990,42 @@ public class Behaviour : MonoBehaviour, IDamageable
         return inputReader;
     }
 
-    bool CanProcessPlayerGameplay()
+    bool IsGameplayActive()
     {
         var reader = GetInputReader();
+        return reader != null && reader.IsGameplayInputEnabled;
+    }
+
+    bool HandleGameplayBlocked()
+    {
+        if (IsGameplayActive())
+        {
+            wasGameplayBlocked = false;
+            return false;
+        }
+
+        if (!wasGameplayBlocked)
+        {
+            ResetMovementRuntimeState();
+            wasGameplayBlocked = true;
+        }
+
+        return true;
+    }
+
+    bool CanProcessPlayerGameplay()
+    {
         var flow = GameFlowController.GetOrCreate();
-        return reader != null
-            && reader.IsGameplayInputEnabled
+        return IsGameplayActive()
             && flow != null
             && flow.State == GameFlowState.Playing
             && Player != null
             && Otter != null;
+    }
+
+    bool HasMovementInput()
+    {
+        return new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).sqrMagnitude > Mathf.Epsilon;
     }
 
     public void ResetMovementRuntimeState()
@@ -1298,6 +1340,11 @@ public class Behaviour : MonoBehaviour, IDamageable
     public void Update()
     {
         HandleDeathState();
+        if (HandleGameplayBlocked())
+        {
+            return;
+        }
+
         if (!CanProcessPlayerGameplay())
         {
             ResetMovementRuntimeState();
@@ -1735,6 +1782,11 @@ public class Behaviour : MonoBehaviour, IDamageable
     [Obsolete]
     public void LateUpdate()
     {
+        if (HandleGameplayBlocked())
+        {
+            return;
+        }
+
         if (!CanProcessPlayerGameplay())
         {
             ResetMovementRuntimeState();
@@ -1758,6 +1810,11 @@ public class Behaviour : MonoBehaviour, IDamageable
     [System.Obsolete]
     public void FixedUpdate()
     {
+        if (HandleGameplayBlocked())
+        {
+            return;
+        }
+
         if (!CanProcessPlayerGameplay())
         {
             ResetMovementRuntimeState();
@@ -1910,6 +1967,12 @@ public class Behaviour : MonoBehaviour, IDamageable
                     HealQue = 3;
                     PlayerRoll(move);
                 }
+            }
+            else
+            {
+                speed = Walk;
+                steer = 0.1f;
+                PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Run, false);
             }
         }
        

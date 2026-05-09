@@ -10,6 +10,7 @@ public class PauseMenuController : MonoBehaviour
 
     GameFlowController gameFlow;
     GameInputReader inputReader;
+    bool keepCursorVisibleAfterResume;
     [SerializeField] Slider volumeSlider;
     [SerializeField] AudioSource Music;
 
@@ -67,25 +68,31 @@ public class PauseMenuController : MonoBehaviour
 
     protected virtual void Update()
     {
-        Pause();
     }
 
     public void Pause()
     {
-        if (ActivePause)
-        {
-            ShowPausePanel();
-            return;
-        }
-
-        HidePausePanel();
-        HideQuestionPanel();
+        ApplyPauseVisualState(ActivePause);
     }
 
     public void ChangeBolean()
     {
-        var pauseRequested = !ActivePause;
-        var keepCursorVisible = !pauseRequested && IsPlayerInTraderOrDialogueUi();
+        var currentFlow = GetGameFlow();
+        if (IsPauseToggleBlocked(currentFlow))
+        {
+            return;
+        }
+
+        var pauseRequested = currentFlow != null
+            ? currentFlow.State != GameFlowState.Paused
+            : !ActivePause;
+        var keepCursorVisible = !pauseRequested &&
+            (keepCursorVisibleAfterResume || IsPlayerInTraderOrDialogueUi());
+
+        if (pauseRequested)
+        {
+            keepCursorVisibleAfterResume = IsPlayerInTraderOrDialogueUi();
+        }
 
         if (!SetPaused(pauseRequested))
         {
@@ -94,7 +101,12 @@ public class PauseMenuController : MonoBehaviour
 
         ActivePause = pauseRequested;
         ApplyCursorState(pauseRequested, keepCursorVisible);
-        Pause();
+        ApplyPauseVisualState(pauseRequested);
+
+        if (!pauseRequested)
+        {
+            keepCursorVisibleAfterResume = false;
+        }
     }
 
     void HandlePausePressed()
@@ -150,14 +162,23 @@ public class PauseMenuController : MonoBehaviour
         SetPanel(Question, false, this, nameof(Question));
     }
 
-    bool SetPaused(bool paused)
+    internal void ApplyPauseVisualState(bool paused)
     {
-        if (gameFlow == null)
+        if (paused)
         {
-            gameFlow = GameFlowController.GetOrCreate();
+            ShowPausePanel();
+            return;
         }
 
-        if (!gameFlow.SetPaused(paused))
+        HidePausePanel();
+        HideQuestionPanel();
+    }
+
+    bool SetPaused(bool paused)
+    {
+        gameFlow = GetGameFlow();
+
+        if (gameFlow == null || !gameFlow.SetPaused(paused))
         {
             ActivePause = false;
             return false;
@@ -191,6 +212,25 @@ public class PauseMenuController : MonoBehaviour
         var currentFlow = gameFlow != null ? gameFlow : GameFlowController.Instance;
         return currentFlow != null &&
             (currentFlow.State == GameFlowState.Shop || currentFlow.State == GameFlowState.Dialogue);
+    }
+
+    GameFlowController GetGameFlow()
+    {
+        if (gameFlow == null)
+        {
+            gameFlow = GameFlowController.Instance != null
+                ? GameFlowController.Instance
+                : GameFlowController.GetOrCreate();
+        }
+
+        return gameFlow;
+    }
+
+    static bool IsPauseToggleBlocked(GameFlowController currentFlow)
+    {
+        return currentFlow != null &&
+            (currentFlow.State == GameFlowState.GameOver ||
+             currentFlow.State == GameFlowState.Transitioning);
     }
 
     static void SetPanel(GameObject panel, bool active, PauseMenuController owner, string fieldName)

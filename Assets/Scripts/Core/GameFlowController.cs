@@ -9,7 +9,7 @@ public class GameFlowController : MonoBehaviour
 
     public static GameFlowController GetOrCreate()
     {
-        return RuntimeServices.GetOrCreate<GameFlowController>(ServiceLifetime.Persistent);
+        return RuntimeServices.GetRequired<GameFlowController>(ServiceLifetime.Persistent);
     }
 
     private void Awake()

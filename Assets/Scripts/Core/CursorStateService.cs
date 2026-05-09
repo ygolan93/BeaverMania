@@ -7,7 +7,7 @@ public class CursorStateService : MonoBehaviour
 
     public static CursorStateService GetOrCreate()
     {
-        return RuntimeServices.GetOrCreate<CursorStateService>(ServiceLifetime.Persistent);
+        return RuntimeServices.GetRequired<CursorStateService>(ServiceLifetime.Persistent);
     }
 
     private void Awake()

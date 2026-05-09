@@ -11,7 +11,7 @@ public sealed class PlayerCameraReference
     {
         None,
         SerializedCamera,
-        FreeLook,
+        FreeLookState,
         BrainCamera,
         MainCamera
     }
@@ -103,7 +103,7 @@ public sealed class PlayerCameraReference
         {
             case Source.SerializedCamera:
                 return cachedCamera == camera && IsCameraValid(cachedCamera);
-            case Source.FreeLook:
+            case Source.FreeLookState:
                 return !TryGetBrainOutputCamera(out _)
                     && !IsCameraValid(Camera.main)
                     && IsFreeLookValid()

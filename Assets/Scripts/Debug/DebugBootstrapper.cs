@@ -3,6 +3,8 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class DebugBootstrapper : MonoBehaviour
 {
+    public static DebugBootstrapper Instance { get; private set; }
+
     [SerializeField] DebugQAConfig config;
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -11,6 +13,19 @@ public sealed class DebugBootstrapper : MonoBehaviour
 
     void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        if (!RuntimeServices.Register(this, ServiceLifetime.Persistent))
+        {
+            return;
+        }
+
+        Instance = this;
+
         if (config == null || !config.enableDebugBootstrapper)
         {
             enabled = false;
@@ -43,6 +58,15 @@ public sealed class DebugBootstrapper : MonoBehaviour
         if (config.enableDamageTrigger)
         {
             root.AddComponent<DebugDamageTrigger>().Configure(config);
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+            RuntimeServices.Unregister(this);
         }
     }
 #endif

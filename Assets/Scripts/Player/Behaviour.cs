@@ -814,7 +814,8 @@ public class Behaviour : MonoBehaviour, IDamageable
     {
         //MusicOP.StopMusic();
         ResetMovementRuntimeState();
-        if (!GameFlowController.GetOrCreate().SetGameOver())
+        var gameFlow = GameFlowController.GetOrCreate();
+        if (gameFlow.State != GameFlowState.GameOver && !gameFlow.SetGameOver())
         {
             return;
         }

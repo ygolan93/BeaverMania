@@ -605,7 +605,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     {
         if (!CanProcessPlayerGameplay())
         {
-            ResetBlockedGameplayInputState();
+            ResetMovementRuntimeState();
             return;
         }
 
@@ -689,7 +689,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     {
         if (!CanProcessPlayerGameplay())
         {
-            ResetBlockedGameplayInputState();
+            ResetMovementRuntimeState();
             return;
         }
 
@@ -728,7 +728,7 @@ public class Behaviour : MonoBehaviour, IDamageable
 
         if (!CanProcessPlayerGameplay())
         {
-            ResetBlockedGameplayInputState();
+            ResetMovementRuntimeState();
             return;
         }
 
@@ -962,10 +962,11 @@ public class Behaviour : MonoBehaviour, IDamageable
             && Otter != null;
     }
 
-    void ResetBlockedGameplayInputState()
+    public void ResetMovementRuntimeState()
     {
-        movementInvoked = false;
         Rolling = false;
+        movementInvoked = false;
+        neutralAndMoving = false;
         keepLooking = false;
         speed = Walk;
         steer = 0.1f;
@@ -975,13 +976,13 @@ public class Behaviour : MonoBehaviour, IDamageable
             Player.velocity = new Vector3(0f, Player.velocity.y, 0f);
         }
 
-        if (Otter == null)
-        {
-            return;
-        }
-
+        ClearMovementAnimatorBools();
         PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Aim, false);
         PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Draw, false);
+    }
+
+    void ClearMovementAnimatorBools()
+    {
         PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Roll, false);
         PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Run, false);
         PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Walk, false);
@@ -1259,7 +1260,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         HandleDeathState();
         if (!CanProcessPlayerGameplay())
         {
-            ResetBlockedGameplayInputState();
+            ResetMovementRuntimeState();
             return;
         }
 
@@ -1696,7 +1697,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     {
         if (!CanProcessPlayerGameplay())
         {
-            ResetBlockedGameplayInputState();
+            ResetMovementRuntimeState();
             return;
         }
 
@@ -1719,7 +1720,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     {
         if (!CanProcessPlayerGameplay())
         {
-            ResetBlockedGameplayInputState();
+            ResetMovementRuntimeState();
             return;
         }
 
@@ -1729,22 +1730,10 @@ public class Behaviour : MonoBehaviour, IDamageable
             return;
         }
 
-        Vector3 XZBack = -XZForward;
-        Vector3 XZLeft = -XZRight;
-
         //Switch off additional animations if not invoked
         {
-            PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Walk, false);
-            PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.StrafeForward, false);
-            PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.StrafeBack, false);
-            PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.StrafeLeft, false);
-            PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.StrafeRight, false);
-            PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Climb, false);
-            PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Run, false);
-            PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Midair, false);
-            PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Roll, false);
+            ClearMovementAnimatorBools();
             PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Aim, false);
-            //PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Draw, false);
             Rolling = false;
             movementInvoked = false;
             //keepLooking = false;
@@ -1857,27 +1846,8 @@ public class Behaviour : MonoBehaviour, IDamageable
         }
         //Basic movement setup
         {
-            Vector2 input = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
-
-            if (Input.GetKey(KeyCode.A))
-            {
-                input.x -= 1f;
-            }
-            if (Input.GetKey(KeyCode.D))
-            {
-                input.x += 1f;
-            }
-            if (Input.GetKey(KeyCode.S))
-            {
-                input.y -= 1f;
-            }
-            if (Input.GetKey(KeyCode.W))
-            {
-                input.y += 1f;
-            }
-
-            input = Vector2.ClampMagnitude(input, 1f);
-            Vector3 move = XZForward * input.y + XZRight * input.x;
+            Vector2 input = Vector2.ClampMagnitude(new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")), 1f);
+            Vector3 move = (XZForward * input.y + XZRight * input.x).normalized;
 
             if (move.sqrMagnitude >= Mathf.Epsilon)
             {

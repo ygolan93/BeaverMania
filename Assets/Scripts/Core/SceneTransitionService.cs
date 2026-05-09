@@ -15,7 +15,7 @@ public class SceneTransitionService : MonoBehaviour
 
     public static SceneTransitionService GetOrCreate()
     {
-        return RuntimeServices.GetOrCreate<SceneTransitionService>(ServiceLifetime.Persistent);
+        return RuntimeServices.GetRequired<SceneTransitionService>(ServiceLifetime.Persistent);
     }
 
     public static void LoadMenu()
@@ -250,7 +250,7 @@ public class SceneTransitionService : MonoBehaviour
             if (isMenu)
             {
                 CursorStateService.GetOrCreate().ShowCursor();
-                GameInputReader.GetOrCreate().EnableUiInput();
+                GameFlowController.GetOrCreate().SetMainMenu();
             }
             else
             {

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [DefaultExecutionOrder(-1000)]
 public class GameFlowController : MonoBehaviour
@@ -9,7 +10,7 @@ public class GameFlowController : MonoBehaviour
 
     public static GameFlowController GetOrCreate()
     {
-        return RuntimeServices.GetOrCreate<GameFlowController>(ServiceLifetime.Persistent);
+        return RuntimeServices.GetRequired<GameFlowController>(ServiceLifetime.Persistent);
     }
 
     private void Awake()
@@ -47,6 +48,31 @@ public class GameFlowController : MonoBehaviour
         State = GameFlowState.Playing;
         Time.timeScale = 1f;
         SetGameplayInput();
+    }
+
+    public bool TrySetPlayingFromSceneStartup(string ownerName)
+    {
+        if (!IsGameplayScene(SceneManager.GetActiveScene().name))
+        {
+            return false;
+        }
+
+        if (State == GameFlowState.Transitioning ||
+            State == GameFlowState.Paused ||
+            State == GameFlowState.GameOver)
+        {
+            return false;
+        }
+
+        SetPlaying();
+        return true;
+    }
+
+    public void SetMainMenu()
+    {
+        State = GameFlowState.MainMenu;
+        Time.timeScale = 1f;
+        SetUiInput();
     }
 
     public bool SetPaused(bool paused)
@@ -107,6 +133,11 @@ public class GameFlowController : MonoBehaviour
         State = GameFlowState.Transitioning;
         Time.timeScale = 1f;
         SetInputDisabled();
+    }
+
+    static bool IsGameplayScene(string sceneName)
+    {
+        return sceneName == SceneNames.Level1;
     }
 
     void SetGameplayInput()

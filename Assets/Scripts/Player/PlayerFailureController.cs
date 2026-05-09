@@ -41,47 +41,35 @@ public class PlayerFailureController : MonoBehaviour
             }
         }
 
-        isResolvingFailure = true;
-
-        if (reason == PlayerFailureReason.CompatibilityRestart)
-        {
-            RestartCheckpointForCompatibility();
-            isResolvingFailure = false;
-            return;
-        }
-
-        if (owner.Lives > 1)
-        {
-            owner.Lives--;
-            owner.RestoreHealth();
-            owner.MoveToCheckpoint();
-            ResetRuntimeState();
-            isResolvingFailure = false;
-            return;
-        }
-
-        owner.Lives = 0;
-        owner.ActivateLooseMenu();
-        isResolvingFailure = false;
+        RestartCheckpointForCompatibility();
     }
 
     void RestartCheckpointForCompatibility()
     {
-        if (owner.Lives <= 0)
+        if (isResolvingFailure)
         {
-            owner.Lives = 0;
-            owner.ActivateLooseMenu();
             return;
         }
 
-        owner.RestoreHealth();
-        owner.MoveToCheckpoint();
-        if (owner.Lives > 1)
+        isResolvingFailure = true;
+        try
         {
-            owner.Lives--;
-        }
+            if (owner.Lives > 1)
+            {
+                owner.Lives--;
+                owner.RestoreHealth();
+                owner.MoveToCheckpoint();
+                ResetRuntimeState();
+                return;
+            }
 
-        ResetRuntimeState();
+            owner.Lives = 0;
+            owner.ActivateLooseMenu();
+        }
+        finally
+        {
+            isResolvingFailure = false;
+        }
     }
 
     void ResetRuntimeState()

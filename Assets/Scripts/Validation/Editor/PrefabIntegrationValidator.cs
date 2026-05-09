@@ -11,7 +11,8 @@ public static class PrefabIntegrationValidator
 {
     const string MenuRoot = "Tools/BeaverMania/Validation/";
     const string RegisterCall = "RuntimeServices.Register";
-    const string PersistentBootstrapPrefab = "Assets/Prefabs/Objects/UI/GameMusic.prefab";
+    const string MusicPrefab = "Assets/Prefabs/Objects/UI/GameMusic.prefab";
+    const string PersistentBootstrapPrefab = "Assets/Prefabs/Runtime/RuntimeServices.prefab";
     const string PlayerBootstrapPrefab = "Assets/Prefabs/OtterPlayer/Otter_Shapekeys/Player.prefab";
     const string RuntimeBootstrapOwnerId = "runtime-bootstrap";
 
@@ -34,7 +35,7 @@ public static class PrefabIntegrationValidator
 
     static readonly RequiredReferenceRule[] RequiredReferenceRules =
     {
-        new RequiredReferenceRule(PersistentBootstrapPrefab, typeof(MusicPlaylist), nameof(MusicPlaylist.MusicSource))
+        new RequiredReferenceRule(MusicPrefab, typeof(MusicPlaylist), nameof(MusicPlaylist.MusicSource))
     };
 
     [MenuItem(MenuRoot + "Run Prefab Integration Validation")]

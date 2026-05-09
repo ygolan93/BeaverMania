@@ -30,7 +30,7 @@ public class GameInputReader : MonoBehaviour
 
     public static GameInputReader GetOrCreate()
     {
-        return RuntimeServices.GetOrCreate<GameInputReader>(ServiceLifetime.Persistent);
+        return RuntimeServices.GetRequired<GameInputReader>(ServiceLifetime.Persistent);
     }
 
     internal void EnableGameplayInput()

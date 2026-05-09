@@ -31,30 +31,102 @@ public static class RuntimeServices
         return false;
     }
 
-    public static T GetOrCreate<T>(ServiceLifetime lifetime) where T : Component
+    public static bool TryGetOrFind<T>(ServiceLifetime lifetime, out T service) where T : Component
     {
-        var serviceType = typeof(T);
-        T service;
         if (TryGet(out service))
         {
-            return service;
+            return true;
         }
 
         service = UnityEngine.Object.FindObjectOfType<T>();
         if (service != null)
         {
             Register(service, lifetime);
+            return true;
+        }
+
+        return false;
+    }
+
+    public static T GetRequired<T>(ServiceLifetime lifetime) where T : Component
+    {
+        T service;
+        if (TryGetOrFind(lifetime, out service))
+        {
             return service;
         }
 
+        throw MissingService<T>(lifetime, false);
+    }
+
+    public static T GetOrCreate<T>(ServiceLifetime lifetime) where T : Component
+    {
+        T service;
+        if (TryGetOrFind(lifetime, out service))
+        {
+            return service;
+        }
+
+        if (lifetime == ServiceLifetime.Persistent)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            return CreateFallback<T>(lifetime);
+#else
+            throw MissingService<T>(lifetime, true);
+#endif
+        }
+
+        return CreateFallback<T>(lifetime);
+    }
+
+    private static T CreateFallback<T>(ServiceLifetime lifetime) where T : Component
+    {
+        var serviceType = typeof(T);
         BuildSafeLogger.WarnOnce(
             serviceType.FullName + ".MissingService",
             "Missing runtime service; creating fallback " + serviceType.Name + ".",
             null,
             serviceType.Name);
-        service = new GameObject(serviceType.Name).AddComponent<T>();
+        var owner = new GameObject(serviceType.Name);
+        owner.AddComponent<RuntimeServiceOwnerMarker>().MarkFallbackCreated();
+        var service = owner.AddComponent<T>();
         Register(service, lifetime);
         return service;
+    }
+
+    private static InvalidOperationException MissingService<T>(ServiceLifetime lifetime, bool blockedFallback) where T : Component
+    {
+        var serviceType = typeof(T);
+        var message = "Missing " + lifetime + " runtime service: " + serviceType.Name + ". Add it to the scene/bootstrap before use.";
+        if (blockedFallback)
+        {
+            message += " Release builds do not create fallback persistent services.";
+        }
+
+        Debug.LogError(message);
+        return new InvalidOperationException(message);
+    }
+
+    public static bool TryGetDeclaredLifetime(Type serviceType, out ServiceLifetime lifetime)
+    {
+        if (serviceType == typeof(SceneTransitionService)
+            || serviceType == typeof(CursorStateService)
+            || serviceType == typeof(GameFlowController)
+            || serviceType == typeof(GameInputReader)
+            || serviceType == typeof(DebugBootstrapper))
+        {
+            lifetime = ServiceLifetime.Persistent;
+            return true;
+        }
+
+        if (serviceType == typeof(CheckpointService))
+        {
+            lifetime = ServiceLifetime.Scene;
+            return true;
+        }
+
+        lifetime = default(ServiceLifetime);
+        return false;
     }
 
     public static bool Register<T>(T service, ServiceLifetime lifetime) where T : UnityEngine.Object
@@ -173,12 +245,16 @@ public static class RuntimeServices
             var component = registration.Service as Component;
             if (component != null)
             {
-                UnityEngine.Object.Destroy(component.gameObject);
+                var owner = component.GetComponent<RuntimeServiceOwnerMarker>();
+                if (owner != null && owner.DestroyOnSceneServiceReset)
+                {
+                    UnityEngine.Object.Destroy(component.gameObject);
+                }
+
+                continue;
             }
-            else
-            {
-                UnityEngine.Object.Destroy(registration.Service);
-            }
+
+            UnityEngine.Object.Destroy(registration.Service);
         }
     }
 }

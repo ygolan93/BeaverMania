@@ -36,7 +36,7 @@ public class PauseMenuController : MonoBehaviour
         }
 
         gameFlow = GameFlowController.GetOrCreate();
-        gameFlow.SetPlaying();
+        gameFlow.TrySetPlayingFromSceneStartup(nameof(PauseMenuController));
         Player = playerObject.GetComponent<Behaviour>();
         if (!RuntimeReferenceValidator.Require(Player, this, nameof(Player)) ||
             !RuntimeReferenceValidator.Require(PauseMenu, this, nameof(PauseMenu)) ||
@@ -60,7 +60,7 @@ public class PauseMenuController : MonoBehaviour
             }
         }
 
-        Player.HideCursor();
+        CursorStateService.GetOrCreate().HideCursor();
         HidePausePanel();
         HideQuestionPanel();
     }
@@ -75,22 +75,26 @@ public class PauseMenuController : MonoBehaviour
         if (ActivePause)
         {
             ShowPausePanel();
-            Player.ShowCursor();
             return;
         }
 
         HidePausePanel();
         HideQuestionPanel();
-        if (Player != null && !Player.isAtTrader)
-        {
-            Player.HideCursor();
-        }
     }
 
     public void ChangeBolean()
     {
-        ActivePause = !ActivePause;
-        SetPaused(ActivePause);
+        var pauseRequested = !ActivePause;
+        var keepCursorVisible = !pauseRequested && IsPlayerInTraderOrDialogueUi();
+
+        if (!SetPaused(pauseRequested))
+        {
+            return;
+        }
+
+        ActivePause = pauseRequested;
+        ApplyCursorState(pauseRequested, keepCursorVisible);
+        Pause();
     }
 
     void HandlePausePressed()
@@ -146,7 +150,7 @@ public class PauseMenuController : MonoBehaviour
         SetPanel(Question, false, this, nameof(Question));
     }
 
-    void SetPaused(bool paused)
+    bool SetPaused(bool paused)
     {
         if (gameFlow == null)
         {
@@ -156,7 +160,37 @@ public class PauseMenuController : MonoBehaviour
         if (!gameFlow.SetPaused(paused))
         {
             ActivePause = false;
+            return false;
         }
+
+        return true;
+    }
+
+    void ApplyCursorState(bool paused, bool keepCursorVisible)
+    {
+        var cursorState = CursorStateService.GetOrCreate();
+        if (paused)
+        {
+            cursorState.ShowCursor();
+            return;
+        }
+
+        if (!keepCursorVisible)
+        {
+            cursorState.HideCursor();
+        }
+    }
+
+    bool IsPlayerInTraderOrDialogueUi()
+    {
+        if (Player != null && Player.isAtTrader)
+        {
+            return true;
+        }
+
+        var currentFlow = gameFlow != null ? gameFlow : GameFlowController.Instance;
+        return currentFlow != null &&
+            (currentFlow.State == GameFlowState.Shop || currentFlow.State == GameFlowState.Dialogue);
     }
 
     static void SetPanel(GameObject panel, bool active, PauseMenuController owner, string fieldName)

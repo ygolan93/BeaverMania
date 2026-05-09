@@ -467,8 +467,11 @@ public class Behaviour : MonoBehaviour, IDamageable
         {
             Plattering = "Get off me ya nasty bastards!";
             ChangeSpeech = 3;
-            var ParryDirection = new Vector3((OBJ.transform.position - transform.position).x, 0, (OBJ.transform.position - transform.position).z);
-            transform.rotation = SafeRotation.LookRotationOrCurrent(ParryDirection, transform.rotation);
+            Vector3 ParryDirection = OBJ.transform.position - transform.position;
+            if (SafeRotation.TryPlanarLookRotation(ParryDirection, out Quaternion parryRotation))
+            {
+                transform.rotation = parryRotation;
+            }
         }
         if (OBJ.gameObject.CompareTag("Strike"))
         {
@@ -610,12 +613,19 @@ public class Behaviour : MonoBehaviour, IDamageable
             return;
         }
 
+        if (!SafeRotation.IsFinite(Direction))
+        {
+            return;
+        }
+
         movementInvoked = true;
         //Regular walk
         if (keepLooking==false)
         {
-            rotGoal = SafeRotation.LookRotationOrCurrent(Direction, transform.rotation);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            if (SafeRotation.TryLookRotation(Direction, out rotGoal))
+            {
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            }
             PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Walk, true);
         }
         //Strafe
@@ -626,8 +636,10 @@ public class Behaviour : MonoBehaviour, IDamageable
                 return;
             }
 
-            rotGoal = SafeRotation.LookRotationOrCurrent(forwardFace, transform.rotation);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            if (SafeRotation.TryLookRotation(forwardFace, out rotGoal))
+            {
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            }
             PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Walk, false);
             if (Input.GetKey(KeyCode.W))
             {
@@ -694,8 +706,15 @@ public class Behaviour : MonoBehaviour, IDamageable
             return;
         }
 
-        rotGoal = SafeRotation.LookRotationOrCurrent(new Vector3(Direction.x, 0, Direction.z), transform.rotation);
-        transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.11f);
+        if (!SafeRotation.IsFinite(Direction))
+        {
+            return;
+        }
+
+        if (SafeRotation.TryPlanarLookRotation(Direction, out rotGoal))
+        {
+            transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.11f);
+        }
         //Evading Roll action
         {
             if (Input.GetKey(KeyCode.LeftControl) && CurrentStamina > 0 && grounded == true)
@@ -738,7 +757,11 @@ public class Behaviour : MonoBehaviour, IDamageable
             return;
         }
 
-        Quaternion direction = SafeRotation.LookRotationOrCurrent(camForward, Spine.rotation);
+        if (!SafeRotation.TryLookRotation(camForward, out Quaternion direction))
+        {
+            return;
+        }
+
         if (bowEquipped==false)
         {
             Spine.rotation = direction;
@@ -1766,8 +1789,10 @@ public class Behaviour : MonoBehaviour, IDamageable
                 Otter.Play("Aim");
                 if (Input.GetKeyDown(KeyCode.Mouse1))
                 {
-                    rotGoal = SafeRotation.LookRotationOrCurrent(XZForward, transform.rotation);
-                    transform.rotation = rotGoal;
+                    if (SafeRotation.TryPlanarLookRotation(XZForward, out rotGoal))
+                    {
+                        transform.rotation = rotGoal;
+                    }
                     Otter.Play("Crouch");
                 }
                 keepLooking = true;
@@ -1794,8 +1819,10 @@ public class Behaviour : MonoBehaviour, IDamageable
         {
             if (Input.GetKeyDown(KeyCode.Mouse1) && !Input.GetKeyUp(KeyCode.Mouse1))
             {
-                rotGoal = SafeRotation.LookRotationOrCurrent(XZForward, transform.rotation);
-                transform.rotation = rotGoal;
+                if (SafeRotation.TryPlanarLookRotation(XZForward, out rotGoal))
+                {
+                    transform.rotation = rotGoal;
+                }
                 if (arrowMunition > 0 &&
                 CurrentStamina > 0)
                 {
@@ -1828,8 +1855,13 @@ public class Behaviour : MonoBehaviour, IDamageable
             }
             if (arrowReady == true && Input.GetKeyUp(KeyCode.Mouse1) && CurrentStamina > 0)
             {
+                if (!SafeRotation.TryPlanarLookRotation(XZForward, out Quaternion arrowRotation))
+                {
+                    return;
+                }
+
                 Sound.ArrowShoot();
-                Instantiate(Arrow, Spine.position + XZForward * 1.4f, SafeRotation.LookRotationOrCurrent(XZForward, transform.rotation) * Quaternion.Euler(90, 0, 0));
+                Instantiate(Arrow, Spine.position + XZForward * 1.4f, arrowRotation * Quaternion.Euler(90, 0, 0));
                 CurrentStamina -= 30;
                 if (HealthBar != null)
                 {
@@ -1926,8 +1958,10 @@ public class Behaviour : MonoBehaviour, IDamageable
             {
                 if (isParried == false)
                 {
-                    rotGoal = SafeRotation.LookRotationOrCurrent(new Vector3(Player.velocity.x, 0, Player.velocity.z), transform.rotation);
-                    transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.5f);
+                    if (SafeRotation.TryPlanarLookRotation(Player.velocity, out rotGoal))
+                    {
+                        transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.5f);
+                    }
                 }
                 PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Moving, true);
                 SlideEffect.enableEmission = true;

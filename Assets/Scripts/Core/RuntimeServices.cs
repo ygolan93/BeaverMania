@@ -107,6 +107,28 @@ public static class RuntimeServices
         return new InvalidOperationException(message);
     }
 
+    public static bool TryGetDeclaredLifetime(Type serviceType, out ServiceLifetime lifetime)
+    {
+        if (serviceType == typeof(SceneTransitionService)
+            || serviceType == typeof(CursorStateService)
+            || serviceType == typeof(GameFlowController)
+            || serviceType == typeof(GameInputReader)
+            || serviceType == typeof(DebugBootstrapper))
+        {
+            lifetime = ServiceLifetime.Persistent;
+            return true;
+        }
+
+        if (serviceType == typeof(CheckpointService))
+        {
+            lifetime = ServiceLifetime.Scene;
+            return true;
+        }
+
+        lifetime = default(ServiceLifetime);
+        return false;
+    }
+
     public static bool Register<T>(T service, ServiceLifetime lifetime) where T : UnityEngine.Object
     {
         if (service == null)

@@ -16,6 +16,8 @@ public sealed class RuntimeBootstrapOwner : MonoBehaviour
 
     void Awake()
     {
+        ValidateOwnedServices();
+
         if (lifetime == ServiceLifetime.Persistent)
         {
             DontDestroyOnLoad(gameObject);
@@ -31,6 +33,51 @@ public sealed class RuntimeBootstrapOwner : MonoBehaviour
         {
             OwnersById.Remove(ownerId);
         }
+    }
+
+    void ValidateOwnedServices()
+    {
+        if (ownedServices == null)
+        {
+            return;
+        }
+
+        var serviceTypes = new HashSet<System.Type>();
+        for (var i = 0; i < ownedServices.Length; i++)
+        {
+            var service = ownedServices[i];
+            if (service == null)
+            {
+                Debug.LogError("RuntimeBootstrapOwner ownedServices contains a null entry at index " + i + ".", this);
+                continue;
+            }
+
+            var serviceType = service.GetType();
+            if (!serviceTypes.Add(serviceType))
+            {
+                Debug.LogError("Duplicate owned runtime service component type found under owner " + OwnerLabel() + ": " + serviceType.FullName + ".", this);
+            }
+
+            ServiceLifetime serviceLifetime;
+            if (!RuntimeServices.TryGetDeclaredLifetime(serviceType, out serviceLifetime))
+            {
+                continue;
+            }
+
+            if (lifetime == ServiceLifetime.Persistent && serviceLifetime == ServiceLifetime.Scene)
+            {
+                Debug.LogError("Persistent RuntimeBootstrapOwner " + OwnerLabel() + " contains scene-lifetime-only service: " + serviceType.FullName + ".", service);
+            }
+            else if (lifetime == ServiceLifetime.Scene && serviceLifetime == ServiceLifetime.Persistent)
+            {
+                Debug.LogError("Scene RuntimeBootstrapOwner " + OwnerLabel() + " contains persistent service: " + serviceType.FullName + ".", service);
+            }
+        }
+    }
+
+    string OwnerLabel()
+    {
+        return string.IsNullOrEmpty(ownerId) ? name : ownerId;
     }
 
     void ValidateUniqueOwnerId()
@@ -54,6 +101,8 @@ public sealed class RuntimeBootstrapOwner : MonoBehaviour
 #if UNITY_EDITOR
     void OnValidate()
     {
+        ValidateOwnedServiceTypesOnly();
+
         if (string.IsNullOrEmpty(ownerId))
         {
             return;
@@ -65,6 +114,29 @@ public sealed class RuntimeBootstrapOwner : MonoBehaviour
             {
                 Debug.LogError("Duplicate RuntimeBootstrapOwner ownerId found: " + ownerId + ".", this);
                 return;
+            }
+        }
+    }
+
+    void ValidateOwnedServiceTypesOnly()
+    {
+        if (ownedServices == null)
+        {
+            return;
+        }
+
+        var serviceTypes = new HashSet<System.Type>();
+        foreach (var service in ownedServices)
+        {
+            if (service == null)
+            {
+                continue;
+            }
+
+            var serviceType = service.GetType();
+            if (!serviceTypes.Add(serviceType))
+            {
+                Debug.LogError("Duplicate owned runtime service component type found under owner " + OwnerLabel() + ": " + serviceType.FullName + ".", this);
             }
         }
     }

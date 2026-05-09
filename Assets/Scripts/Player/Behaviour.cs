@@ -171,6 +171,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     public string Wallet;
     public GameObject AimIcon;
     public CinemachineFreeLook FreeLook;
+    [SerializeField] PlayerCameraReference cameraReference = new PlayerCameraReference();
     public CinemachineFreeLook CamForTraders;
     public float ChangeSpeech = 1F;
     GameInputReader inputReader;
@@ -181,6 +182,19 @@ public class Behaviour : MonoBehaviour, IDamageable
     PlayerMovementController movementController;
     PlayerFailureController failureController;
 
+    PlayerCameraReference GameplayCamera
+    {
+        get
+        {
+            if (cameraReference == null)
+            {
+                cameraReference = new PlayerCameraReference();
+            }
+
+            cameraReference.Configure(this, FreeLook);
+            return cameraReference;
+        }
+    }
 
     PlayerHealthController Health
     {
@@ -604,8 +618,12 @@ public class Behaviour : MonoBehaviour, IDamageable
         //Strafe
         if (keepLooking == true)
         {
-            Vector3 forwardFace = Camera.main.transform.TransformDirection(Vector3.forward);
-            rotGoal = SafeRotation.LookRotationOrCurrent(new Vector3(forwardFace.x, 0, forwardFace.z), transform.rotation);
+            if (!GameplayCamera.TryGetPlanarBasis(out Vector3 forwardFace, out _))
+            {
+                return;
+            }
+
+            rotGoal = SafeRotation.LookRotationOrCurrent(forwardFace, transform.rotation);
             transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
             Otter.SetBool("walk", false);
             if (Input.GetKey(KeyCode.W))
@@ -695,7 +713,11 @@ public class Behaviour : MonoBehaviour, IDamageable
     [Obsolete]
     public void RotateForward()
     {
-        Vector3 camForward = Camera.main.transform.TransformDirection(Vector3.forward);
+        if (!GameplayCamera.TryGetPlanarBasis(out Vector3 camForward, out _))
+        {
+            return;
+        }
+
         Quaternion direction = SafeRotation.LookRotationOrCurrent(camForward, Spine.rotation);
         if (bowEquipped==false)
         {
@@ -1516,16 +1538,13 @@ public class Behaviour : MonoBehaviour, IDamageable
         }
 
         //Camera vectors setup
-        Vector3 cameraRelativeForward = Camera.main.transform.TransformDirection(Vector3.forward);
-        Vector3 cameraRelativeBack = Camera.main.transform.TransformDirection(Vector3.back);
-        Vector3 cameraRelativeRight = Camera.main.transform.TransformDirection(Vector3.right);
-        Vector3 cameraRelativeLeft = Camera.main.transform.TransformDirection(Vector3.left);
+        if (!GameplayCamera.TryGetPlanarBasis(out Vector3 XZForward, out Vector3 XZRight))
+        {
+            return;
+        }
 
-        //Horizontal camera vectors
-        Vector3 XZForward = new(cameraRelativeForward.x, 0, cameraRelativeForward.z);
-        Vector3 XZBack = new(cameraRelativeBack.x, 0, cameraRelativeBack.z);
-        Vector3 XZRight = new(cameraRelativeRight.x, 0, cameraRelativeRight.z);
-        Vector3 XZLeft = new(cameraRelativeLeft.x, 0, cameraRelativeLeft.z);
+        Vector3 XZBack = -XZForward;
+        Vector3 XZLeft = -XZRight;
 
         //Switch off additional animations if not invoked
         {
@@ -1558,7 +1577,7 @@ public class Behaviour : MonoBehaviour, IDamageable
                 Otter.Play("Aim");
                 if (Input.GetKeyDown(KeyCode.Mouse1))
                 {
-                    rotGoal = SafeRotation.LookRotationOrCurrent(cameraRelativeForward, transform.rotation);
+                    rotGoal = SafeRotation.LookRotationOrCurrent(XZForward, transform.rotation);
                     transform.rotation = rotGoal;
                     Otter.Play("Crouch");
                 }
@@ -1586,7 +1605,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         {
             if (Input.GetKeyDown(KeyCode.Mouse1) && !Input.GetKeyUp(KeyCode.Mouse1))
             {
-                rotGoal = SafeRotation.LookRotationOrCurrent(cameraRelativeForward, transform.rotation);
+                rotGoal = SafeRotation.LookRotationOrCurrent(XZForward, transform.rotation);
                 transform.rotation = rotGoal;
                 if (arrowMunition > 0 &&
                 CurrentStamina > 0)
@@ -1621,7 +1640,7 @@ public class Behaviour : MonoBehaviour, IDamageable
             if (arrowReady == true && Input.GetKeyUp(KeyCode.Mouse1) && CurrentStamina > 0)
             {
                 Sound.ArrowShoot();
-                Instantiate(Arrow, Spine.position + new Vector3(0,1.4f * cameraRelativeForward.normalized.y, 1.4f * cameraRelativeForward.normalized.z), SafeRotation.LookRotationOrCurrent(cameraRelativeForward, transform.rotation)* Quaternion.Euler(90, 0, 0));
+                Instantiate(Arrow, Spine.position + XZForward * 1.4f, SafeRotation.LookRotationOrCurrent(XZForward, transform.rotation) * Quaternion.Euler(90, 0, 0));
                 CurrentStamina -= 30;
                 if (HealthBar != null)
                 {

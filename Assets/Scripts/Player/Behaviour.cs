@@ -607,6 +607,12 @@ public class Behaviour : MonoBehaviour, IDamageable
     public void HandleFailure(PlayerFailureReason reason) => Failure.HandleFailure(reason);
     public void PlayerMove(Vector3 Direction)
     {
+        if (!CanProcessPlayerGameplay())
+        {
+            ResetBlockedGameplayInputState();
+            return;
+        }
+
         movementInvoked = true;
         //Regular walk
         if (keepLooking==false)
@@ -685,6 +691,12 @@ public class Behaviour : MonoBehaviour, IDamageable
     }
     public void PlayerRoll(Vector3 Direction)
     {
+        if (!CanProcessPlayerGameplay())
+        {
+            ResetBlockedGameplayInputState();
+            return;
+        }
+
         rotGoal = SafeRotation.LookRotationOrCurrent(new Vector3(Direction.x, 0, Direction.z), transform.rotation);
         transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.11f);
         //Evading Roll action
@@ -713,6 +725,12 @@ public class Behaviour : MonoBehaviour, IDamageable
     [Obsolete]
     public void RotateForward()
     {
+        if (!CanProcessPlayerGameplay())
+        {
+            ResetBlockedGameplayInputState();
+            return;
+        }
+
         if (!GameplayCamera.TryGetPlanarBasis(out Vector3 camForward, out _))
         {
             return;
@@ -931,10 +949,48 @@ public class Behaviour : MonoBehaviour, IDamageable
         return inputReader;
     }
 
-    bool IsGameplayInputBlocked()
+    bool CanProcessPlayerGameplay()
     {
         var reader = GetInputReader();
-        return reader != null && !reader.IsGameplayInputEnabled;
+        var flow = GameFlowController.GetOrCreate();
+        return reader != null
+            && reader.IsGameplayInputEnabled
+            && flow != null
+            && flow.State == GameFlowState.Playing
+            && Player != null
+            && Otter != null;
+    }
+
+    void ResetBlockedGameplayInputState()
+    {
+        movementInvoked = false;
+        Rolling = false;
+        keepLooking = false;
+        speed = Walk;
+        steer = 0.1f;
+
+        if (Player != null)
+        {
+            Player.velocity = new Vector3(0f, Player.velocity.y, 0f);
+        }
+
+        if (Otter == null)
+        {
+            return;
+        }
+
+        Otter.SetBool("aim", false);
+        Otter.SetBool("draw", false);
+        Otter.SetBool("roll", false);
+        Otter.SetBool("run", false);
+        Otter.SetBool("walk", false);
+        Otter.SetBool("strafeForward", false);
+        Otter.SetBool("strafeBack", false);
+        Otter.SetBool("strafeLeft", false);
+        Otter.SetBool("strafeRight", false);
+        Otter.SetBool("climb", false);
+        Otter.SetBool("midair", false);
+        Otter.SetBool("moving", false);
     }
 
     void HandleDeathState() => Health.HandleDeathState();
@@ -1074,8 +1130,9 @@ public class Behaviour : MonoBehaviour, IDamageable
     public void Update()
     {
         HandleDeathState();
-        if (IsGameplayInputBlocked())
+        if (!CanProcessPlayerGameplay())
         {
+            ResetBlockedGameplayInputState();
             return;
         }
 
@@ -1510,8 +1567,9 @@ public class Behaviour : MonoBehaviour, IDamageable
     [Obsolete]
     public void LateUpdate()
     {
-        if (IsGameplayInputBlocked())
+        if (!CanProcessPlayerGameplay())
         {
+            ResetBlockedGameplayInputState();
             return;
         }
 
@@ -1532,8 +1590,9 @@ public class Behaviour : MonoBehaviour, IDamageable
     [System.Obsolete]
     public void FixedUpdate()
     {
-        if (IsGameplayInputBlocked())
+        if (!CanProcessPlayerGameplay())
         {
+            ResetBlockedGameplayInputState();
             return;
         }
 

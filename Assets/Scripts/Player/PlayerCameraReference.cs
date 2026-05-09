@@ -45,7 +45,7 @@ public sealed class PlayerCameraReference
             return false;
         }
 
-        var basisRotation = GetBasisRotation();
+        Quaternion basisRotation = GetCachedBasisRotation();
         forward = Flatten(basisRotation * Vector3.forward);
         right = Flatten(basisRotation * Vector3.right);
         if (forward.sqrMagnitude < MinPlanarSqrMagnitude || right.sqrMagnitude < MinPlanarSqrMagnitude)
@@ -84,7 +84,7 @@ public sealed class PlayerCameraReference
 
         if (IsFreeLookValid())
         {
-            Cache(freeLook.transform, null, Source.FreeLookState);
+            Cache(freeLook.VirtualCameraGameObject.transform, null, Source.FreeLook);
             return true;
         }
 
@@ -107,7 +107,7 @@ public sealed class PlayerCameraReference
                 return !TryGetBrainOutputCamera(out _)
                     && !IsCameraValid(Camera.main)
                     && IsFreeLookValid()
-                    && cachedTransform == freeLook.transform;
+                    && cachedTransform == freeLook.VirtualCameraGameObject.transform;
             case Source.BrainCamera:
             case Source.MainCamera:
                 return IsCameraValid(cachedCamera);
@@ -135,9 +135,9 @@ public sealed class PlayerCameraReference
         cachedSource = Source.None;
     }
 
-    Quaternion GetBasisRotation()
+    Quaternion GetCachedBasisRotation()
     {
-        if (cachedSource == Source.FreeLookState && IsFreeLookValid())
+        if (cachedSource == Source.FreeLook && freeLook != null)
         {
             return freeLook.State.FinalOrientation;
         }
@@ -147,7 +147,10 @@ public sealed class PlayerCameraReference
 
     bool IsFreeLookValid()
     {
-        return freeLook != null && freeLook.enabled && freeLook.gameObject.activeInHierarchy;
+        return freeLook != null
+            && freeLook.enabled
+            && freeLook.VirtualCameraGameObject != null
+            && freeLook.VirtualCameraGameObject.activeInHierarchy;
     }
 
     static bool TryGetBrainOutputCamera(out Camera outputCamera)

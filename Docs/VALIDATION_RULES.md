@@ -1,7 +1,35 @@
 # Validation Rules
 
+## Editor prefab integration validation
+
+Run `Tools/BeaverMania/Validation/Run Prefab Integration Validation` after prefab, ownership, runtime service, or serialized-reference changes.
+
+Menu items:
+
+- `Tools/BeaverMania/Validation/Run Prefab Integration Validation`: full prefab scan.
+- `Tools/BeaverMania/Validation/Validate References`: missing `MonoBehaviour` scripts and detectable missing serialized object references.
+- `Tools/BeaverMania/Validation/Validate Service Ownership`: runtime service duplication, ownership markers, and unapproved service locations.
+
+The validator scans all project prefabs with `AssetDatabase.FindAssets("t:Prefab")` and prints one deterministic Unity console report sorted by rule, prefab path, and detail.
+
+### Rules
+
+- Missing `MonoBehaviour` scripts are errors.
+- Serialized object references are errors when a referenced asset GUID is missing, or when a non-prefab-instance-backed local `fileID` does not exist in the prefab YAML.
+- A component type whose script calls `RuntimeServices.Register` may appear in only one prefab unless this document and the validator allow-list are updated.
+- Runtime service components are allowed only in approved service owner prefabs:
+  - `Assets/Prefabs/Objects/UI/GameMusic.prefab`
+  - `Assets/Prefabs/OtterPlayer/Otter_Shapekeys/Player.prefab`
+- Focus prefabs must keep ownership markers:
+  - `Assets/Prefabs/Objects/UI/GameMusic.prefab`: `RuntimeBootstrapOwner.ownerId=runtime-bootstrap`
+  - `Assets/Prefabs/OtterPlayer/Otter_Shapekeys/Player.prefab`: `PrefabRuntimeHardening`
+  - `Assets/Prefabs/Wasp/LVL1 Wasp.prefab`: `PrefabRuntimeHardening`
+  - `Assets/Prefabs/Scorpion/ScorpionBoss.prefab`: `PrefabRuntimeHardening`
+- Nested prefab instances containing runtime service components outside approved owner prefabs are errors.
+
 ## Required checks
 
+- Run `Tools/BeaverMania/Validation/Run Prefab Integration Validation` before committing prefab integration changes.
 - Run `Tools/Runtime Services/Validate Prefab Registrations` after adding, moving, removing, or variant-overriding any component that calls `RuntimeServices.Register`.
 - Run prefab play-mode smoke tests after changing required refs, tags, layers, animation paths, hitboxes, or UI event wiring.
 - Keep `PrefabRuntimeHardening.requiredComponents` and `requiredObjects` aligned with this documentation.

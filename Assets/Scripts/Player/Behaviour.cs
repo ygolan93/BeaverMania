@@ -560,9 +560,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         }
         if (OBJ.gameObject.CompareTag("House"))
         {
-            FreeLook.m_Orbits[0].m_Radius = 1f;
-            FreeLook.m_Orbits[1].m_Radius = 2f;
-            FreeLook.m_Orbits[2].m_Radius =1f;
+            TrySetFreeLookOrbits(FreeLook, 1f, 2f, 1f);
         }
         if (OBJ.gameObject.CompareTag("What Is this?"))
         {
@@ -592,9 +590,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         }
         if (OBJ.gameObject.CompareTag("House"))
         {
-            FreeLook.m_Orbits[0].m_Radius = 4;
-            FreeLook.m_Orbits[1].m_Radius = 6;
-            FreeLook.m_Orbits[2].m_Radius = 5;
+            TrySetFreeLookOrbits(FreeLook, 4f, 6f, 5f);
             //FreeLook.m_Lens.FieldOfView = 25;
         }
         if (OBJ.gameObject.CompareTag("Scorpion"))
@@ -1019,8 +1015,6 @@ public class Behaviour : MonoBehaviour, IDamageable
             RuntimeReferenceValidator.Require(MunitionDisplay, this, nameof(MunitionDisplay)) &
             RuntimeReferenceValidator.Require(LooseScreen, this, nameof(LooseScreen)) &
             RuntimeReferenceValidator.Require(AimIcon, this, nameof(AimIcon)) &
-            RuntimeReferenceValidator.Require(FreeLook, this, nameof(FreeLook)) &
-            RuntimeReferenceValidator.Require(CamForTraders, this, nameof(CamForTraders)) &
             RuntimeReferenceValidator.Require(HologramedBridge, this, nameof(HologramedBridge)) &
             RuntimeReferenceValidator.Require(appleOBJ, this, nameof(appleOBJ)) &
             RuntimeReferenceValidator.Require(gobletOBJ, this, nameof(gobletOBJ));
@@ -1041,7 +1035,59 @@ public class Behaviour : MonoBehaviour, IDamageable
             }
         }
 
+        WarnMissingCameraReference(FreeLook, nameof(FreeLook));
+        WarnMissingCameraReference(CamForTraders, nameof(CamForTraders));
+
         return valid;
+    }
+
+    bool TrySetFreeLookOrbits(CinemachineFreeLook cam, float top, float mid, float bottom)
+    {
+        if (!WarnMissingCameraReference(cam, nameof(FreeLook)))
+        {
+            return false;
+        }
+
+        if (cam.m_Orbits == null || cam.m_Orbits.Length < 3)
+        {
+            BuildSafeLogger.WarnOnce(
+                nameof(Behaviour) + ".InvalidFreeLookOrbits",
+                "FreeLook camera does not have the expected three orbit rigs.",
+                this,
+                nameof(FreeLook));
+            return false;
+        }
+
+        cam.m_Orbits[0].m_Radius = top;
+        cam.m_Orbits[1].m_Radius = mid;
+        cam.m_Orbits[2].m_Radius = bottom;
+        return true;
+    }
+
+    bool TrySetTraderCameraEnabled(bool enabled)
+    {
+        if (!WarnMissingCameraReference(CamForTraders, nameof(CamForTraders)))
+        {
+            return false;
+        }
+
+        CamForTraders.enabled = enabled;
+        return true;
+    }
+
+    bool WarnMissingCameraReference(CinemachineFreeLook cam, string fieldName)
+    {
+        if (cam != null)
+        {
+            return true;
+        }
+
+        BuildSafeLogger.WarnOnce(
+            nameof(Behaviour) + ".MissingCameraReference." + fieldName,
+            fieldName + " is not assigned; camera-specific behaviour will be skipped.",
+            this,
+            fieldName);
+        return false;
     }
 
     public void Start()
@@ -1060,7 +1106,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         Failure.Initialize(this);
         arrowModel.SetActive(false);
         bowAim = new Vector3(-0.33f, 20f, -0.3f);
-        CamForTraders.enabled = false;
+        TrySetTraderCameraEnabled(false);
         if (PopUpEffect != null && Root != null)
         {
             Instantiate(PopUpEffect, Root.position, Quaternion.identity);
@@ -1127,9 +1173,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         {
             Bow[i].SetActive(false);
         }
-        FreeLook.m_Orbits[0].m_Radius = 4;
-        FreeLook.m_Orbits[1].m_Radius = 6;
-        FreeLook.m_Orbits[2].m_Radius = 5;
+        TrySetFreeLookOrbits(FreeLook, 4f, 6f, 5f);
     }
     [System.Obsolete]
     public void Update()
@@ -1228,7 +1272,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         Health.ClampStaminaAndParry();
         //Crouch action - Place Logs
         {
-            if (Input.GetKey(KeyCode.LeftControl)&& FreeLook.m_Lens.FieldOfView<20)
+            if (FreeLook != null && Input.GetKey(KeyCode.LeftControl) && FreeLook.m_Lens.FieldOfView < 20)
             {
                 FreeLook.m_LookAt = Face;
             }

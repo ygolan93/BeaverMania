@@ -1,5 +1,7 @@
 using UnityEngine;
 
+/// <summary>Legacy compatibility marker. Prefer RuntimeBootstrapOwner for runtime bootstrap persistence metadata.</summary>
+[AddComponentMenu("Legacy/DoNotDestroy (Legacy)")]
 public class DoNotDestroy : MonoBehaviour
 {
     private static readonly System.Collections.Generic.HashSet<System.Type> PersistentTypes =

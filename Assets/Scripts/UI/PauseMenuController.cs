@@ -36,7 +36,7 @@ public class PauseMenuController : MonoBehaviour
         }
 
         gameFlow = GameFlowController.GetOrCreate();
-        gameFlow.SetPlaying();
+        gameFlow.TrySetPlayingFromSceneStartup(nameof(PauseMenuController));
         Player = playerObject.GetComponent<Behaviour>();
         if (!RuntimeReferenceValidator.Require(Player, this, nameof(Player)) ||
             !RuntimeReferenceValidator.Require(PauseMenu, this, nameof(PauseMenu)) ||

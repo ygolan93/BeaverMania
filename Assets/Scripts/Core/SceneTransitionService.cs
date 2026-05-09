@@ -250,7 +250,7 @@ public class SceneTransitionService : MonoBehaviour
             if (isMenu)
             {
                 CursorStateService.GetOrCreate().ShowCursor();
-                GameInputReader.GetOrCreate().EnableUiInput();
+                GameFlowController.GetOrCreate().SetMainMenu();
             }
             else
             {

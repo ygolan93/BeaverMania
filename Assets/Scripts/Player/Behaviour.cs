@@ -969,7 +969,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         }
 
         inputReader = GameInputReader.GetOrCreate();
-        GameFlowController.GetOrCreate().SetPlaying();
+        GameFlowController.GetOrCreate().TrySetPlayingFromSceneStartup(nameof(Behaviour));
         Inventory.Initialize(this);
         Interaction.Initialize(this, inputReader);
         Combat.Initialize(this);

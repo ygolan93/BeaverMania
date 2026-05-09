@@ -12,12 +12,20 @@ public class AnimatedAttack : MonoBehaviour
 
     private void Start()
     {
-        Player = transform.parent.GetComponent<Behaviour>();
-        GlowEffect.SetActive(false);
+        Player = GetComponentInParent<Behaviour>();
+        if (GlowEffect != null)
+        {
+            GlowEffect.SetActive(false);
+        }
     }
 
     public void CauseDamage(Vector3 origin, float range, int Damage)
     {
+        if (range <= 0f)
+        {
+            return;
+        }
+
         Collider[] hitEnemies = Physics.OverlapSphere(origin, range, enemyLayers);
         foreach (Collider enemy in hitEnemies)
         {
@@ -39,19 +47,28 @@ public class AnimatedAttack : MonoBehaviour
                 case "NPC":
                     {
                         var Wasp = enemy.gameObject.GetComponent<NPC_Basic>();
-                        Wasp.TakeDamage(Damage);
+                        if (Wasp != null)
+                        {
+                            Wasp.TakeDamage(Damage);
+                        }
                         break;
                     }
                 case "Hive":
                     {
                         var Hive = enemy.gameObject.GetComponent<Static_Hive>();
-                        Hive.TakeDamage(Damage);
+                        if (Hive != null)
+                        {
+                            Hive.TakeDamage(Damage);
+                        }
                         break;
                     }
                 case "Scorpion":
                     {
                         var Scorpion = enemy.gameObject.GetComponent<ScorpionScript>();
-                        Scorpion.TakeDamage(Damage);
+                        if (Scorpion != null)
+                        {
+                            Scorpion.TakeDamage(Damage);
+                        }
                         break;
                     }
             }
@@ -61,13 +78,21 @@ public class AnimatedAttack : MonoBehaviour
 
     public void RollAttack()
     {
-        CauseDamage(AttackPoint.position, 1.5f, 200);
+        if (AttackPoint != null)
+        {
+            CauseDamage(AttackPoint.position, 1.5f, 200);
+        }
     }
 
     public void GroundAttack()
     {
-        var arsenal = Player.GetComponent<Behaviour>().Arsenal;
-        var weapon = Player.GetComponent<Behaviour>().arsenalBrowser;
+        if (Player == null || AttackPoint == null || Sphere == null || Player.Arsenal == null || Player.Arsenal.Count == 0)
+        {
+            return;
+        }
+
+        var arsenal = Player.Arsenal;
+        var weapon = Mathf.Clamp(Player.arsenalBrowser, 0, arsenal.Count - 1);
         switch (arsenal[weapon])
         {
             case "Bare Hands":
@@ -96,8 +121,13 @@ public class AnimatedAttack : MonoBehaviour
     }
     public void AirAttack()
     {
-        var arsenal = Player.GetComponent<Behaviour>().Arsenal;
-        var weapon = Player.GetComponent<Behaviour>().arsenalBrowser;
+        if (Player == null || Sphere == null || Player.Arsenal == null || Player.Arsenal.Count == 0)
+        {
+            return;
+        }
+
+        var arsenal = Player.Arsenal;
+        var weapon = Mathf.Clamp(Player.arsenalBrowser, 0, arsenal.Count - 1);
         switch (arsenal[weapon])
         {
             case "Bare Hands":
@@ -120,20 +150,32 @@ public class AnimatedAttack : MonoBehaviour
 
     public void ShieldParryON()
     {
-        Player.ParryON();
+        if (Player != null)
+        {
+            Player.ParryON();
+        }
     }
     public void ShieldParryOFF()
     {
-        Player.ParryOFF();
+        if (Player != null)
+        {
+            Player.ParryOFF();
+        }
     }
 
     public void TurnOnGlow()
     {
-        GlowEffect.SetActive(true);
+        if (GlowEffect != null)
+        {
+            GlowEffect.SetActive(true);
+        }
     }
 
     public void TurnOffGlow()
     {
-        GlowEffect.SetActive(false);
+        if (GlowEffect != null)
+        {
+            GlowEffect.SetActive(false);
+        }
     }
 }

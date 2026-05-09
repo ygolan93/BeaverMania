@@ -145,18 +145,35 @@ public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
         isDead = true;
         deathResolved = true;
         feedback?.EmitDeath();
-        Explosion.SetActive(true);
-        Explosion.transform.parent = null;
-        foreach (var OBJ in SpawnedObjects)
+        if (Explosion != null)
         {
-            spawnedOnDeath.Add(Instantiate(OBJ, gameObject.transform.position, Quaternion.identity));
+            Explosion.SetActive(true);
+            Explosion.transform.parent = null;
+        }
 
-        }
-        for (int i = 0; i < 30; i++)
+        if (SpawnedObjects != null)
         {
-            spawnedOnDeath.Add(Instantiate(Wasp, gameObject.transform.position, Quaternion.identity).gameObject);
+            foreach (var OBJ in SpawnedObjects)
+            {
+                if (OBJ != null)
+                {
+                    spawnedOnDeath.Add(Instantiate(OBJ, gameObject.transform.position, Quaternion.identity));
+                }
+            }
         }
-        Hive.SetActive(false);
+
+        if (Wasp != null)
+        {
+            for (int i = 0; i < 30; i++)
+            {
+                spawnedOnDeath.Add(Instantiate(Wasp, gameObject.transform.position, Quaternion.identity).gameObject);
+            }
+        }
+
+        if (Hive != null)
+        {
+            Hive.SetActive(false);
+        }
     }
 
     public void TakeDamage(int Damage) => TakeDamage(new DamageEvent { Amount = Damage, Source = null, Point = transform.position, Type = DamageType.Generic, CanStun = false });
@@ -172,7 +189,14 @@ public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
             feedback?.EmitHit();
         }
         CurrentHealth -= Mathf.RoundToInt(damageEvent.Amount);
-        Sound.Play();
-        HiveBar.SetNPCHealth(CurrentHealth);
+        if (Sound != null)
+        {
+            Sound.Play();
+        }
+
+        if (HiveBar != null)
+        {
+            HiveBar.SetNPCHealth(CurrentHealth);
+        }
     }
 }

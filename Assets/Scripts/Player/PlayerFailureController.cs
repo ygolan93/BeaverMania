@@ -75,7 +75,7 @@ public class PlayerFailureController : MonoBehaviour
 
     void RestartCheckpointForCompatibility()
     {
-        if (owner.Lives <= 1)
+        if (owner.Lives <= 0)
         {
             owner.Lives = 0;
             owner.ActivateLooseMenu();

@@ -7,6 +7,7 @@ public class LoadingScreenController : MonoBehaviour
     public Slider loadingBar; // Reference to a loading progress bar (if applicable)
     public float fillSpeed = 0.5f; // Speed at which the loading bar fills (adjust as needed)
 
+    private static string activeLoadScene;
     private bool isLoading;
 
     void Start()
@@ -18,14 +19,23 @@ public class LoadingScreenController : MonoBehaviour
         }
     }
 
-    public void LoadScene(string sceneName)
+    void OnDestroy()
     {
         if (isLoading)
+        {
+            activeLoadScene = null;
+        }
+    }
+
+    public void LoadScene(string sceneName)
+    {
+        if (string.IsNullOrWhiteSpace(sceneName) || isLoading || !string.IsNullOrEmpty(activeLoadScene))
         {
             return;
         }
 
         isLoading = true;
+        activeLoadScene = sceneName;
 
         // Activate the loading screen canvas
         if (loadingScreen != null)
@@ -44,6 +54,7 @@ public class LoadingScreenController : MonoBehaviour
         if (operation == null)
         {
             isLoading = false;
+            activeLoadScene = null;
 
             if (loadingScreen != null)
             {
@@ -93,5 +104,6 @@ public class LoadingScreenController : MonoBehaviour
         }
 
         isLoading = false;
+        activeLoadScene = null;
     }
 }

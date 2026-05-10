@@ -272,7 +272,7 @@ public class PauseMenuController : MonoBehaviour
 
             if (active)
             {
-                SelectPanelObject(firstSelection, owner, fieldName);
+                SelectPanelObject(panel, firstSelection, owner, fieldName);
             }
 
             return;
@@ -285,7 +285,7 @@ public class PauseMenuController : MonoBehaviour
             fieldName);
     }
 
-    static void SelectPanelObject(GameObject selection, PauseMenuController owner, string fieldName)
+    static void SelectPanelObject(GameObject panel, GameObject selection, PauseMenuController owner, string fieldName)
     {
         var eventSystem = EventSystem.current;
         if (eventSystem == null)
@@ -294,7 +294,31 @@ public class PauseMenuController : MonoBehaviour
             return;
         }
 
-        eventSystem.SetSelectedGameObject(selection);
+        eventSystem.SetSelectedGameObject(ResolveSelection(panel, selection));
+    }
+
+    static GameObject ResolveSelection(GameObject panel, GameObject selection)
+    {
+        if (selection != null)
+        {
+            return selection;
+        }
+
+        if (panel == null)
+        {
+            return null;
+        }
+
+        var selectables = panel.GetComponentsInChildren<Selectable>();
+        foreach (var selectable in selectables)
+        {
+            if (selectable != null && selectable.IsInteractable() && selectable.gameObject != panel)
+            {
+                return selectable.gameObject;
+            }
+        }
+
+        return null;
     }
 
     static void ClearSelectionIfPanelOwnsIt(GameObject panel, PauseMenuController owner, string fieldName)

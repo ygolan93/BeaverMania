@@ -2,8 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(AudioSource))]
 public class MusicPlaylist : MonoBehaviour
 {
+    // GameMusic.prefab persists music only; it is not a runtime bootstrap owner.
     public AudioSource MusicSource;
     [SerializeField] AudioClip[] MusicClip;
     private int currentSong = 0;
@@ -68,16 +70,31 @@ public class MusicPlaylist : MonoBehaviour
 
     public void StopMusic()
     {
+        if (MusicSource == null)
+        {
+            return;
+        }
+
         MusicSource.Pause();
     }
 
     public void ResumeMusic()
     {
+        if (MusicSource == null)
+        {
+            return;
+        }
+
         MusicSource.Play();
     }
 
     public void ChangeSong(int newSongIndex)
     {
+        if (MusicSource == null || MusicClip == null || MusicClip.Length == 0)
+        {
+            return;
+        }
+
         if (newSongIndex >= 0 && newSongIndex < MusicClip.Length)
         {
             currentSong = newSongIndex;

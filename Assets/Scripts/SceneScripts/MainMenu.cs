@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class MainMenu : MonoBehaviour
 {
+    private bool playRequested;
+
     //double Timer=57;
     //Behavior Ottis;
     //Start is called before the first frame update
@@ -17,6 +19,12 @@ public class MainMenu : MonoBehaviour
     //}
     public void PlayGame()
     {
+        if (playRequested)
+        {
+            return;
+        }
+
+        playRequested = true;
         SceneTransitionService.LoadLevel1();
     }
     public void QuitGame()

@@ -183,7 +183,8 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
         {
             foreach (var animatorBool in initialAnimatorBools)
             {
-                SetWaspBool(animatorBool.Key, animatorBool.Value);
+                // Restore cached bools through the guarded setter with the Wasp animator.
+                SetAnimatorBoolIfChanged(Wasp, animatorBool.Key, animatorBool.Value);
             }
         }
 

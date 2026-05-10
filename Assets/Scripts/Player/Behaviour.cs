@@ -199,6 +199,11 @@ public class Behaviour : MonoBehaviour, IDamageable
         }
     }
 
+    public bool TryGetGameplayCamera(out Camera gameplayCamera)
+    {
+        return GameplayCamera.TryGetCamera(out gameplayCamera);
+    }
+
     PlayerHealthController Health
     {
         get

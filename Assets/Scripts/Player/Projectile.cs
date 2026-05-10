@@ -18,8 +18,11 @@ public class Projectile : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        var mainCamera = Camera.main;
         PlayerReference.TryGetPlayer(out Player);
+        if (Player == null || !Player.TryGetGameplayCamera(out var mainCamera))
+        {
+            PlayerCameraReference.TryGetActiveGameplayCamera(out mainCamera, this);
+        }
 
         if (!ValidateReferences(mainCamera))
         {

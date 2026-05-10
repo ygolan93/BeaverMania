@@ -10,10 +10,12 @@ public class WayPoint : MonoBehaviour
     public Transform[] Locations;
     public Transform Arrow;
     public int i;
+    readonly PlayerCameraReference cameraReference = new PlayerCameraReference();
 
     // Start is called before the first frame update
     void Start()
     {
+        cameraReference.Configure(this, null);
         Arrow.gameObject.SetActive(false);
         for (int index = 0; index < Locations.Length; index++)
         {
@@ -53,13 +55,19 @@ public class WayPoint : MonoBehaviour
         // Waypoint Mark
         if (target != null)
         {
+            if (!cameraReference.TryGetCamera(out var gameplayCamera))
+            {
+                Mark.enabled = false;
+                return;
+            }
+
             float minX = Mark.GetPixelAdjustedRect().width / 2;
             float maxX = Screen.width - minX;
             float minY = Mark.GetPixelAdjustedRect().height / 2;
             float maxY = Screen.height - minY;
-            Vector2 pos = Camera.main.WorldToScreenPoint(target.position + new Vector3(0, 2, 0));
+            Vector2 pos = gameplayCamera.WorldToScreenPoint(target.position + new Vector3(0, 2, 0));
 
-            if (Vector3.Dot((target.position - transform.position), transform.forward) < 0)
+            if (Vector3.Dot((target.position - gameplayCamera.transform.position), gameplayCamera.transform.forward) < 0)
             {
                 // Target is behind player
                 Mark.enabled = false;

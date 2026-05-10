@@ -13,6 +13,7 @@ public class PauseMenuController : MonoBehaviour
     bool keepCursorVisibleAfterResume;
     [SerializeField] Slider volumeSlider;
     [SerializeField] AudioSource Music;
+    [SerializeField] SettingsController settingsController;
 
     protected virtual void OnEnable()
     {
@@ -136,7 +137,19 @@ public class PauseMenuController : MonoBehaviour
 
     public void Volume()
     {
-        if (Player != null && Player.seekMusic && Music != null && volumeSlider != null)
+        if (volumeSlider == null)
+        {
+            return;
+        }
+
+        var adapter = GetSettingsController();
+        if (adapter != null)
+        {
+            adapter.SetMusicVolume(volumeSlider.value);
+            return;
+        }
+
+        if (Player != null && Player.seekMusic && Music != null)
         {
             Music.volume = volumeSlider.value;
         }
@@ -212,6 +225,16 @@ public class PauseMenuController : MonoBehaviour
         var currentFlow = gameFlow != null ? gameFlow : GameFlowController.Instance;
         return currentFlow != null &&
             (currentFlow.State == GameFlowState.Shop || currentFlow.State == GameFlowState.Dialogue);
+    }
+
+    SettingsController GetSettingsController()
+    {
+        if (settingsController == null)
+        {
+            settingsController = GetComponentInChildren<SettingsController>(true);
+        }
+
+        return settingsController;
     }
 
     GameFlowController GetGameFlow()

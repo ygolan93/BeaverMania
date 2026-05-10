@@ -14520,6 +14520,24 @@ MonoBehaviour:
   Player: {fileID: 0}
   ActivePause: 0
   volumeSlider: {fileID: 7082506645858404237}
+  Music: {fileID: 0}
+  settingsController: {fileID: 7314265830149100999}
+--- !u!114 &7314265830149100999
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5444702970909479657}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 731426583ee745558df549fd9c2a1b84, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  musicSource: {fileID: 0}
+  musicVolumeSlider: {fileID: 7082506645858404237}
+  fullscreenToggle: {fileID: 0}
+  qualityDropdown: {fileID: 0}
 --- !u!224 &3581325046781199432
 RectTransform:
   m_ObjectHideFlags: 0
@@ -17434,6 +17452,7 @@ GameObject:
   - component: {fileID: 5444702970909479658}
   - component: {fileID: 2485461517859228943}
   - component: {fileID: 3566363148136130855}
+  - component: {fileID: 7314265830149100999}
   - component: {fileID: 7082506645900832702}
   m_Layer: 5
   m_Name: PlayerCanvas

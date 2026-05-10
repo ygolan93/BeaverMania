@@ -11,6 +11,12 @@ public class DoNotDestroy : MonoBehaviour
 
     private void Awake()
     {
+        var musicPlaylist = GetComponent<MusicPlaylist>();
+        if (musicPlaylist != null)
+        {
+            musicPlaylist.WarnIfDuplicateMusicObjectExists();
+        }
+
         var serviceType = GetType();
         if (PersistentTypes.Contains(serviceType))
         {

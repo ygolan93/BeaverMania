@@ -11,9 +11,12 @@ public class MusicPlaylist : MonoBehaviour
     private int currentSong = 0;
     private int previousSong = -1;
     private Coroutine playlistCoroutine;
+    private const string MusicTag = "Music";
 
     private void Start()
     {
+        WarnIfDuplicateMusicObjectExists();
+
         if (MusicSource == null)
         {
             MusicSource = GetComponent<AudioSource>();
@@ -30,6 +33,20 @@ public class MusicPlaylist : MonoBehaviour
             return;
         }
         StartPlaylist();
+    }
+
+    private void WarnIfDuplicateMusicObjectExists()
+    {
+        var musicObjects = GameObject.FindGameObjectsWithTag(MusicTag);
+        for (var i = 0; i < musicObjects.Length; i++)
+        {
+            var musicObject = musicObjects[i];
+            if (musicObject != null && musicObject != gameObject && musicObject.activeInHierarchy)
+            {
+                BuildSafeLogger.WarnOnce("MusicPlaylist.DuplicateActiveMusic", "Another active object tagged Music exists: " + musicObject.name, this, missingTag: MusicTag);
+                return;
+            }
+        }
     }
 
     private void StartPlaylist()

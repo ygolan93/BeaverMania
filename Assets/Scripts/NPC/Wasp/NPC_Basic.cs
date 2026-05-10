@@ -183,7 +183,7 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
         {
             foreach (var animatorBool in initialAnimatorBools)
             {
-                SetAnimatorBoolIfChanged(animatorBool.Key, animatorBool.Value);
+                SetWaspBool(animatorBool.Key, animatorBool.Value);
             }
         }
 

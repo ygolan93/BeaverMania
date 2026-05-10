@@ -11,6 +11,11 @@ public class UpdatePlattering : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (Player == null || PlatetringText == null)
+        {
+            return;
+        }
+
         PlatetringText.text = Player.Plattering;
     }
 }

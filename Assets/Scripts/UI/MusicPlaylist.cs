@@ -13,10 +13,13 @@ public class MusicPlaylist : MonoBehaviour
     private Coroutine playlistCoroutine;
     private const string MusicTag = "Music";
 
-    private void Start()
+    private void Awake()
     {
         WarnIfDuplicateMusicObjectExists();
+    }
 
+    private void Start()
+    {
         if (MusicSource == null)
         {
             MusicSource = GetComponent<AudioSource>();
@@ -35,7 +38,7 @@ public class MusicPlaylist : MonoBehaviour
         StartPlaylist();
     }
 
-    private void WarnIfDuplicateMusicObjectExists()
+    internal void WarnIfDuplicateMusicObjectExists()
     {
         var musicObjects = GameObject.FindGameObjectsWithTag(MusicTag);
         for (var i = 0; i < musicObjects.Length; i++)

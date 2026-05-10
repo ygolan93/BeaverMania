@@ -908,7 +908,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     }
     public void GobletON()
     {
-        gobletOBJ.SetActive(true);
+        SetActiveIfChanged(gobletOBJ, true);
         GobletPicked = true;
         AnimSpeed = 3;
         Walk = 7;
@@ -1276,7 +1276,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         Combat.Initialize(this);
         Movement.Initialize(this);
         Failure.Initialize(this);
-        arrowModel.SetActive(false);
+        SetActiveIfChanged(arrowModel, false);
         bowAim = new Vector3(-0.33f, 20f, -0.3f);
         TrySetTraderCameraEnabled(false);
         if (PopUpEffect != null && Root != null)
@@ -1285,7 +1285,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         }
         HideCursor();
         SaveCheckpoint(transform.position);
-        AimIcon.SetActive(false);
+        SetActiveIfChanged(AimIcon, false);
         MunitionDisplay.SetActive(false);
         //Enable/Disable Background music
         if (seekMusic == true)
@@ -1335,8 +1335,8 @@ public class Behaviour : MonoBehaviour, IDamageable
         InsertRun = Run;
         HideLosePanel();
         HologramedBridge.SetActive(false);
-        appleOBJ.SetActive(false);
-        gobletOBJ.SetActive(false);
+        SetActiveIfChanged(appleOBJ, false);
+        SetActiveIfChanged(gobletOBJ, false);
         for (int i = 0; i < ArmorSet.Length; i++)
         {
             ArmorSet[i].SetActive(false);
@@ -1640,7 +1640,7 @@ public class Behaviour : MonoBehaviour, IDamageable
             }
             if (Input.GetKeyUp(KeyCode.T))
             {
-                appleOBJ.SetActive(false);
+                SetActiveIfChanged(appleOBJ, false);
             }
         }
         //Use Goblet
@@ -1661,7 +1661,7 @@ public class Behaviour : MonoBehaviour, IDamageable
 
             if (Input.GetKeyUp(KeyCode.Y))
             {
-                gobletOBJ.SetActive(false);
+                SetActiveIfChanged(gobletOBJ, false);
             }
         }
 
@@ -1790,6 +1790,14 @@ public class Behaviour : MonoBehaviour, IDamageable
         }
     }
 
+    static void SetActiveIfChanged(GameObject target, bool active)
+    {
+        if (target != null && target.activeSelf != active)
+        {
+            target.SetActive(active);
+        }
+    }
+
     [Obsolete]
     public void LateUpdate()
     {
@@ -1851,8 +1859,8 @@ public class Behaviour : MonoBehaviour, IDamageable
                 && !Input.GetKey(KeyCode.LeftControl)
                 && bowEquipped == false && grounded == true)
             {
-                Stone.SetActive(true);
-                AimIcon.SetActive(true);
+                SetActiveIfChanged(Stone, true);
+                SetActiveIfChanged(AimIcon, true);
                 PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Aim, true);
                 Otter.Play("Aim");
                 if (Input.GetKeyDown(KeyCode.Mouse1))
@@ -1878,8 +1886,8 @@ public class Behaviour : MonoBehaviour, IDamageable
             }
             if (!Input.GetKey(KeyCode.Mouse1))
             {
-                Stone.SetActive(false);
-                AimIcon.SetActive(false);
+                SetActiveIfChanged(Stone, false);
+                SetActiveIfChanged(AimIcon, false);
             }
         }
         //Bow action       
@@ -1897,10 +1905,10 @@ public class Behaviour : MonoBehaviour, IDamageable
                     CountArrows();
                     Sound.ArrowDraw();
                     arrowReady = true;
-                    AimIcon.SetActive(true);
+                    SetActiveIfChanged(AimIcon, true);
                     keepLooking = true;
-                    arrowModel.SetActive(true);
-                    bowString.SetActive(false);
+                    SetActiveIfChanged(arrowModel, true);
+                    SetActiveIfChanged(bowString, false);
                     PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Draw, true);
                     stringLine.enabled = true;
                     stringLine.useWorldSpace = false;
@@ -1935,9 +1943,9 @@ public class Behaviour : MonoBehaviour, IDamageable
                 {
                     HealthBar.SetStamina(CurrentStamina);
                 }
-                arrowModel.SetActive(false);
+                SetActiveIfChanged(arrowModel, false);
                 stringLine.enabled = false;
-                bowString.SetActive(true);
+                SetActiveIfChanged(bowString, true);
                 PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Draw, false);
                 arrowReady = false;
             }

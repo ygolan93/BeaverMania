@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class MusicPlaylist : MonoBehaviour
@@ -22,7 +21,7 @@ public class MusicPlaylist : MonoBehaviour
             BuildSafeLogger.ErrorOnce("MusicPlaylist.MissingAudioSource", "No AudioSource component found on the GameObject.", this, missingField: nameof(MusicSource));
             return;
         }
-        if (MusicClip.Length == 0)
+        if (MusicClip == null || MusicClip.Length == 0)
         {
             BuildSafeLogger.ErrorOnce("MusicPlaylist.NoMusicClips", "No music clips assigned in the MusicClip array.", this, missingField: nameof(MusicClip));
             return;
@@ -32,6 +31,11 @@ public class MusicPlaylist : MonoBehaviour
 
     private void StartPlaylist()
     {
+        if (MusicSource == null || MusicClip == null || MusicClip.Length == 0)
+        {
+            return;
+        }
+
         if (playlistCoroutine != null)
         {
             StopCoroutine(playlistCoroutine);
@@ -41,44 +45,64 @@ public class MusicPlaylist : MonoBehaviour
 
     IEnumerator Playlist()
     {
-        while (true)
+        while (MusicSource != null && MusicClip != null && MusicClip.Length > 0)
         {
-            if (currentSong != previousSong)
+            if (currentSong < 0 || currentSong >= MusicClip.Length)
             {
-                PlayCurrentSong();
-                previousSong = currentSong;
+                yield break;
             }
 
-            // Check if the current clip has finished playing
-            if (!MusicSource.isPlaying)
+            AudioClip clip = MusicClip[currentSong];
+            if (clip == null)
             {
-                // Replay the current song
+                BuildSafeLogger.WarnOnce("MusicPlaylist.NullClip." + currentSong, "Null music clip at index: " + currentSong, this);
+                yield break;
+            }
+
+            if (currentSong != previousSong || MusicSource.clip != clip)
+            {
+                PlayCurrentSong(clip);
+                previousSong = currentSong;
+            }
+            else if (!MusicSource.isPlaying)
+            {
                 MusicSource.Play();
             }
 
-            yield return null; // Wait until the next frame to recheck
+            yield return new WaitForSeconds(Mathf.Max(0.05f, clip.length - MusicSource.time));
         }
     }
 
-    private void PlayCurrentSong()
+    private void PlayCurrentSong(AudioClip clip)
     {
-        MusicSource.clip = MusicClip[currentSong];
+        if (MusicSource == null || clip == null)
+        {
+            return;
+        }
+
+        MusicSource.clip = clip;
         MusicSource.Play();
     }
 
     public void StopMusic()
     {
-        MusicSource.Pause();
+        if (MusicSource != null)
+        {
+            MusicSource.Pause();
+        }
     }
 
     public void ResumeMusic()
     {
-        MusicSource.Play();
+        if (MusicSource != null)
+        {
+            MusicSource.Play();
+        }
     }
 
     public void ChangeSong(int newSongIndex)
     {
-        if (newSongIndex >= 0 && newSongIndex < MusicClip.Length)
+        if (MusicClip != null && newSongIndex >= 0 && newSongIndex < MusicClip.Length)
         {
             currentSong = newSongIndex;
             StartPlaylist();

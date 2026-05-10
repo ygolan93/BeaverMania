@@ -110,10 +110,7 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
         SetState(WaspState.Patrol);
         RandoMovement();
         NPC.velocity = Vector3.forward;
-        if (BuzzSource != null)
-        {
-            BuzzSource.SetActive(true);
-        }
+        SetBuzzActive(true);
         CaptureRuntimeState();
     }
 
@@ -186,7 +183,8 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
         {
             foreach (var animatorBool in initialAnimatorBools)
             {
-                Wasp.SetBool(animatorBool.Key, animatorBool.Value);
+                // Restore cached bools through the guarded setter with the Wasp animator.
+                SetAnimatorBoolIfChanged(Wasp, animatorBool.Key, animatorBool.Value);
             }
         }
 
@@ -197,10 +195,7 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
 
         feedback?.ResetFeedback();
 
-        if (BuzzSource != null)
-        {
-            BuzzSource.SetActive(true);
-        }
+        SetBuzzActive(true);
 
         for (int i = spawnedOnDeath.Count - 1; i >= 0; i--)
         {
@@ -211,6 +206,32 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
         }
 
         spawnedOnDeath.Clear();
+    }
+
+    void SetBuzzActive(bool active)
+    {
+        SetActiveIfChanged(BuzzSource, active);
+    }
+
+    void SetWaspBool(string param, bool value)
+    {
+        SetAnimatorBoolIfChanged(Wasp, param, value);
+    }
+
+    static void SetActiveIfChanged(GameObject target, bool active)
+    {
+        if (target != null && target.activeSelf != active)
+        {
+            target.SetActive(active);
+        }
+    }
+
+    static void SetAnimatorBoolIfChanged(Animator animator, string param, bool value)
+    {
+        if (animator != null && animator.GetBool(param) != value)
+        {
+            animator.SetBool(param, value);
+        }
     }
 
     bool ValidateReferences()
@@ -303,7 +324,7 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
 
         if (PlayerDistance > 6)
         {
-            Wasp.SetBool("Beat", false);
+            SetWaspBool("Beat", false);
         }
     }
 
@@ -320,15 +341,8 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
                 RotateTowardVelocity();
                 if (refreshPatrolMovement)
                 {
-                    if (BuzzSource != null)
-                    {
-                        BuzzSource.SetActive(true);
-                    }
-
-                    if (Wasp != null)
-                    {
-                        Wasp.SetBool("Sting", false);
-                    }
+                    SetBuzzActive(true);
+                    SetWaspBool("Sting", false);
 
                     RandoMovement();
                     refreshPatrolMovement = false;
@@ -340,15 +354,8 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
                 break;
             case WaspState.Chase:
                 RotateTowardVelocity();
-                if (BuzzSource != null)
-                {
-                    BuzzSource.SetActive(true);
-                }
-
-                if (Wasp != null)
-                {
-                    Wasp.SetBool("Sting", true);
-                }
+                SetBuzzActive(true);
+                SetWaspBool("Sting", true);
 
                 if (NPC != null)
                 {
@@ -356,10 +363,7 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
                 }
                 break;
             case WaspState.ContactRecover:
-                if (Wasp != null)
-                {
-                    Wasp.SetBool("Sting", false);
-                }
+                SetWaspBool("Sting", false);
 
                 if (NPC != null)
                 {
@@ -468,7 +472,7 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
         {
             if (Wasp != null)
             {
-                Wasp.SetBool("Beat", true);
+                SetWaspBool("Beat", true);
             }
 
             TakeDamage(15);
@@ -489,14 +493,8 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
     }
     public void TurnBack()
     {
-        if (BuzzSource != null)
-        {
-            BuzzSource.SetActive(true);
-        }
-        if (Wasp != null)
-        {
-            Wasp.SetBool("Sting", false);
-        }
+        SetBuzzActive(true);
+        SetWaspBool("Sting", false);
 
         if ((transform.position - SpawnPos).magnitude > LeashDistance)
         {
@@ -549,10 +547,7 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
    public void Stunned()
     {
         StopFloat();
-        if (BuzzSource != null)
-        {
-            BuzzSource.SetActive(false);
-        }
+        SetBuzzActive(false);
 
         floating = false;
         if (NPC != null)
@@ -561,24 +556,15 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
             NPC.useGravity = true;
         }
 
-        if (Wasp != null)
-        {
-            Wasp.SetBool("Stunned", true);
-            Wasp.SetBool("Sting", false);
-        }
+        SetWaspBool("Stunned", true);
+        SetWaspBool("Sting", false);
     }
 
     void Recovered()
     {
-        if (BuzzSource != null)
-        {
-            BuzzSource.SetActive(true);
-        }
+        SetBuzzActive(true);
         floating = false;
-        if (Wasp != null)
-        {
-            Wasp.SetBool("Stunned", false);
-        }
+        SetWaspBool("Stunned", false);
 
         Recovery = RecoverySeconds;
         if (NPC != null)
@@ -609,10 +595,7 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
             }
         }
 
-        if (Wasp != null)
-        {
-            Wasp.SetBool("Sting", false);
-        }
+        SetWaspBool("Sting", false);
 
         if (PlayerHealth.isParried == true)
         {
@@ -648,10 +631,7 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
 
     public void RandoMovement()
     {
-        if (BuzzSource != null)
-        {
-            BuzzSource.SetActive(true);
-        }
+        SetBuzzActive(true);
         if ((SpawnPos - transform.position).magnitude < LeashDistance)
         {
             Recovered();
@@ -673,10 +653,7 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
 
     public void TakeDamage(DamageEvent damageEvent)
     {
-        if (BuzzSource != null)
-        {
-            BuzzSource.SetActive(false);
-        }
+        SetBuzzActive(false);
 
         rotGoal = SafeRotation.LookRotationOrCurrent(Distance, transform.rotation);
         transform.rotation = rotGoal;
@@ -685,11 +662,8 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
             NPC.useGravity = true;
         }
 
-        if (Wasp != null)
-        {
-            Wasp.SetBool("Beat", true);
-            Wasp.SetBool("Sting", false);
-        }
+        SetWaspBool("Beat", true);
+        SetWaspBool("Sting", false);
 
         CurrentHealth -= Mathf.RoundToInt(damageEvent.Amount);
         if (damageEvent.Type == DamageType.Hazard)

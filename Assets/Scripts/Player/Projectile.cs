@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Projectile : MonoBehaviour
@@ -15,9 +14,11 @@ public class Projectile : MonoBehaviour
     [SerializeField] GameObject Explosion;
     [SerializeField] int Damage;
     [SerializeField] GameObject arrowPickup;
+    bool isDisposed;
     // Start is called before the first frame update
     void Start()
     {
+        StartCoroutine(ExpireAfterLifetime());
         var mainCamera = Camera.main;
         PlayerReference.TryGetPlayer(out Player);
 
@@ -54,37 +55,44 @@ public class Projectile : MonoBehaviour
 
         return valid;
     }
-    private void Update()
-    {
-        clock -= Time.deltaTime;
-        if (clock<=0)
-        {
-            Destroy(gameObject);
-            if (isArrow==true && arrowPickup != null)
-            {
-                Instantiate(arrowPickup, transform.position, Quaternion.identity);
-            }
-        }
-        
-    }
 
+    IEnumerator ExpireAfterLifetime()
+    {
+        yield return new WaitForSeconds(clock);
+        Dispose(spawnArrowPickup: isArrow, explode: false);
+    }
 
     public void Explode()
     {
-        if (Explosion == null)
+        Dispose(spawnArrowPickup: false, explode: true);
+    }
+
+    void Dispose(bool spawnArrowPickup, bool explode)
+    {
+        if (isDisposed)
         {
-            Destroy(transform.gameObject);
             return;
         }
 
-        var explode = Instantiate(Explosion, transform.position, transform.rotation);
-        explode.transform.localScale += new Vector3(1, 1, 1);
-        Destroy(transform.gameObject);
+        isDisposed = true;
+
+        if (explode && Explosion != null)
+        {
+            var explodeInstance = Instantiate(Explosion, transform.position, transform.rotation);
+            explodeInstance.transform.localScale += new Vector3(1, 1, 1);
+        }
+
+        if (spawnArrowPickup && arrowPickup != null)
+        {
+            Instantiate(arrowPickup, transform.position, Quaternion.identity);
+        }
+
+        Destroy(gameObject);
     }
 
     public void RockHit()
     {
-        if (Sound == null)
+        if (Sound == null || isDisposed)
         {
             return;
         }
@@ -95,7 +103,7 @@ public class Projectile : MonoBehaviour
     }
     private void OnCollisionEnter(Collision OBJ)
     {
-        if (OBJ == null || OBJ.gameObject == null)
+        if (isDisposed || OBJ == null || OBJ.gameObject == null)
         {
             return;
         }

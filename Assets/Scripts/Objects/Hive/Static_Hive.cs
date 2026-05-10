@@ -122,8 +122,9 @@ public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
             RuntimeReferenceValidator.Require(Wasp, this, nameof(Wasp)) &
             RuntimeReferenceValidator.Require(Explosion, this, nameof(Explosion)) &
             RuntimeReferenceValidator.Require(feedback, this, nameof(feedback)) &
-            RuntimeReferenceValidator.Require(Sound, this, nameof(Sound)) &
-            RuntimeReferenceValidator.Require(HitEffect, this, nameof(HitEffect));
+            RuntimeReferenceValidator.Require(Sound, this, nameof(Sound));
+
+        RuntimeReferenceValidator.Optional(HitEffect, this, nameof(HitEffect));
 
         if (SpawnedObjects != null)
         {
@@ -180,6 +181,11 @@ public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
 
     public void TakeDamage(DamageEvent damageEvent)
     {
+        if (deathResolved)
+        {
+            return;
+        }
+
         if (damageEvent.Type == DamageType.Hazard)
         {
             feedback?.EmitHazard();

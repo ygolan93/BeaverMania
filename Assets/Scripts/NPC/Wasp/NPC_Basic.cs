@@ -242,8 +242,6 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
             RuntimeReferenceValidator.Require(PlayerHealth, this, nameof(PlayerHealth)) &
             RuntimeReferenceValidator.Require(NPCHealthBar, this, nameof(NPCHealthBar)) &
             RuntimeReferenceValidator.Require(feedback, this, nameof(feedback)) &
-            RuntimeReferenceValidator.Require(HitEffect, this, nameof(HitEffect)) &
-            RuntimeReferenceValidator.Require(SlashEffect, this, nameof(SlashEffect)) &
             RuntimeReferenceValidator.Require(Explosion, this, nameof(Explosion)) &
             RuntimeReferenceValidator.Require(Sound, this, nameof(Sound)) &
             RuntimeReferenceValidator.Require(BuzzSource, this, nameof(BuzzSource)) &
@@ -252,6 +250,9 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
             RuntimeReferenceValidator.Require(Wing, this, nameof(Wing)) &
             RuntimeReferenceValidator.Require(Leg, this, nameof(Leg)) &
             RuntimeReferenceValidator.Require(Reward, this, nameof(Reward));
+
+        RuntimeReferenceValidator.Optional(HitEffect, this, nameof(HitEffect));
+        RuntimeReferenceValidator.Optional(SlashEffect, this, nameof(SlashEffect));
 
         return valid;
     }
@@ -653,6 +654,11 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
 
     public void TakeDamage(DamageEvent damageEvent)
     {
+        if (isDead)
+        {
+            return;
+        }
+
         SetBuzzActive(false);
 
         rotGoal = SafeRotation.LookRotationOrCurrent(Distance, transform.rotation);
@@ -717,6 +723,11 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
         if (NPCHealthBar != null)
         {
             NPCHealthBar.SetNPCHealth(CurrentHealth);
+        }
+
+        if (CurrentHealth <= 0)
+        {
+            SetState(WaspState.Dead);
         }
     }
 

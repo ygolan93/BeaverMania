@@ -76,7 +76,7 @@ public class PauseMenuController : MonoBehaviour
 
     public void Pause()
     {
-        ApplyPauseVisualState(ActivePause);
+        // Legacy animation/UI hook. Pause panel state is applied only when pause state changes.
     }
 
     public void ChangeBolean()

@@ -18,7 +18,6 @@ public sealed class DebugReference : MonoBehaviour
     public TextMeshProUGUI ArrowMunition;
 
     HudPresenter presenter;
-    bool presenterOwnsUpdate = true;
 
     private void Start()
     {
@@ -29,7 +28,6 @@ public sealed class DebugReference : MonoBehaviour
         }
 
         presenter.Bind(Player, PlayerObjective, CheckpointService.GetOrCreate());
-        presenterOwnsUpdate = presenter.isActiveAndEnabled;
         presenter.ObjectiveText = ObjectiveText;
         presenter.DisplayText = DisplayText;
         presenter.StaminaText = StaminaText;
@@ -42,17 +40,4 @@ public sealed class DebugReference : MonoBehaviour
         presenter.ArrowMunition = ArrowMunition;
     }
 
-    private void Update()
-    {
-        if (presenter == null)
-        {
-            return;
-        }
-
-        presenterOwnsUpdate = presenter.isActiveAndEnabled;
-        if (!presenterOwnsUpdate)
-        {
-            presenter.RenderNow();
-        }
-    }
 }

@@ -15786,7 +15786,6 @@ GameObject:
   - component: {fileID: 3664632416280873462}
   - component: {fileID: 2439549891900878302}
   - component: {fileID: 7314265830149100123}
-  - component: {fileID: 8281943336708320071}
   - component: {fileID: 1234567890123456789}
   m_Layer: 5
   m_Name: PlayerCanvas
@@ -16018,30 +16017,6 @@ MonoBehaviour:
   musicVolumeSlider: {fileID: 8281943336794801012}
   fullscreenToggle: {fileID: 0}
   qualityDropdown: {fileID: 0}
---- !u!114 &8281943336708320071
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6569126030801917456}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 66e3189e81ab2eb41ae0a551e8ad811e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Player: {fileID: 0}
-  PlayerObjective: {fileID: 0}
-  ObjectiveText: {fileID: 9220225752409644998}
-  DisplayText: {fileID: 3664632416460160701}
-  StaminaText: {fileID: 702658506274280216}
-  LogCountText: {fileID: 3664632415969327218}
-  HealingDisplay: {fileID: 3664632415368234109}
-  CurrencyCount: {fileID: 8281943336737566932}
-  SeedCount: {fileID: 509081396571889018}
-  GobletCount: {fileID: 8281943335477456013}
-  AppleCount: {fileID: 189672765652707343}
-  ArrowMunition: {fileID: 8722552630855434181}
 --- !u!114 &1234567890123456789
 MonoBehaviour:
   m_ObjectHideFlags: 0

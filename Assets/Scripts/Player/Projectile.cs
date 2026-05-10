@@ -18,14 +18,16 @@ public class Projectile : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        StartCoroutine(ExpireAfterLifetime());
         var mainCamera = Camera.main;
         PlayerReference.TryGetPlayer(out Player);
 
         if (!ValidateReferences(mainCamera))
         {
+            isDisposed = true;
             return;
         }
+
+        StartCoroutine(ExpireAfterLifetime());
 
         Vector3 launchDirection = mainCamera.transform.TransformDirection(Vector3.forward);
         Physics.IgnoreLayerCollision(1, 3);

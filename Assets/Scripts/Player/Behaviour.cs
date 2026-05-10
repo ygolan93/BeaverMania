@@ -147,6 +147,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     [SerializeField] Light HurtLight;
     [SerializeField] GameObject PopUpEffect;
     [SerializeField] GameObject PickUpEffect;
+    readonly HashSet<int> handledPickups = new HashSet<int>();
     [SerializeField] GameObject KickWind;
     [SerializeField] GameObject SwordCopter;
     [SerializeField] GameObject SwordPlainTrail;
@@ -308,19 +309,55 @@ public class Behaviour : MonoBehaviour, IDamageable
     public void ToggleParryCounterAttack() => WhichAttack = !WhichAttack;
     public void SetAppleModelActive(bool active) => appleOBJ.SetActive(active);
 
+    bool TryBeginPickup(GameObject pickup)
+    {
+        return pickup != null && handledPickups.Add(pickup.GetInstanceID());
+    }
+
+    void SpawnPickupEffect(Vector3 position)
+    {
+        SpawnOptionalEffect(PickUpEffect, position, Quaternion.identity, null, nameof(PickUpEffect));
+    }
+
+    GameObject SpawnOptionalEffect(GameObject prefab, Vector3 position, Quaternion rotation, Transform parent, string fieldName)
+    {
+        if (!RuntimeReferenceValidator.Optional(prefab, this, fieldName))
+        {
+            return null;
+        }
+
+        var instance = Instantiate(prefab, position, rotation);
+        if (parent != null)
+        {
+            instance.transform.parent = parent;
+        }
+
+        return instance;
+    }
+
     public void OnCollisionEnter(Collision OBJ)
     {
         if (OBJ.gameObject.CompareTag("Part")&& Load.CanCarry == true && grounded==true && !Input.GetKey(KeyCode.Mouse0)&& !Input.GetKey(KeyCode.Mouse1))
         {
+            if (!TryBeginPickup(OBJ.gameObject))
+            {
+                return;
+            }
+
             Otter.Play("Crouch");
             Sound.PickItem();
-            Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+            SpawnPickupEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
             Destroy(OBJ.gameObject);
         }
         if ( OBJ.gameObject.CompareTag("Seed") || OBJ.gameObject.CompareTag("Apple") || OBJ.gameObject.CompareTag("GobletKey"))
         {
+            if (!TryBeginPickup(OBJ.gameObject))
+            {
+                return;
+            }
+
             Otter.Play("Crouch");
-            Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+            SpawnPickupEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
             Destroy(OBJ.gameObject);
 
             if (OBJ.gameObject.CompareTag("Seed"))
@@ -337,8 +374,6 @@ public class Behaviour : MonoBehaviour, IDamageable
             {
                 Sound.PickUp2();
                 Inventory.AddGoblet();
-                Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
-                Destroy(OBJ.gameObject);
             }
 
         }
@@ -356,17 +391,27 @@ public class Behaviour : MonoBehaviour, IDamageable
         }
         if (OBJ.gameObject.CompareTag("Coin"))
         {
-            Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+            if (!TryBeginPickup(OBJ.gameObject))
+            {
+                return;
+            }
+
+            SpawnPickupEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
             Sound.Coin();
         }
         if (arrowMunition<Arrows.Length && bowEquipped==true)
         {
             if (OBJ.gameObject.CompareTag("Arrow"))
             {
+                if (!TryBeginPickup(OBJ.gameObject))
+                {
+                    return;
+                }
+
                 Otter.Play("Crouch");
                 Sound.PickUp2();
                 arrowMunition++;
-                Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+                SpawnPickupEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
                 if (bowEquipped == true)
                 {
                     CountArrows();
@@ -375,9 +420,14 @@ public class Behaviour : MonoBehaviour, IDamageable
             }
             if (OBJ.gameObject.CompareTag("ArrowBundle"))
             {
+                if (!TryBeginPickup(OBJ.gameObject))
+                {
+                    return;
+                }
+
                 Otter.Play("Crouch");
                 Sound.PickUp2();
-                Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+                SpawnPickupEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
                 if (arrowMunition + 10 < Arrows.Length)
                 {
                     arrowMunition += 10;
@@ -413,17 +463,27 @@ public class Behaviour : MonoBehaviour, IDamageable
         }
         if (OBJ.gameObject.CompareTag("Weapon"))
         {
+            if (!TryBeginPickup(OBJ.gameObject))
+            {
+                return;
+            }
+
             Plattering = ("Hammers!");
             ChangeSpeech = 1;
             Otter.Play("Crouch");
             Arsenal.Add("Hammers");
             ArsenalCounter++;
             Sound.PickItem();
-            Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+            SpawnPickupEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
             Destroy(OBJ.gameObject);
         }
         if (OBJ.gameObject.CompareTag("Bow"))
         {
+            if (!TryBeginPickup(OBJ.gameObject))
+            {
+                return;
+            }
+
             Plattering = ("Booya!");
             ChangeSpeech = 1;
             Otter.Play("Crouch");
@@ -432,30 +492,45 @@ public class Behaviour : MonoBehaviour, IDamageable
             Sound.PickItem();
             arrowMunition = 5;
             CountArrows();
-            Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+            SpawnPickupEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
             Destroy(OBJ.gameObject);
         }
         if (OBJ.gameObject.CompareTag("Armor"))
         {
+            if (!TryBeginPickup(OBJ.gameObject))
+            {
+                return;
+            }
+
             Plattering = ("Oh my!");
             ChangeSpeech = 1;
             Otter.Play("Crouch");
             Arsenal.Add("ArmorSet");
             ArsenalCounter++;
             Sound.PickItem();
-            Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+            SpawnPickupEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
             Destroy(OBJ.gameObject);
         }
         if (OBJ.gameObject.CompareTag("Honey") && Honeypicked == false)
         {
+            if (!TryBeginPickup(OBJ.gameObject))
+            {
+                return;
+            }
+
             Otter.Play("Crouch");
             HoneyON();
             Sound.PickItem();
-            Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+            SpawnPickupEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
             Destroy(OBJ.gameObject);
         }
         if (OBJ.gameObject.CompareTag("Gold") && GoldPicked == false)
         {
+            if (!TryBeginPickup(OBJ.gameObject))
+            {
+                return;
+            }
+
             Otter.Play("Crouch");
             GoldON();
             Destroy(OBJ.gameObject);
@@ -1087,15 +1162,22 @@ public class Behaviour : MonoBehaviour, IDamageable
             RuntimeReferenceValidator.Require(HealthBar, this, nameof(HealthBar)) &
             RuntimeReferenceValidator.Require(HoneyJar, this, nameof(HoneyJar)) &
             RuntimeReferenceValidator.Require(GoldBrick, this, nameof(GoldBrick)) &
-            RuntimeReferenceValidator.Require(PopUpEffect, this, nameof(PopUpEffect)) &
-            RuntimeReferenceValidator.Require(HealEffect, this, nameof(HealEffect)) &
+            RuntimeReferenceValidator.Require(PopUpEffect, this, nameof(PopUpEffect));
+
+        RuntimeReferenceValidator.Optional(PickUpEffect, this, nameof(PickUpEffect));
+        RuntimeReferenceValidator.Optional(KickWind, this, nameof(KickWind));
+        RuntimeReferenceValidator.Optional(SwordCopter, this, nameof(SwordCopter));
+        RuntimeReferenceValidator.Optional(BoxWind, this, nameof(BoxWind));
+
+        valid &= RuntimeReferenceValidator.Require(HealEffect, this, nameof(HealEffect)) &
             RuntimeReferenceValidator.Require(ElectricEffect, this, nameof(ElectricEffect)) &
             RuntimeReferenceValidator.Require(MunitionDisplay, this, nameof(MunitionDisplay)) &
             RuntimeReferenceValidator.Require(LooseScreen, this, nameof(LooseScreen)) &
             RuntimeReferenceValidator.Require(AimIcon, this, nameof(AimIcon)) &
             RuntimeReferenceValidator.Require(HologramedBridge, this, nameof(HologramedBridge)) &
             RuntimeReferenceValidator.Require(appleOBJ, this, nameof(appleOBJ)) &
-            RuntimeReferenceValidator.Require(gobletOBJ, this, nameof(gobletOBJ));
+            RuntimeReferenceValidator.Require(gobletOBJ, this, nameof(gobletOBJ)) &
+            RuntimeReferenceValidator.Require(KickEffectPos, this, nameof(KickEffectPos));
 
         if (ArmorSet != null)
         {
@@ -1709,13 +1791,11 @@ public class Behaviour : MonoBehaviour, IDamageable
                     {
                         if (Otter.GetCurrentAnimatorStateInfo(0).IsName("Air Kick"))
                         {
-                            var WindTrail = Instantiate(KickWind, KickEffectPos.position, Quaternion.Euler(-90, UnityEngine.Random.Range(0f, 360f), 0));
-                            WindTrail.transform.parent = KickEffectPos;
+                            SpawnOptionalEffect(KickWind, KickEffectPos.position, Quaternion.Euler(-90, UnityEngine.Random.Range(0f, 360f), 0), KickEffectPos, nameof(KickWind));
                         }
                         if (Otter.GetCurrentAnimatorStateInfo(0).IsName("HuricaneSword"))
                         {
-                            var SwordTrail = Instantiate(SwordCopter, KickEffectPos.position +new Vector3(0,0.5f,0), Quaternion.Euler(-90, UnityEngine.Random.Range(0f, 360f), 0));
-                            SwordTrail.transform.parent = KickEffectPos;
+                            SpawnOptionalEffect(SwordCopter, KickEffectPos.position +new Vector3(0,0.5f,0), Quaternion.Euler(-90, UnityEngine.Random.Range(0f, 360f), 0), KickEffectPos, nameof(SwordCopter));
                         }                        
                         if (Otter.speed > 0.4)
                         {
@@ -1753,16 +1833,14 @@ public class Behaviour : MonoBehaviour, IDamageable
                         {
                             if (Root.childCount == 0)
                             {
-                                var RightWind = Instantiate(BoxWind, Root.position - new Vector3(0, 0.3f, 0), rotGoal * Quaternion.Euler(-90, 90, 0));
-                                RightWind.transform.parent = Root;
+                                SpawnOptionalEffect(BoxWind, Root.position - new Vector3(0, 0.3f, 0), rotGoal * Quaternion.Euler(-90, 90, 0), Root, nameof(BoxWind));
                             }
                         }
                         if (Otter.GetCurrentAnimatorStateInfo(1).IsName("AttackB"))
                         {
                             if (Root.childCount == 0)
                             {
-                                var LeftWind = Instantiate(BoxWind, Root.position - new Vector3(0, 0.3f, 0), rotGoal * Quaternion.Euler(90, 90, 0));
-                                LeftWind.transform.parent = Root;
+                                SpawnOptionalEffect(BoxWind, Root.position - new Vector3(0, 0.3f, 0), rotGoal * Quaternion.Euler(90, 90, 0), Root, nameof(BoxWind));
                             }
                         }
                     }

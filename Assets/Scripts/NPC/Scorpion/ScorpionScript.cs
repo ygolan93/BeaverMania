@@ -235,10 +235,11 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
             RuntimeReferenceValidator.Require(Jaw2B, this, nameof(Jaw2B)) &
             RuntimeReferenceValidator.Require(Sting, this, nameof(Sting)) &
             RuntimeReferenceValidator.Require(feedback, this, nameof(feedback)) &
-            RuntimeReferenceValidator.Require(HitEffect, this, nameof(HitEffect)) &
             RuntimeReferenceValidator.Require(Explosion, this, nameof(Explosion)) &
-            RuntimeReferenceValidator.Require(StunEffect, this, nameof(StunEffect)) &
             RuntimeReferenceValidator.Require(Sound, this, nameof(Sound));
+
+        RuntimeReferenceValidator.Optional(HitEffect, this, nameof(HitEffect));
+        RuntimeReferenceValidator.Optional(StunEffect, this, nameof(StunEffect));
 
         if (drops != null)
         {
@@ -460,6 +461,11 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
 
     public void TakeDamage(DamageEvent damageEvent)
     {
+        if (isDead)
+        {
+            return;
+        }
+
         transform.rotation = rotGoal;
         if (damageEvent.Type == DamageType.Hazard)
         {
@@ -483,6 +489,11 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
         if (BossHealth != null)
         {
             BossHealth.SetNPCHealth(CurrentHealth);
+        }
+
+        if (CurrentHealth <= 0)
+        {
+            SetState(EnemyState.Dead);
         }
     }
     private void Stunned()

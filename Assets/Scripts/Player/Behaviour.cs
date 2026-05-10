@@ -810,6 +810,8 @@ public class Behaviour : MonoBehaviour, IDamageable
     }
     public void ShowCursor() => Interaction.ShowCursor();
     public void HideCursor() => Interaction.HideCursor();
+    public void ExitTraderInteraction() => Interaction.ExitTrader();
+    public void RestoreGameplayCursorAfterUiClose() => Interaction.RestoreGameplayCursorAfterUiClose();
     public void ActivateLooseMenu()
     {
         //MusicOP.StopMusic();

@@ -28,6 +28,11 @@ public class PlayerInteractionController : MonoBehaviour
         }
     }
 
+    public void RestoreGameplayCursorAfterUiClose()
+    {
+        CursorStateService.GetOrCreate().RestoreGameplayCursorAfterUiClose(CanRestoreGameplayCursor);
+    }
+
     public void EnterTrader(Collider trader)
     {
         var skip = trader.gameObject.GetComponent<Trader>().skipPressed;
@@ -48,11 +53,24 @@ public class PlayerInteractionController : MonoBehaviour
     public void ExitTrader()
     {
         owner.isAtTrader = false;
-        GameFlowController.GetOrCreate().SetPlaying();
+        var gameFlow = GameFlowController.GetOrCreate();
+        if (gameFlow.State == GameFlowState.Playing ||
+            gameFlow.State == GameFlowState.Shop ||
+            gameFlow.State == GameFlowState.Dialogue)
+        {
+            gameFlow.SetPlaying();
+        }
+
         owner.TrySetTraderCameraEnabled(false);
         owner.TrySetTraderCameraLookAt(null);
         owner.TrySetFreeLookEnabled(true);
         owner.TryRotateFreeLookLookAtTowardRoot();
+        RestoreGameplayCursorAfterUiClose();
+    }
+
+    bool CanRestoreGameplayCursor()
+    {
+        return owner != null && !owner.isAtTrader;
     }
 
     GameInputReader GetInputReader()

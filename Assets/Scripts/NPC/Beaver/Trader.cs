@@ -70,11 +70,35 @@ public class Trader : MonoBehaviour
         TradeText.SetActive(false);
         DialoguePanel.SetActive(false);
         Shop.SetActive(false);
+        RestoreGameplayAfterInteractionUiClosed();
     }
 
     public void CloseShop()
     {
+        skipPressed = true;
         Shop.SetActive(false);
+        RestoreGameplayAfterInteractionUiClosed();
+    }
+
+    public bool IsShopOpen()
+    {
+        return Shop != null && Shop.activeInHierarchy;
+    }
+
+    public void RestoreGameplayAfterDialogueCancelled()
+    {
+        if (!IsShopOpen())
+        {
+            RestoreGameplayAfterInteractionUiClosed();
+        }
+    }
+
+    void RestoreGameplayAfterInteractionUiClosed()
+    {
+        if (Player != null)
+        {
+            Player.ExitTraderInteraction();
+        }
     }
 
     public void Honey()

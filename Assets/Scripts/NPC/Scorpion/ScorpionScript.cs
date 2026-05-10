@@ -87,7 +87,7 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
         Physics.IgnoreLayerCollision(10, 10);
 
         CurrentHealth = MaxHealth;
-        Explosion.SetActive(false);
+        SetActiveIfChanged(Explosion, false);
         feedback?.ResetFeedback();
         paceUp = chargeSpeed + 2;
         resetCharge = chargeClock;
@@ -167,7 +167,7 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
         {
             foreach (var animatorBool in initialAnimatorBools)
             {
-                Scorpion.SetBool(animatorBool.Key, animatorBool.Value);
+                SetAnimatorBoolIfChanged(Scorpion, animatorBool.Key, animatorBool.Value);
             }
         }
 
@@ -176,14 +176,14 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
             Explosion.transform.SetParent(initialExplosionParent);
             Explosion.transform.localPosition = initialExplosionLocalPosition;
             Explosion.transform.localRotation = initialExplosionLocalRotation;
-            Explosion.SetActive(initialExplosionActive);
+            SetActiveIfChanged(Explosion, initialExplosionActive);
         }
 
         feedback?.ResetFeedback();
 
         if (StunEffect != null)
         {
-            StunEffect.SetActive(false);
+            SetActiveIfChanged(StunEffect, false);
         }
 
         if (BossHealth != null)
@@ -200,6 +200,27 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
         }
 
         spawnedOnDeath.Clear();
+    }
+
+    void SetScorpionBool(string param, bool value)
+    {
+        SetAnimatorBoolIfChanged(Scorpion, param, value);
+    }
+
+    static void SetActiveIfChanged(GameObject target, bool active)
+    {
+        if (target != null && target.activeSelf != active)
+        {
+            target.SetActive(active);
+        }
+    }
+
+    static void SetAnimatorBoolIfChanged(Animator animator, string param, bool value)
+    {
+        if (animator != null && animator.GetBool(param) != value)
+        {
+            animator.SetBool(param, value);
+        }
     }
 
     bool ValidateReferences()
@@ -377,9 +398,9 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
     private void Idle()
     {
         isAttacking = false;
-        Scorpion.SetBool("Walk", false);
-        Scorpion.SetBool("Backwards", false);
-        Scorpion.SetBool("Attack", false);
+        SetScorpionBool("Walk", false);
+        SetScorpionBool("Backwards", false);
+        SetScorpionBool("Attack", false);
         RBScorpion.velocity = new Vector3(0, RBScorpion.velocity.y, 0);
         rotGoal = transform.rotation;
         RBScorpion.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
@@ -392,15 +413,15 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
         RBScorpion.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
         if (transform.rotation != rotGoal)
         {
-            Scorpion.SetBool("Walk", true);
-            Scorpion.SetBool("Backwards", false);
-            Scorpion.SetBool("Attack", false);
+            SetScorpionBool("Walk", true);
+            SetScorpionBool("Backwards", false);
+            SetScorpionBool("Attack", false);
         }
         else
         {
-            Scorpion.SetBool("Walk", false);
-            Scorpion.SetBool("Backwards", false);
-            Scorpion.SetBool("Attack", false);
+            SetScorpionBool("Walk", false);
+            SetScorpionBool("Backwards", false);
+            SetScorpionBool("Attack", false);
         }
     }
     public void Charge(float speed)
@@ -410,17 +431,17 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
         RBScorpion.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
         RBScorpion.velocity = new Vector3(Distance.x, 0, Distance.z).normalized * speed + new Vector3(0, RBScorpion.velocity.y, 0);
 
-        Scorpion.SetBool("Walk", true);
-        Scorpion.SetBool("Backwards", false);
-        Scorpion.SetBool("Attack", false);
+        SetScorpionBool("Walk", true);
+        SetScorpionBool("Backwards", false);
+        SetScorpionBool("Attack", false);
     }
     private void StopAndAttack()
     {
         isAttacking = true;
         RBScorpion.velocity = new Vector3(0, RBScorpion.velocity.y, 0);
-        Scorpion.SetBool("Walk", false);
-        Scorpion.SetBool("Backwards", false);
-        Scorpion.SetBool("Attack", true);
+        SetScorpionBool("Walk", false);
+        SetScorpionBool("Backwards", false);
+        SetScorpionBool("Attack", true);
         rotGoal = SafeRotation.PlanarLookRotationOrCurrent(Distance, transform.rotation);
         RBScorpion.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
     }
@@ -430,9 +451,9 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
         rotGoal = SafeRotation.PlanarLookRotationOrCurrent(Distance, transform.rotation);
         RBScorpion.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
         RBScorpion.velocity = new Vector3(-Distance.x, 0, -Distance.z).normalized * 5 + new Vector3(0, RBScorpion.velocity.y, 0);
-        Scorpion.SetBool("Walk", false);
-        Scorpion.SetBool("Backwards", true);
-        Scorpion.SetBool("Attack", false);
+        SetScorpionBool("Walk", false);
+        SetScorpionBool("Backwards", true);
+        SetScorpionBool("Attack", false);
     }
 
     public void TakeDamage(int Damage) => TakeDamage(new DamageEvent { Amount = Damage, Source = null, Point = transform.position, Type = DamageType.Generic, CanStun = false });
@@ -467,19 +488,19 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
     private void Stunned()
     {
         isAttacking = false;
-        Scorpion.SetBool("Backwards", false);
-        Scorpion.SetBool("Walk", false);
-        Scorpion.SetBool("Attack", false);
-        Scorpion.SetBool("Stunned", true);
-        StunEffect.SetActive(true);
+        SetScorpionBool("Backwards", false);
+        SetScorpionBool("Walk", false);
+        SetScorpionBool("Attack", false);
+        SetScorpionBool("Stunned", true);
+        SetActiveIfChanged(StunEffect, true);
     }
     private void Recovered()
     {
         isAttacking = false;
-        Scorpion.SetBool("Stunned", false);
+        SetScorpionBool("Stunned", false);
         combo = 0;
         StunnedClock = initialStun;
-        StunEffect.SetActive(false);
+        SetActiveIfChanged(StunEffect, false);
     }
     private void Death()
     {
@@ -493,7 +514,7 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
         feedback?.EmitDeath();
         if (Explosion != null)
         {
-            Explosion.SetActive(true);
+            SetActiveIfChanged(Explosion, true);
             Explosion.transform.parent = null;
         }
 

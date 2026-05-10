@@ -19,6 +19,16 @@ public sealed class HudPresenter : MonoBehaviour
     public TextMeshProUGUI ArrowMunition;
 
     CheckpointService checkpointService;
+    string lastObjectiveText;
+    string lastDisplayText;
+    string lastStaminaText;
+    string lastLogCountText;
+    string lastHealingDisplay;
+    string lastCurrencyCount;
+    string lastSeedCount;
+    string lastGobletCount;
+    string lastAppleCount;
+    string lastArrowMunition;
 
     private void Start()
     {
@@ -38,16 +48,16 @@ public sealed class HudPresenter : MonoBehaviour
         }
 
         var state = Player.State;
-        SetText(ObjectiveText, BuildObjectiveText());
-        SetText(DisplayText, BuildHealthText(state));
-        SetText(StaminaText, BuildStaminaText(state));
-        SetText(LogCountText, BuildLogCountText(state));
-        SetText(CurrencyCount, BuildCurrencyText(state));
-        SetText(HealingDisplay, BuildStatusText(state));
-        SetText(SeedCount, BuildSeedText(state));
-        SetText(GobletCount, BuildGobletText(state));
-        SetText(AppleCount, BuildAppleText(state));
-        SetText(ArrowMunition, BuildArrowText(state));
+        SetTextIfChanged(ObjectiveText, BuildObjectiveText(), ref lastObjectiveText);
+        SetTextIfChanged(DisplayText, BuildHealthText(state), ref lastDisplayText);
+        SetTextIfChanged(StaminaText, BuildStaminaText(state), ref lastStaminaText);
+        SetTextIfChanged(LogCountText, BuildLogCountText(state), ref lastLogCountText);
+        SetTextIfChanged(CurrencyCount, BuildCurrencyText(state), ref lastCurrencyCount);
+        SetTextIfChanged(HealingDisplay, BuildStatusText(state), ref lastHealingDisplay);
+        SetTextIfChanged(SeedCount, BuildSeedText(state), ref lastSeedCount);
+        SetTextIfChanged(GobletCount, BuildGobletText(state), ref lastGobletCount);
+        SetTextIfChanged(AppleCount, BuildAppleText(state), ref lastAppleCount);
+        SetTextIfChanged(ArrowMunition, BuildArrowText(state), ref lastArrowMunition);
     }
 
     public void Bind(Behaviour player, ObjectiveUI objective, CheckpointService checkpoints)
@@ -178,11 +188,14 @@ public sealed class HudPresenter : MonoBehaviour
         return Math.Round((current / max) * 100f, 1) + "%";
     }
 
-    static void SetText(TextMeshProUGUI text, string value)
+    static void SetTextIfChanged(TextMeshProUGUI text, string value, ref string lastValue)
     {
-        if (text != null)
+        if (text == null || lastValue == value)
         {
-            text.text = value;
+            return;
         }
+
+        text.text = value;
+        lastValue = value;
     }
 }

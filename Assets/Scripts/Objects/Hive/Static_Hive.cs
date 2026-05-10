@@ -48,7 +48,7 @@ public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
         }
 
         CurrentHealth = MaxHealth;
-        Explosion.SetActive(false);
+        SetActiveIfChanged(Explosion, false);
         feedback?.ResetFeedback();
         CaptureRuntimeState();
     }
@@ -78,7 +78,7 @@ public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
 
         if (Hive != null)
         {
-            Hive.SetActive(initialHiveActive);
+            SetActiveIfChanged(Hive, initialHiveActive);
         }
 
         if (Explosion != null)
@@ -86,7 +86,7 @@ public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
             Explosion.transform.SetParent(initialExplosionParent);
             Explosion.transform.localPosition = initialExplosionLocalPosition;
             Explosion.transform.localRotation = initialExplosionLocalRotation;
-            Explosion.SetActive(initialExplosionActive);
+            SetActiveIfChanged(Explosion, initialExplosionActive);
         }
 
         feedback?.ResetFeedback();
@@ -105,6 +105,14 @@ public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
         }
 
         spawnedOnDeath.Clear();
+    }
+
+    static void SetActiveIfChanged(GameObject target, bool active)
+    {
+        if (target != null && target.activeSelf != active)
+        {
+            target.SetActive(active);
+        }
     }
 
     bool ValidateReferences()
@@ -127,14 +135,6 @@ public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
 
         return valid;
     }
-    private void LateUpdate()
-    {
-        if (CurrentHealth <= 0 && !deathResolved)
-        {
-            Death();
-        }
-    }
-
     public void Death()
     {
         if (isDead)
@@ -147,7 +147,7 @@ public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
         feedback?.EmitDeath();
         if (Explosion != null)
         {
-            Explosion.SetActive(true);
+            SetActiveIfChanged(Explosion, true);
             Explosion.transform.parent = null;
         }
 
@@ -172,7 +172,7 @@ public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
 
         if (Hive != null)
         {
-            Hive.SetActive(false);
+            SetActiveIfChanged(Hive, false);
         }
     }
 
@@ -197,6 +197,11 @@ public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
         if (HiveBar != null)
         {
             HiveBar.SetNPCHealth(CurrentHealth);
+        }
+
+        if (CurrentHealth <= 0 && !deathResolved)
+        {
+            Death();
         }
     }
 }

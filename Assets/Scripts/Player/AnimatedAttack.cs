@@ -13,9 +13,14 @@ public class AnimatedAttack : MonoBehaviour
     private void Start()
     {
         Player = GetComponentInParent<Behaviour>();
-        if (GlowEffect != null)
+        SetActiveIfChanged(GlowEffect, false);
+    }
+
+    static void SetActiveIfChanged(GameObject target, bool active)
+    {
+        if (target != null && target.activeSelf != active)
         {
-            GlowEffect.SetActive(false);
+            target.SetActive(active);
         }
     }
 
@@ -165,17 +170,11 @@ public class AnimatedAttack : MonoBehaviour
 
     public void TurnOnGlow()
     {
-        if (GlowEffect != null)
-        {
-            GlowEffect.SetActive(true);
-        }
+        SetActiveIfChanged(GlowEffect, true);
     }
 
     public void TurnOffGlow()
     {
-        if (GlowEffect != null)
-        {
-            GlowEffect.SetActive(false);
-        }
+        SetActiveIfChanged(GlowEffect, false);
     }
 }

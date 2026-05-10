@@ -19,15 +19,46 @@ public sealed class DebugReference : MonoBehaviour
 
     HudPresenter presenter;
 
+    private void Awake()
+    {
+        ApplyReferences();
+    }
+
     private void Start()
+    {
+        ApplyReferences();
+        enabled = presenter == null;
+    }
+
+    private void Update()
+    {
+        if (presenter == null)
+        {
+            ApplyReferences();
+        }
+
+        enabled = false;
+    }
+
+    private void OnValidate()
+    {
+        ApplyReferences();
+    }
+
+    void ApplyReferences()
     {
         presenter = GetComponent<HudPresenter>();
         if (presenter == null)
         {
+            if (!Application.isPlaying)
+            {
+                return;
+            }
+
             presenter = gameObject.AddComponent<HudPresenter>();
         }
 
-        presenter.Bind(Player, PlayerObjective, CheckpointService.GetOrCreate());
+        presenter.Bind(Player, PlayerObjective, Application.isPlaying ? CheckpointService.GetOrCreate() : null);
         presenter.ObjectiveText = ObjectiveText;
         presenter.DisplayText = DisplayText;
         presenter.StaminaText = StaminaText;
@@ -38,13 +69,5 @@ public sealed class DebugReference : MonoBehaviour
         presenter.GobletCount = GobletCount;
         presenter.AppleCount = AppleCount;
         presenter.ArrowMunition = ArrowMunition;
-    }
-
-    private void Update()
-    {
-        if (presenter != null)
-        {
-            presenter.RenderNow();
-        }
     }
 }

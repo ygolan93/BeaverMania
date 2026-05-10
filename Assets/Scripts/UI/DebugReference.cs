@@ -40,11 +40,4 @@ public sealed class DebugReference : MonoBehaviour
         presenter.ArrowMunition = ArrowMunition;
     }
 
-    private void Update()
-    {
-        if (presenter != null)
-        {
-            presenter.RenderNow();
-        }
-    }
 }

@@ -51,8 +51,8 @@ public class BossHandler : MonoBehaviour
     {
         ChatCollider.SetActive(false);
         player.isAtTrader = false;
-        player.HideCursor();
         BossPanel.SetActive(false);
+        player.RestoreGameplayCursorAfterUiClose();
         Boss.isAttacking = true;
         BossBar.SetActive(true);
         player.TryConfigureFreeLookForBoss(6f, 300f, 2f, player.Root);

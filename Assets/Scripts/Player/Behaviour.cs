@@ -810,11 +810,14 @@ public class Behaviour : MonoBehaviour, IDamageable
     }
     public void ShowCursor() => Interaction.ShowCursor();
     public void HideCursor() => Interaction.HideCursor();
+    public void ExitTraderInteraction() => Interaction.ExitTrader();
+    public void RestoreGameplayCursorAfterUiClose() => Interaction.RestoreGameplayCursorAfterUiClose();
     public void ActivateLooseMenu()
     {
         //MusicOP.StopMusic();
         ResetMovementRuntimeState();
-        if (!GameFlowController.GetOrCreate().SetGameOver())
+        var gameFlow = GameFlowController.GetOrCreate();
+        if (gameFlow.State != GameFlowState.GameOver && !gameFlow.SetGameOver())
         {
             return;
         }

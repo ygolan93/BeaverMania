@@ -1,16 +1,27 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using TMPro;
-using UnityEngine.UI;
+using UnityEngine;
+
 public class UpdatePlattering : MonoBehaviour
 {
     public Behaviour Player;
     public TextMeshProUGUI PlatetringText;
 
-    // Update is called once per frame
     void Update()
     {
-        PlatetringText.text = Player.Plattering;
+        if (Player == null)
+        {
+            var playerObject = GameObject.FindGameObjectWithTag("Player");
+            if (playerObject != null)
+            {
+                Player = playerObject.GetComponent<Behaviour>();
+            }
+        }
+
+        if (Player == null || PlatetringText == null)
+        {
+            return;
+        }
+
+        PlatetringText.text = Player.Plattering ?? string.Empty;
     }
 }

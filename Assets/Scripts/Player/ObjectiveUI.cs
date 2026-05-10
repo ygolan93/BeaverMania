@@ -12,7 +12,19 @@ public class ObjectiveUI: MonoBehaviour
     public void Update()
     {
         Player = transform.GetComponent<Behaviour>();
-        i = currentPoint.GetComponent<WayPoint>().i;
+
+        if (currentPoint == null || Objective == null)
+        {
+            return;
+        }
+
+        i = currentPoint.i;
+
+        if (i < 0 || i >= Objective.Length)
+        {
+            return;
+        }
+
         Instruction = Objective[i];
 
     }

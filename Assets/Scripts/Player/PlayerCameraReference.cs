@@ -19,13 +19,13 @@ public sealed class PlayerCameraReference
 
     [SerializeField] Camera camera;
 
-    [NonSerialized] Behaviour owner;
+    [NonSerialized] UnityEngine.Object owner;
     [NonSerialized] CinemachineFreeLook freeLook;
     [NonSerialized] Transform cachedTransform;
     [NonSerialized] Camera cachedCamera;
     [NonSerialized] Source cachedSource;
 
-    public void Configure(Behaviour owner, CinemachineFreeLook freeLook)
+    public void Configure(UnityEngine.Object owner, CinemachineFreeLook freeLook)
     {
         this.owner = owner;
         this.freeLook = freeLook;

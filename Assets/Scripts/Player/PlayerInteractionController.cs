@@ -19,7 +19,10 @@ public class PlayerInteractionController : MonoBehaviour
 
     public void HideCursor()
     {
-        owner.TrySetFreeLookLookAt(owner.Root);
+        if (owner != null)
+        {
+            owner.TrySetFreeLookLookAt(owner.Root);
+        }
         CursorStateService.GetOrCreate().HideCursor();
         var gameFlow = GameFlowController.Instance;
         if (gameFlow == null || gameFlow.State == GameFlowState.Playing)
@@ -35,7 +38,12 @@ public class PlayerInteractionController : MonoBehaviour
 
     public void EnterTrader(Collider trader)
     {
-        var skip = trader.gameObject.GetComponent<Trader>().skipPressed;
+        if (owner == null || trader == null || !trader.TryGetComponent(out Trader traderComponent))
+        {
+            return;
+        }
+
+        var skip = traderComponent.skipPressed;
         if (!skip)
         {
             ShowCursor();
@@ -52,6 +60,11 @@ public class PlayerInteractionController : MonoBehaviour
 
     public void ExitTrader()
     {
+        if (owner == null)
+        {
+            return;
+        }
+
         owner.isAtTrader = false;
         var gameFlow = GameFlowController.GetOrCreate();
         if (gameFlow.State == GameFlowState.Playing ||

@@ -18,6 +18,9 @@ public static class PlayerAnimatorParameters
     public static readonly int Armor = Animator.StringToHash("armor");
     public static readonly int Slash = Animator.StringToHash("slash");
     public static readonly int Fight = Animator.StringToHash("fight");
+    public static readonly int Parry = Animator.StringToHash("Parry");
+    public static readonly int HammerParry = Animator.StringToHash("HammerParry");
+    public static readonly int ShieldParry = Animator.StringToHash("shieldParry");
 
     public static bool TrySetBool(Animator animator, int hash, bool value)
     {

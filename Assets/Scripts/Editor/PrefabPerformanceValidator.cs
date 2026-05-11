@@ -122,18 +122,33 @@ public static class PrefabPerformanceValidator
     static void ValidateAlwaysActiveEffects(GameObject prefab, PrefabReport report)
     {
         foreach (var particleSystem in prefab.GetComponentsInChildren<ParticleSystem>(true)
-            .Where(component => component != null && component.gameObject.activeInHierarchy && component.main.playOnAwake)
+            .Where(component => component != null && IsActiveInPrefabHierarchy(component.transform) && component.main.playOnAwake)
             .OrderBy(component => TransformPath(component.transform), StringComparer.Ordinal))
         {
             report.Warnings.Add("Always-active ParticleSystem for manual review at " + TransformPath(particleSystem.transform));
         }
 
         foreach (var light in prefab.GetComponentsInChildren<Light>(true)
-            .Where(component => component != null && component.enabled && component.gameObject.activeInHierarchy)
+            .Where(component => component != null && component.enabled && IsActiveInPrefabHierarchy(component.transform))
             .OrderBy(component => TransformPath(component.transform), StringComparer.Ordinal))
         {
             report.Warnings.Add("Always-active Light for manual review at " + TransformPath(light.transform));
         }
+    }
+
+    static bool IsActiveInPrefabHierarchy(Transform transform)
+    {
+        while (transform != null)
+        {
+            if (!transform.gameObject.activeSelf)
+            {
+                return false;
+            }
+
+            transform = transform.parent;
+        }
+
+        return true;
     }
 
     static void AddDuplicateComponentWarning(string componentName, string[] matches, PrefabReport report)

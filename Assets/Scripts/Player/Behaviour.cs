@@ -179,6 +179,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     PlayerHealthController healthController;
     PlayerInventory inventory;
     PlayerInteractionController interactionController;
+    PlayerTraderTriggerController traderTriggerController;
     PlayerCombatController combatController;
     PlayerMovementController movementController;
     PlayerFailureController failureController;
@@ -248,6 +249,24 @@ public class Behaviour : MonoBehaviour, IDamageable
             }
 
             return interactionController;
+        }
+    }
+
+    PlayerTraderTriggerController TraderTriggers
+    {
+        get
+        {
+            if (traderTriggerController == null)
+            {
+                traderTriggerController = GetComponent<PlayerTraderTriggerController>();
+                if (traderTriggerController == null)
+                {
+                    traderTriggerController = gameObject.AddComponent<PlayerTraderTriggerController>();
+                }
+                traderTriggerController.Initialize(this);
+            }
+
+            return traderTriggerController;
         }
     }
 
@@ -551,18 +570,7 @@ public class Behaviour : MonoBehaviour, IDamageable
             if (CurrentHealth >= MaxHealth)
                 TouchShroom = false;
         }
-        if (OBJ.gameObject.CompareTag("Trader"))
-        {
-            var skip = OBJ.gameObject.GetComponent<Trader>().skipPressed;
-            if (skip ==false)
-            {
-                Interaction.EnterTrader(OBJ);
-            }
-            if (skip ==true)
-            {
-                Interaction.ExitTrader();
-            }
-        }
+        TraderTriggers.HandleTriggerStay(OBJ);
         if (OBJ.gameObject.CompareTag("House"))
         {
             TrySetFreeLookOrbits(FreeLook, 1f, 2f, 1f);
@@ -589,10 +597,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         {
             TouchShroom = false;
         }
-        if (OBJ.gameObject.CompareTag("Trader"))
-        {
-            Interaction.ExitTrader();
-        }
+        TraderTriggers.HandleTriggerExit(OBJ);
         if (OBJ.gameObject.CompareTag("House"))
         {
             TrySetFreeLookOrbits(FreeLook, 4f, 6f, 5f);
@@ -810,6 +815,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     }
     public void ShowCursor() => Interaction.ShowCursor();
     public void HideCursor() => Interaction.HideCursor();
+    public void EnterTraderInteraction(Collider trader) => Interaction.EnterTrader(trader);
     public void ExitTraderInteraction() => Interaction.ExitTrader();
     public void RestoreGameplayCursorAfterUiClose() => Interaction.RestoreGameplayCursorAfterUiClose();
     public void ActivateLooseMenu()
@@ -1276,6 +1282,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         GameFlowController.GetOrCreate().TrySetPlayingFromSceneStartup(nameof(Behaviour));
         Inventory.Initialize(this);
         Interaction.Initialize(this, inputReader);
+        TraderTriggers.Initialize(this);
         Combat.Initialize(this);
         Movement.Initialize(this);
         Failure.Initialize(this);

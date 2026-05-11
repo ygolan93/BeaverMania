@@ -184,6 +184,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     PlayerMovementController movementController;
     PlayerFailureController failureController;
     PlayerPickupController pickupController;
+    PlayerCameraZoneController cameraZoneController;
     bool wasGameplayBlocked;
 
     PlayerCameraReference GameplayCamera
@@ -343,6 +344,24 @@ public class Behaviour : MonoBehaviour, IDamageable
         }
     }
 
+    PlayerCameraZoneController CameraZones
+    {
+        get
+        {
+            if (cameraZoneController == null)
+            {
+                cameraZoneController = GetComponent<PlayerCameraZoneController>();
+                if (cameraZoneController == null)
+                {
+                    cameraZoneController = gameObject.AddComponent<PlayerCameraZoneController>();
+                }
+                cameraZoneController.Initialize(this);
+            }
+
+            return cameraZoneController;
+        }
+    }
+
     public void ToggleParryCounterAttack() => WhichAttack = !WhichAttack;
     public void SetAppleModelActive(bool active) => appleOBJ.SetActive(active);
     public bool CanCollectArrowPickup => Arrows != null && arrowMunition < Arrows.Length && bowEquipped;
@@ -476,10 +495,7 @@ public class Behaviour : MonoBehaviour, IDamageable
                 TouchShroom = false;
         }
         TraderTriggers.HandleTriggerStay(OBJ);
-        if (OBJ.gameObject.CompareTag("House"))
-        {
-            TrySetFreeLookOrbits(FreeLook, 1f, 2f, 1f);
-        }
+        CameraZones.HandleTriggerStay(OBJ);
         if (OBJ.gameObject.CompareTag("What Is this?"))
         {
             Plattering = "Ah shit. what happened here?";
@@ -503,11 +519,7 @@ public class Behaviour : MonoBehaviour, IDamageable
             TouchShroom = false;
         }
         TraderTriggers.HandleTriggerExit(OBJ);
-        if (OBJ.gameObject.CompareTag("House"))
-        {
-            TrySetFreeLookOrbits(FreeLook, 4f, 6f, 5f);
-            //FreeLook.m_Lens.FieldOfView = 25;
-        }
+        CameraZones.HandleTriggerExit(OBJ);
         if (OBJ.gameObject.CompareTag("Scorpion"))
         {
             scorpAttack = false;
@@ -1033,6 +1045,10 @@ public class Behaviour : MonoBehaviour, IDamageable
         return valid;
     }
 
+    public void ApplyHouseCameraOrbits() => TrySetFreeLookOrbits(FreeLook, 1f, 2f, 1f);
+
+    public void RestoreDefaultCameraOrbits() => TrySetFreeLookOrbits(FreeLook, 4f, 6f, 5f);
+
     bool TrySetFreeLookOrbits(CinemachineFreeLook cam, float top, float mid, float bottom)
     {
         if (!WarnMissingCameraReference(cam, nameof(FreeLook)))
@@ -1169,6 +1185,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     void OnDisable()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
+        cameraZoneController?.RestoreDefaultCameraOrbits();
     }
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -1192,6 +1209,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         Movement.Initialize(this);
         Failure.Initialize(this);
         Pickup.Initialize(this);
+        CameraZones.Initialize(this);
         arrowModel.SetActive(false);
         bowAim = new Vector3(-0.33f, 20f, -0.3f);
         TrySetTraderCameraEnabled(false);
@@ -1261,7 +1279,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         {
             Bow[i].SetActive(false);
         }
-        TrySetFreeLookOrbits(FreeLook, 4f, 6f, 5f);
+        RestoreDefaultCameraOrbits();
     }
     [System.Obsolete]
     public void Update()

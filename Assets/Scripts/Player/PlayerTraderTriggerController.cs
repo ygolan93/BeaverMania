@@ -26,14 +26,21 @@ public class PlayerTraderTriggerController : MonoBehaviour
         var skipPressed = trader.skipPressed;
         if (activeTrader == trader)
         {
-            if (!activeSkipPressed && skipPressed)
+            if (!owner.isAtTrader)
             {
-                ExitActiveTrader();
+                ClearActiveTraderState();
+            }
+            else
+            {
+                if (!activeSkipPressed && skipPressed)
+                {
+                    ExitActiveTrader();
+                    return;
+                }
+
+                activeSkipPressed = skipPressed;
                 return;
             }
-
-            activeSkipPressed = skipPressed;
-            return;
         }
 
         if (skipPressed)
@@ -78,9 +85,14 @@ public class PlayerTraderTriggerController : MonoBehaviour
             return;
         }
 
+        ClearActiveTraderState();
+        owner.ExitTraderInteraction();
+    }
+
+    void ClearActiveTraderState()
+    {
         activeTrader = null;
         activeCollider = null;
         activeSkipPressed = false;
-        owner.ExitTraderInteraction();
     }
 }

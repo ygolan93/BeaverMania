@@ -186,6 +186,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     PlayerPickupController pickupController;
     PlayerCameraZoneController cameraZoneController;
     PlayerEnemyContactController enemyContactController;
+    PlayerPlatformController platformController;
     bool wasGameplayBlocked;
 
     PlayerCameraReference GameplayCamera
@@ -381,6 +382,24 @@ public class Behaviour : MonoBehaviour, IDamageable
         }
     }
 
+    PlayerPlatformController Platforms
+    {
+        get
+        {
+            if (platformController == null)
+            {
+                platformController = GetComponent<PlayerPlatformController>();
+                if (platformController == null)
+                {
+                    platformController = gameObject.AddComponent<PlayerPlatformController>();
+                }
+                platformController.Initialize(this);
+            }
+
+            return platformController;
+        }
+    }
+
     public void ToggleParryCounterAttack() => WhichAttack = !WhichAttack;
     public void SetAppleModelActive(bool active) => appleOBJ.SetActive(active);
     public bool CanCollectArrowPickup => Arrows != null && arrowMunition < Arrows.Length && bowEquipped;
@@ -396,6 +415,18 @@ public class Behaviour : MonoBehaviour, IDamageable
     public void AddApplePickup() => Inventory.AddApple();
     public void AddGobletPickup() => Inventory.AddGoblet();
     public void SetScorpionContactAttacking(bool attacking) => scorpAttack = attacking;
+    public void SetOnPlatform(bool onPlatform) => OnPlatform = onPlatform;
+    public void SetStep(bool value) => step = value;
+    public void DetachFromPlatform()
+    {
+        if (Player == null)
+        {
+            return;
+        }
+
+        Player.transform.parent = null;
+        Player.transform.localScale = new(1, 1, 1);
+    }
 
     public void OnCollisionEnter(Collision OBJ)
     {
@@ -480,24 +511,10 @@ public class Behaviour : MonoBehaviour, IDamageable
         {
             Player.velocity += new Vector3(0, 1, 0);
         }
-        if (OBJ.gameObject.CompareTag("Tile"))
-        {   
-            Player.transform.SetParent(OBJ.gameObject.transform, true);
-            OnPlatform = true;
-        }
     }
     public void OnTriggerStay(Collider OBJ)
     {
         EnemyContacts.HandleTriggerStay(OBJ);
-        if (OBJ.gameObject.CompareTag("Tile"))
-        {
-            OnPlatform = true;
-            Player.transform.parent = OBJ.gameObject.transform;
-        }
-        if (OBJ.gameObject.CompareTag("stairs"))
-        {
-            step = true;
-        }
         if (OBJ.gameObject.CompareTag("Life"))
         {
             SaveCheckpoint(OBJ.transform.position);
@@ -520,17 +537,6 @@ public class Behaviour : MonoBehaviour, IDamageable
     }
     public void OnTriggerExit(Collider OBJ)
     {
-        if (OBJ.gameObject.CompareTag("stairs"))
-        {
-            step = false;
-        }
-        if (OBJ.gameObject.CompareTag("Tile"))
-        {
-            grounded = false;
-            OnPlatform = false;
-            Player.transform.parent = null;
-            Player.transform.localScale = new(1, 1, 1);
-        }
         if (OBJ.gameObject.CompareTag("Life"))
         {
             TouchShroom = false;
@@ -1201,6 +1207,9 @@ public class Behaviour : MonoBehaviour, IDamageable
         SceneManager.sceneLoaded -= OnSceneLoaded;
         cameraZoneController?.RestoreDefaultCameraOrbits();
         enemyContactController?.ClearScorpionContacts();
+        SetOnPlatform(false);
+        SetStep(false);
+        DetachFromPlatform();
     }
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -1210,6 +1219,8 @@ public class Behaviour : MonoBehaviour, IDamageable
 
     public void Start()
     {
+        Platforms.Initialize(this);
+
         if (!ValidateStartReferences())
         {
             return;

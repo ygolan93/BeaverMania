@@ -12,13 +12,13 @@ public static class PerformanceAuditMenu
 
     static readonly Regex TickMethodRegex = new Regex(@"\b(?:void|IEnumerator)\s+(Update|FixedUpdate|LateUpdate)\s*\(", RegexOptions.Compiled);
 
-    static readonly string[] FlaggedCalls =
+    static readonly KeyValuePair<string, Regex>[] FlaggedCalls =
     {
-        "Camera.main",
-        "FindGameObjectWithTag",
-        "Instantiate",
-        "Destroy",
-        "Debug.Log"
+        new KeyValuePair<string, Regex>("Camera.main", new Regex(@"\bCamera\s*\.\s*main\b", RegexOptions.Compiled)),
+        new KeyValuePair<string, Regex>("FindGameObjectWithTag", new Regex(@"\bFindGameObjectWithTag\s*\(", RegexOptions.Compiled)),
+        new KeyValuePair<string, Regex>("Instantiate", new Regex(@"\bInstantiate\s*\(", RegexOptions.Compiled)),
+        new KeyValuePair<string, Regex>("Destroy", new Regex(@"\bDestroy\s*\(", RegexOptions.Compiled)),
+        new KeyValuePair<string, Regex>("Debug.Log", new Regex(@"\bDebug\s*\.\s*Log\s*\(", RegexOptions.Compiled))
     };
 
     [MenuItem(MenuPath)]
@@ -69,22 +69,155 @@ public static class PerformanceAuditMenu
     static void AppendFlaggedCalls(StringBuilder report, string[] scripts)
     {
         report.AppendLine();
-        report.AppendLine("Flagged calls:");
+        report.AppendLine("Flagged calls (runtime scripts only):");
 
         var rows = new List<string>();
-        foreach (var script in scripts)
+        foreach (var script in scripts.Where(IsRuntimeScript))
         {
-            var source = AssetDatabase.LoadAssetAtPath<MonoScript>(script).text;
+            var source = StripCommentsAndStrings(AssetDatabase.LoadAssetAtPath<MonoScript>(script).text);
             foreach (var flaggedCall in FlaggedCalls)
             {
-                if (source.Contains(flaggedCall))
+                if (flaggedCall.Value.IsMatch(source))
                 {
-                    rows.Add("- " + script + ": " + flaggedCall);
+                    rows.Add("- " + script + ": " + flaggedCall.Key);
                 }
             }
         }
 
         AppendRowsOrNone(report, rows);
+    }
+
+    static bool IsRuntimeScript(string path)
+    {
+        return path.IndexOf("/Editor/", StringComparison.OrdinalIgnoreCase) < 0;
+    }
+
+    static string StripCommentsAndStrings(string source)
+    {
+        var chars = source.ToCharArray();
+        var inLineComment = false;
+        var inBlockComment = false;
+        var inString = false;
+        var inVerbatimString = false;
+        var inCharacter = false;
+
+        for (var i = 0; i < chars.Length; i++)
+        {
+            var current = chars[i];
+            var next = i + 1 < chars.Length ? chars[i + 1] : '\0';
+
+            if (inLineComment)
+            {
+                if (current == '\r' || current == '\n')
+                {
+                    inLineComment = false;
+                }
+                else
+                {
+                    chars[i] = ' ';
+                }
+
+                continue;
+            }
+
+            if (inBlockComment)
+            {
+                if (current == '*' && next == '/')
+                {
+                    chars[i] = ' ';
+                    chars[i + 1] = ' ';
+                    i++;
+                    inBlockComment = false;
+                }
+                else if (current != '\r' && current != '\n')
+                {
+                    chars[i] = ' ';
+                }
+
+                continue;
+            }
+
+            if (inString)
+            {
+                if (current == '\r' || current == '\n')
+                {
+                    inString = false;
+                    continue;
+                }
+
+                chars[i] = ' ';
+                if (current == '"')
+                {
+                    if (inVerbatimString && next == '"')
+                    {
+                        chars[i + 1] = ' ';
+                        i++;
+                    }
+                    else
+                    {
+                        inString = false;
+                        inVerbatimString = false;
+                    }
+                }
+                else if (!inVerbatimString && current == '\\' && next != '\0')
+                {
+                    chars[i + 1] = ' ';
+                    i++;
+                }
+
+                continue;
+            }
+
+            if (inCharacter)
+            {
+                if (current == '\r' || current == '\n')
+                {
+                    inCharacter = false;
+                    continue;
+                }
+
+                chars[i] = ' ';
+                if (current == '\'')
+                {
+                    inCharacter = false;
+                }
+                else if (current == '\\' && next != '\0')
+                {
+                    chars[i + 1] = ' ';
+                    i++;
+                }
+
+                continue;
+            }
+
+            if (current == '/' && next == '/')
+            {
+                chars[i] = ' ';
+                chars[i + 1] = ' ';
+                i++;
+                inLineComment = true;
+            }
+            else if (current == '/' && next == '*')
+            {
+                chars[i] = ' ';
+                chars[i + 1] = ' ';
+                i++;
+                inBlockComment = true;
+            }
+            else if (current == '"')
+            {
+                chars[i] = ' ';
+                inString = true;
+                inVerbatimString = i > 0 && chars[i - 1] == '@';
+            }
+            else if (current == '\'')
+            {
+                chars[i] = ' ';
+                inCharacter = true;
+            }
+        }
+
+        return new string(chars);
     }
 
     static void AppendPrefabValidation(StringBuilder report)

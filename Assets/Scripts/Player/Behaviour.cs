@@ -185,6 +185,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     PlayerFailureController failureController;
     PlayerPickupController pickupController;
     PlayerCameraZoneController cameraZoneController;
+    PlayerEnemyContactController enemyContactController;
     bool wasGameplayBlocked;
 
     PlayerCameraReference GameplayCamera
@@ -362,6 +363,24 @@ public class Behaviour : MonoBehaviour, IDamageable
         }
     }
 
+    PlayerEnemyContactController EnemyContacts
+    {
+        get
+        {
+            if (enemyContactController == null)
+            {
+                enemyContactController = GetComponent<PlayerEnemyContactController>();
+                if (enemyContactController == null)
+                {
+                    enemyContactController = gameObject.AddComponent<PlayerEnemyContactController>();
+                }
+                enemyContactController.Initialize(this);
+            }
+
+            return enemyContactController;
+        }
+    }
+
     public void ToggleParryCounterAttack() => WhichAttack = !WhichAttack;
     public void SetAppleModelActive(bool active) => appleOBJ.SetActive(active);
     public bool CanCollectArrowPickup => Arrows != null && arrowMunition < Arrows.Length && bowEquipped;
@@ -376,6 +395,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     public void AddSeedPickup() => Inventory.AddSeed();
     public void AddApplePickup() => Inventory.AddApple();
     public void AddGobletPickup() => Inventory.AddGoblet();
+    public void SetScorpionContactAttacking(bool attacking) => scorpAttack = attacking;
 
     public void OnCollisionEnter(Collision OBJ)
     {
@@ -468,10 +488,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     }
     public void OnTriggerStay(Collider OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Scorpion"))
-        {
-            scorpAttack = OBJ.gameObject.GetComponent<ScorpionScript>().isAttacking;
-        }
+        EnemyContacts.HandleTriggerStay(OBJ);
         if (OBJ.gameObject.CompareTag("Tile"))
         {
             OnPlatform = true;
@@ -520,10 +537,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         }
         TraderTriggers.HandleTriggerExit(OBJ);
         CameraZones.HandleTriggerExit(OBJ);
-        if (OBJ.gameObject.CompareTag("Scorpion"))
-        {
-            scorpAttack = false;
-        }
+        EnemyContacts.HandleTriggerExit(OBJ);
     }
     public void TakeDamage(float Damage) => TakeDamage(new DamageEvent { Amount = Damage, Source = null, Point = transform.position, Type = DamageType.Generic, CanStun = false });
     public void TakeDamage(DamageEvent damageEvent) => Health.TakeDamage(damageEvent.Amount);
@@ -1186,6 +1200,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
         cameraZoneController?.RestoreDefaultCameraOrbits();
+        enemyContactController?.ClearScorpionContacts();
     }
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)

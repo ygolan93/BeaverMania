@@ -14,11 +14,8 @@ public class PauseController : MonoBehaviour
         this.question = question;
         this.player = player;
 
-        if (player != null)
-            player.HideCursor();
-
-        SetMenuVisible(false);
-        SetQuestionVisible(false);
+        ActivePause = false;
+        ApplyPauseState();
     }
 
     public void Pause()

@@ -16,6 +16,7 @@ public static class BuildSafeLogger
     private static readonly HashSet<string> errorKeys = new HashSet<string>();
 #endif
 
+    [System.Diagnostics.Conditional("UNITY_EDITOR"), System.Diagnostics.Conditional("DEVELOPMENT_BUILD")]
     public static void InfoOnce(string key, string message, Object owner = null, string missingField = null, string missingTag = null, string missingMethod = null)
     {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -26,6 +27,7 @@ public static class BuildSafeLogger
 #endif
     }
 
+    [System.Diagnostics.Conditional("UNITY_EDITOR"), System.Diagnostics.Conditional("DEVELOPMENT_BUILD")]
     public static void WarnOnce(string key, string message, Object owner = null, string missingField = null, string missingTag = null, string missingMethod = null)
     {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -36,6 +38,7 @@ public static class BuildSafeLogger
 #endif
     }
 
+    [System.Diagnostics.Conditional("UNITY_EDITOR"), System.Diagnostics.Conditional("DEVELOPMENT_BUILD")]
     public static void ErrorOnce(string key, string message, Object owner = null, string missingField = null, string missingTag = null, string missingMethod = null)
     {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD

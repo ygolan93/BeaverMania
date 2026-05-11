@@ -161,6 +161,7 @@ public class Behaviour : MonoBehaviour
     public CinemachineFreeLook FreeLook;
     public CinemachineFreeLook CamForTraders;
     [SerializeField] PlayerCursorController cursorController;
+    [SerializeField] PlayerCheckpointRespawn checkpointRespawn;
     public float ChangeSpeech = 1F;
 
     public void OnCollisionEnter(Collision OBJ)
@@ -656,6 +657,8 @@ public class Behaviour : MonoBehaviour
             i++;
         }
     }
+    public GameObject CheckpointPopUpEffect => PopUpEffect;
+
     PlayerCursorController CursorController
     {
         get
@@ -696,13 +699,28 @@ public class Behaviour : MonoBehaviour
         HideCursor();
         LooseScreen.SetActive(false);
     }
+    PlayerCheckpointRespawn CheckpointRespawn
+    {
+        get
+        {
+            if (checkpointRespawn == null)
+            {
+                checkpointRespawn = GetComponent<PlayerCheckpointRespawn>();
+            }
+
+            if (checkpointRespawn == null)
+            {
+                checkpointRespawn = gameObject.AddComponent<PlayerCheckpointRespawn>();
+            }
+
+            checkpointRespawn.Bind(this);
+            return checkpointRespawn;
+        }
+    }
+
     public void RestartCheckpoint()
     {
-        HealthBar.SetHealth(MaxHealth);
-        CurrentHealth = MaxHealth;
-        transform.position = GM.lastCheckPointPos;
-        Instantiate(PopUpEffect, transform.position, Quaternion.identity);
-        Lives--;
+        CheckpointRespawn.RestartCheckpoint();
     }
     public void RestartGame()
     {

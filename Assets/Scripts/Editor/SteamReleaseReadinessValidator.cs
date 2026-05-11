@@ -24,7 +24,8 @@ public static class SteamReleaseReadinessValidator
         "Assets/Scripts/Debug/DebugDamageTrigger.cs",
         "Assets/Scripts/Debug/DebugCheckpointTeleport.cs",
         "Assets/Scripts/Debug/DebugSceneResetShortcut.cs",
-        "Assets/Scripts/Debug/FpsDisplay.cs"
+        "Assets/Scripts/Debug/FpsDisplay.cs",
+        "Assets/Scripts/Debug/PerformanceDiagnosticsOverlay.cs"
     };
 
     [MenuItem(MenuPath)]

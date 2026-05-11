@@ -452,6 +452,11 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
 
     private void OnCollisionEnter(Collision OBJ)
     {
+        if (isDead || OBJ == null || OBJ.gameObject == null)
+        {
+            return;
+        }
+
         if (OBJ.gameObject == PlayerTarget)
         {
             if (combo < hit2stun)
@@ -477,10 +482,6 @@ public class NPC_Basic : MonoBehaviour, IDamageable, IRuntimeResettable
             }
 
             TakeDamage(15);
-            if (Sound != null)
-            {
-                Sound.Beat();
-            }
             combo = hit2stun;
         }
         if (OBJ.gameObject.CompareTag("Isle"))

@@ -181,7 +181,7 @@ public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
 
     public void TakeDamage(DamageEvent damageEvent)
     {
-        if (deathResolved)
+        if (deathResolved || isDead)
         {
             return;
         }
@@ -195,7 +195,7 @@ public class Static_Hive : MonoBehaviour, IDamageable, IRuntimeResettable
             feedback?.EmitHit();
         }
         CurrentHealth -= Mathf.RoundToInt(damageEvent.Amount);
-        if (Sound != null)
+        if (Sound != null && Sound.clip != null)
         {
             Sound.Play();
         }

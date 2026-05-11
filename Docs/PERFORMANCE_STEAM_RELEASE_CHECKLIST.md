@@ -5,7 +5,8 @@ Use this checklist before every Steam release candidate. Do not change project o
 ## Automated audit
 
 - Run `Tools/Beavermania/Validate Steam Release Readiness` in the Unity editor.
-- Save the console output with the release-candidate notes.
+- Run `Tools/Beavermania/Run Performance Audit` in the Unity editor.
+- Save both console outputs with the release-candidate notes.
 - Confirm the validator is report-only and did not modify `ProjectSettings/*`, scenes, prefabs, or assets.
 
 ## Display defaults
@@ -22,7 +23,7 @@ Use this checklist before every Steam release candidate. Do not change project o
   - `vSyncCount > 0`: Unity uses display sync; target frame rate may be ignored.
   - `vSyncCount == 0`: `Application.targetFrameRate` / platform default governs frame pacing.
 - Target frame-rate behavior is tested on the target hardware class.
-- No development-only FPS overlay appears in release builds.
+- No development-only FPS or performance diagnostics overlay appears in release builds.
 
 ## Quality / rendering
 
@@ -46,7 +47,9 @@ Use this checklist before every Steam release candidate. Do not change project o
 - `BuildSafeLogger` calls are compiled out for non-development players.
 - Non-development player build emits no development diagnostic UI or log spam.
 - Logging configuration exists for editor/development-build diagnostics if those builds are being produced.
-- Runtime diagnostic helpers under `Assets/Scripts/Debug` and `DevelopmentRuntimeDiagnostics` are unavailable in non-development players.
+- Runtime diagnostic helpers under `Assets/Scripts/Debug`, including `PerformanceDiagnosticsOverlay`, and `DevelopmentRuntimeDiagnostics` are unavailable in non-development players.
+- `PerformanceDiagnosticsOverlay` is not attached to release scenes/prefabs and remains disabled unless explicitly toggled in editor/development builds.
+- Duplicate music/runtime-service warnings from development diagnostics are investigated before release.
 
 ## Steam smoke test
 

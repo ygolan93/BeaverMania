@@ -159,6 +159,7 @@ public class Behaviour : MonoBehaviour
     public GameObject AimIcon;
     public CinemachineFreeLook FreeLook;
     public CinemachineFreeLook CamForTraders;
+    [SerializeField] PlayerCursorController cursorController;
     public float ChangeSpeech = 1F;
 
     public void OnCollisionEnter(Collision OBJ)
@@ -654,18 +655,31 @@ public class Behaviour : MonoBehaviour
             i++;
         }
     }
+    PlayerCursorController CursorController
+    {
+        get
+        {
+            if (cursorController == null)
+            {
+                cursorController = GetComponent<PlayerCursorController>();
+            }
+
+            if (cursorController == null)
+            {
+                cursorController = gameObject.AddComponent<PlayerCursorController>();
+            }
+
+            cursorController.Bind(Root, FreeLook);
+            return cursorController;
+        }
+    }
     public void ShowCursor()
     {
-        //show mouse icon
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        CursorController.ShowCursor();
     }
     public void HideCursor()
     {
-        //Lock and hide mouse icon
-        FreeLook.m_LookAt = Root;
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        CursorController.HideCursor();
     }
     public void ActivateLooseMenu()
     {

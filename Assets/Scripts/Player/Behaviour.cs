@@ -187,6 +187,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     PlayerCameraZoneController cameraZoneController;
     PlayerEnemyContactController enemyContactController;
     PlayerPlatformController platformController;
+    PlayerCheckpointHealController checkpointHealController;
     bool wasGameplayBlocked;
 
     PlayerCameraReference GameplayCamera
@@ -400,6 +401,24 @@ public class Behaviour : MonoBehaviour, IDamageable
         }
     }
 
+    PlayerCheckpointHealController CheckpointHeals
+    {
+        get
+        {
+            if (checkpointHealController == null)
+            {
+                checkpointHealController = GetComponent<PlayerCheckpointHealController>();
+                if (checkpointHealController == null)
+                {
+                    checkpointHealController = gameObject.AddComponent<PlayerCheckpointHealController>();
+                }
+                checkpointHealController.Initialize(this);
+            }
+
+            return checkpointHealController;
+        }
+    }
+
     public void ToggleParryCounterAttack() => WhichAttack = !WhichAttack;
     public void SetAppleModelActive(bool active) => appleOBJ.SetActive(active);
     public bool CanCollectArrowPickup => Arrows != null && arrowMunition < Arrows.Length && bowEquipped;
@@ -483,10 +502,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         {
             grounded = false;
         }
-        if (OBJ.gameObject.CompareTag("Life"))
-        {
-            TouchShroom = false;
-        }
+        CheckpointHeals.HandleCollisionExit(OBJ);
     }
     public void OnTriggerEnter(Collider OBJ)
     {
@@ -503,10 +519,7 @@ public class Behaviour : MonoBehaviour, IDamageable
             }
 
         }
-        if (OBJ.gameObject.CompareTag("Life"))
-        {
-            State.checkpointMessageUntil = Time.time + 3f;
-        }
+        CheckpointHeals.HandleTriggerEnter(OBJ);
         if (OBJ.gameObject.CompareTag("Bridge"))
         {
             Player.velocity += new Vector3(0, 1, 0);
@@ -515,19 +528,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     public void OnTriggerStay(Collider OBJ)
     {
         EnemyContacts.HandleTriggerStay(OBJ);
-        if (OBJ.gameObject.CompareTag("Life"))
-        {
-            SaveCheckpoint(OBJ.transform.position);
-            Plattering = ("Shroom!");
-            ChangeSpeech = 1;
-            if (CurrentHealth < MaxHealth)
-            {
-                TakeDamage(-2);
-                TouchShroom = true;
-            }
-            if (CurrentHealth >= MaxHealth)
-                TouchShroom = false;
-        }
+        CheckpointHeals.HandleTriggerStay(OBJ);
         TraderTriggers.HandleTriggerStay(OBJ);
         CameraZones.HandleTriggerStay(OBJ);
         if (OBJ.gameObject.CompareTag("What Is this?"))
@@ -537,14 +538,14 @@ public class Behaviour : MonoBehaviour, IDamageable
     }
     public void OnTriggerExit(Collider OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Life"))
-        {
-            TouchShroom = false;
-        }
+        CheckpointHeals.HandleTriggerExit(OBJ);
         TraderTriggers.HandleTriggerExit(OBJ);
         CameraZones.HandleTriggerExit(OBJ);
         EnemyContacts.HandleTriggerExit(OBJ);
     }
+    public void SetCheckpointMessageUntil(float time) => State.checkpointMessageUntil = time;
+    public void SavePlayerCheckpoint(Vector3 position) => SaveCheckpoint(position);
+    public void SetTouchShroom(bool active) => TouchShroom = active;
     public void TakeDamage(float Damage) => TakeDamage(new DamageEvent { Amount = Damage, Source = null, Point = transform.position, Type = DamageType.Generic, CanStun = false });
     public void TakeDamage(DamageEvent damageEvent) => Health.TakeDamage(damageEvent.Amount);
     public void HandleFailure(PlayerFailureReason reason)
@@ -1207,6 +1208,8 @@ public class Behaviour : MonoBehaviour, IDamageable
         SceneManager.sceneLoaded -= OnSceneLoaded;
         cameraZoneController?.RestoreDefaultCameraOrbits();
         enemyContactController?.ClearScorpionContacts();
+        checkpointHealController?.ClearTouchShroom();
+        SetTouchShroom(false);
         SetOnPlatform(false);
         SetStep(false);
         DetachFromPlatform();
@@ -1236,6 +1239,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         Failure.Initialize(this);
         Pickup.Initialize(this);
         CameraZones.Initialize(this);
+        CheckpointHeals.Initialize(this);
         arrowModel.SetActive(false);
         bowAim = new Vector3(-0.33f, 20f, -0.3f);
         TrySetTraderCameraEnabled(false);

@@ -1,14 +1,16 @@
 using UnityEngine;
 
+namespace Beavermania.Core.GameFlow
+{
 public class PauseController : MonoBehaviour
 {
     public bool ActivePause = false;
 
     GameObject pauseMenu;
     GameObject question;
-    Behaviour player;
+    global::Behaviour player;
 
-    public void Bind(GameObject pauseMenu, GameObject question, Behaviour player)
+    public void Bind(GameObject pauseMenu, GameObject question, global::Behaviour player)
     {
         this.pauseMenu = pauseMenu;
         this.question = question;
@@ -72,4 +74,5 @@ public class PauseController : MonoBehaviour
         if (question != null)
             question.SetActive(visible);
     }
+}
 }

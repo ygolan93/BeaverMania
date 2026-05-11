@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Beavermania.Player;
 using Cinemachine;
 using Cinemachine.Utility;
 using UnityEngine;

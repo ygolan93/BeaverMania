@@ -1,6 +1,8 @@
 using Cinemachine;
 using UnityEngine;
 
+namespace Beavermania.Player
+{
 public class PlayerCursorController : MonoBehaviour
 {
     public Transform Root;
@@ -28,4 +30,5 @@ public class PlayerCursorController : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
+}
 }

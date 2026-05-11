@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class PauseMenuController : MonoBehaviour
@@ -10,8 +11,12 @@ public class PauseMenuController : MonoBehaviour
 
     GameFlowController gameFlow;
     GameInputReader inputReader;
+    bool keepCursorVisibleAfterResume;
     [SerializeField] Slider volumeSlider;
     [SerializeField] AudioSource Music;
+    [SerializeField] SettingsController settingsController;
+    [SerializeField] GameObject firstPauseSelection;
+    [SerializeField] GameObject firstQuestionSelection;
 
     protected virtual void OnEnable()
     {
@@ -79,25 +84,31 @@ public class PauseMenuController : MonoBehaviour
 
     protected virtual void Update()
     {
-        Pause();
     }
 
     public void Pause()
     {
-        if (ActivePause)
-        {
-            ShowPausePanel();
-            return;
-        }
-
-        HidePausePanel();
-        HideQuestionPanel();
+        // Legacy animation/UI hook. Pause panel state is applied only when pause state changes.
     }
 
     public void ChangeBolean()
     {
-        var pauseRequested = !ActivePause;
-        var keepCursorVisible = !pauseRequested && IsPlayerInTraderOrDialogueUi();
+        var currentFlow = GetGameFlow();
+        if (IsPauseToggleBlocked(currentFlow))
+        {
+            return;
+        }
+
+        var pauseRequested = currentFlow != null
+            ? currentFlow.State != GameFlowState.Paused
+            : !ActivePause;
+        var keepCursorVisible = !pauseRequested &&
+            (keepCursorVisibleAfterResume || IsPlayerInTraderOrDialogueUi());
+
+        if (pauseRequested)
+        {
+            keepCursorVisibleAfterResume = IsPlayerInTraderOrDialogueUi();
+        }
 
         if (!SetPaused(pauseRequested))
         {
@@ -106,7 +117,12 @@ public class PauseMenuController : MonoBehaviour
 
         ActivePause = pauseRequested;
         ApplyCursorState(pauseRequested, keepCursorVisible);
-        Pause();
+        ApplyPauseVisualState(pauseRequested);
+
+        if (!pauseRequested)
+        {
+            keepCursorVisibleAfterResume = false;
+        }
     }
 
     void HandlePausePressed()
@@ -154,32 +170,41 @@ public class PauseMenuController : MonoBehaviour
 
     public void ShowPausePanel()
     {
-        SetPanel(PauseMenu, true, this, nameof(PauseMenu));
+        SetPanel(PauseMenu, true, firstPauseSelection, this, nameof(PauseMenu));
     }
 
     public void HidePausePanel()
     {
-        SetPanel(PauseMenu, false, this, nameof(PauseMenu));
+        SetPanel(PauseMenu, false, firstPauseSelection, this, nameof(PauseMenu));
     }
 
     public void ShowQuestionPanel()
     {
-        SetPanel(Question, true, this, nameof(Question));
+        SetPanel(Question, true, firstQuestionSelection, this, nameof(Question));
     }
 
     public void HideQuestionPanel()
     {
-        SetPanel(Question, false, this, nameof(Question));
+        SetPanel(Question, false, firstQuestionSelection, this, nameof(Question));
+    }
+
+    internal void ApplyPauseVisualState(bool paused)
+    {
+        if (paused)
+        {
+            ShowPausePanel();
+            return;
+        }
+
+        HidePausePanel();
+        HideQuestionPanel();
     }
 
     bool SetPaused(bool paused)
     {
-        if (gameFlow == null)
-        {
-            gameFlow = GameFlowController.GetOrCreate();
-        }
+        gameFlow = GetGameFlow();
 
-        if (!gameFlow.SetPaused(paused))
+        if (gameFlow == null || !gameFlow.SetPaused(paused))
         {
             ActivePause = false;
             return false;
@@ -215,7 +240,36 @@ public class PauseMenuController : MonoBehaviour
             (currentFlow.State == GameFlowState.Shop || currentFlow.State == GameFlowState.Dialogue);
     }
 
-    static void SetPanel(GameObject panel, bool active, PauseMenuController owner, string fieldName)
+    SettingsController GetSettingsController()
+    {
+        if (settingsController == null)
+        {
+            settingsController = GetComponentInChildren<SettingsController>(true);
+        }
+
+        return settingsController;
+    }
+
+    GameFlowController GetGameFlow()
+    {
+        if (gameFlow == null)
+        {
+            gameFlow = GameFlowController.Instance != null
+                ? GameFlowController.Instance
+                : GameFlowController.GetOrCreate();
+        }
+
+        return gameFlow;
+    }
+
+    static bool IsPauseToggleBlocked(GameFlowController currentFlow)
+    {
+        return currentFlow != null &&
+            (currentFlow.State == GameFlowState.GameOver ||
+             currentFlow.State == GameFlowState.Transitioning);
+    }
+
+    static void SetPanel(GameObject panel, bool active, GameObject firstSelection, PauseMenuController owner, string fieldName)
     {
         if (panel != null)
         {
@@ -232,5 +286,65 @@ public class PauseMenuController : MonoBehaviour
             "UI panel is null; cannot set active=" + active + ".",
             owner,
             fieldName);
+    }
+
+    static void SelectPanelObject(GameObject panel, GameObject selection, PauseMenuController owner, string fieldName)
+    {
+        var eventSystem = EventSystem.current;
+        if (eventSystem == null)
+        {
+            WarnMissingEventSystem(owner, fieldName);
+            return;
+        }
+
+        eventSystem.SetSelectedGameObject(ResolveSelection(panel, selection));
+    }
+
+    static GameObject ResolveSelection(GameObject panel, GameObject selection)
+    {
+        if (selection != null)
+        {
+            return selection;
+        }
+
+        if (panel == null)
+        {
+            return null;
+        }
+
+        var selectables = panel.GetComponentsInChildren<Selectable>();
+        foreach (var selectable in selectables)
+        {
+            if (selectable != null && selectable.IsInteractable() && selectable.gameObject != panel)
+            {
+                return selectable.gameObject;
+            }
+        }
+
+        return null;
+    }
+
+    static void ClearSelectionIfPanelOwnsIt(GameObject panel, PauseMenuController owner, string fieldName)
+    {
+        var eventSystem = EventSystem.current;
+        if (eventSystem == null)
+        {
+            WarnMissingEventSystem(owner, fieldName);
+            return;
+        }
+
+        var selected = eventSystem.currentSelectedGameObject;
+        if (selected != null && (selected == panel || selected.transform.IsChildOf(panel.transform)))
+        {
+            eventSystem.SetSelectedGameObject(null);
+        }
+    }
+
+    static void WarnMissingEventSystem(PauseMenuController owner, string fieldName)
+    {
+        BuildSafeLogger.WarnOnce(
+            nameof(PauseMenuController) + ".MissingEventSystem." + fieldName,
+            "EventSystem is missing; UI selection update skipped.",
+            owner);
     }
 }

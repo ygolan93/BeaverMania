@@ -18,6 +18,14 @@ public class LoadingScreenController : MonoBehaviour
         }
     }
 
+    void OnDestroy()
+    {
+        if (isLoading)
+        {
+            activeLoadScene = null;
+        }
+    }
+
     public void LoadScene(string sceneName)
     {
         if (isLoading)
@@ -78,5 +86,8 @@ public class LoadingScreenController : MonoBehaviour
 
             yield return null; // Wait for the next frame
         }
+
+        isLoading = false;
+        activeLoadScene = null;
     }
 }

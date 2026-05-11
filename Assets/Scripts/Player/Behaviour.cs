@@ -180,9 +180,15 @@ public class Behaviour : MonoBehaviour, IDamageable
     PlayerHealthController healthController;
     PlayerInventory inventory;
     PlayerInteractionController interactionController;
+    PlayerTraderTriggerController traderTriggerController;
     PlayerCombatController combatController;
     PlayerMovementController movementController;
     PlayerFailureController failureController;
+    PlayerPickupController pickupController;
+    PlayerCameraZoneController cameraZoneController;
+    PlayerEnemyContactController enemyContactController;
+    PlayerPlatformController platformController;
+    PlayerCheckpointHealController checkpointHealController;
     bool wasGameplayBlocked;
 
     PlayerCameraReference GameplayCamera
@@ -254,6 +260,24 @@ public class Behaviour : MonoBehaviour, IDamageable
             }
 
             return interactionController;
+        }
+    }
+
+    PlayerTraderTriggerController TraderTriggers
+    {
+        get
+        {
+            if (traderTriggerController == null)
+            {
+                traderTriggerController = GetComponent<PlayerTraderTriggerController>();
+                if (traderTriggerController == null)
+                {
+                    traderTriggerController = gameObject.AddComponent<PlayerTraderTriggerController>();
+                }
+                traderTriggerController.Initialize(this);
+            }
+
+            return traderTriggerController;
         }
     }
 
@@ -381,18 +405,25 @@ public class Behaviour : MonoBehaviour, IDamageable
                 Inventory.AddGoblet();
             }
 
+            return pickupController;
         }
-        if (OBJ.gameObject.CompareTag("Isle") || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("stairs") || OBJ.gameObject.CompareTag("Tile"))
+    }
+
+    PlayerCameraZoneController CameraZones
+    {
+        get
         {
-            FallClock = InitialFall;
-            if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.D))
+            if (cameraZoneController == null)
             {
-                if (OBJ.gameObject.CompareTag("stairs"))
+                cameraZoneController = GetComponent<PlayerCameraZoneController>();
+                if (cameraZoneController == null)
                 {
-                    Player.velocity += new Vector3(0, 1, 0);
-                    Player.drag = 0;
+                    cameraZoneController = gameObject.AddComponent<PlayerCameraZoneController>();
                 }
+                cameraZoneController.Initialize(this);
             }
+
+            return cameraZoneController;
         }
         if (OBJ.gameObject.CompareTag("Coin"))
         {
@@ -406,7 +437,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         }
         if (arrowMunition<Arrows.Length && bowEquipped==true)
         {
-            if (OBJ.gameObject.CompareTag("Arrow"))
+            if (enemyContactController == null)
             {
                 if (!TryBeginPickup(OBJ.gameObject))
                 {
@@ -419,11 +450,20 @@ public class Behaviour : MonoBehaviour, IDamageable
                 SpawnPickupEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
                 if (bowEquipped == true)
                 {
-                    CountArrows();
+                    enemyContactController = gameObject.AddComponent<PlayerEnemyContactController>();
                 }
-                Destroy(OBJ.gameObject);
+                enemyContactController.Initialize(this);
             }
-            if (OBJ.gameObject.CompareTag("ArrowBundle"))
+
+            return enemyContactController;
+        }
+    }
+
+    PlayerPlatformController Platforms
+    {
+        get
+        {
+            if (platformController == null)
             {
                 if (!TryBeginPickup(OBJ.gameObject))
                 {
@@ -435,34 +475,83 @@ public class Behaviour : MonoBehaviour, IDamageable
                 SpawnPickupEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
                 if (arrowMunition + 10 < Arrows.Length)
                 {
-                    arrowMunition += 10;
+                    platformController = gameObject.AddComponent<PlayerPlatformController>();
                 }
-                else
-                {
-                    for (int i = 0; i <(arrowMunition-10); i++)
-                    {
-                        Instantiate(ArrowPickup, OBJ.transform.position+new Vector3(0,i* 0.3f, 0), Quaternion.Euler(0,0,90));
-                    }
-                    arrowMunition = Arrows.Length;
-                }
-                if (bowEquipped == true)
-                {
-                    CountArrows();
-                }
-                Destroy(OBJ.gameObject);
+                platformController.Initialize(this);
             }
 
+            return platformController;
+        }
+    }
+
+    PlayerCheckpointHealController CheckpointHeals
+    {
+        get
+        {
+            if (checkpointHealController == null)
+            {
+                checkpointHealController = GetComponent<PlayerCheckpointHealController>();
+                if (checkpointHealController == null)
+                {
+                    checkpointHealController = gameObject.AddComponent<PlayerCheckpointHealController>();
+                }
+                checkpointHealController.Initialize(this);
+            }
+
+            return checkpointHealController;
+        }
+    }
+
+    public void ToggleParryCounterAttack() => WhichAttack = !WhichAttack;
+    public void SetAppleModelActive(bool active) => appleOBJ.SetActive(active);
+    public bool CanCollectArrowPickup => Arrows != null && arrowMunition < Arrows.Length && bowEquipped;
+    public int ArrowCapacity => Arrows != null ? Arrows.Length : 0;
+    public void PlayPickupEffect(Vector3 position)
+    {
+        if (PickUpEffect != null)
+        {
+            Instantiate(PickUpEffect, position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+        }
+    }
+    public void AddSeedPickup() => Inventory.AddSeed();
+    public void AddApplePickup() => Inventory.AddApple();
+    public void AddGobletPickup() => Inventory.AddGoblet();
+    public void SetScorpionContactAttacking(bool attacking) => scorpAttack = attacking;
+    public void SetOnPlatform(bool onPlatform) => OnPlatform = onPlatform;
+    public void SetStep(bool value) => step = value;
+    public void DetachFromPlatform()
+    {
+        if (Player == null)
+        {
+            return;
+        }
+
+        Player.transform.parent = null;
+        Player.transform.localScale = new(1, 1, 1);
+    }
+
+    public void OnCollisionEnter(Collision OBJ)
+    {
+        if (OBJ.gameObject.CompareTag("Isle") || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("stairs") || OBJ.gameObject.CompareTag("Tile"))
+        {
+            FallClock = InitialFall;
+            if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.D))
+            {
+                if (OBJ.gameObject.CompareTag("stairs"))
+                {
+                    Player.velocity += new Vector3(0, 1, 0);
+                    Player.drag = 0;
+                }
+            }
         }
 
     }
     public void OnCollisionStay(Collision OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Isle") || 
-            OBJ.gameObject.CompareTag("Bridge") || 
-            OBJ.gameObject.CompareTag("Tile") || 
-            OBJ.gameObject.CompareTag("House") || 
-            OBJ.gameObject.CompareTag("stairs") || 
-            OBJ.gameObject.CompareTag("Tile"))
+        GameObject otherObject = OBJ.gameObject;
+        Transform otherTransform = OBJ.transform;
+
+        if (IsGroundSurface(otherObject))
         {
             grounded = true;
         }
@@ -548,105 +637,56 @@ public class Behaviour : MonoBehaviour, IDamageable
         {
             Plattering = "Get off me ya nasty bastards!";
             ChangeSpeech = 3;
-            Vector3 ParryDirection = OBJ.transform.position - transform.position;
+            Vector3 ParryDirection = otherTransform.position - transform.position;
             if (SafeRotation.TryPlanarLookRotation(ParryDirection, out Quaternion parryRotation))
             {
                 transform.rotation = parryRotation;
             }
         }
-        if (OBJ.gameObject.CompareTag("Strike"))
+        if (otherObject.CompareTag(PlayerTags.Strike))
         {
             HandleFailure(PlayerFailureReason.Strike);
         }
     }
     public void OnCollisionExit(Collision OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Isle") || 
-            OBJ.gameObject.CompareTag("Bridge") || 
-            OBJ.gameObject.CompareTag("House") || 
-            OBJ.gameObject.CompareTag("stairs") || 
-            OBJ.gameObject.CompareTag("Tile"))
+        GameObject otherObject = OBJ.gameObject;
+
+        if (IsGroundSurface(otherObject))
         {
             grounded = false;
         }
-        if (OBJ.gameObject.CompareTag("Life"))
-        {
-            TouchShroom = false;
-        }
+        CheckpointHeals.HandleCollisionExit(OBJ);
     }
     public void OnTriggerEnter(Collider OBJ)
     {
-        if (OBJ.gameObject.CompareTag("SwitchMusic"))
+        GameObject otherObject = OBJ.gameObject;
+
+        if (otherObject.CompareTag(PlayerTags.SwitchMusic))
         {
-            OBJ.gameObject.SetActive(false);
-            if (int.TryParse(OBJ.gameObject.name, out int songIndex))
+            otherObject.SetActive(false);
+            if (int.TryParse(otherObject.name, out int songIndex))
             {
                 Music.ChangeSong(songIndex);
             }
             else
             {
-                BuildSafeLogger.WarnOnce("Behaviour.SwitchMusic.InvalidName." + OBJ.gameObject.name, "The game object's name is not a valid integer: " + OBJ.gameObject.name, this);
+                BuildSafeLogger.WarnOnce("Behaviour.SwitchMusic.InvalidName." + otherObject.name, "The game object's name is not a valid integer: " + otherObject.name, this);
             }
 
         }
-        if (OBJ.gameObject.CompareTag("Life"))
-        {
-            State.checkpointMessageUntil = Time.time + 3f;
-        }
+        CheckpointHeals.HandleTriggerEnter(OBJ);
         if (OBJ.gameObject.CompareTag("Bridge"))
         {
             Player.velocity += new Vector3(0, 1, 0);
         }
-        if (OBJ.gameObject.CompareTag("Tile"))
-        {   
-            Player.transform.SetParent(OBJ.gameObject.transform, true);
-            OnPlatform = true;
-        }
     }
     public void OnTriggerStay(Collider OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Scorpion"))
-        {
-            scorpAttack = OBJ.gameObject.GetComponent<ScorpionScript>().isAttacking;
-        }
-        if (OBJ.gameObject.CompareTag("Tile"))
-        {
-            OnPlatform = true;
-            Player.transform.parent = OBJ.gameObject.transform;
-        }
-        if (OBJ.gameObject.CompareTag("stairs"))
-        {
-            step = true;
-        }
-        if (OBJ.gameObject.CompareTag("Life"))
-        {
-            SaveCheckpoint(OBJ.transform.position);
-            Plattering = ("Shroom!");
-            ChangeSpeech = 1;
-            if (CurrentHealth < MaxHealth)
-            {
-                TakeDamage(-2);
-                TouchShroom = true;
-            }
-            if (CurrentHealth >= MaxHealth)
-                TouchShroom = false;
-        }
-        if (OBJ.gameObject.CompareTag("Trader"))
-        {
-            var skip = OBJ.gameObject.GetComponent<Trader>().skipPressed;
-            if (skip ==false)
-            {
-                Interaction.EnterTrader(OBJ);
-            }
-            if (skip ==true)
-            {
-                Interaction.ExitTrader();
-            }
-        }
-        if (OBJ.gameObject.CompareTag("House"))
-        {
-            TrySetFreeLookOrbits(FreeLook, 1f, 2f, 1f);
-        }
+        EnemyContacts.HandleTriggerStay(OBJ);
+        CheckpointHeals.HandleTriggerStay(OBJ);
+        TraderTriggers.HandleTriggerStay(OBJ);
+        CameraZones.HandleTriggerStay(OBJ);
         if (OBJ.gameObject.CompareTag("What Is this?"))
         {
             Plattering = "Ah shit. what happened here?";
@@ -654,35 +694,14 @@ public class Behaviour : MonoBehaviour, IDamageable
     }
     public void OnTriggerExit(Collider OBJ)
     {
-        if (OBJ.gameObject.CompareTag("stairs"))
-        {
-            step = false;
-        }
-        if (OBJ.gameObject.CompareTag("Tile"))
-        {
-            grounded = false;
-            OnPlatform = false;
-            Player.transform.parent = null;
-            Player.transform.localScale = new(1, 1, 1);
-        }
-        if (OBJ.gameObject.CompareTag("Life"))
-        {
-            TouchShroom = false;
-        }
-        if (OBJ.gameObject.CompareTag("Trader"))
-        {
-            Interaction.ExitTrader();
-        }
-        if (OBJ.gameObject.CompareTag("House"))
-        {
-            TrySetFreeLookOrbits(FreeLook, 4f, 6f, 5f);
-            //FreeLook.m_Lens.FieldOfView = 25;
-        }
-        if (OBJ.gameObject.CompareTag("Scorpion"))
-        {
-            scorpAttack = false;
-        }
+        CheckpointHeals.HandleTriggerExit(OBJ);
+        TraderTriggers.HandleTriggerExit(OBJ);
+        CameraZones.HandleTriggerExit(OBJ);
+        EnemyContacts.HandleTriggerExit(OBJ);
     }
+    public void SetCheckpointMessageUntil(float time) => State.checkpointMessageUntil = time;
+    public void SavePlayerCheckpoint(Vector3 position) => SaveCheckpoint(position);
+    public void SetTouchShroom(bool active) => TouchShroom = active;
     public void TakeDamage(float Damage) => TakeDamage(new DamageEvent { Amount = Damage, Source = null, Point = transform.position, Type = DamageType.Generic, CanStun = false });
     public void TakeDamage(DamageEvent damageEvent) => Health.TakeDamage(damageEvent.Amount);
     public void HandleFailure(PlayerFailureReason reason)
@@ -890,11 +909,15 @@ public class Behaviour : MonoBehaviour, IDamageable
     }
     public void ShowCursor() => Interaction.ShowCursor();
     public void HideCursor() => Interaction.HideCursor();
+    public void EnterTraderInteraction(Collider trader) => Interaction.EnterTrader(trader);
+    public void ExitTraderInteraction() => Interaction.ExitTrader();
+    public void RestoreGameplayCursorAfterUiClose() => Interaction.RestoreGameplayCursorAfterUiClose();
     public void ActivateLooseMenu()
     {
         //MusicOP.StopMusic();
         ResetMovementRuntimeState();
-        if (!GameFlowController.GetOrCreate().SetGameOver())
+        var gameFlow = GameFlowController.GetOrCreate();
+        if (gameFlow.State != GameFlowState.GameOver && !gameFlow.SetGameOver())
         {
             return;
         }
@@ -1018,30 +1041,35 @@ public class Behaviour : MonoBehaviour, IDamageable
         {
             if (HammerHeld == false)
             {
-                Otter.SetBool("Parry", true);
-                Otter.SetBool("HammerParry", false);
+                SetParryAnimatorState(true, false, false);
             }
             if (HammerHeld == true)
             {
-                Otter.SetBool("HammerParry", true);
-                Otter.SetBool("Parry", false);
-                Otter.SetBool("shieldParry", false);
+                SetParryAnimatorState(false, true, false);
             }
             if (ArmorEquipped == true)
             {
-                Otter.SetBool("shieldParry", true);
-                Otter.SetBool("Parry", false);
-                Otter.SetBool("HammerParry", false);
+                SetParryAnimatorState(false, false, true);
             }
         }
         isParried = true;
     }
     public void ParryOFF()
     {
-        Otter.SetBool("Parry", false);
-        Otter.SetBool("HammerParry", false);
-        Otter.SetBool("shieldParry", false);
+        ClearParryAnimatorState();
         isParried = false;
+    }
+
+    void SetParryAnimatorState(bool parry, bool hammerParry, bool shieldParry)
+    {
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.Parry, parry);
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.HammerParry, hammerParry);
+        PlayerAnimatorParameters.TrySetBool(Otter, PlayerAnimatorParameters.ShieldParry, shieldParry);
+    }
+
+    void ClearParryAnimatorState()
+    {
+        SetParryAnimatorState(false, false, false);
     }
     public void HoneyON()
     {
@@ -1108,9 +1136,14 @@ public class Behaviour : MonoBehaviour, IDamageable
             && Otter != null;
     }
 
+    Vector2 GetMovementInput()
+    {
+        return new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+    }
+
     bool HasMovementInput()
     {
-        return new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).sqrMagnitude > Mathf.Epsilon;
+        return GetMovementInput().sqrMagnitude > Mathf.Epsilon;
     }
 
     public void ResetMovementRuntimeState()
@@ -1158,7 +1191,19 @@ public class Behaviour : MonoBehaviour, IDamageable
     {
         Player = GetComponent<Rigidbody>();
 
-        bool valid = RuntimeReferenceValidator.Require(Player, this, nameof(Player)) &
+        bool valid = ValidateMovementReferences() &
+            ValidateHealthReferences() &
+            ValidateCombatReferences() &
+            ValidateUiReferences() &
+            ValidateInventoryVisualReferences();
+
+        ValidateCameraReferences();
+        return valid;
+    }
+
+    bool ValidateMovementReferences()
+    {
+        return RuntimeReferenceValidator.Require(Player, this, nameof(Player)) &
             RuntimeReferenceValidator.Require(Load, this, nameof(Load)) &
             RuntimeReferenceValidator.Require(Root, this, nameof(Root)) &
             RuntimeReferenceValidator.Require(Otter, this, nameof(Otter)) &
@@ -1178,7 +1223,13 @@ public class Behaviour : MonoBehaviour, IDamageable
             RuntimeReferenceValidator.Require(ElectricEffect, this, nameof(ElectricEffect)) &
             RuntimeReferenceValidator.Require(MunitionDisplay, this, nameof(MunitionDisplay)) &
             RuntimeReferenceValidator.Require(LooseScreen, this, nameof(LooseScreen)) &
-            RuntimeReferenceValidator.Require(AimIcon, this, nameof(AimIcon)) &
+            RuntimeReferenceValidator.Require(AimIcon, this, nameof(AimIcon));
+    }
+
+    bool ValidateInventoryVisualReferences()
+    {
+        bool valid = RuntimeReferenceValidator.Require(HoneyJar, this, nameof(HoneyJar)) &
+            RuntimeReferenceValidator.Require(GoldBrick, this, nameof(GoldBrick)) &
             RuntimeReferenceValidator.Require(HologramedBridge, this, nameof(HologramedBridge)) &
             RuntimeReferenceValidator.Require(appleOBJ, this, nameof(appleOBJ)) &
             RuntimeReferenceValidator.Require(gobletOBJ, this, nameof(gobletOBJ)) &
@@ -1200,11 +1251,18 @@ public class Behaviour : MonoBehaviour, IDamageable
             }
         }
 
-        WarnMissingCameraReference(FreeLook, nameof(FreeLook));
-        WarnMissingCameraReference(CamForTraders, nameof(CamForTraders));
-
         return valid;
     }
+
+    void ValidateCameraReferences()
+    {
+        WarnMissingCameraReference(FreeLook, nameof(FreeLook));
+        WarnMissingCameraReference(CamForTraders, nameof(CamForTraders));
+    }
+
+    public void ApplyHouseCameraOrbits() => TrySetFreeLookOrbits(FreeLook, 1f, 2f, 1f);
+
+    public void RestoreDefaultCameraOrbits() => TrySetFreeLookOrbits(FreeLook, 4f, 6f, 5f);
 
     bool TrySetFreeLookOrbits(CinemachineFreeLook cam, float top, float mid, float bottom)
     {
@@ -1342,6 +1400,13 @@ public class Behaviour : MonoBehaviour, IDamageable
     void OnDisable()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
+        cameraZoneController?.RestoreDefaultCameraOrbits();
+        enemyContactController?.ClearScorpionContacts();
+        checkpointHealController?.ClearTouchShroom();
+        SetTouchShroom(false);
+        SetOnPlatform(false);
+        SetStep(false);
+        DetachFromPlatform();
     }
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -1351,15 +1416,37 @@ public class Behaviour : MonoBehaviour, IDamageable
 
     public void Start()
     {
+        Platforms.Initialize(this);
+
         if (!ValidateStartReferences())
         {
             return;
         }
 
+        InitializeRuntimeServices();
+        InitializePlayerControllers();
+        InitializeStartupPresentation();
+        if (!InitializeMusicState())
+        {
+            return;
+        }
+
+        InitializePlayerRuntimeState();
+        InitializeEquipmentVisuals();
+        TrySetFreeLookOrbits(FreeLook, 4f, 6f, 5f);
+    }
+
+    void InitializeRuntimeServices()
+    {
         inputReader = GameInputReader.GetOrCreate();
         GameFlowController.GetOrCreate().TrySetPlayingFromSceneStartup(nameof(Behaviour));
+    }
+
+    void InitializePlayerControllers()
+    {
         Inventory.Initialize(this);
         Interaction.Initialize(this, inputReader);
+        TraderTriggers.Initialize(this);
         Combat.Initialize(this);
         Movement.Initialize(this);
         Failure.Initialize(this);
@@ -1374,39 +1461,47 @@ public class Behaviour : MonoBehaviour, IDamageable
         SaveCheckpoint(transform.position);
         SetActiveIfChanged(AimIcon, false);
         MunitionDisplay.SetActive(false);
-        //Enable/Disable Background music
+    }
+
+    bool InitializeMusicState()
+    {
+        // Enable/disable background music switches without adding runtime service ownership.
         if (seekMusic == true)
         {
             var musicObject = GameObject.Find("GameMusic");
             if (!RuntimeReferenceValidator.Require(musicObject, this, "GameMusic"))
             {
-                return;
+                return false;
             }
 
             Music = musicObject.GetComponent<MusicPlaylist>();
             if (!RuntimeReferenceValidator.Require(Music, this, nameof(Music)))
             {
-                return;
+                return false;
             }
 
             Music.transform.parent = Player.transform;
             Music.transform.position = new Vector3(0, 0, 0);
-            var MusicSwitches = GameObject.FindGameObjectsWithTag("SwitchMusic");
-            foreach (var item in MusicSwitches)
-            {
-                item.SetActive(true);
-            }
+            SetMusicSwitchesActive(true);
+            return true;
+        }
 
-        }
-        else
+        Music = null;
+        SetMusicSwitchesActive(false);
+        return true;
+    }
+
+    void SetMusicSwitchesActive(bool active)
+    {
+        var musicSwitches = GameObject.FindGameObjectsWithTag(PlayerTags.SwitchMusic);
+        foreach (var item in musicSwitches)
         {
-            Music = null;
-            var MusicSwitches = GameObject.FindGameObjectsWithTag("SwitchMusic");
-            foreach (var item in MusicSwitches)
-            {
-                item.SetActive(false);
-            }
+            item.SetActive(active);
         }
+    }
+
+    void InitializePlayerRuntimeState()
+    {
         Health.Initialize(this);
         HealShape = HealEffect.shape;
         ParryOFF();
@@ -1421,6 +1516,10 @@ public class Behaviour : MonoBehaviour, IDamageable
         InsertWalk = Walk;
         InsertRun = Run;
         HideLosePanel();
+    }
+
+    void InitializeEquipmentVisuals()
+    {
         HologramedBridge.SetActive(false);
         SetActiveIfChanged(appleOBJ, false);
         SetActiveIfChanged(gobletOBJ, false);
@@ -1432,8 +1531,74 @@ public class Behaviour : MonoBehaviour, IDamageable
         {
             Bow[i].SetActive(false);
         }
-        TrySetFreeLookOrbits(FreeLook, 4f, 6f, 5f);
+        RestoreDefaultCameraOrbits();
     }
+
+
+    void HandleParryAnimationTimer()
+    {
+        if (Defend != true)
+        {
+            return;
+        }
+
+        DefendAnim -= Time.deltaTime;
+        if (DefendAnim > 0)
+        {
+            if (WhichAttack == true)
+                Otter.Play("AttackA");
+            if (WhichAttack == false)
+                Otter.Play("AttackB");
+            return;
+        }
+
+        Defend = false;
+        Otter.StopPlayback();
+    }
+
+    void HandleGlowAttackEffect()
+    {
+        if (!Input.GetKey(KeyCode.Mouse0))
+        {
+            otterAction.TurnOffGlow();
+        }
+    }
+
+    void UpdateSpeechTimer()
+    {
+        if (Plattering != "")
+        {
+            ChangeSpeech -= Time.deltaTime;
+            if (ChangeSpeech <= 0)
+            {
+                Plattering = "";
+            }
+        }
+    }
+
+    void UpdateLifeIcons()
+    {
+        State.arrowMunition = arrowMunition;
+        if (Lives == 3)
+        {
+            ICON_1.SetActive(true);
+            ICON_2.SetActive(true);
+            ICON_3.SetActive(true);
+        }
+        if (Lives == 2)
+        {
+            ICON_1.SetActive(false);
+            ICON_2.SetActive(true);
+            ICON_3.SetActive(true);
+        }
+        if (Lives == 1)
+        {
+            ICON_1.SetActive(false);
+            ICON_2.SetActive(false);
+            ICON_3.SetActive(true);
+        }
+    }
+
     [System.Obsolete]
     public void Update()
     {
@@ -1449,65 +1614,13 @@ public class Behaviour : MonoBehaviour, IDamageable
             return;
         }
 
-        //Parry animations
-        if (Defend == true)
-        {
-            DefendAnim -= Time.deltaTime;
-            if (DefendAnim > 0)
-            {
-                if (WhichAttack == true)
-                    Otter.Play("AttackA");
-                if (WhichAttack == false)
-                    Otter.Play("AttackB");
-            }
-            else
-            {
-                Defend = false;
-                Otter.StopPlayback();
-            }
-
-        }
-
-        //Turn off glow attack effect
-        if (!Input.GetKey(KeyCode.Mouse0))
-        {
-            otterAction.TurnOffGlow();
-        }
-
-        //Update UI text
-        if (Plattering != "")
-        {
-            ChangeSpeech -= Time.deltaTime;
-            if (ChangeSpeech <= 0)
-            {
-                Plattering = "";
-            }
-        }
+        HandleParryAnimationTimer();
+        HandleGlowAttackEffect();
+        UpdateSpeechTimer();
 
         //Reload Stamina Bar
         Health.TickStamina();
-        //Update UI
-        {
-            State.arrowMunition = arrowMunition;
-            if (Lives == 3)
-            {
-                ICON_1.SetActive(true);
-                ICON_2.SetActive(true);
-                ICON_3.SetActive(true);
-            }
-            if (Lives == 2)
-            {
-                ICON_1.SetActive(false);
-                ICON_2.SetActive(true);
-                ICON_3.SetActive(true);
-            }
-            if (Lives == 1)
-            {
-                ICON_1.SetActive(false);
-                ICON_2.SetActive(false);
-                ICON_3.SetActive(true);
-            }
-        }
+        UpdateLifeIcons();
         //Jump action
         {
             if (Input.GetKeyDown(KeyCode.Space) && JumpNum > 0)
@@ -1651,7 +1764,7 @@ public class Behaviour : MonoBehaviour, IDamageable
                                 break;
                             }
 
-                        case "Bow":
+                        case PlayerTags.Bow:
                             {
                                 Otter.Play("Equip");
                                 CountArrows();
@@ -2052,7 +2165,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         //Basic movement setup
         if (hasGameplayCamera)
         {
-            Vector2 input = Vector2.ClampMagnitude(new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")), 1f);
+            Vector2 input = Vector2.ClampMagnitude(GetMovementInput(), 1f);
             Vector3 move = (XZForward * input.y + XZRight * input.x).normalized;
 
             if (move.sqrMagnitude >= Mathf.Epsilon)

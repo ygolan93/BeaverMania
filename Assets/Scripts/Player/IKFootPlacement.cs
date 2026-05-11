@@ -27,7 +27,7 @@ public class IKFootPlacement : MonoBehaviour
             Ray rayL = new(anim.GetIKPosition(AvatarIKGoal.LeftFoot) + Vector3.up, Vector3.down);
             if (Physics.Raycast(rayL, out RaycastHit hitL, DistanceToGround + 1f, layerMask))
             {
-                if (hitL.transform.CompareTag("Isle"))
+                if (hitL.transform.CompareTag(PlayerTags.Isle))
                 {
                     Vector3 footPosition = hitL.point;
                     footPosition.y += DistanceToGround;
@@ -41,7 +41,7 @@ public class IKFootPlacement : MonoBehaviour
             Ray rayR = new(anim.GetIKPosition(AvatarIKGoal.RightFoot) + Vector3.up, Vector3.down);
             if (Physics.Raycast(rayR, out RaycastHit hitR, DistanceToGround + 1f, layerMask))
             {
-                if (hitR.transform.CompareTag("Isle"))
+                if (hitR.transform.CompareTag(PlayerTags.Isle))
                 {
                     Vector3 footPosition = hitR.point;
                     footPosition.y += DistanceToGround;

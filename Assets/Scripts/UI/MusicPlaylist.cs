@@ -1,8 +1,10 @@
 using System.Collections;
 using UnityEngine;
 
+[RequireComponent(typeof(AudioSource))]
 public class MusicPlaylist : MonoBehaviour
 {
+    // GameMusic.prefab persists music only; it is not a runtime bootstrap owner.
     public AudioSource MusicSource;
     [SerializeField] AudioClip[] MusicClip;
     private int currentSong = 0;
@@ -24,6 +26,20 @@ public class MusicPlaylist : MonoBehaviour
 
         ValidateDuplicateMusicInstances();
         StartPlaylist();
+    }
+
+    internal void WarnIfDuplicateMusicObjectExists()
+    {
+        var musicObjects = GameObject.FindGameObjectsWithTag(MusicTag);
+        for (var i = 0; i < musicObjects.Length; i++)
+        {
+            var musicObject = musicObjects[i];
+            if (musicObject != null && musicObject != gameObject && musicObject.activeInHierarchy)
+            {
+                BuildSafeLogger.WarnOnce("MusicPlaylist.DuplicateActiveMusic", "Another active object tagged Music exists: " + musicObject.name, this, missingTag: MusicTag);
+                return;
+            }
+        }
     }
 
     private void StartPlaylist()

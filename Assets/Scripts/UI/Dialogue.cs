@@ -52,6 +52,18 @@ public class Dialogue : MonoBehaviour
         index = 0;
     }
 
+    void OnDisable()
+    {
+        if (Merchant != null)
+        {
+            Merchant.RestoreGameplayAfterDialogueCancelled();
+        }
+        else if (Player != null && Player.isAtTrader)
+        {
+            Player.ExitTraderInteraction();
+        }
+    }
+
     // Update is called once per frame
     public void Continue()
     {

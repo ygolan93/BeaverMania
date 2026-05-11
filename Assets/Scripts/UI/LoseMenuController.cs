@@ -11,6 +11,12 @@ public sealed class LoseMenuController : MonoBehaviour
 
     public void ShowLosePanel()
     {
+        if (!TrySetGameOver())
+        {
+            return;
+        }
+
+        CursorStateService.GetOrCreate().ShowCursor();
         SetPanel(true);
     }
 
@@ -34,11 +40,30 @@ public sealed class LoseMenuController : MonoBehaviour
         SceneTransitionService.LoadMenu();
     }
 
+    bool TrySetGameOver()
+    {
+        var gameFlow = GameFlowController.GetOrCreate();
+        if (gameFlow.State == GameFlowState.GameOver)
+        {
+            return true;
+        }
+
+        if (gameFlow.State == GameFlowState.Transitioning)
+        {
+            return false;
+        }
+
+        return gameFlow.SetGameOver();
+    }
+
     void SetPanel(bool active)
     {
         if (LosePanel != null)
         {
-            LosePanel.SetActive(active);
+            if (LosePanel.activeSelf != active)
+            {
+                LosePanel.SetActive(active);
+            }
             return;
         }
 

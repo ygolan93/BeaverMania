@@ -22,7 +22,7 @@ public class Carry : MonoBehaviour
     public bool CanCarry;
     public void OnCollisionEnter(Collision OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Part"))
+        if (OBJ.gameObject.CompareTag(PlayerTags.Part))
         {
             if (i < CarryPoint.Length - 1 && !Input.GetKey(KeyCode.Mouse0))
             {

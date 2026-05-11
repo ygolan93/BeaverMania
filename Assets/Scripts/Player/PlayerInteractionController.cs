@@ -19,7 +19,10 @@ public class PlayerInteractionController : MonoBehaviour
 
     public void HideCursor()
     {
-        owner.TrySetFreeLookLookAt(owner.Root);
+        if (owner != null)
+        {
+            owner.TrySetFreeLookLookAt(owner.Root);
+        }
         CursorStateService.GetOrCreate().HideCursor();
         var gameFlow = GameFlowController.Instance;
         if (gameFlow == null || gameFlow.State == GameFlowState.Playing)
@@ -28,9 +31,19 @@ public class PlayerInteractionController : MonoBehaviour
         }
     }
 
+    public void RestoreGameplayCursorAfterUiClose()
+    {
+        CursorStateService.GetOrCreate().RestoreGameplayCursorAfterUiClose(CanRestoreGameplayCursor);
+    }
+
     public void EnterTrader(Collider trader)
     {
-        var skip = trader.gameObject.GetComponent<Trader>().skipPressed;
+        if (owner == null || trader == null || !trader.TryGetComponent(out Trader traderComponent))
+        {
+            return;
+        }
+
+        var skip = traderComponent.skipPressed;
         if (!skip)
         {
             ShowCursor();
@@ -47,12 +60,30 @@ public class PlayerInteractionController : MonoBehaviour
 
     public void ExitTrader()
     {
+        if (owner == null)
+        {
+            return;
+        }
+
         owner.isAtTrader = false;
-        GameFlowController.GetOrCreate().SetPlaying();
+        var gameFlow = GameFlowController.GetOrCreate();
+        if (gameFlow.State == GameFlowState.Playing ||
+            gameFlow.State == GameFlowState.Shop ||
+            gameFlow.State == GameFlowState.Dialogue)
+        {
+            gameFlow.SetPlaying();
+        }
+
         owner.TrySetTraderCameraEnabled(false);
         owner.TrySetTraderCameraLookAt(null);
         owner.TrySetFreeLookEnabled(true);
         owner.TryRotateFreeLookLookAtTowardRoot();
+        RestoreGameplayCursorAfterUiClose();
+    }
+
+    bool CanRestoreGameplayCursor()
+    {
+        return owner != null && !owner.isAtTrader;
     }
 
     GameInputReader GetInputReader()

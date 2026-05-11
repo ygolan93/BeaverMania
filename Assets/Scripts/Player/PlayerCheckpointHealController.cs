@@ -5,13 +5,11 @@ public class PlayerCheckpointHealController : MonoBehaviour
 {
     [SerializeField] float checkpointMessageSeconds = 3f;
     [SerializeField] float checkpointSaveInterval = 0.5f;
-    [SerializeField] float healTickInterval = 0.2f;
     [SerializeField] float healPerTick = 2f;
 
     Behaviour owner;
     Transform activeLife;
     float nextCheckpointSaveTime;
-    float nextHealTime;
 
     public void Initialize(Behaviour behaviour)
     {
@@ -39,7 +37,7 @@ public class PlayerCheckpointHealController : MonoBehaviour
 
         activeLife = other.transform;
         SaveCheckpoint(activeLife.position, false);
-        Heal(false);
+        Heal();
     }
 
     public void HandleTriggerExit(Collider other)
@@ -86,7 +84,7 @@ public class PlayerCheckpointHealController : MonoBehaviour
         owner.SavePlayerCheckpoint(position);
     }
 
-    void Heal(bool force)
+    void Heal()
     {
         owner.Plattering = "Shroom!";
         owner.ChangeSpeech = 1f;
@@ -98,12 +96,6 @@ public class PlayerCheckpointHealController : MonoBehaviour
         }
 
         owner.SetTouchShroom(true);
-        if (!force && Time.time < nextHealTime)
-        {
-            return;
-        }
-
-        nextHealTime = Time.time + healTickInterval;
         owner.TakeDamage(-healPerTick);
 
         if (owner.CurrentHealth >= owner.MaxHealth)
@@ -116,7 +108,6 @@ public class PlayerCheckpointHealController : MonoBehaviour
     {
         activeLife = null;
         nextCheckpointSaveTime = 0f;
-        nextHealTime = 0f;
         owner?.SetTouchShroom(false);
     }
 

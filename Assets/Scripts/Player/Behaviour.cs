@@ -1219,6 +1219,8 @@ public class Behaviour : MonoBehaviour, IDamageable
 
     public void Start()
     {
+        Platforms.Initialize(this);
+
         if (!ValidateStartReferences())
         {
             return;
@@ -1234,7 +1236,6 @@ public class Behaviour : MonoBehaviour, IDamageable
         Failure.Initialize(this);
         Pickup.Initialize(this);
         CameraZones.Initialize(this);
-        Platforms.Initialize(this);
         arrowModel.SetActive(false);
         bowAim = new Vector3(-0.33f, 20f, -0.3f);
         TrySetTraderCameraEnabled(false);

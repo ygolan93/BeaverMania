@@ -75,20 +75,16 @@ public class PlayerFailureController : MonoBehaviour
 
     void RestartCheckpointForCompatibility()
     {
-        if (owner.Lives <= 0)
+        if (owner.Lives <= 1)
         {
-            owner.Lives = 0;
+            owner.Lives = Mathf.Max(owner.Lives, 1);
             owner.ActivateLooseMenu();
             return;
         }
 
+        owner.Lives--;
         owner.RestoreHealth();
         owner.MoveToCheckpoint();
-        if (owner.Lives > 1)
-        {
-            owner.Lives--;
-        }
-
         ResetRuntimeState();
     }
 

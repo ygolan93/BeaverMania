@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class ObjectiveUI: MonoBehaviour
@@ -8,13 +6,27 @@ public class ObjectiveUI: MonoBehaviour
     public string[] Objective;
     public int i;
     public WayPoint currentPoint;
-   public string Instruction;
+    public string Instruction;
+
     public void Update()
     {
-        Player = transform.GetComponent<Behaviour>();
-        i = currentPoint.GetComponent<WayPoint>().i;
-        Instruction = Objective[i];
+        if (Player == null)
+        {
+            Player = GetComponent<Behaviour>();
+        }
 
+        if (Player == null || currentPoint == null || Objective == null || Objective.Length == 0)
+        {
+            return;
+        }
+
+        i = currentPoint.i;
+        if (i < 0 || i >= Objective.Length)
+        {
+            return;
+        }
+
+        Instruction = Objective[i] ?? string.Empty;
     }
 
     //public void OnTriggerStay(Collider GameObjective) 
@@ -33,7 +45,12 @@ public class ObjectiveUI: MonoBehaviour
     //}
     public void UpdateObjective()
     {
-        i++;
+        if (Objective == null || Objective.Length == 0)
+        {
+            return;
+        }
+
+        i = Mathf.Min(i + 1, Objective.Length - 1);
     }
 
 }

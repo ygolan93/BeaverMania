@@ -6,12 +6,18 @@ public sealed class RestartGameLooseMenu : MonoBehaviour
 
     public void ResetartGame()
     {
+        ResolveLoseMenuController();
         if (loseMenuController != null)
         {
             loseMenuController.RestartGame();
-            return;
         }
+    }
 
-        SceneTransitionService.ReloadActiveScene();
+    void ResolveLoseMenuController()
+    {
+        if (loseMenuController == null)
+        {
+            loseMenuController = GetComponentInParent<LoseMenuController>();
+        }
     }
 }

@@ -197,7 +197,11 @@ public class PauseMenuController : MonoBehaviour
     {
         if (panel != null)
         {
-            panel.SetActive(active);
+            if (panel.activeSelf != active)
+            {
+                panel.SetActive(active);
+            }
+
             return;
         }
 

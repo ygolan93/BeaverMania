@@ -7,6 +7,8 @@ public class LoadingScreenController : MonoBehaviour
     public Slider loadingBar; // Reference to a loading progress bar (if applicable)
     public float fillSpeed = 0.5f; // Speed at which the loading bar fills (adjust as needed)
 
+    bool isLoading;
+
     void Start()
     {
         // Disable the loading screen canvas on Start
@@ -18,6 +20,13 @@ public class LoadingScreenController : MonoBehaviour
 
     public void LoadScene(string sceneName)
     {
+        if (isLoading)
+        {
+            return;
+        }
+
+        isLoading = true;
+
         // Activate the loading screen canvas
         if (loadingScreen != null)
         {
@@ -34,6 +43,7 @@ public class LoadingScreenController : MonoBehaviour
         AsyncOperation operation = SceneTransitionService.LoadSceneAsync(sceneName);
         if (operation == null)
         {
+            isLoading = false;
             yield break;
         }
 

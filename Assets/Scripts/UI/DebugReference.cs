@@ -18,6 +18,7 @@ public sealed class DebugReference : MonoBehaviour
     public TextMeshProUGUI ArrowMunition;
 
     HudPresenter presenter;
+    bool appliedAtRuntime;
 
     private void Awake()
     {
@@ -26,18 +27,10 @@ public sealed class DebugReference : MonoBehaviour
 
     private void Start()
     {
-        ApplyReferences();
-        enabled = presenter == null;
-    }
-
-    private void Update()
-    {
-        if (presenter == null)
+        if (!appliedAtRuntime)
         {
             ApplyReferences();
         }
-
-        enabled = false;
     }
 
     private void OnValidate()
@@ -58,6 +51,7 @@ public sealed class DebugReference : MonoBehaviour
             presenter = gameObject.AddComponent<HudPresenter>();
         }
 
+        appliedAtRuntime |= Application.isPlaying;
         presenter.Bind(Player, PlayerObjective, Application.isPlaying ? CheckpointService.GetOrCreate() : null);
         presenter.ObjectiveText = ObjectiveText;
         presenter.DisplayText = DisplayText;

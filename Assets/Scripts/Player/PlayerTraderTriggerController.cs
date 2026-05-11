@@ -9,6 +9,8 @@ public class PlayerTraderTriggerController : MonoBehaviour
     Collider activeCollider;
     Trader activeTrader;
     bool activeSkipPressed;
+    Collider suppressedCollider;
+    Trader suppressedTrader;
 
     public void Initialize(Behaviour behaviour)
     {
@@ -24,11 +26,18 @@ public class PlayerTraderTriggerController : MonoBehaviour
         }
 
         var skipPressed = trader.skipPressed;
+        if (IsSuppressedTrader(traderCollider, trader))
+        {
+            return;
+        }
+
         if (activeTrader == trader)
         {
             if (!owner.isAtTrader)
             {
+                SuppressTraderUntilExit(traderCollider, trader);
                 ClearActiveTraderState();
+                return;
             }
             else
             {
@@ -56,9 +65,15 @@ public class PlayerTraderTriggerController : MonoBehaviour
 
     public void HandleTriggerExit(Collider traderCollider)
     {
-        if (activeCollider == traderCollider || activeTrader == ResolveTrader(traderCollider))
+        var trader = ResolveTrader(traderCollider);
+        if (activeCollider == traderCollider || activeTrader == trader)
         {
             ExitActiveTrader();
+        }
+
+        if (suppressedCollider == traderCollider || suppressedTrader == trader)
+        {
+            ClearSuppressedTraderState();
         }
     }
 
@@ -76,6 +91,24 @@ public class PlayerTraderTriggerController : MonoBehaviour
         }
 
         return cachedTrader;
+    }
+
+
+    bool IsSuppressedTrader(Collider traderCollider, Trader trader)
+    {
+        return suppressedCollider == traderCollider || suppressedTrader == trader;
+    }
+
+    void SuppressTraderUntilExit(Collider traderCollider, Trader trader)
+    {
+        suppressedCollider = traderCollider;
+        suppressedTrader = trader;
+    }
+
+    void ClearSuppressedTraderState()
+    {
+        suppressedCollider = null;
+        suppressedTrader = null;
     }
 
     void ExitActiveTrader()

@@ -8,6 +8,7 @@ public class MusicPlaylist : MonoBehaviour
     private int currentSong = 0;
     private int previousSong = -1;
     private Coroutine playlistCoroutine;
+    bool musicPaused;
 
     private void Start()
     {
@@ -16,22 +17,18 @@ public class MusicPlaylist : MonoBehaviour
             MusicSource = GetComponent<AudioSource>();
         }
 
-        if (MusicSource == null)
+        if (!ValidatePlaylist())
         {
-            BuildSafeLogger.ErrorOnce("MusicPlaylist.MissingAudioSource", "No AudioSource component found on the GameObject.", this, missingField: nameof(MusicSource));
             return;
         }
-        if (MusicClip == null || MusicClip.Length == 0)
-        {
-            BuildSafeLogger.ErrorOnce("MusicPlaylist.NoMusicClips", "No music clips assigned in the MusicClip array.", this, missingField: nameof(MusicClip));
-            return;
-        }
+
+        ValidateDuplicateMusicInstances();
         StartPlaylist();
     }
 
     private void StartPlaylist()
     {
-        if (MusicSource == null || MusicClip == null || MusicClip.Length == 0)
+        if (!HasPlaylistSource())
         {
             return;
         }
@@ -40,22 +37,17 @@ public class MusicPlaylist : MonoBehaviour
         {
             StopCoroutine(playlistCoroutine);
         }
+
+        musicPaused = false;
         playlistCoroutine = StartCoroutine(Playlist());
     }
 
     IEnumerator Playlist()
     {
-        while (MusicSource != null && MusicClip != null && MusicClip.Length > 0)
+        while (HasPlaylistSource())
         {
-            if (currentSong < 0 || currentSong >= MusicClip.Length)
+            if (!TryGetCurrentClip(out var clip))
             {
-                yield break;
-            }
-
-            AudioClip clip = MusicClip[currentSong];
-            if (clip == null)
-            {
-                BuildSafeLogger.WarnOnce("MusicPlaylist.NullClip." + currentSong, "Null music clip at index: " + currentSong, this);
                 yield break;
             }
 
@@ -64,12 +56,12 @@ public class MusicPlaylist : MonoBehaviour
                 PlayCurrentSong(clip);
                 previousSong = currentSong;
             }
-            else if (!MusicSource.isPlaying)
+            else if (!MusicSource.isPlaying && !musicPaused)
             {
                 MusicSource.Play();
             }
 
-            yield return new WaitForSeconds(Mathf.Max(0.05f, clip.length - MusicSource.time));
+            yield return new WaitWhile(() => HasPlaylistSource() && currentSong == previousSong && (MusicSource.isPlaying || musicPaused));
         }
     }
 
@@ -86,18 +78,24 @@ public class MusicPlaylist : MonoBehaviour
 
     public void StopMusic()
     {
-        if (MusicSource != null)
+        if (!HasPlayableMusic())
         {
-            MusicSource.Pause();
+            return;
         }
+
+        musicPaused = true;
+        MusicSource.Pause();
     }
 
     public void ResumeMusic()
     {
-        if (MusicSource != null)
+        if (!HasPlayableMusic())
         {
-            MusicSource.Play();
+            return;
         }
+
+        musicPaused = false;
+        MusicSource.Play();
     }
 
     public void ChangeSong(int newSongIndex)
@@ -111,5 +109,75 @@ public class MusicPlaylist : MonoBehaviour
         {
             BuildSafeLogger.WarnOnce("MusicPlaylist.InvalidSongIndex." + newSongIndex, "Invalid song index: " + newSongIndex, this);
         }
+    }
+
+    bool ValidatePlaylist()
+    {
+        bool valid = true;
+
+        if (MusicSource == null)
+        {
+            BuildSafeLogger.ErrorOnce("MusicPlaylist.MissingAudioSource", "No AudioSource component found on the GameObject.", this, missingField: nameof(MusicSource));
+            valid = false;
+        }
+
+        if (MusicClip == null || MusicClip.Length == 0)
+        {
+            BuildSafeLogger.ErrorOnce("MusicPlaylist.NoMusicClips", "No music clips assigned in the MusicClip array.", this, missingField: nameof(MusicClip));
+            return false;
+        }
+
+        for (int i = 0; i < MusicClip.Length; i++)
+        {
+            if (MusicClip[i] == null)
+            {
+                BuildSafeLogger.WarnOnce("MusicPlaylist.NullClip." + i, "Null music clip at index: " + i, this, missingField: nameof(MusicClip));
+            }
+        }
+
+        return valid;
+    }
+
+    bool HasPlaylistSource()
+    {
+        return MusicSource != null && MusicClip != null && MusicClip.Length > 0;
+    }
+
+    bool HasPlayableMusic()
+    {
+        return HasPlaylistSource() && MusicSource.clip != null;
+    }
+
+    bool TryGetCurrentClip(out AudioClip clip)
+    {
+        clip = null;
+        if (MusicClip == null || currentSong < 0 || currentSong >= MusicClip.Length)
+        {
+            return false;
+        }
+
+        clip = MusicClip[currentSong];
+        if (clip == null)
+        {
+            BuildSafeLogger.WarnOnce("MusicPlaylist.NullClip." + currentSong, "Null music clip at index: " + currentSong, this, missingField: nameof(MusicClip));
+            return false;
+        }
+
+        return true;
+    }
+
+    void ValidateDuplicateMusicInstances()
+    {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        var playlists = FindObjectsOfType<MusicPlaylist>();
+        var taggedMusicObjects = GameObject.FindGameObjectsWithTag("Music");
+        if (playlists.Length > 1 || taggedMusicObjects.Length > 1)
+        {
+            BuildSafeLogger.WarnOnce(
+                "MusicPlaylist.DuplicatePersistentMusic",
+                "Duplicate active music detected. MusicPlaylist count=" + playlists.Length + "; Music tag count=" + taggedMusicObjects.Length + ".",
+                this);
+        }
+#endif
     }
 }

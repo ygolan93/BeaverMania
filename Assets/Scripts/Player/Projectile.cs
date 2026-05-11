@@ -15,6 +15,7 @@ public class Projectile : MonoBehaviour
     [SerializeField] int Damage;
     [SerializeField] GameObject arrowPickup;
     bool isDisposed;
+    bool impactAudioPlayed;
     // Start is called before the first frame update
     void Start()
     {
@@ -97,14 +98,15 @@ public class Projectile : MonoBehaviour
 
     public void RockHit()
     {
-        if (Sound == null || isDisposed)
+        if (Sound == null || Sound.clip == null || isDisposed || impactAudioPlayed)
         {
             return;
         }
 
-        Sound.PlayOneShot(Sound.clip);
+        impactAudioPlayed = true;
         Sound.volume = 0.2f;
         Sound.pitch = 0.8f;
+        Sound.PlayOneShot(Sound.clip);
     }
     private void OnCollisionEnter(Collision OBJ)
     {

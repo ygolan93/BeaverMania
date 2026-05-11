@@ -544,6 +544,11 @@ public class ScorpionScript : MonoBehaviour, IDamageable, IRuntimeResettable
 
     private void OnCollisionEnter(Collision OBJ)
     {
+        if (isDead || OBJ == null || OBJ.gameObject == null)
+        {
+            return;
+        }
+
         if (OBJ.gameObject.CompareTag("Strike"))
         {
             SetState(EnemyState.Dead);

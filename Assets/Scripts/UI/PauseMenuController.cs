@@ -17,6 +17,11 @@ public class PauseMenuController : MonoBehaviour
     {
         inputReader = GameInputReader.GetOrCreate();
         inputReader.PausePressedEvent += HandlePausePressed;
+
+        if (volumeSlider != null)
+        {
+            volumeSlider.onValueChanged.AddListener(HandleVolumeChanged);
+        }
     }
 
     protected virtual void OnDisable()
@@ -24,6 +29,11 @@ public class PauseMenuController : MonoBehaviour
         if (inputReader != null)
         {
             inputReader.PausePressedEvent -= HandlePausePressed;
+        }
+
+        if (volumeSlider != null)
+        {
+            volumeSlider.onValueChanged.RemoveListener(HandleVolumeChanged);
         }
     }
 
@@ -48,15 +58,17 @@ public class PauseMenuController : MonoBehaviour
         if (Player.seekMusic)
         {
             var musicObject = GameObject.FindGameObjectWithTag("Music");
-            if (!RuntimeReferenceValidator.Require(musicObject, this, "Music tag"))
+            if (musicObject == null)
             {
-                return;
+                BuildSafeLogger.WarnOnce(nameof(PauseMenuController) + ".MissingMusicTag", "Music tag object not found; volume slider will not control music.", this, missingTag: "Music");
             }
-
-            Music = musicObject.GetComponent<AudioSource>();
-            if (!RuntimeReferenceValidator.Require(Music, this, nameof(Music)))
+            else
             {
-                return;
+                Music = musicObject.GetComponent<AudioSource>();
+                if (Music == null)
+                {
+                    BuildSafeLogger.WarnOnce(nameof(PauseMenuController) + ".MissingMusicSource", "Music tag object has no AudioSource; volume slider will not control music.", this, missingField: nameof(Music));
+                }
             }
         }
 
@@ -123,6 +135,16 @@ public class PauseMenuController : MonoBehaviour
     }
 
     public void Volume()
+    {
+        ApplyVolumeFromSlider();
+    }
+
+    void HandleVolumeChanged(float _)
+    {
+        ApplyVolumeFromSlider();
+    }
+
+    void ApplyVolumeFromSlider()
     {
         if (Player != null && Player.seekMusic && Music != null && volumeSlider != null)
         {

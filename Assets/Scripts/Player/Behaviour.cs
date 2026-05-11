@@ -183,6 +183,7 @@ public class Behaviour : MonoBehaviour, IDamageable
     PlayerCombatController combatController;
     PlayerMovementController movementController;
     PlayerFailureController failureController;
+    PlayerPickupController pickupController;
     bool wasGameplayBlocked;
 
     PlayerCameraReference GameplayCamera
@@ -324,43 +325,41 @@ public class Behaviour : MonoBehaviour, IDamageable
         }
     }
 
+    PlayerPickupController Pickup
+    {
+        get
+        {
+            if (pickupController == null)
+            {
+                pickupController = GetComponent<PlayerPickupController>();
+                if (pickupController == null)
+                {
+                    pickupController = gameObject.AddComponent<PlayerPickupController>();
+                }
+                pickupController.Initialize(this);
+            }
+
+            return pickupController;
+        }
+    }
+
     public void ToggleParryCounterAttack() => WhichAttack = !WhichAttack;
     public void SetAppleModelActive(bool active) => appleOBJ.SetActive(active);
+    public bool CanCollectArrowPickup => Arrows != null && arrowMunition < Arrows.Length && bowEquipped;
+    public int ArrowCapacity => Arrows != null ? Arrows.Length : 0;
+    public void PlayPickupEffect(Vector3 position)
+    {
+        if (PickUpEffect != null)
+        {
+            Instantiate(PickUpEffect, position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+        }
+    }
+    public void AddSeedPickup() => Inventory.AddSeed();
+    public void AddApplePickup() => Inventory.AddApple();
+    public void AddGobletPickup() => Inventory.AddGoblet();
 
     public void OnCollisionEnter(Collision OBJ)
     {
-        if (OBJ.gameObject.CompareTag("Part")&& Load.CanCarry == true && grounded==true && !Input.GetKey(KeyCode.Mouse0)&& !Input.GetKey(KeyCode.Mouse1))
-        {
-            Otter.Play("Crouch");
-            Sound.PickItem();
-            Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
-            Destroy(OBJ.gameObject);
-        }
-        if ( OBJ.gameObject.CompareTag("Seed") || OBJ.gameObject.CompareTag("Apple") || OBJ.gameObject.CompareTag("GobletKey"))
-        {
-            Otter.Play("Crouch");
-            Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
-            Destroy(OBJ.gameObject);
-
-            if (OBJ.gameObject.CompareTag("Seed"))
-            {
-                Inventory.AddSeed();
-                Sound.PickItem();
-            }
-            if (OBJ.gameObject.CompareTag("Apple"))
-            {
-                Sound.PickUp2();
-                Inventory.AddApple();
-            }
-            if (OBJ.gameObject.CompareTag("GobletKey"))
-            {
-                Sound.PickUp2();
-                Inventory.AddGoblet();
-                Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
-                Destroy(OBJ.gameObject);
-            }
-
-        }
         if (OBJ.gameObject.CompareTag("Isle") || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("stairs") || OBJ.gameObject.CompareTag("Tile"))
         {
             FallClock = InitialFall;
@@ -372,50 +371,6 @@ public class Behaviour : MonoBehaviour, IDamageable
                     Player.drag = 0;
                 }
             }
-        }
-        if (OBJ.gameObject.CompareTag("Coin"))
-        {
-            Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
-            Sound.Coin();
-        }
-        if (arrowMunition<Arrows.Length && bowEquipped==true)
-        {
-            if (OBJ.gameObject.CompareTag("Arrow"))
-            {
-                Otter.Play("Crouch");
-                Sound.PickUp2();
-                arrowMunition++;
-                Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
-                if (bowEquipped == true)
-                {
-                    CountArrows();
-                }
-                Destroy(OBJ.gameObject);
-            }
-            if (OBJ.gameObject.CompareTag("ArrowBundle"))
-            {
-                Otter.Play("Crouch");
-                Sound.PickUp2();
-                Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
-                if (arrowMunition + 10 < Arrows.Length)
-                {
-                    arrowMunition += 10;
-                }
-                else
-                {
-                    for (int i = 0; i <(arrowMunition-10); i++)
-                    {
-                        Instantiate(ArrowPickup, OBJ.transform.position+new Vector3(0,i* 0.3f, 0), Quaternion.Euler(0,0,90));
-                    }
-                    arrowMunition = Arrows.Length;
-                }
-                if (bowEquipped == true)
-                {
-                    CountArrows();
-                }
-                Destroy(OBJ.gameObject);
-            }
-
         }
 
     }
@@ -429,56 +384,6 @@ public class Behaviour : MonoBehaviour, IDamageable
             OBJ.gameObject.CompareTag("Tile"))
         {
             grounded = true;
-        }
-        if (OBJ.gameObject.CompareTag("Weapon"))
-        {
-            Plattering = ("Hammers!");
-            ChangeSpeech = 1;
-            Otter.Play("Crouch");
-            Arsenal.Add("Hammers");
-            ArsenalCounter++;
-            Sound.PickItem();
-            Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
-            Destroy(OBJ.gameObject);
-        }
-        if (OBJ.gameObject.CompareTag("Bow"))
-        {
-            Plattering = ("Booya!");
-            ChangeSpeech = 1;
-            Otter.Play("Crouch");
-            Arsenal.Add("Bow");
-            ArsenalCounter++;
-            Sound.PickItem();
-            arrowMunition = 5;
-            CountArrows();
-            Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
-            Destroy(OBJ.gameObject);
-        }
-        if (OBJ.gameObject.CompareTag("Armor"))
-        {
-            Plattering = ("Oh my!");
-            ChangeSpeech = 1;
-            Otter.Play("Crouch");
-            Arsenal.Add("ArmorSet");
-            ArsenalCounter++;
-            Sound.PickItem();
-            Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
-            Destroy(OBJ.gameObject);
-        }
-        if (OBJ.gameObject.CompareTag("Honey") && Honeypicked == false)
-        {
-            Otter.Play("Crouch");
-            HoneyON();
-            Sound.PickItem();
-            Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
-            Destroy(OBJ.gameObject);
-        }
-        if (OBJ.gameObject.CompareTag("Gold") && GoldPicked == false)
-        {
-            Otter.Play("Crouch");
-            GoldON();
-            Destroy(OBJ.gameObject);
-            
         }
         if (OBJ.gameObject.CompareTag("NPC") && isParried == true 
             || OBJ.gameObject.CompareTag("Scorpion") && isParried == true 
@@ -1286,6 +1191,7 @@ public class Behaviour : MonoBehaviour, IDamageable
         Combat.Initialize(this);
         Movement.Initialize(this);
         Failure.Initialize(this);
+        Pickup.Initialize(this);
         arrowModel.SetActive(false);
         bowAim = new Vector3(-0.33f, 20f, -0.3f);
         TrySetTraderCameraEnabled(false);

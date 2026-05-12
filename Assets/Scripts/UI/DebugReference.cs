@@ -17,7 +17,6 @@ public class DebugReference : MonoBehaviour
     public TextMeshProUGUI ArrowMunition;
 
     bool loggedMissingPlayer;
-    bool loggedMissingPlayerHudState;
 
     void Start()
     {
@@ -46,7 +45,6 @@ public class DebugReference : MonoBehaviour
         {
             PlayerHudState = Player.gameObject.AddComponent<PlayerHudState>();
             PlayerHudState.CopyFrom(Player, Player.GetComponent<ObjectiveUI>());
-            LogHudStateFallback();
         }
     }
 
@@ -87,12 +85,4 @@ public class DebugReference : MonoBehaviour
 #endif
     }
 
-    void LogHudStateFallback()
-    {
-        if (loggedMissingPlayerHudState)
-            return;
-
-        loggedMissingPlayerHudState = true;
-        Debug.LogWarning($"{nameof(DebugReference)} added a missing {nameof(PlayerHudState)} component to {Player.name} at runtime so HUD text can update.", this);
-    }
 }

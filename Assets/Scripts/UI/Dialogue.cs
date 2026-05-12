@@ -7,15 +7,18 @@ public class Dialogue : MonoBehaviour
     [SerializeField] public Behaviour Player;
     public ScorpionScript Scorpion;
     [SerializeField] public ObjectiveUI PlayerObjective;
-    public TextMeshProUGUI textComponent;
-    public GameObject ContinueButton;
-    public GameObject SkipButton;
-    public Transform panel;
+    [SerializeField] public TextMeshProUGUI textComponent;
+    [SerializeField] public GameObject ContinueButton;
+    [SerializeField] public GameObject SkipButton;
+    [SerializeField] public Transform panel;
     public Trader Merchant;
     public string[] lines;
     public float textSpeed;
     private int index;
     public bool isBoss;
+    bool loggedMissingPlayer;
+    bool loggedMissingPlayerObjective;
+    bool loggedMissingPanel;
     // Start is called before the first frame update
     void Start()
     {
@@ -35,14 +38,19 @@ public class Dialogue : MonoBehaviour
             }
 
             if (Player == null)
-                LogMissingReference(nameof(Player));
+                LogMissingReference(nameof(Player), ref loggedMissingPlayer);
 
             if (PlayerObjective == null)
-                LogMissingReference(nameof(PlayerObjective));
+                LogMissingReference(nameof(PlayerObjective), ref loggedMissingPlayerObjective);
         }
 
         //Boss = GameObject.FindGameObjectWithTag("Boss").GetComponent<BossScript>();
-        panel = gameObject.transform.parent.GetComponent<Transform>();
+        if (panel == null && transform.parent != null)
+            panel = transform.parent;
+
+        if (panel == null)
+            LogMissingReference(nameof(panel), ref loggedMissingPanel);
+
         SkipButton.SetActive(true);
         textComponent.text = string.Empty;
         StartDialogue();
@@ -117,8 +125,12 @@ public class Dialogue : MonoBehaviour
         //Scorpion.InitiateCharge();
     }
 
-    void LogMissingReference(string referenceName)
+    void LogMissingReference(string referenceName, ref bool logged)
     {
+        if (logged)
+            return;
+
+        logged = true;
 #if DEVELOPMENT_BUILD
         Debug.LogWarning($"{nameof(Dialogue)} could not resolve {referenceName} fallback.", this);
 #endif

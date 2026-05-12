@@ -8,6 +8,8 @@ public class NPC_Basic : MonoBehaviour
     [Header("Body and animation")]
     public Rigidbody NPC;
     [SerializeField] Animator Wasp;
+    Collider npcCollider;
+
     [Header("Movement")]
     GameObject PlayerTarget;
     Behaviour PlayerHealth;
@@ -56,6 +58,7 @@ public class NPC_Basic : MonoBehaviour
     {
         SpawnPos = transform.position;
         Wasp = GetComponent<Animator>();
+        npcCollider = GetComponent<Collider>();
         CurrentHealth = MaxHealth;
         PlayerTarget = GameObject.FindGameObjectWithTag("Player");
         PlayerHealth = PlayerTarget.GetComponent<Behaviour>();
@@ -104,7 +107,7 @@ public class NPC_Basic : MonoBehaviour
                     {
                         BuzzSource.SetActive(true);
                         ChargeClock = 0.7f;
-                        Physics.IgnoreCollision(AnotherWasp.GetComponent<Collider>(), transform.GetComponent<Collider>());
+                        Physics.IgnoreCollision(AnotherWasp.GetComponent<Collider>(), npcCollider);
                         NPC.velocity = (Distance.normalized * 50f);
                         Wasp.SetBool("Sting", true);
                         ChangeNav = 0;
@@ -181,7 +184,7 @@ public class NPC_Basic : MonoBehaviour
                 Sting();
             }
             Contact = true;
-            if (OBJ.gameObject.GetComponent<Behaviour>().isParried== true)
+            if (PlayerHealth.isParried== true)
             {
                 TakeDamage(20);
                 combo += 10;
@@ -299,8 +302,8 @@ public class NPC_Basic : MonoBehaviour
         Wasp.SetBool("Beat", true);
         Wasp.SetBool("Sting", false);
         CurrentHealth -= Damage;
-        var playerArsenal = PlayerTarget.GetComponent<Behaviour>().Arsenal;
-        var currentWeapon = PlayerTarget.GetComponent<Behaviour>().arsenalBrowser;
+        var playerArsenal = PlayerHealth.Arsenal;
+        var currentWeapon = PlayerHealth.arsenalBrowser;
         switch (playerArsenal[currentWeapon])
         {
             case "Bare Hands":

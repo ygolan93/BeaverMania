@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Beavermania.Core.Input;
 using UnityEngine;
 
 public class Grow : MonoBehaviour
@@ -36,7 +37,7 @@ public class Grow : MonoBehaviour
     {
         if (OBJ.gameObject.tag == "Player")
         {
-            if (Input.GetKey(KeyCode.Mouse0))
+            if (PlayerInputReader.IsPrimaryHeld())
             {
                 Instantiate(Log1, transform.position, Quaternion.identity);
                 Instantiate(Log2, transform.position, Quaternion.identity);

@@ -33,5 +33,11 @@ namespace Beavermania.Core.Input
         {
             return UnityEngine.Input.GetKey(KeyCode.LeftControl);
         }
+
+        /// <summary>Holds Q to show the waypoint / compass arrow overlay (WayPoint UI).</summary>
+        public static bool IsWaypointCompassHeld()
+        {
+            return UnityEngine.Input.GetKey(KeyCode.Q);
+        }
     }
 }

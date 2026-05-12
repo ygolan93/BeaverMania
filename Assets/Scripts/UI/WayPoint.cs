@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Beavermania.Core.Input;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -40,7 +41,7 @@ namespace Beavermania.UI.Objectives
         void Update()
         {
             // Arrow Compass
-            if (Input.GetKey(KeyCode.Q))
+            if (PlayerInputReader.IsWaypointCompassHeld())
             {
                 Arrow.gameObject.SetActive(true);
             }

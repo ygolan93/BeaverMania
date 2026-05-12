@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Beavermania.Core.GameFlow;
 using Beavermania.Player;
 using Cinemachine;
 using Cinemachine.Utility;
@@ -164,7 +165,6 @@ public class Behaviour : MonoBehaviour
     bool loggedRuntimeHudStateFallback;
     public CinemachineFreeLook FreeLook;
     public CinemachineFreeLook CamForTraders;
-    [SerializeField] PlayerCursorController cursorController;
     [SerializeField] PlayerCheckpointRespawn checkpointRespawn;
     public float ChangeSpeech = 1F;
 
@@ -663,31 +663,14 @@ public class Behaviour : MonoBehaviour
     }
     public GameObject CheckpointPopUpEffect => PopUpEffect;
 
-    PlayerCursorController CursorController
-    {
-        get
-        {
-            if (cursorController == null)
-            {
-                cursorController = GetComponent<PlayerCursorController>();
-            }
-
-            if (cursorController == null)
-            {
-                cursorController = gameObject.AddComponent<PlayerCursorController>();
-            }
-
-            cursorController.Bind(Root, FreeLook);
-            return cursorController;
-        }
-    }
     public void ShowCursor()
     {
-        CursorController.ShowCursor();
+        PlayerCursorRules.ApplyUnlockedVisible();
     }
+
     public void HideCursor()
     {
-        CursorController.HideCursor();
+        PlayerCursorRules.ApplyLockedHidden(FreeLook, Root);
     }
     public void ActivateLooseMenu()
     {

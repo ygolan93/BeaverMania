@@ -1,13 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
-using UnityEngine.UI;
 public class DebugReference : MonoBehaviour
 {
     [SerializeField] public Behaviour Player;
     [SerializeField] public PlayerHudState PlayerHudState;
-    [SerializeField] public ObjectiveUI PlayerObjective;
 
     public TextMeshProUGUI ObjectiveText;
     public TextMeshProUGUI DisplayText;
@@ -21,9 +17,9 @@ public class DebugReference : MonoBehaviour
     public TextMeshProUGUI ArrowMunition;
 
     bool loggedMissingPlayer;
-    bool loggedMissingPlayerObjective;
+    bool loggedMissingPlayerHudState;
 
-    private void Start()
+    void Start()
     {
         BindPlayerHudState();
     }
@@ -47,13 +43,7 @@ public class DebugReference : MonoBehaviour
             PlayerHudState = Player.GetComponent<PlayerHudState>();
 
         if (PlayerHudState == null)
-            PlayerHudState = Player.gameObject.AddComponent<PlayerHudState>();
-
-        if (PlayerObjective == null)
-            PlayerObjective = Player.GetComponent<ObjectiveUI>();
-
-        if (PlayerObjective == null)
-            LogMissingReference(nameof(PlayerObjective), ref loggedMissingPlayerObjective);
+            LogMissingReference(nameof(PlayerHudState), ref loggedMissingPlayerHudState);
     }
 
     void Update()
@@ -64,18 +54,22 @@ public class DebugReference : MonoBehaviour
         if (PlayerHudState == null)
             return;
 
-        PlayerHudState.CopyFrom(Player, PlayerObjective);
+        SetText(ObjectiveText, PlayerHudState.ObjectiveText);
+        SetText(DisplayText, PlayerHudState.DebugText);
+        SetText(StaminaText, PlayerHudState.StaminaText);
+        SetText(LogCountText, PlayerHudState.LogCount);
+        SetText(CurrencyCount, PlayerHudState.Wallet);
+        SetText(HealingDisplay, PlayerHudState.HealingText);
+        SetText(SeedCount, PlayerHudState.SeedText);
+        SetText(GobletCount, PlayerHudState.GobletText);
+        SetText(AppleCount, PlayerHudState.AppleText);
+        SetText(ArrowMunition, PlayerHudState.ArrowText);
+    }
 
-        ObjectiveText.text = PlayerHudState.ObjectiveText;
-        DisplayText.text = PlayerHudState.DebugText;
-        StaminaText.text = PlayerHudState.StaminaText;
-        LogCountText.text = PlayerHudState.LogCount;
-        CurrencyCount.text = PlayerHudState.Wallet;
-        HealingDisplay.text = PlayerHudState.HealingText;
-        SeedCount.text = PlayerHudState.SeedText;
-        GobletCount.text = PlayerHudState.GobletText;
-        AppleCount.text = PlayerHudState.AppleText;
-        ArrowMunition.text = PlayerHudState.ArrowText;
+    static void SetText(TextMeshProUGUI text, string value)
+    {
+        if (text != null)
+            text.text = value;
     }
 
     void LogMissingReference(string referenceName, ref bool logged)

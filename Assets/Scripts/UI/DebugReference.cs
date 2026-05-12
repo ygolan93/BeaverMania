@@ -43,7 +43,11 @@ public class DebugReference : MonoBehaviour
             PlayerHudState = Player.GetComponent<PlayerHudState>();
 
         if (PlayerHudState == null)
-            LogMissingReference(nameof(PlayerHudState), ref loggedMissingPlayerHudState);
+        {
+            PlayerHudState = Player.gameObject.AddComponent<PlayerHudState>();
+            PlayerHudState.CopyFrom(Player, Player.GetComponent<ObjectiveUI>());
+            LogHudStateFallback();
+        }
     }
 
     void Update()
@@ -81,5 +85,14 @@ public class DebugReference : MonoBehaviour
 #if DEVELOPMENT_BUILD
         Debug.LogWarning($"{nameof(DebugReference)} could not resolve {referenceName} fallback.", this);
 #endif
+    }
+
+    void LogHudStateFallback()
+    {
+        if (loggedMissingPlayerHudState)
+            return;
+
+        loggedMissingPlayerHudState = true;
+        Debug.LogWarning($"{nameof(DebugReference)} added a missing {nameof(PlayerHudState)} component to {Player.name} at runtime so HUD text can update.", this);
     }
 }

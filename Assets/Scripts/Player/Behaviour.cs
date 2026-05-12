@@ -161,6 +161,7 @@ public class Behaviour : MonoBehaviour
     public GameObject AimIcon;
     public PlayerHudState PlayerHudState;
     public ObjectiveUI PlayerObjective;
+    bool loggedRuntimeHudStateFallback;
     public CinemachineFreeLook FreeLook;
     public CinemachineFreeLook CamForTraders;
     [SerializeField] PlayerCursorController cursorController;
@@ -1729,8 +1730,23 @@ public class Behaviour : MonoBehaviour
         if (PlayerHudState == null)
             PlayerHudState = GetComponent<PlayerHudState>();
 
+        if (PlayerHudState == null)
+        {
+            PlayerHudState = gameObject.AddComponent<PlayerHudState>();
+            LogHudStateFallback();
+        }
+
         if (PlayerObjective == null)
             PlayerObjective = GetComponent<ObjectiveUI>();
+    }
+
+    void LogHudStateFallback()
+    {
+        if (loggedRuntimeHudStateFallback)
+            return;
+
+        loggedRuntimeHudStateFallback = true;
+        Debug.LogWarning($"{nameof(Behaviour)} added a missing {nameof(PlayerHudState)} component to {name} at runtime so HUD text can update.", this);
     }
 
     void SyncHudState()

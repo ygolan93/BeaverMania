@@ -1,3 +1,4 @@
+using Beavermania.Core.Input;
 using UnityEngine;
 
 namespace Beavermania.Core.GameFlow
@@ -37,7 +38,7 @@ namespace Beavermania.Core.GameFlow
 
         void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Escape))
+            if (PlayerInputReader.WasPausePressed())
                 ChangeBolean();
         }
 

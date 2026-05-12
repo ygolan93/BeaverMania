@@ -7,6 +7,7 @@ using Cinemachine.Utility;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+[RequireComponent(typeof(PlayerHudState))]
 public class Behaviour : MonoBehaviour
 {
     [Header("Movement and animation")]

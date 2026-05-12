@@ -5,15 +5,18 @@ using UnityEngine;
 
 public class NPC_Basic : MonoBehaviour
 {
-    [Header("Body and animation")]
+    [Header("Core References")]
     public Rigidbody NPC;
     [SerializeField] Animator Wasp;
     Collider npcCollider;
+    GameObject AnotherWasp;
+    Collider AnotherWaspCollider;
 
-    [Header("Movement")]
+    [Header("Player References")]
     GameObject PlayerTarget;
     Behaviour PlayerHealth;
-    GameObject AnotherWasp;
+
+    [Header("Movement")]
     public Vector3 Distance;
     public Quaternion rotGoal;
     readonly float steer = 0.5f;
@@ -28,18 +31,23 @@ public class NPC_Basic : MonoBehaviour
     float c;
     //public WaspCourse course;
     Vector3 SpawnPos;
+
+    [Header("Floating")]
     public Vector3 currentPos;
     public bool floating;
     public float floatSpeed = 1.0f;
     public float floatDistance = 1.0f;
     public float maxTiltAngle = 10.0f;
-    [Header("Health and damage")]
+
+    [Header("Health and Damage")]
     public int hit2stun;
     public int combo = 0;
     public int Damage2Player = 1;
     public int MaxHealth = 2000;
     public int CurrentHealth;
     public NPC_Health NPCHealthBar;
+
+    [Header("Effects")]
     public GameObject HitEffect;
     public GameObject SlashEffect;
     public GameObject Explosion;
@@ -47,6 +55,7 @@ public class NPC_Basic : MonoBehaviour
     [Header("Sound")]
     public NPC_Audio Sound;
     [SerializeField] GameObject BuzzSource;
+
     [Header("On Death")]
     public GameObject Body;
     public GameObject Head;
@@ -107,7 +116,11 @@ public class NPC_Basic : MonoBehaviour
                     {
                         BuzzSource.SetActive(true);
                         ChargeClock = 0.7f;
-                        Physics.IgnoreCollision(AnotherWasp.GetComponent<Collider>(), npcCollider);
+                        if (AnotherWaspCollider == null || AnotherWaspCollider.gameObject != AnotherWasp)
+                        {
+                            AnotherWaspCollider = AnotherWasp.GetComponent<Collider>();
+                        }
+                        Physics.IgnoreCollision(AnotherWaspCollider, npcCollider);
                         NPC.velocity = (Distance.normalized * 50f);
                         Wasp.SetBool("Sting", true);
                         ChangeNav = 0;

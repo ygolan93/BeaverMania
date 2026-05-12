@@ -9,6 +9,11 @@ namespace Beavermania.Core.Input
             return UnityEngine.Input.GetKey(KeyCode.Mouse0);
         }
 
+        public static bool WasPrimaryPressed()
+        {
+            return UnityEngine.Input.GetKeyDown(KeyCode.Mouse0);
+        }
+
         public static bool IsSecondaryHeld()
         {
             return UnityEngine.Input.GetKey(KeyCode.Mouse1);
@@ -34,6 +39,11 @@ namespace Beavermania.Core.Input
             return UnityEngine.Input.GetKey(KeyCode.LeftControl);
         }
 
+        public static bool WasRollPressed()
+        {
+            return UnityEngine.Input.GetKeyDown(KeyCode.LeftControl);
+        }
+
         /// <summary>Holds Q to show the waypoint / compass arrow overlay (WayPoint UI).</summary>
         public static bool IsWaypointCompassHeld()
         {
@@ -48,6 +58,11 @@ namespace Beavermania.Core.Input
         public static bool WasSecondaryReleased()
         {
             return UnityEngine.Input.GetKeyUp(KeyCode.Mouse1);
+        }
+
+        public static bool WasPrimaryOrSecondaryReleased()
+        {
+            return UnityEngine.Input.GetKeyUp(KeyCode.Mouse0) || UnityEngine.Input.GetKeyUp(KeyCode.Mouse1);
         }
 
         public static bool IsMoveForwardHeld()

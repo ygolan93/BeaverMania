@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Beavermania.Core.Input;
 using Beavermania.Objects;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using UnityEngine;
@@ -96,7 +97,7 @@ namespace Beavermania.NPC
                 case StateCharge:
                     {
                         var speed = chargeSpeed;
-                        if (Input.GetKey(KeyCode.LeftShift))
+                        if (PlayerInputReader.IsSprintHeld())
                         {
                             speed = paceUp;
                             Scorpion.speed = 1.05f;
@@ -169,7 +170,7 @@ namespace Beavermania.NPC
                 {
                     if (combo<comboLimit-5)
                     {
-                        if (Input.GetKey(KeyCode.Mouse0) || Input.GetKey(KeyCode.Mouse1))
+                        if (PlayerInputReader.IsPrimaryHeld() || PlayerInputReader.IsSecondaryHeld())
                         {
                             if (currentDistance<chargeDistance-10)
                             {
@@ -205,7 +206,7 @@ namespace Beavermania.NPC
                                     {
                                         state = StateStop;
 
-                                        if (Input.GetKeyUp(KeyCode.Mouse0) || Input.GetKeyUp(KeyCode.Mouse1))
+                                        if (PlayerInputReader.WasPrimaryOrSecondaryReleased())
                                         {
                                             chargeClock = resetCharge;
                                         }

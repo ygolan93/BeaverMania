@@ -1,5 +1,4 @@
 using UnityEngine;
-using Beavermania.UI.Objectives;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 
 namespace Beavermania.Player
@@ -22,10 +21,11 @@ namespace Beavermania.Player
         public string AppleText;
         public string ArrowText;
 
-        public void CopyFrom(BeaverPlayer player, ObjectiveUI objective)
+        /// <param name="hasObjective">When true, <see cref="ObjectiveText"/> is set to <paramref name="objectiveInstruction"/> (which may be null). When false, objective HUD text is unchanged.</param>
+        public void CopyFrom(BeaverPlayer player, bool hasObjective, string objectiveInstruction)
         {
-            if (objective != null)
-                ObjectiveText = objective.Instruction;
+            if (hasObjective)
+                ObjectiveText = objectiveInstruction;
 
             if (player == null)
                 return;

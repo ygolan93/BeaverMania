@@ -2015,7 +2015,7 @@ namespace Beavermania.Player
                 BindHudState();
 
             if (PlayerHudState != null)
-                PlayerHudState.CopyFrom(this, PlayerObjective);
+                PlayerHudState.CopyFrom(this, PlayerObjective != null, PlayerObjective != null ? PlayerObjective.Instruction : null);
         }
     }
 }

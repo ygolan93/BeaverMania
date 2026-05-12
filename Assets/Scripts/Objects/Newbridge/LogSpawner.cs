@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Beavermania.Core.Input;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 
 namespace Beavermania.Objects
@@ -22,7 +23,7 @@ namespace Beavermania.Objects
             if (OBJ.gameObject.tag=="Player")
             {
                var isGrounded= OBJ.gameObject.GetComponent<BeaverPlayer>().grounded;
-                if (Input.GetKey(KeyCode.Mouse0)&&isGrounded==false)
+                if (PlayerInputReader.IsPrimaryHeld() && isGrounded == false)
                 {
                     DestroyTree(OBJ.transform);
                 }
@@ -32,7 +33,7 @@ namespace Beavermania.Objects
         {
             if (OBJ.gameObject.tag == "Player")
             {
-                if (Input.GetKey(KeyCode.Mouse0))
+                if (PlayerInputReader.IsPrimaryHeld())
                 {
                     DestroyTree(OBJ.transform);
                 }

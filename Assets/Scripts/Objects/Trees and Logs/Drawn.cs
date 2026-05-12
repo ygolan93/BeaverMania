@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Beavermania.Core.Input;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using Beavermania.Player.Movement;
 
@@ -30,7 +31,7 @@ namespace Beavermania.Objects
                 var Player = OBJ.GetComponent<BeaverPlayer>();
                 var PlayerLoad = OBJ.GetComponent<Carry>();
                 //Check if the log is close enough to be drawn + player's health above minimum **         
-                if (Input.GetKey(KeyCode.Mouse1) && !Input.GetKey(KeyCode.LeftControl))
+                if (PlayerInputReader.IsSecondaryHeld() && !PlayerInputReader.IsRollHeld())
                 {
                     Player.Plattering = ("To me! my loyal logs");
                     Player.ChangeSpeech = 1;

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Beavermania.Core.Input;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using UnityEngine;
 
@@ -157,7 +158,7 @@ namespace Beavermania.NPC
                 }
             }
 
-            if (!Input.GetKey(KeyCode.Mouse0) || PlayerDistance > 3)
+            if (!PlayerInputReader.IsPrimaryHeld() || PlayerDistance > 3)
             {
                 HitEffect.SetActive(false);
                 SlashEffect.SetActive(false);
@@ -165,7 +166,7 @@ namespace Beavermania.NPC
         }
         private void LateUpdate()
         { 
-            if (!Input.GetKey(KeyCode.Mouse0)||Distance.magnitude>6)
+            if (!PlayerInputReader.IsPrimaryHeld() || Distance.magnitude > 6)
             {
                 Wasp.SetBool("Beat", false);
             }

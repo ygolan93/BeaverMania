@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Beavermania.Core.Input;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 
 namespace Beavermania.Objects
@@ -46,7 +47,7 @@ namespace Beavermania.Objects
             {
                 bool isGrounded = OBJ.gameObject.GetComponent<BeaverPlayer>().grounded;
                 Rigidbody Player = OBJ.gameObject.GetComponent<Rigidbody>();
-                if (isGrounded == false && Input.GetKeyDown(KeyCode.Mouse0))
+                if (isGrounded == false && PlayerInputReader.WasPrimaryPressed())
                 {
                     Player.velocity += new Vector3(0, elevateSpeed, 0);
                 }

@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Beavermania.Audio;
+using Beavermania.Core.Input;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 
 namespace Beavermania.Objects
@@ -86,7 +87,7 @@ namespace Beavermania.Objects
         {
             if (OBJ.gameObject.CompareTag("Player"))
             {
-                if (Input.GetKeyDown(KeyCode.LeftControl))
+                if (PlayerInputReader.WasRollPressed())
                 {
                     if (invokeLock==false)
                     {
@@ -113,7 +114,7 @@ namespace Beavermania.Objects
  
             }
 
-            if (Input.GetKey(KeyCode.LeftControl) && PartCount >= BridgeLimit)
+            if (PlayerInputReader.IsRollHeld() && PartCount >= BridgeLimit)
             {
                 Player.Plattering = "Oh man! I need a nut";
                 Player.ChangeSpeech = 3;

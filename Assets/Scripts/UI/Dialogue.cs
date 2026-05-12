@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using Beavermania.NPC;
-using Beavermania.Player.Combat;
+using Beavermania.Player;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using Beavermania.UI.Objectives;
 
@@ -128,7 +128,11 @@ namespace Beavermania.UI
                 PlayerObjective.UpdateObjective();
 
             if (Player != null)
-                Player.GetComponent<BossHandler>().SkipBossChat();
+            {
+                var bossFlow = Player.GetComponent<IBossDialogueSkippable>();
+                if (bossFlow != null)
+                    bossFlow.SkipBossChat();
+            }
             //Scorpion.InitiateCharge();
         }
 

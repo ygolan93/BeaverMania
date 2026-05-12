@@ -1,13 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using Beavermania.NPC;
+using Beavermania.Player;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using UnityEngine;
 
 namespace Beavermania.Player.Combat
 {
 
-    public class BossHandler : MonoBehaviour
+    public class BossHandler : MonoBehaviour, IBossDialogueSkippable
     {
         public BeaverPlayer player;
         public ScorpionScript Boss;

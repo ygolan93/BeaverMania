@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Beavermania.Core.Input;
 
 namespace Beavermania.Objects
 {
@@ -30,7 +31,7 @@ namespace Beavermania.Objects
                 Log.GetComponent<Rigidbody>().velocity = Vector3.zero;
                 Log.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
                 Log.transform.SetParent(tempParent.transform);
-                if (Input.GetKeyDown(KeyCode.Mouse1))
+                if (PlayerInputReader.WasInteractPressed())
                 {
                     IsHolding = false;
                 }
@@ -47,7 +48,7 @@ namespace Beavermania.Objects
     
         public void FixedUpdate()
         {
-            if (distance <= 2.5f && Input.GetKey(KeyCode.Mouse1))
+            if (distance <= 2.5f && PlayerInputReader.IsSecondaryHeld())
             {
                 IsHolding = true;
                 Log.GetComponent<Rigidbody>().useGravity = false;

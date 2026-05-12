@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Beavermania.Core.Input;
 using Beavermania.Player.Movement;
 
 namespace Beavermania.Objects
@@ -14,7 +15,7 @@ namespace Beavermania.Objects
             if (OBJ.gameObject.CompareTag("Player"))
             {
                 int counter = OBJ.GetComponent<Carry>().i;
-                if (Input.GetKey(KeyCode.LeftControl)&& counter>0)
+                if (PlayerInputReader.IsRollHeld() && counter > 0)
                 {
                     OBJ.transform.position = spawnHere.position;
                 }

@@ -1,8 +1,8 @@
 using Beavermania.Core.GameFlow;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
 namespace Beavermania.UI.Menus
 {
@@ -74,9 +74,22 @@ namespace Beavermania.UI.Menus
             if (Player == null)
                 return;
 
-            PauseController.HideQuestion();
-            PauseController.ResumeIfPaused();
-            Player.RestartCheckpoint();
+            if (Player.Lives <= 1)
+                return;
+
+            Player.StartCoroutine(RunRestartCheckpointAfterPauseUiChain(PauseController, Player));
+        }
+
+        static IEnumerator RunRestartCheckpointAfterPauseUiChain(PauseController pauseController, BeaverPlayer player)
+        {
+            yield return new WaitForEndOfFrame();
+
+            if (pauseController == null || player == null)
+                yield break;
+
+            pauseController.HideQuestion();
+            pauseController.ResumeIfPaused();
+            player.RestartCheckpoint();
         }
         public void QuitGame()
         {
@@ -85,8 +98,7 @@ namespace Beavermania.UI.Menus
 
         public void MainMenu()
         {
-            GameTimeScaleGate.ClearAll();
-            SceneManager.LoadScene("Menu");
+            SceneRestartController.LoadSceneSingle("Menu");
         }
         public void Volume()
         {

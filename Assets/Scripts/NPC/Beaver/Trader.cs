@@ -2,107 +2,110 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 
-public class Trader : MonoBehaviour
+namespace Beavermania.NPC
 {
-    const float LookRotationEpsilon = 0.0001f;
-    public GameObject Merchant;
-    public Transform PlayerRoot;
-    public Behaviour Player;
-    public GameObject TradeText;
-    public GameObject DialoguePanel;
-    public GameObject Shop;
-    public Vector3 PlayerDistance;
-    public bool skipPressed = false;
-    [SerializeField] bool Rotate;
-    [SerializeField] float PanelPopUp;
-    bool traderOfferPresentationActive;
-    Quaternion FormalLook;
 
-    public float GetOfferPanelDistance()
+    public class Trader : MonoBehaviour
     {
-        return PanelPopUp;
-    }
-    // Start is called before the first frame update
-    void Start()
-    {
-        FormalLook = transform.rotation;
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
-        PlayerRoot = GameObject.FindGameObjectWithTag("PlayerRoot").GetComponent<Transform>();
-    }
+        const float LookRotationEpsilon = 0.0001f;
+        public GameObject Merchant;
+        public Transform PlayerRoot;
+        public BeaverPlayer Player;
+        public GameObject TradeText;
+        public GameObject DialoguePanel;
+        public GameObject Shop;
+        public Vector3 PlayerDistance;
+        public bool skipPressed = false;
+        [SerializeField] bool Rotate;
+        [SerializeField] float PanelPopUp;
+        bool traderOfferPresentationActive;
+        Quaternion FormalLook;
 
-    // Update is called once per frame
-    public void Update()
-    {
-
-        PlayerDistance = Player.transform.position - Merchant.transform.position;
-        var Distance = Mathf.Abs(PlayerDistance.magnitude);
-        bool wantOfferPresentation = Player != null && Distance < PanelPopUp && skipPressed == false;
-        if (wantOfferPresentation)
+        public float GetOfferPanelDistance()
         {
-            traderOfferPresentationActive = true;
-            Player.ApplyTraderOfferPresentation(transform);
+            return PanelPopUp;
         }
-        else if (traderOfferPresentationActive && Player != null)
+        // Start is called before the first frame update
+        void Start()
         {
-            traderOfferPresentationActive = false;
-            Player.RestoreGameplayAfterTrader();
+            FormalLook = transform.rotation;
+            Player = GameObject.FindGameObjectWithTag("Player").GetComponent<BeaverPlayer>();
+            PlayerRoot = GameObject.FindGameObjectWithTag("PlayerRoot").GetComponent<Transform>();
         }
 
-        if (Distance<PanelPopUp&&skipPressed==false)
+        // Update is called once per frame
+        public void Update()
         {
-            TradeText.SetActive(true);
-            DialoguePanel.SetActive(true);
-            if (Rotate == true)
+
+            PlayerDistance = Player.transform.position - Merchant.transform.position;
+            var Distance = Mathf.Abs(PlayerDistance.magnitude);
+            bool wantOfferPresentation = Player != null && Distance < PanelPopUp && skipPressed == false;
+            if (wantOfferPresentation)
             {
-                Vector3 toPlayer = Player.transform.position - Merchant.transform.position;
-                if (toPlayer.sqrMagnitude > LookRotationEpsilon)
-                    Player.rotGoal = Quaternion.LookRotation(toPlayer);
-                if (PlayerDistance.sqrMagnitude > LookRotationEpsilon)
-                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(PlayerDistance), 0.1f);
+                traderOfferPresentationActive = true;
+                Player.ApplyTraderOfferPresentation(transform);
+            }
+            else if (traderOfferPresentationActive && Player != null)
+            {
+                traderOfferPresentationActive = false;
+                Player.RestoreGameplayAfterTrader();
+            }
+
+            if (Distance<PanelPopUp&&skipPressed==false)
+            {
+                TradeText.SetActive(true);
+                DialoguePanel.SetActive(true);
+                if (Rotate == true)
+                {
+                    Vector3 toPlayer = Player.transform.position - Merchant.transform.position;
+                    if (toPlayer.sqrMagnitude > LookRotationEpsilon)
+                        Player.rotGoal = Quaternion.LookRotation(toPlayer);
+                    if (PlayerDistance.sqrMagnitude > LookRotationEpsilon)
+                        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(PlayerDistance), 0.1f);
+                }
+            }
+
+            else
+            {
+                transform.rotation = Quaternion.Slerp(transform.rotation, FormalLook, 0.1f);
+                TradeText.SetActive(false);
+                DialoguePanel.SetActive(false);
+                Shop.SetActive(false);
+            }
+
+            if (Distance > PanelPopUp)
+            {
+                skipPressed = false;
             }
         }
-
-        else
+        public void activateSkip()
         {
-            transform.rotation = Quaternion.Slerp(transform.rotation, FormalLook, 0.1f);
+            skipPressed = true;
+            traderOfferPresentationActive = false;
             TradeText.SetActive(false);
             DialoguePanel.SetActive(false);
             Shop.SetActive(false);
+            if (Player != null)
+                Player.RestoreGameplayAfterTrader();
         }
 
-        if (Distance > PanelPopUp)
+        public void CloseShop()
         {
-            skipPressed = false;
+            Shop.SetActive(false);
         }
-    }
-    public void activateSkip()
-    {
-        skipPressed = true;
-        traderOfferPresentationActive = false;
-        TradeText.SetActive(false);
-        DialoguePanel.SetActive(false);
-        Shop.SetActive(false);
-        if (Player != null)
-            Player.RestoreGameplayAfterTrader();
-    }
 
-    public void CloseShop()
-    {
-        Shop.SetActive(false);
-    }
+        public void Honey()
+        {
+            Player.HoneyON();
+        }
 
-    public void Honey()
-    {
-        Player.HoneyON();
-    }
-
-    void OnDisable()
-    {
-        traderOfferPresentationActive = false;
-        if (Player != null && Player.isAtTrader)
-            Player.RestoreGameplayAfterTrader();
+        void OnDisable()
+        {
+            traderOfferPresentationActive = false;
+            if (Player != null && Player.isAtTrader)
+                Player.RestoreGameplayAfterTrader();
+        }
     }
 }
-
-

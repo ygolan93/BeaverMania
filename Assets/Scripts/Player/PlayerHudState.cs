@@ -1,38 +1,44 @@
 using UnityEngine;
+using Beavermania.UI.Objectives;
+using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 
-[DisallowMultipleComponent]
-public class PlayerHudState : MonoBehaviour
+namespace Beavermania.Player
 {
-    [Header("Objective")]
-    public string ObjectiveText;
 
-    [Header("Player HUD")]
-    public string DebugText;
-    public string StaminaText;
-    public string LogCount;
-    public string HealingText;
-    public string Wallet;
-    public string SeedText;
-    public string GobletText;
-    public string AppleText;
-    public string ArrowText;
-
-    public void CopyFrom(Behaviour player, ObjectiveUI objective)
+    [DisallowMultipleComponent]
+    public class PlayerHudState : MonoBehaviour
     {
-        if (objective != null)
-            ObjectiveText = objective.Instruction;
+        [Header("Objective")]
+        public string ObjectiveText;
 
-        if (player == null)
-            return;
+        [Header("Player HUD")]
+        public string DebugText;
+        public string StaminaText;
+        public string LogCount;
+        public string HealingText;
+        public string Wallet;
+        public string SeedText;
+        public string GobletText;
+        public string AppleText;
+        public string ArrowText;
 
-        DebugText = player.DebugText;
-        StaminaText = player.StaminaText;
-        LogCount = player.LogCount;
-        HealingText = player.HealingText;
-        Wallet = player.Wallet;
-        SeedText = player.SeedText;
-        GobletText = player.GobletText;
-        AppleText = player.AppleText;
-        ArrowText = player.ArrowText;
+        public void CopyFrom(BeaverPlayer player, ObjectiveUI objective)
+        {
+            if (objective != null)
+                ObjectiveText = objective.Instruction;
+
+            if (player == null)
+                return;
+
+            DebugText = player.DebugText;
+            StaminaText = player.StaminaText;
+            LogCount = player.LogCount;
+            HealingText = player.HealingText;
+            Wallet = player.Wallet;
+            SeedText = player.SeedText;
+            GobletText = player.GobletText;
+            AppleText = player.AppleText;
+            ArrowText = player.ArrowText;
+        }
     }
 }

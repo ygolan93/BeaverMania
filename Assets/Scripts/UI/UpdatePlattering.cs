@@ -3,14 +3,19 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
-public class UpdatePlattering : MonoBehaviour
-{
-    public Behaviour Player;
-    public TextMeshProUGUI PlatetringText;
+using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 
-    // Update is called once per frame
-    void Update()
+namespace Beavermania.UI.Hud
+{
+    public class UpdatePlattering : MonoBehaviour
     {
-        PlatetringText.text = Player.Plattering;
+        public BeaverPlayer Player;
+        public TextMeshProUGUI PlatetringText;
+
+        // Update is called once per frame
+        void Update()
+        {
+            PlatetringText.text = Player.Plattering;
+        }
     }
 }

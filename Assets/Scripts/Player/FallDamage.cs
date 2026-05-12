@@ -1,59 +1,64 @@
 using System.Collections;
 using System.Collections.Generic;
+using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using UnityEngine;
 
-public class FallDamage : MonoBehaviour
+namespace Beavermania.Player.Movement
 {
-    [Range(0, 10)]
-    [SerializeField] float fallDamageFactor;
-    [SerializeField] float damageVelocity;
-    float fallReader;
-    Behaviour Player;
-    Rigidbody RB_Player;
-    bool midAir=true;
 
-    private void Start()
+    public class FallDamage : MonoBehaviour
     {
-        Player = gameObject.GetComponent<Behaviour>();
-        RB_Player = gameObject.GetComponent<Rigidbody>();
-        fallReader = 0;
-    }
+        [Range(0, 10)]
+        [SerializeField] float fallDamageFactor;
+        [SerializeField] float damageVelocity;
+        float fallReader;
+        BeaverPlayer Player;
+        Rigidbody RB_Player;
+        bool midAir=true;
 
-    private void FixedUpdate()
-    {
-        if (midAir==true)
+        private void Start()
         {
-            fallReader = Mathf.Round(Mathf.Abs(RB_Player.velocity.y));
+            Player = gameObject.GetComponent<BeaverPlayer>();
+            RB_Player = gameObject.GetComponent<Rigidbody>();
+            fallReader = 0;
         }
 
-        ////Update UI text
-        //if (Player.Plattering != fallReader+"/"+damageVelocity)
-        //{
-        //    Player.ChangeSpeech -= Time.deltaTime;
-        //    if (Player.ChangeSpeech <= 0)
-        //    {
-        //        Player.Plattering = fallReader + "/" + damageVelocity;
-        //    }
-        //}
-    }
-    public void OnTriggerEnter(Collider OBJ)
-    {
-
-        if (OBJ.gameObject.layer == 0)
+        private void FixedUpdate()
         {
-            midAir = false;
-            if (fallReader >= damageVelocity)
+            if (midAir==true)
             {
-                Player.TakeDamage(fallDamageFactor * fallReader);
+                fallReader = Mathf.Round(Mathf.Abs(RB_Player.velocity.y));
             }
 
+            ////Update UI text
+            //if (Player.Plattering != fallReader+"/"+damageVelocity)
+            //{
+            //    Player.ChangeSpeech -= Time.deltaTime;
+            //    if (Player.ChangeSpeech <= 0)
+            //    {
+            //        Player.Plattering = fallReader + "/" + damageVelocity;
+            //    }
+            //}
         }
-    }
-    public void OnTriggerExit(Collider OBJ)
-    {
-        if (OBJ.gameObject.layer == 0)
+        public void OnTriggerEnter(Collider OBJ)
         {
-            midAir = true;
+
+            if (OBJ.gameObject.layer == 0)
+            {
+                midAir = false;
+                if (fallReader >= damageVelocity)
+                {
+                    Player.TakeDamage(fallDamageFactor * fallReader);
+                }
+
+            }
+        }
+        public void OnTriggerExit(Collider OBJ)
+        {
+            if (OBJ.gameObject.layer == 0)
+            {
+                midAir = true;
+            }
         }
     }
 }

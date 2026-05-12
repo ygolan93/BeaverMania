@@ -1,82 +1,87 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 
-public class Shop : MonoBehaviour
+namespace Beavermania.UI.Menus
 {
-    public Behaviour Player;
-    // Start is called before the first frame update
-    void Start()
-    {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
-    }
 
-    // Update is called once per frame
+    public class Shop : MonoBehaviour
+    {
+        public BeaverPlayer Player;
+        // Start is called before the first frame update
+        void Start()
+        {
+            Player = GameObject.FindGameObjectWithTag("Player").GetComponent<BeaverPlayer>();
+        }
 
-    public void BuyNuts()
-    {
-        if (Player.Currency >= 3)
+        // Update is called once per frame
+
+        public void BuyNuts()
         {
-            Player.NutCount++;
-            Player.Currency -= 3;
+            if (Player.Currency >= 3)
+            {
+                Player.NutCount++;
+                Player.Currency -= 3;
+            }
         }
-    }
-    public void SellNuts()
-    {
-        if (Player.NutCount > 0)
+        public void SellNuts()
         {
-            Player.NutCount--;
-            Player.Currency += 3;
+            if (Player.NutCount > 0)
+            {
+                Player.NutCount--;
+                Player.Currency += 3;
+            }
         }
-    }
-    public void BuyApple()
-    {
-        if (Player.Currency >= 5)
+        public void BuyApple()
         {
-            Player.Apple++;
-            Player.Currency -= 5;
+            if (Player.Currency >= 5)
+            {
+                Player.Apple++;
+                Player.Currency -= 5;
+            }
         }
-    }
-    public void SellApple()
-    {
-        if (Player.Apple > 0)
+        public void SellApple()
         {
-            Player.Apple--;
-            Player.Currency += 5;
+            if (Player.Apple > 0)
+            {
+                Player.Apple--;
+                Player.Currency += 5;
+            }
         }
-    }
-    public void BuyAccesory()
-    {
-        if (Player.Currency >= 60)
+        public void BuyAccesory()
         {
-            Player.GobletPickup++;
-            Player.Currency -= 60;
+            if (Player.Currency >= 60)
+            {
+                Player.GobletPickup++;
+                Player.Currency -= 60;
+            }
         }
-    }
-    public void SellAccesory()
-    {
-        if (Player.GobletPickup > 0)
+        public void SellAccesory()
         {
-            Player.GobletPickup--;
-            Player.Currency += 60;
+            if (Player.GobletPickup > 0)
+            {
+                Player.GobletPickup--;
+                Player.Currency += 60;
+            }
         }
-    }
-    public void BuyGoldBrick()
-    {
-        if (Player.GoldPicked == false)
+        public void BuyGoldBrick()
         {
-            Player.GoldON();
-            Player.Currency -= 150;
+            if (Player.GoldPicked == false)
+            {
+                Player.GoldON();
+                Player.Currency -= 150;
+            }
         }
-    }
-    public void SellGoldBrick()
-    {
-        if (Player.GoldPicked==true)
+        public void SellGoldBrick()
         {
-            Player.GoldOFF();
-            Player.Currency += 150;
+            if (Player.GoldPicked==true)
+            {
+                Player.GoldOFF();
+                Player.Currency += 150;
+            }
         }
-    }
        
 
+    }
 }

@@ -1,369 +1,374 @@
 using System.Collections;
 using System.Collections.Generic;
+using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using UnityEngine;
 
-
-public class NPC_Basic : MonoBehaviour
+namespace Beavermania.NPC
 {
-    const float LookRotationEpsilon = 0.0001f;
-    [Header("Core References")]
-    public Rigidbody NPC;
-    [SerializeField] Animator Wasp;
-    Collider npcCollider;
-    GameObject AnotherWasp;
-    Collider AnotherWaspCollider;
 
-    [Header("Player References")]
-    GameObject PlayerTarget;
-    Behaviour PlayerHealth;
 
-    [Header("Movement")]
-    public Vector3 Distance;
-    public Quaternion rotGoal;
-    readonly float steer = 0.5f;
-    public float AttackSpeed = 7f;
-    public float PlayerDistance;
-    float ChangeNav = 5f;
-    public float Recovery = 10f;
-    float ChargeClock = 0.7f;
-    bool Contact = false;
-    float a;
-    float b;
-    float c;
-    //public WaspCourse course;
-    Vector3 SpawnPos;
-
-    [Header("Floating")]
-    public Vector3 currentPos;
-    public bool floating;
-    public float floatSpeed = 1.0f;
-    public float floatDistance = 1.0f;
-    public float maxTiltAngle = 10.0f;
-
-    [Header("Health and Damage")]
-    public int hit2stun;
-    public int combo = 0;
-    public int Damage2Player = 1;
-    public int MaxHealth = 2000;
-    public int CurrentHealth;
-    public NPC_Health NPCHealthBar;
-
-    [Header("Effects")]
-    public GameObject HitEffect;
-    public GameObject SlashEffect;
-    public GameObject Explosion;
-
-    [Header("Sound")]
-    public NPC_Audio Sound;
-    [SerializeField] GameObject BuzzSource;
-
-    [Header("On Death")]
-    public GameObject Body;
-    public GameObject Head;
-    public GameObject Wing;
-    public GameObject Leg;
-    public GameObject Reward;
-    // Start is called before the first frame update    
-    public void Start()
+    public class NPC_Basic : MonoBehaviour
     {
-        SpawnPos = transform.position;
-        Wasp = GetComponent<Animator>();
-        npcCollider = GetComponent<Collider>();
-        CurrentHealth = MaxHealth;
-        PlayerTarget = GameObject.FindGameObjectWithTag("Player");
-        PlayerHealth = PlayerTarget.GetComponent<Behaviour>();
-        HitEffect.SetActive(false);
-        RandoMovement();
-        NPC.velocity = Vector3.forward;
-        BuzzSource.SetActive(true);
-    }
+        const float LookRotationEpsilon = 0.0001f;
+        [Header("Core References")]
+        public Rigidbody NPC;
+        [SerializeField] Animator Wasp;
+        Collider npcCollider;
+        GameObject AnotherWasp;
+        Collider AnotherWaspCollider;
 
-    // Update is called once per frame
-    public void FixedUpdate()
-    {
-        AnotherWasp = GameObject.FindGameObjectWithTag("NPC");
-        Vector3 Distance = PlayerTarget.transform.position - transform.position;
-        PlayerDistance = Distance.magnitude;
-        ChangeNav -= Time.deltaTime;
-        if (combo < hit2stun)
+        [Header("Player References")]
+        GameObject PlayerTarget;
+        BeaverPlayer PlayerHealth;
+
+        [Header("Movement")]
+        public Vector3 Distance;
+        public Quaternion rotGoal;
+        readonly float steer = 0.5f;
+        public float AttackSpeed = 7f;
+        public float PlayerDistance;
+        float ChangeNav = 5f;
+        public float Recovery = 10f;
+        float ChargeClock = 0.7f;
+        bool Contact = false;
+        float a;
+        float b;
+        float c;
+        //public WaspCourse course;
+        Vector3 SpawnPos;
+
+        [Header("Floating")]
+        public Vector3 currentPos;
+        public bool floating;
+        public float floatSpeed = 1.0f;
+        public float floatDistance = 1.0f;
+        public float maxTiltAngle = 10.0f;
+
+        [Header("Health and Damage")]
+        public int hit2stun;
+        public int combo = 0;
+        public int Damage2Player = 1;
+        public int MaxHealth = 2000;
+        public int CurrentHealth;
+        public NPC_Health NPCHealthBar;
+
+        [Header("Effects")]
+        public GameObject HitEffect;
+        public GameObject SlashEffect;
+        public GameObject Explosion;
+
+        [Header("Sound")]
+        public NPC_Audio Sound;
+        [SerializeField] GameObject BuzzSource;
+
+        [Header("On Death")]
+        public GameObject Body;
+        public GameObject Head;
+        public GameObject Wing;
+        public GameObject Leg;
+        public GameObject Reward;
+        // Start is called before the first frame update    
+        public void Start()
         {
-            if (floating == true)
+            SpawnPos = transform.position;
+            Wasp = GetComponent<Animator>();
+            npcCollider = GetComponent<Collider>();
+            CurrentHealth = MaxHealth;
+            PlayerTarget = GameObject.FindGameObjectWithTag("Player");
+            PlayerHealth = PlayerTarget.GetComponent<BeaverPlayer>();
+            HitEffect.SetActive(false);
+            RandoMovement();
+            NPC.velocity = Vector3.forward;
+            BuzzSource.SetActive(true);
+        }
+
+        // Update is called once per frame
+        public void FixedUpdate()
+        {
+            AnotherWasp = GameObject.FindGameObjectWithTag("NPC");
+            Vector3 Distance = PlayerTarget.transform.position - transform.position;
+            PlayerDistance = Distance.magnitude;
+            ChangeNav -= Time.deltaTime;
+            if (combo < hit2stun)
             {
-                Wasp.SetBool("Sting", false);
-                currentPos = transform.position;
-                FloatOnAir(currentPos);
+                if (floating == true)
+                {
+                    Wasp.SetBool("Sting", false);
+                    currentPos = transform.position;
+                    FloatOnAir(currentPos);
+                }
+                else
+                {
+                    if (NPC.velocity.sqrMagnitude > LookRotationEpsilon)
+                        rotGoal = Quaternion.LookRotation(NPC.velocity);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+                    if (Distance.magnitude >= 50)
+                    {
+                        if (ChangeNav <= 0)
+                        {
+                            BuzzSource.SetActive(true);
+                            Wasp.SetBool("Sting", false);
+                            RandoMovement();
+                        }
+                        else
+                        {
+                            TurnBack();
+                        }
+                    }
+
+                    if (PlayerDistance < 50)
+                    {
+                        if (Contact == false)
+                        {
+                            BuzzSource.SetActive(true);
+                            ChargeClock = 0.7f;
+                            if (AnotherWaspCollider == null || AnotherWaspCollider.gameObject != AnotherWasp)
+                            {
+                                AnotherWaspCollider = AnotherWasp.GetComponent<Collider>();
+                            }
+                            Physics.IgnoreCollision(AnotherWaspCollider, npcCollider);
+                            NPC.velocity = (Distance.normalized * 50f);
+                            Wasp.SetBool("Sting", true);
+                            ChangeNav = 0;
+                        }
+                        if (Contact == true)
+                        {
+                            Wasp.SetBool("Sting", false);
+                            NPC.AddForce(new Vector3(-Distance.x, 0.01f, -Distance.z).normalized * 0.1f);
+                            if (Distance.sqrMagnitude > LookRotationEpsilon)
+                                transform.rotation = (Quaternion.LookRotation(Distance));
+                            ChargeClock -= Time.deltaTime;
+                            if (ChargeClock <= 0)
+                                Contact = false;
+                        }
+                    
+                    }
+                }
+
             }
             else
             {
-                if (NPC.velocity.sqrMagnitude > LookRotationEpsilon)
-                    rotGoal = Quaternion.LookRotation(NPC.velocity);
-                transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
-                if (Distance.magnitude >= 50)
+                Stunned();
+                Recovery -= Time.deltaTime;
+                if (Recovery <= 0)
                 {
-                    if (ChangeNav <= 0)
-                    {
-                        BuzzSource.SetActive(true);
-                        Wasp.SetBool("Sting", false);
-                        RandoMovement();
-                    }
-                    else
-                    {
-                        TurnBack();
-                    }
-                }
-
-                if (PlayerDistance < 50)
-                {
-                    if (Contact == false)
-                    {
-                        BuzzSource.SetActive(true);
-                        ChargeClock = 0.7f;
-                        if (AnotherWaspCollider == null || AnotherWaspCollider.gameObject != AnotherWasp)
-                        {
-                            AnotherWaspCollider = AnotherWasp.GetComponent<Collider>();
-                        }
-                        Physics.IgnoreCollision(AnotherWaspCollider, npcCollider);
-                        NPC.velocity = (Distance.normalized * 50f);
-                        Wasp.SetBool("Sting", true);
-                        ChangeNav = 0;
-                    }
-                    if (Contact == true)
-                    {
-                        Wasp.SetBool("Sting", false);
-                        NPC.AddForce(new Vector3(-Distance.x, 0.01f, -Distance.z).normalized * 0.1f);
-                        if (Distance.sqrMagnitude > LookRotationEpsilon)
-                            transform.rotation = (Quaternion.LookRotation(Distance));
-                        ChargeClock -= Time.deltaTime;
-                        if (ChargeClock <= 0)
-                            Contact = false;
-                    }
-                    
+                    Recovered();
+                    combo = 0;
                 }
             }
 
+            if (!Input.GetKey(KeyCode.Mouse0) || PlayerDistance > 3)
+            {
+                HitEffect.SetActive(false);
+                SlashEffect.SetActive(false);
+            }
         }
-        else
+        private void LateUpdate()
+        { 
+            if (!Input.GetKey(KeyCode.Mouse0)||Distance.magnitude>6)
+            {
+                Wasp.SetBool("Beat", false);
+            }
+            if (CurrentHealth <= 0)
+            {
+                Death();
+            }
+        }
+
+        private void Death()
         {
-            Stunned();
-            Recovery -= Time.deltaTime;
-            if (Recovery <= 0)
+            PlayerHealth.Plattering = ("HA! gotcha");
+            PlayerHealth.ChangeSpeech = 1;
+            Instantiate(Explosion, transform.position + new Vector3(0, 1, 0), transform.rotation);
+            Instantiate(Body, transform.position + new Vector3(0, 1, 0), transform.rotation);
+            Instantiate(Head, transform.position + new Vector3(0, 1, 0), transform.rotation);
+            Instantiate(Wing, transform.position + new Vector3(0, 1, 0), transform.rotation);
+            Instantiate(Wing, transform.position + new Vector3(0, 1, 0), transform.rotation);
+            Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
+            Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
+            Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
+            Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
+            Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
+            Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
+            Instantiate(Reward, transform.position + new Vector3(0, 7, 0), transform.rotation);
+            Instantiate(Reward, transform.position + new Vector3(0, 7, 0), transform.rotation);
+            GameObject.Destroy(gameObject);
+        }
+
+        private void OnCollisionEnter(Collision OBJ)
+        {
+            if (OBJ.gameObject == PlayerTarget)
+            {
+                if (combo < hit2stun)
+                {
+                    Sting();
+                }
+                Contact = true;
+                if (PlayerHealth.isParried== true)
+                {
+                    TakeDamage(20);
+                    combo += 10;
+                }
+            }
+            if (OBJ.gameObject.CompareTag("Strike"))
+            {
+                Death();
+            }
+            if (OBJ.gameObject.CompareTag("Damage"))
+            {
+                Wasp.SetBool("Beat", true);
+                TakeDamage(15);
+                Sound.Beat();
+                combo = hit2stun;
+            }
+            if (OBJ.gameObject.CompareTag("Isle"))
+            {
+                Contact = true;
+                NPC.velocity += new Vector3(Random.Range(-1, 1), 1, Random.Range(-1,1));
+            }
+        }
+        public void TurnBack()
+        {
+            BuzzSource.SetActive(true);
+            Wasp.SetBool("Sting", false);
+            if ((transform.position - SpawnPos).magnitude > 30)
+            {
+                NPC.velocity = (SpawnPos - transform.position).normalized * 10;
+            }
+        }
+
+
+        void FloatOnAir(Vector3 initialPosition)
+        {
+            StartCoroutine(FloatObject(initialPosition));
+        }
+        private IEnumerator FloatObject(Vector3 initialPosition)
+        {
+            float direction = -1.0f;
+            while (true)
+            {
+                float newY = initialPosition.y + Mathf.Sin(Time.time * floatSpeed) * floatDistance+1;
+                transform.position = new Vector3(transform.position.x, newY, transform.position.z);
+                float tiltAngle = direction * maxTiltAngle * Mathf.Sin(Time.time * floatSpeed);
+                transform.rotation = Quaternion.Euler(tiltAngle, transform.rotation.eulerAngles.y, 0);
+                if (newY >= initialPosition.y + floatDistance || newY <= initialPosition.y - floatDistance)
+                {
+                    direction *= 1.0f;
+                }
+
+                yield return null;
+            }
+        }
+       public void Stunned()
+        {
+            BuzzSource.SetActive(false);
+            floating = false;
+            NPC.constraints = RigidbodyConstraints.None;
+            NPC.useGravity = true;
+            Wasp.SetBool("Stunned", true);
+            Wasp.SetBool("Sting", false);
+        }
+
+        void Recovered()
+        {
+            BuzzSource.SetActive(true);
+            floating = false;
+            Wasp.SetBool("Stunned", false);
+            Recovery = 10f;
+            NPC.constraints = RigidbodyConstraints.FreezeRotation;
+            NPC.useGravity = false;
+        }
+        public void Sting()
+        {
+            floating = false;
+            Recovered();
+            if (PlayerHealth.isParried == false && PlayerHealth.Rolling == false)
+            {
+                Sound.Sting();
+                PlayerHealth.TakeDamage(Damage2Player);
+            }
+            Wasp.SetBool("Sting", false);
+            if (PlayerHealth.isParried == true)
+            {
+                PlayerHealth.TakeDamage(0.01f);
+                TakeDamage(1);
+                combo = 3;
+            }
+
+        }
+
+        public void RandoMovement()
+        {
+            BuzzSource.SetActive(true);
+            if ((SpawnPos - transform.position).magnitude < 20)
             {
                 Recovered();
-                combo = 0;
+                a = Random.Range(-1, 1);
+                b = Random.Range(-0.1f, 0.1f);
+                c = Random.Range(-1, 1);
+                NPC.velocity = new Vector3(a, b, c);
+                ChangeNav = 5f;
             }
+            else 
+                NPC.velocity = (SpawnPos - transform.position).normalized * 5;
         }
 
-        if (!Input.GetKey(KeyCode.Mouse0) || PlayerDistance > 3)
+        public void TakeDamage(int Damage)
         {
-            HitEffect.SetActive(false);
-            SlashEffect.SetActive(false);
-        }
-    }
-    private void LateUpdate()
-    { 
-        if (!Input.GetKey(KeyCode.Mouse0)||Distance.magnitude>6)
-        {
-            Wasp.SetBool("Beat", false);
-        }
-        if (CurrentHealth <= 0)
-        {
-            Death();
-        }
-    }
-
-    private void Death()
-    {
-        PlayerHealth.Plattering = ("HA! gotcha");
-        PlayerHealth.ChangeSpeech = 1;
-        Instantiate(Explosion, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Body, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Head, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Wing, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Wing, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-        Instantiate(Reward, transform.position + new Vector3(0, 7, 0), transform.rotation);
-        Instantiate(Reward, transform.position + new Vector3(0, 7, 0), transform.rotation);
-        GameObject.Destroy(gameObject);
-    }
-
-    private void OnCollisionEnter(Collision OBJ)
-    {
-        if (OBJ.gameObject == PlayerTarget)
-        {
-            if (combo < hit2stun)
+            BuzzSource.SetActive(false);
+            Vector3 towardPlayer = PlayerTarget != null ? PlayerTarget.transform.position - transform.position : Distance;
+            if (towardPlayer.sqrMagnitude > LookRotationEpsilon)
             {
-                Sting();
+                rotGoal = Quaternion.LookRotation(towardPlayer);
+                transform.rotation = rotGoal;
             }
-            Contact = true;
-            if (PlayerHealth.isParried== true)
-            {
-                TakeDamage(20);
-                combo += 10;
-            }
-        }
-        if (OBJ.gameObject.CompareTag("Strike"))
-        {
-            Death();
-        }
-        if (OBJ.gameObject.CompareTag("Damage"))
-        {
+            NPC.useGravity = true;
             Wasp.SetBool("Beat", true);
-            TakeDamage(15);
-            Sound.Beat();
-            combo = hit2stun;
-        }
-        if (OBJ.gameObject.CompareTag("Isle"))
-        {
-            Contact = true;
-            NPC.velocity += new Vector3(Random.Range(-1, 1), 1, Random.Range(-1,1));
-        }
-    }
-    public void TurnBack()
-    {
-        BuzzSource.SetActive(true);
-        Wasp.SetBool("Sting", false);
-        if ((transform.position - SpawnPos).magnitude > 30)
-        {
-            NPC.velocity = (SpawnPos - transform.position).normalized * 10;
-        }
-    }
-
-
-    void FloatOnAir(Vector3 initialPosition)
-    {
-        StartCoroutine(FloatObject(initialPosition));
-    }
-    private IEnumerator FloatObject(Vector3 initialPosition)
-    {
-        float direction = -1.0f;
-        while (true)
-        {
-            float newY = initialPosition.y + Mathf.Sin(Time.time * floatSpeed) * floatDistance+1;
-            transform.position = new Vector3(transform.position.x, newY, transform.position.z);
-            float tiltAngle = direction * maxTiltAngle * Mathf.Sin(Time.time * floatSpeed);
-            transform.rotation = Quaternion.Euler(tiltAngle, transform.rotation.eulerAngles.y, 0);
-            if (newY >= initialPosition.y + floatDistance || newY <= initialPosition.y - floatDistance)
+            Wasp.SetBool("Sting", false);
+            CurrentHealth -= Damage;
+            var playerArsenal = PlayerHealth.Arsenal;
+            var currentWeapon = PlayerHealth.arsenalBrowser;
+            switch (playerArsenal[currentWeapon])
             {
-                direction *= 1.0f;
+                case "Bare Hands":
+                    {
+                        HitEffect.SetActive(true);
+                        Sound.Beat();
+                        break;
+                    }
+                case "Hammers":
+                    {
+                        HitEffect.SetActive(true);
+                        Sound.Beat();
+                        break;
+                    }
+                case "Bow":
+                    {
+                        HitEffect.SetActive(true);
+                        Sound.Beat();
+                        break;
+                    }
+                case "ArmorSet":
+                    {
+                        SlashEffect.SetActive(true);
+                        Sound.LiteSwordDamage();
+                        //var playerAnimator = PlayerTarget.GetComponent<BeaverPlayer>().Otter;
+                        //var currentClip = playerAnimator.GetComponent<AnimationClip>().ToString();
+                        //if (currentClip=="Sword1" || currentClip == "Sword2")
+                        //{
+                        //    HitEffect.SetActive(true);
+                        //    Sound.LiteSwordDamage();
+                        //}
+                        //if(currentClip=="NewSwordJump")
+                        //{
+                        //    Sound.HeavySwordDamage();
+                        //    //Sound.Beat();
+                        //}
+                        break;
+                    }
             }
-
-            yield return null;
+            combo++;
+            NPCHealthBar.SetNPCHealth(CurrentHealth);
         }
-    }
-   public void Stunned()
-    {
-        BuzzSource.SetActive(false);
-        floating = false;
-        NPC.constraints = RigidbodyConstraints.None;
-        NPC.useGravity = true;
-        Wasp.SetBool("Stunned", true);
-        Wasp.SetBool("Sting", false);
-    }
-
-    void Recovered()
-    {
-        BuzzSource.SetActive(true);
-        floating = false;
-        Wasp.SetBool("Stunned", false);
-        Recovery = 10f;
-        NPC.constraints = RigidbodyConstraints.FreezeRotation;
-        NPC.useGravity = false;
-    }
-    public void Sting()
-    {
-        floating = false;
-        Recovered();
-        if (PlayerHealth.isParried == false && PlayerHealth.Rolling == false)
-        {
-            Sound.Sting();
-            PlayerHealth.TakeDamage(Damage2Player);
-        }
-        Wasp.SetBool("Sting", false);
-        if (PlayerHealth.isParried == true)
-        {
-            PlayerHealth.TakeDamage(0.01f);
-            TakeDamage(1);
-            combo = 3;
-        }
-
-    }
-
-    public void RandoMovement()
-    {
-        BuzzSource.SetActive(true);
-        if ((SpawnPos - transform.position).magnitude < 20)
-        {
-            Recovered();
-            a = Random.Range(-1, 1);
-            b = Random.Range(-0.1f, 0.1f);
-            c = Random.Range(-1, 1);
-            NPC.velocity = new Vector3(a, b, c);
-            ChangeNav = 5f;
-        }
-        else 
-            NPC.velocity = (SpawnPos - transform.position).normalized * 5;
-    }
-
-    public void TakeDamage(int Damage)
-    {
-        BuzzSource.SetActive(false);
-        Vector3 towardPlayer = PlayerTarget != null ? PlayerTarget.transform.position - transform.position : Distance;
-        if (towardPlayer.sqrMagnitude > LookRotationEpsilon)
-        {
-            rotGoal = Quaternion.LookRotation(towardPlayer);
-            transform.rotation = rotGoal;
-        }
-        NPC.useGravity = true;
-        Wasp.SetBool("Beat", true);
-        Wasp.SetBool("Sting", false);
-        CurrentHealth -= Damage;
-        var playerArsenal = PlayerHealth.Arsenal;
-        var currentWeapon = PlayerHealth.arsenalBrowser;
-        switch (playerArsenal[currentWeapon])
-        {
-            case "Bare Hands":
-                {
-                    HitEffect.SetActive(true);
-                    Sound.Beat();
-                    break;
-                }
-            case "Hammers":
-                {
-                    HitEffect.SetActive(true);
-                    Sound.Beat();
-                    break;
-                }
-            case "Bow":
-                {
-                    HitEffect.SetActive(true);
-                    Sound.Beat();
-                    break;
-                }
-            case "ArmorSet":
-                {
-                    SlashEffect.SetActive(true);
-                    Sound.LiteSwordDamage();
-                    //var playerAnimator = PlayerTarget.GetComponent<Behaviour>().Otter;
-                    //var currentClip = playerAnimator.GetComponent<AnimationClip>().ToString();
-                    //if (currentClip=="Sword1" || currentClip == "Sword2")
-                    //{
-                    //    HitEffect.SetActive(true);
-                    //    Sound.LiteSwordDamage();
-                    //}
-                    //if(currentClip=="NewSwordJump")
-                    //{
-                    //    Sound.HeavySwordDamage();
-                    //    //Sound.Beat();
-                    //}
-                    break;
-                }
-        }
-        combo++;
-        NPCHealthBar.SetNPCHealth(CurrentHealth);
     }
 }

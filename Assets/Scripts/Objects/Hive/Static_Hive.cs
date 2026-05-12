@@ -1,62 +1,67 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Beavermania.NPC;
 
-
-public class Static_Hive : MonoBehaviour
+namespace Beavermania.Objects
 {
-    public int MaxHealth = 10000;
-    public int CurrentHealth;
-    public NPC_Health HiveBar;
-    public GameObject Hive;
-    [SerializeField] GameObject[] SpawnedObjects;
-    //public Transform Log1;
-    //public Transform Log2;
-    //public Transform Log3;
-    //public Transform Log4;
-    //public Transform Log5;
-    //public Transform Log6;
-    public Transform Wasp;
-    public GameObject Explosion;
-    public AudioSource Sound;
-    public GameObject HitEffect;
 
-    //Start is called before the first frame update
-    public void Start()
+
+    public class Static_Hive : MonoBehaviour
     {
-        CurrentHealth = MaxHealth;
-        Explosion.SetActive(false);
-    }
-    private void LateUpdate()
-    {
-        HitEffect.SetActive(false);
-        if (CurrentHealth <= 0)
+        public int MaxHealth = 10000;
+        public int CurrentHealth;
+        public NPC_Health HiveBar;
+        public GameObject Hive;
+        [SerializeField] GameObject[] SpawnedObjects;
+        //public Transform Log1;
+        //public Transform Log2;
+        //public Transform Log3;
+        //public Transform Log4;
+        //public Transform Log5;
+        //public Transform Log6;
+        public Transform Wasp;
+        public GameObject Explosion;
+        public AudioSource Sound;
+        public GameObject HitEffect;
+
+        //Start is called before the first frame update
+        public void Start()
         {
-            Death();
+            CurrentHealth = MaxHealth;
+            Explosion.SetActive(false);
         }
-    }
-
-    public void Death()
-    {
-        Explosion.SetActive(true);
-        Explosion.transform.parent = null;
-        foreach (var OBJ in SpawnedObjects)
+        private void LateUpdate()
         {
-            Instantiate(OBJ, gameObject.transform.position, Quaternion.identity);
-
+            HitEffect.SetActive(false);
+            if (CurrentHealth <= 0)
+            {
+                Death();
+            }
         }
-        for (int i = 0; i < 30; i++)
+
+        public void Death()
         {
-            Instantiate(Wasp, gameObject.transform.position, Quaternion.identity);
-        }
-        Destroy(Hive);
-    }
+            Explosion.SetActive(true);
+            Explosion.transform.parent = null;
+            foreach (var OBJ in SpawnedObjects)
+            {
+                Instantiate(OBJ, gameObject.transform.position, Quaternion.identity);
 
-    public void TakeDamage(int Damage)
-    {
-        HitEffect.SetActive(true);
-        CurrentHealth -= Damage;
-        Sound.Play();
-        HiveBar.SetNPCHealth(CurrentHealth);
+            }
+            for (int i = 0; i < 30; i++)
+            {
+                Instantiate(Wasp, gameObject.transform.position, Quaternion.identity);
+            }
+            Destroy(Hive);
+        }
+
+        public void TakeDamage(int Damage)
+        {
+            HitEffect.SetActive(true);
+            CurrentHealth -= Damage;
+            Sound.Play();
+            HiveBar.SetNPCHealth(CurrentHealth);
+        }
     }
 }

@@ -1,4 +1,5 @@
 using Beavermania.Core.Input;
+using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using UnityEngine;
 
 namespace Beavermania.Core.GameFlow
@@ -9,9 +10,9 @@ namespace Beavermania.Core.GameFlow
 
         GameObject pauseMenu;
         GameObject question;
-        global::Behaviour player;
+        BeaverPlayer player;
 
-        public void Bind(GameObject pauseMenu, GameObject question, global::Behaviour player)
+        public void Bind(GameObject pauseMenu, GameObject question, BeaverPlayer player)
         {
             this.pauseMenu = pauseMenu;
             this.question = question;

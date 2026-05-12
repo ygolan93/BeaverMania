@@ -1,58 +1,63 @@
 using System.Collections;
 using System.Collections.Generic;
+using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using UnityEngine;
 
-public class ScorpionDamage : MonoBehaviour
+namespace Beavermania.NPC
 {
-    public float JawClamp;
-    public float Sting;
-    public Behaviour Player;
-    public NPC_Audio BossAudio;
-    public ScorpionScript Scorpion;
 
-    private void Awake()
+    public class ScorpionDamage : MonoBehaviour
     {
-        BossAudio = GameObject.FindGameObjectWithTag("Boss").GetComponent<NPC_Audio>();
-        Player = transform.GetComponent<Behaviour>();
-    }
-    public void OnTriggerEnter(Collider OBJ)
-    {
-        if (OBJ.gameObject.CompareTag("Arena"))
+        public float JawClamp;
+        public float Sting;
+        public BeaverPlayer Player;
+        public NPC_Audio BossAudio;
+        public ScorpionScript Scorpion;
+
+        private void Awake()
         {
-            Scorpion = GameObject.FindGameObjectWithTag("Boss").GetComponent<ScorpionScript>();
+            BossAudio = GameObject.FindGameObjectWithTag("Boss").GetComponent<NPC_Audio>();
+            Player = transform.GetComponent<BeaverPlayer>();
         }
-        if (OBJ.gameObject.CompareTag("ScorpionDamage"))
+        public void OnTriggerEnter(Collider OBJ)
         {
-            if (Scorpion.combo < Scorpion.comboLimit)
+            if (OBJ.gameObject.CompareTag("Arena"))
             {
-                if (Player.isParried == false)
-                {
-                    Player.TakeDamage(JawClamp);
-                    BossAudio.Sting();
-                }
-                if (Player.isParried == true)
-                {
-                    Player.TakeDamage(6);
-                    Scorpion.TakeDamage(10);
-                    Scorpion.combo++;
-                }
+                Scorpion = GameObject.FindGameObjectWithTag("Boss").GetComponent<ScorpionScript>();
             }
-
-        }
-        if (OBJ.gameObject.CompareTag("ScorpionSting"))
-        {
-            if (Scorpion.combo < Scorpion.comboLimit)
+            if (OBJ.gameObject.CompareTag("ScorpionDamage"))
             {
-                if (Player.isParried == false)
+                if (Scorpion.combo < Scorpion.comboLimit)
                 {
-                    Player.TakeDamage(Sting);
-                    BossAudio.Sting();
+                    if (Player.isParried == false)
+                    {
+                        Player.TakeDamage(JawClamp);
+                        BossAudio.Sting();
+                    }
+                    if (Player.isParried == true)
+                    {
+                        Player.TakeDamage(6);
+                        Scorpion.TakeDamage(10);
+                        Scorpion.combo++;
+                    }
                 }
-                if (Player.isParried == true)
+
+            }
+            if (OBJ.gameObject.CompareTag("ScorpionSting"))
+            {
+                if (Scorpion.combo < Scorpion.comboLimit)
                 {
-                    Player.TakeDamage(6f);
-                    Scorpion.TakeDamage(10);
-                    Scorpion.combo++;
+                    if (Player.isParried == false)
+                    {
+                        Player.TakeDamage(Sting);
+                        BossAudio.Sting();
+                    }
+                    if (Player.isParried == true)
+                    {
+                        Player.TakeDamage(6f);
+                        Scorpion.TakeDamage(10);
+                        Scorpion.combo++;
+                    }
                 }
             }
         }

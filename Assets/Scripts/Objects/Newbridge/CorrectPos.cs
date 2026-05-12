@@ -1,18 +1,23 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Beavermania.Player.Movement;
 
-public class CorrectPos : MonoBehaviour
+namespace Beavermania.Objects
 {
-    [SerializeField] Transform spawnHere;
-    private void OnTriggerStay(Collider OBJ)
+
+    public class CorrectPos : MonoBehaviour
     {
-        if (OBJ.gameObject.CompareTag("Player"))
+        [SerializeField] Transform spawnHere;
+        private void OnTriggerStay(Collider OBJ)
         {
-            int counter = OBJ.GetComponent<Carry>().i;
-            if (Input.GetKey(KeyCode.LeftControl)&& counter>0)
+            if (OBJ.gameObject.CompareTag("Player"))
             {
-                OBJ.transform.position = spawnHere.position;
+                int counter = OBJ.GetComponent<Carry>().i;
+                if (Input.GetKey(KeyCode.LeftControl)&& counter>0)
+                {
+                    OBJ.transform.position = spawnHere.position;
+                }
             }
         }
     }

@@ -2,21 +2,25 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WatchtowerEnable : MonoBehaviour
+namespace Beavermania.NPC
 {
-    [SerializeField] Trader Guard;
-    [SerializeField] GameObject Hammers;
-    private void Start()
+
+    public class WatchtowerEnable : MonoBehaviour
     {
-        Guard.enabled = false;
-    }
-    private void OnTriggerEnter(Collider OBJ)
-    {
-        if (OBJ.gameObject.CompareTag("Honey"))
+        [SerializeField] Trader Guard;
+        [SerializeField] GameObject Hammers;
+        private void Start()
         {
-            Guard.enabled = true;
-            Instantiate(Hammers, OBJ.gameObject.transform.position+new Vector3(0,1,0), Quaternion.identity);
-            Destroy(OBJ.gameObject);
+            Guard.enabled = false;
+        }
+        private void OnTriggerEnter(Collider OBJ)
+        {
+            if (OBJ.gameObject.CompareTag("Honey"))
+            {
+                Guard.enabled = true;
+                Instantiate(Hammers, OBJ.gameObject.transform.position+new Vector3(0,1,0), Quaternion.identity);
+                Destroy(OBJ.gameObject);
+            }
         }
     }
 }

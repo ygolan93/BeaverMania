@@ -1,39 +1,44 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 
-public class ObjectiveUI: MonoBehaviour
+namespace Beavermania.UI.Objectives
 {
-    public Behaviour Player;
-    public string[] Objective;
-    public int i;
-    public WayPoint currentPoint;
-   public string Instruction;
-    public void Update()
+
+    public class ObjectiveUI: MonoBehaviour
     {
-        Player = transform.GetComponent<Behaviour>();
-        i = currentPoint.GetComponent<WayPoint>().i;
-        Instruction = Objective[i];
+        public BeaverPlayer Player;
+        public string[] Objective;
+        public int i;
+        public WayPoint currentPoint;
+       public string Instruction;
+        public void Update()
+        {
+            Player = transform.GetComponent<BeaverPlayer>();
+            i = currentPoint.GetComponent<WayPoint>().i;
+            Instruction = Objective[i];
+
+        }
+
+        //public void OnTriggerStay(Collider GameObjective) 
+        //{
+        //    if (GameObjective.CompareTag("Objective"))
+        //    {
+        //        i = GameObjective.GetComponent<ChangeOBJ>().ObjectiveNum;
+        //    }
+        //}
+        //public void /*OnTriggerExit*/(Collider GameObjective)
+        //{
+        //    if (GameObjective.CompareTag("Objective"))
+        //    {
+        //        i = 0;
+        //    }
+        //}
+        public void UpdateObjective()
+        {
+            i++;
+        }
 
     }
-
-    //public void OnTriggerStay(Collider GameObjective) 
-    //{
-    //    if (GameObjective.CompareTag("Objective"))
-    //    {
-    //        i = GameObjective.GetComponent<ChangeOBJ>().ObjectiveNum;
-    //    }
-    //}
-    //public void /*OnTriggerExit*/(Collider GameObjective)
-    //{
-    //    if (GameObjective.CompareTag("Objective"))
-    //    {
-    //        i = 0;
-    //    }
-    //}
-    public void UpdateObjective()
-    {
-        i++;
-    }
-
 }

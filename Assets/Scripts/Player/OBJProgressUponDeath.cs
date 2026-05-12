@@ -1,24 +1,29 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Beavermania.UI.Objectives;
 
-public class OBJProgressUponDeath : MonoBehaviour
+namespace Beavermania.Player
 {
-    public GameObject OBJ;
-    public ObjectiveUI Player;
-    // Start is called before the first frame update
-    void Start()
-    {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<ObjectiveUI>();
-    }
 
-    // Update is called once per frame
-    void Update()
+    public class OBJProgressUponDeath : MonoBehaviour
     {
-        if (OBJ == null)
+        public GameObject OBJ;
+        public ObjectiveUI Player;
+        // Start is called before the first frame update
+        void Start()
         {
-            Player.i++;
-            Destroy(gameObject);
+            Player = GameObject.FindGameObjectWithTag("Player").GetComponent<ObjectiveUI>();
+        }
+
+        // Update is called once per frame
+        void Update()
+        {
+            if (OBJ == null)
+            {
+                Player.i++;
+                Destroy(gameObject);
+            }
         }
     }
 }

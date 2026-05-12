@@ -2,13 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EffectObject : MonoBehaviour
+namespace Beavermania.NPC
 {
-    // Start is called before the first frame update
 
-    public float time = 2f;
-    private void Start()
+    public class EffectObject : MonoBehaviour
     {
-        Destroy(gameObject, time);
+        // Start is called before the first frame update
+
+        public float time = 2f;
+        private void Start()
+        {
+            Destroy(gameObject, time);
+        }
     }
 }

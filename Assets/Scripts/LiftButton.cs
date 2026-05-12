@@ -2,84 +2,88 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LiftButton : MonoBehaviour
+namespace Beavermania.Objects
 {
-    public float pushSpeed;
-    public ElevatorController elevator;
-    public Material unPressed;
-    public Material Pressed;
-    public Renderer mat;
-    public Transform initialPos;
-    public Transform pushPos;
-    public bool isPushed;
-    public float switchOff;
-    [SerializeField] AudioSource click;
-    [SerializeField] GameObject pressedButton;
-    // Start is called before the first frame update
-    private void Start()
-    {
-        mat = pressedButton.GetComponent<Renderer>();
-        pressedButton.transform.position = initialPos.position;
-    }
 
-    private void Update()
+    public class LiftButton : MonoBehaviour
     {
-        if (isPushed==true)
+        public float pushSpeed;
+        public ElevatorController elevator;
+        public Material unPressed;
+        public Material Pressed;
+        public Renderer mat;
+        public Transform initialPos;
+        public Transform pushPos;
+        public bool isPushed;
+        public float switchOff;
+        [SerializeField] AudioSource click;
+        [SerializeField] GameObject pressedButton;
+        // Start is called before the first frame update
+        private void Start()
         {
-            PushButton();
+            mat = pressedButton.GetComponent<Renderer>();
+            pressedButton.transform.position = initialPos.position;
         }
-        if (isPushed == false)
+
+        private void Update()
         {
-            RetractButton();
+            if (isPushed==true)
+            {
+                PushButton();
+            }
+            if (isPushed == false)
+            {
+                RetractButton();
+            }
+            if (elevator.isMoving==true)
+            {
+                mat.material = Pressed;
+            }
+            if (elevator.isMoving==false)
+            {
+                mat.material = unPressed;
+            }
         }
-        if (elevator.isMoving==true)
+        private void OnTriggerEnter(Collider OBJ)
         {
-            mat.material = Pressed;
+            if (OBJ.gameObject.CompareTag("Player"))
+            {
+                click.Play();
+                isPushed = true;
+            }
         }
-        if (elevator.isMoving==false)
+        private void OnCollisionEnter(Collision OBJ)
         {
-            mat.material = unPressed;
+            if (OBJ.gameObject.CompareTag("Damage"))
+            {
+                click.Play();
+                isPushed = true;
+            }
         }
-    }
-    private void OnTriggerEnter(Collider OBJ)
-    {
-        if (OBJ.gameObject.CompareTag("Player"))
+        private void OnTriggerExit(Collider OBJ)
         {
-            click.Play();
-            isPushed = true;
+            if (OBJ.gameObject.CompareTag("Player"))
+            {
+                isPushed = false;
+            }
         }
-    }
-    private void OnCollisionEnter(Collision OBJ)
-    {
-        if (OBJ.gameObject.CompareTag("Damage"))
+        private void OnCollisionExit(Collision OBJ)
         {
-            click.Play();
-            isPushed = true;
+            if (OBJ.gameObject.CompareTag("Damage"))
+            {
+                isPushed = false;
+            }
         }
-    }
-    private void OnTriggerExit(Collider OBJ)
-    {
-        if (OBJ.gameObject.CompareTag("Player"))
-        {
-            isPushed = false;
-        }
-    }
-    private void OnCollisionExit(Collision OBJ)
-    {
-        if (OBJ.gameObject.CompareTag("Damage"))
-        {
-            isPushed = false;
-        }
-    }
 
 
-    void PushButton()
-    {
-            pressedButton.transform.position = Vector3.Lerp(pressedButton.transform.position, pushPos.position, pushSpeed);
-    }
-    void RetractButton()
-    {
-        pressedButton.transform.position = Vector3.Lerp(pressedButton.transform.position, initialPos.position, pushSpeed);
+        void PushButton()
+        {
+                pressedButton.transform.position = Vector3.Lerp(pressedButton.transform.position, pushPos.position, pushSpeed);
+        }
+        void RetractButton()
+        {
+            pressedButton.transform.position = Vector3.Lerp(pressedButton.transform.position, initialPos.position, pushSpeed);
         
+        }
     }
 }

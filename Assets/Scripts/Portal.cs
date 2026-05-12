@@ -2,14 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Portal : MonoBehaviour
+namespace Beavermania.Objects
 {
-    [SerializeField] Transform destination;
-    private void OnTriggerEnter(Collider OBJ)
+
+    public class Portal : MonoBehaviour
     {
-        if (OBJ.gameObject.CompareTag("Player"))
+        [SerializeField] Transform destination;
+        private void OnTriggerEnter(Collider OBJ)
         {
-            OBJ.gameObject.transform.position = destination.position;
+            if (OBJ.gameObject.CompareTag("Player"))
+            {
+                OBJ.gameObject.transform.position = destination.position;
+            }
         }
     }
 }

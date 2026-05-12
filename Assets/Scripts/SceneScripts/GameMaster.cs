@@ -2,20 +2,24 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GameMaster : MonoBehaviour
+namespace Beavermania.Core.GameFlow
 {
-    private static GameMaster instance;
-    public Vector3 lastCheckPointPos;
-    private void Awake()
+
+    public class GameMaster : MonoBehaviour
     {
-        if (instance == null)
+        private static GameMaster instance;
+        public Vector3 lastCheckPointPos;
+        private void Awake()
         {
-            instance = this;
-            DontDestroyOnLoad(instance);
-        }
-        else
-        {
-            Destroy(gameObject);
+            if (instance == null)
+            {
+                instance = this;
+                DontDestroyOnLoad(instance);
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
         }
     }
 }

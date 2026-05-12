@@ -2,15 +2,19 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WoodenGateSound : MonoBehaviour
+namespace Beavermania.Objects
 {
-    [SerializeField] AudioSource Gate;
 
-    private void OnCollisionEnter(Collision OBJ)
-    { 
-      if (OBJ.gameObject.CompareTag("Player"))
-        {
-            Gate.Play();
+    public class WoodenGateSound : MonoBehaviour
+    {
+        [SerializeField] AudioSource Gate;
+
+        private void OnCollisionEnter(Collision OBJ)
+        { 
+          if (OBJ.gameObject.CompareTag("Player"))
+            {
+                Gate.Play();
+            }
         }
     }
 }

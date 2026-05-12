@@ -2,12 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Spawner : MonoBehaviour
+namespace Beavermania.Objects
 {
-    public GameObject Constructor;
-    // Start is called before the first frame update
-    public void Spawn()
+
+    public class Spawner : MonoBehaviour
     {
-        Instantiate(Constructor, transform.position, Quaternion.identity);
+        public GameObject Constructor;
+        // Start is called before the first frame update
+        public void Spawn()
+        {
+            Instantiate(Constructor, transform.position, Quaternion.identity);
+        }
     }
 }

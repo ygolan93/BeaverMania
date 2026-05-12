@@ -2,24 +2,28 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class StickToBridge : MonoBehaviour
+namespace Beavermania.Objects
 {
-    [SerializeField] Transform Ramp;
-    private void OnTriggerStay(Collider OBJ)
+
+    public class StickToBridge : MonoBehaviour
     {
-        if (OBJ.gameObject.CompareTag("Player"))
+        [SerializeField] Transform Ramp;
+        private void OnTriggerStay(Collider OBJ)
         {
-                var Child = OBJ.GetComponent<Transform>();
-            Child.transform.parent = Ramp.transform;
+            if (OBJ.gameObject.CompareTag("Player"))
+            {
+                    var Child = OBJ.GetComponent<Transform>();
+                Child.transform.parent = Ramp.transform;
       
+            }
         }
-    }
-    private void OnTriggerExit(Collider OBJ)
-    {
-        if (OBJ.gameObject.CompareTag("Player"))
+        private void OnTriggerExit(Collider OBJ)
         {
-            var Child = OBJ.GetComponent<Transform>();
-            Child.transform.parent = null;
+            if (OBJ.gameObject.CompareTag("Player"))
+            {
+                var Child = OBJ.GetComponent<Transform>();
+                Child.transform.parent = null;
+            }
         }
     }
 }

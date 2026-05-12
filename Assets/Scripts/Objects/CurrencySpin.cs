@@ -1,26 +1,31 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 
-public class CurrencySpin : MonoBehaviour
+namespace Beavermania.Objects
 {
-     Behaviour Player;
-    private void Start()
-    {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
-    }
-    // Update is called once per frame
-    private void Update()
-    {
-        transform.Rotate(0, 0, 170 * Time.deltaTime);
 
-    }
-    private void OnCollisionEnter(Collision OBJ)
+    public class CurrencySpin : MonoBehaviour
     {
-        if (OBJ.gameObject.CompareTag("Player"))
+         BeaverPlayer Player;
+        private void Start()
         {
-            Player.Currency += 1;
-            Destroy(transform.gameObject);
+            Player = GameObject.FindGameObjectWithTag("Player").GetComponent<BeaverPlayer>();
+        }
+        // Update is called once per frame
+        private void Update()
+        {
+            transform.Rotate(0, 0, 170 * Time.deltaTime);
+
+        }
+        private void OnCollisionEnter(Collision OBJ)
+        {
+            if (OBJ.gameObject.CompareTag("Player"))
+            {
+                Player.Currency += 1;
+                Destroy(transform.gameObject);
+            }
         }
     }
 }

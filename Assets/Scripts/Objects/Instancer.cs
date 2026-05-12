@@ -1,48 +1,52 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-public class Instancer : MonoBehaviour
+
+namespace Beavermania.Objects
 {
-    public int Instances;
-    public Mesh mesh;
-    public Material[] Materials;
-    private List<List<Matrix4x4>> Batches = new List<List<Matrix4x4>>();
-
-    private void RenderBatches()
+    public class Instancer : MonoBehaviour
     {
-        foreach (var Batch in Batches)
+        public int Instances;
+        public Mesh mesh;
+        public Material[] Materials;
+        private List<List<Matrix4x4>> Batches = new List<List<Matrix4x4>>();
+
+        private void RenderBatches()
         {
-            for (int i = 0; i < mesh.subMeshCount; i++)
+            foreach (var Batch in Batches)
             {
-                Graphics.DrawMeshInstanced(mesh, i, Materials[i], Batch);
+                for (int i = 0; i < mesh.subMeshCount; i++)
+                {
+                    Graphics.DrawMeshInstanced(mesh, i, Materials[i], Batch);
+                }
             }
         }
-    }
-    private void Update()
-    {
-        RenderBatches();
-    }
-
-    private void Start()
-    {
-        int AddedMatrices = 0;
-
-        Batches.Add(item: new List<Matrix4x4>());
-
-
-        for (int i = 0; i < Instances; i++)
+        private void Update()
         {
-            if(AddedMatrices<1000)
+            RenderBatches();
+        }
+
+        private void Start()
+        {
+            int AddedMatrices = 0;
+
+            Batches.Add(item: new List<Matrix4x4>());
+
+
+            for (int i = 0; i < Instances; i++)
             {
-                Batches[Batches.Count - 1].Add(item:Matrix4x4.TRS(pos:new Vector3(Random.Range(0,50), Random.Range(0, 50), Random.Range(0, 50)), Random.rotation, s: new Vector3()));
-                AddedMatrices += 1;
-            }
-            else
-            {
-                Batches.Add(item: new List<Matrix4x4>());
-                AddedMatrices = 0;
+                if(AddedMatrices<1000)
+                {
+                    Batches[Batches.Count - 1].Add(item:Matrix4x4.TRS(pos:new Vector3(Random.Range(0,50), Random.Range(0, 50), Random.Range(0, 50)), Random.rotation, s: new Vector3()));
+                    AddedMatrices += 1;
+                }
+                else
+                {
+                    Batches.Add(item: new List<Matrix4x4>());
+                    AddedMatrices = 0;
+                }
             }
         }
-    }
 
+    }
 }

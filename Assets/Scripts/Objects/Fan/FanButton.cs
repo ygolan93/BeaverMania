@@ -2,97 +2,101 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FanButton : MonoBehaviour
+namespace Beavermania.Objects
 {
-    public float pushSpeed;
-    public Fan Rotor;
-    public Material unPressed;
-    public Material Pressed;
-    public Renderer mat;
-    public Transform initialPos;
-    public Transform pushPos;
-    public bool isPushed;
-    public float switchOff;
-    [SerializeField] AudioSource click;
-    [SerializeField] AudioClip clickClip;
-    [SerializeField] GameObject pressedButton;
-    // Start is called before the first frame update
-    private void Start()
-    {
-        mat = pressedButton.GetComponent<Renderer>();
-        pressedButton.transform.position = initialPos.position;
-    }
 
-    private void Update()
+    public class FanButton : MonoBehaviour
     {
-        if (isPushed == true)
+        public float pushSpeed;
+        public Fan Rotor;
+        public Material unPressed;
+        public Material Pressed;
+        public Renderer mat;
+        public Transform initialPos;
+        public Transform pushPos;
+        public bool isPushed;
+        public float switchOff;
+        [SerializeField] AudioSource click;
+        [SerializeField] AudioClip clickClip;
+        [SerializeField] GameObject pressedButton;
+        // Start is called before the first frame update
+        private void Start()
         {
-            PushButton();
-        }
-        if (isPushed == false)
-        {
-            RetractButton();
+            mat = pressedButton.GetComponent<Renderer>();
+            pressedButton.transform.position = initialPos.position;
         }
 
-        if (Rotor.turnON==true)
+        private void Update()
         {
-            mat.material = Pressed;
-        }
-        if (Rotor.turnON==false)
-        {
-            mat.material = unPressed;
-        }
+            if (isPushed == true)
+            {
+                PushButton();
+            }
+            if (isPushed == false)
+            {
+                RetractButton();
+            }
 
-    }
-    private void OnTriggerEnter(Collider OBJ)
-    {
-        if (OBJ.gameObject.CompareTag("Player"))
-        {
-            click.clip = clickClip;
-            click.PlayOneShot(clickClip);
-            isPushed = true;
+            if (Rotor.turnON==true)
+            {
+                mat.material = Pressed;
+            }
             if (Rotor.turnON==false)
             {
-                Rotor.turnON = true;
+                mat.material = unPressed;
             }
+
         }
-    }
-    private void OnCollisionEnter(Collision OBJ)
-    {
-        if (OBJ.gameObject.CompareTag("Damage"))
+        private void OnTriggerEnter(Collider OBJ)
         {
-            click.clip = clickClip;
-            click.PlayOneShot(clickClip);
-            isPushed = true;
-            if (Rotor.turnON == false)
+            if (OBJ.gameObject.CompareTag("Player"))
             {
-                Rotor.turnON = true;
+                click.clip = clickClip;
+                click.PlayOneShot(clickClip);
+                isPushed = true;
+                if (Rotor.turnON==false)
+                {
+                    Rotor.turnON = true;
+                }
             }
         }
-    }
-    private void OnTriggerExit(Collider OBJ)
-    {
-        if (OBJ.gameObject.CompareTag("Player"))
+        private void OnCollisionEnter(Collision OBJ)
         {
-            isPushed = false;
+            if (OBJ.gameObject.CompareTag("Damage"))
+            {
+                click.clip = clickClip;
+                click.PlayOneShot(clickClip);
+                isPushed = true;
+                if (Rotor.turnON == false)
+                {
+                    Rotor.turnON = true;
+                }
+            }
         }
-    }
-    private void OnCollisionExit(Collision OBJ)
-    {
-        if (OBJ.gameObject.CompareTag("Damage"))
+        private void OnTriggerExit(Collider OBJ)
         {
-            isPushed = false;
+            if (OBJ.gameObject.CompareTag("Player"))
+            {
+                isPushed = false;
+            }
         }
-    }
+        private void OnCollisionExit(Collision OBJ)
+        {
+            if (OBJ.gameObject.CompareTag("Damage"))
+            {
+                isPushed = false;
+            }
+        }
 
 
-    void PushButton()
-    {
-        pressedButton.transform.position = Vector3.Lerp(pressedButton.transform.position, pushPos.position, pushSpeed);
-    }
-    void RetractButton()
-    {
-        pressedButton.transform.position = Vector3.Lerp(pressedButton.transform.position, initialPos.position, pushSpeed);
+        void PushButton()
+        {
+            pressedButton.transform.position = Vector3.Lerp(pressedButton.transform.position, pushPos.position, pushSpeed);
+        }
+        void RetractButton()
+        {
+            pressedButton.transform.position = Vector3.Lerp(pressedButton.transform.position, initialPos.position, pushSpeed);
 
+        }
     }
 }

@@ -1,47 +1,53 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
+using Beavermania.Player.Movement;
 
-public class Drawn : MonoBehaviour
+namespace Beavermania.Objects
 {
-    public Rigidbody Log;
-    public bool Click;
-    public ParticleSystem DrawnEffect;
+
+    public class Drawn : MonoBehaviour
+    {
+        public Rigidbody Log;
+        public bool Click;
+        public ParticleSystem DrawnEffect;
 
    
-    private void OnCollisionEnter(Collision OBJ)
-    {
-        if (OBJ.gameObject.tag == "Strike")
+        private void OnCollisionEnter(Collision OBJ)
         {
-            Destroy(gameObject);
+            if (OBJ.gameObject.tag == "Strike")
+            {
+                Destroy(gameObject);
+            }
         }
-    }
 
-    [System.Obsolete]
-    private void OnTriggerStay(Collider OBJ)
-    {
-        if (OBJ.gameObject.tag == "Player")
+        [System.Obsolete]
+        private void OnTriggerStay(Collider OBJ)
         {
-            var Player = OBJ.GetComponent<Behaviour>();
-            var PlayerLoad = OBJ.GetComponent<Carry>();
-            //Check if the log is close enough to be drawn + player's health above minimum **         
-            if (Input.GetKey(KeyCode.Mouse1) && !Input.GetKey(KeyCode.LeftControl))
+            if (OBJ.gameObject.tag == "Player")
             {
-                Player.Plattering = ("To me! my loyal logs");
-                Player.ChangeSpeech = 1;
-                //Check if player's load is still clear to carry more
-                bool CanDraw = PlayerLoad.CanCarry;
-                if (CanDraw == true)
+                var Player = OBJ.GetComponent<BeaverPlayer>();
+                var PlayerLoad = OBJ.GetComponent<Carry>();
+                //Check if the log is close enough to be drawn + player's health above minimum **         
+                if (Input.GetKey(KeyCode.Mouse1) && !Input.GetKey(KeyCode.LeftControl))
                 {
-                    Log.velocity = (Player.transform.position - Log.transform.position).normalized * 1.5f;
-                    DrawnEffect.enableEmission = true;
-                }
+                    Player.Plattering = ("To me! my loyal logs");
+                    Player.ChangeSpeech = 1;
+                    //Check if player's load is still clear to carry more
+                    bool CanDraw = PlayerLoad.CanCarry;
+                    if (CanDraw == true)
+                    {
+                        Log.velocity = (Player.transform.position - Log.transform.position).normalized * 1.5f;
+                        DrawnEffect.enableEmission = true;
+                    }
 
-            }
-            else
-            {
-                DrawnEffect.enableEmission = false;
-            }
-        } 
+                }
+                else
+                {
+                    DrawnEffect.enableEmission = false;
+                }
+            } 
+        }
     }
 }

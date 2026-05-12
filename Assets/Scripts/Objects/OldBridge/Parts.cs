@@ -2,16 +2,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Parts : MonoBehaviour
+namespace Beavermania.Objects
 {
-     [SerializeField] Transform Backwards;
-    // Start is called before the first frame update
-    public void OnCollisionEnter(Collision collision)
+
+    public class Parts : MonoBehaviour
     {
-        if (collision.gameObject.tag == "Part")
+         [SerializeField] Transform Backwards;
+        // Start is called before the first frame update
+        public void OnCollisionEnter(Collision collision)
         {
-            //Instantiate(transform, transform.position + transform.forward * 0.5f, transform.rotation);
-             collision.transform.position = Backwards.position + new Vector3 (0,1,0);
+            if (collision.gameObject.tag == "Part")
+            {
+                //Instantiate(transform, transform.position + transform.forward * 0.5f, transform.rotation);
+                 collision.transform.position = Backwards.position + new Vector3 (0,1,0);
+            }
         }
     }
 }

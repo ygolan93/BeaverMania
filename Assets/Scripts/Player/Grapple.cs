@@ -1,58 +1,63 @@
 using System.Collections;
 using System.Collections.Generic;
+using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using UnityEngine;
 
-public class Grapple : MonoBehaviour
+namespace Beavermania.Player.Movement
 {
-    const float LookRotationEpsilon = 0.0001f;
-    [Header ("References")]
-    [SerializeField] Behaviour Player;
-    Rigidbody rb_player;
-    [SerializeField] Transform PlayerCam;
-    [SerializeField] Transform Hand;
-    public LayerMask GrapplingLayer;
 
-    [Header("Grappling")]
-    [SerializeField] float maxGrapplingDistance;
-    Vector3 grapplePoint;
-
-    [Header("Input")]
-    public KeyCode grapplingKey=KeyCode.Tab;
-    // Start is called before the first frame update
-    void Start()
+    public class Grapple : MonoBehaviour
     {
-        Player = gameObject.GetComponent<Behaviour>();
-        rb_player = gameObject.GetComponent<Rigidbody>();
-    }
-    // Update is called once per frame
-    void Update()
-    {   
+        const float LookRotationEpsilon = 0.0001f;
+        [Header ("References")]
+        [SerializeField] BeaverPlayer Player;
+        Rigidbody rb_player;
+        [SerializeField] Transform PlayerCam;
+        [SerializeField] Transform Hand;
+        public LayerMask GrapplingLayer;
+
+        [Header("Grappling")]
+        [SerializeField] float maxGrapplingDistance;
+        Vector3 grapplePoint;
+
+        [Header("Input")]
+        public KeyCode grapplingKey=KeyCode.Tab;
+        // Start is called before the first frame update
+        void Start()
+        {
+            Player = gameObject.GetComponent<BeaverPlayer>();
+            rb_player = gameObject.GetComponent<Rigidbody>();
+        }
+        // Update is called once per frame
+        void Update()
+        {   
         
-    }
-
-    void shootGrapple()
-    {
-        RaycastHit Hit;
-        if (Physics.Raycast(PlayerCam.position, PlayerCam.forward, out Hit, maxGrapplingDistance, GrapplingLayer))
-        {
-            grapplePoint = Hit.point;
-            Invoke(nameof(ExecuteGrapple), 0.3f);
         }
-        else
+
+        void shootGrapple()
         {
-            grapplePoint = PlayerCam.position + PlayerCam.forward * maxGrapplingDistance;
-            Invoke(nameof(StopGrapple), 0.3f);
+            RaycastHit Hit;
+            if (Physics.Raycast(PlayerCam.position, PlayerCam.forward, out Hit, maxGrapplingDistance, GrapplingLayer))
+            {
+                grapplePoint = Hit.point;
+                Invoke(nameof(ExecuteGrapple), 0.3f);
+            }
+            else
+            {
+                grapplePoint = PlayerCam.position + PlayerCam.forward * maxGrapplingDistance;
+                Invoke(nameof(StopGrapple), 0.3f);
+            }
         }
-    }
 
-    void ExecuteGrapple()
-    {
-        Vector3 lookDir = grapplePoint - Player.transform.position;
-        if (lookDir.sqrMagnitude > LookRotationEpsilon)
-            Player.transform.rotation = Quaternion.LookRotation(lookDir);
-    }
-    void StopGrapple()
-    {
+        void ExecuteGrapple()
+        {
+            Vector3 lookDir = grapplePoint - Player.transform.position;
+            if (lookDir.sqrMagnitude > LookRotationEpsilon)
+                Player.transform.rotation = Quaternion.LookRotation(lookDir);
+        }
+        void StopGrapple()
+        {
 
+        }
     }
 }

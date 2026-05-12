@@ -3,17 +3,21 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class NPC_Health : MonoBehaviour
+namespace Beavermania.NPC
 {
-    public Slider NPCslider;
 
-    public void SetMaxNPCHealth(int NPCH)
+    public class NPC_Health : MonoBehaviour
     {
-        NPCslider.maxValue = NPCH;
-        NPCslider.value = NPCH;
-    }
-    public void SetNPCHealth(int NPCH)
-    {
-        NPCslider.value = NPCH;
+        public Slider NPCslider;
+
+        public void SetMaxNPCHealth(int NPCH)
+        {
+            NPCslider.maxValue = NPCH;
+            NPCslider.value = NPCH;
+        }
+        public void SetNPCHealth(int NPCH)
+        {
+            NPCslider.value = NPCH;
+        }
     }
 }

@@ -2,20 +2,24 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BridgeConstructor : MonoBehaviour
+namespace Beavermania.Objects
 {
-    public GameObject[] BridgeParts;
 
-    public int i = 0;
-    public void OnCollisionEnter(Collision collision)
+    public class BridgeConstructor : MonoBehaviour
     {
-        if(collision.gameObject.tag == "Part")
+        public GameObject[] BridgeParts;
+
+        public int i = 0;
+        public void OnCollisionEnter(Collision collision)
         {
-            if (i < BridgeParts.Length)
-                BridgeParts[i].SetActive(true);
-            i++;
+            if(collision.gameObject.tag == "Part")
+            {
+                if (i < BridgeParts.Length)
+                    BridgeParts[i].SetActive(true);
+                i++;
             
-            Destroy(collision.transform.gameObject);
+                Destroy(collision.transform.gameObject);
+            }
         }
     }
 }

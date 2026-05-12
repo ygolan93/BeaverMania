@@ -3,45 +3,49 @@ using System.Collections.Generic;
 using Beavermania.Core.Input;
 using UnityEngine;
 
-public class Grow : MonoBehaviour
+namespace Beavermania.Objects
 {
-    public GameObject GivingTree;
-    float Clock;
-    public bool AtRange;
-    Vector3 scaleChange;
-    [SerializeField] Transform Log1;
-    [SerializeField] Transform Log2;
 
-    // Start is called before the first frame update
-    void Start()
+    public class Grow : MonoBehaviour
     {
-        Clock = 0.83f;
-        scaleChange = new Vector3(0.01f, 0.014f, 0.01f);
-    }
+        public GameObject GivingTree;
+        float Clock;
+        public bool AtRange;
+        Vector3 scaleChange;
+        [SerializeField] Transform Log1;
+        [SerializeField] Transform Log2;
 
-
-    // Update is called once per frame
-    void Update()
-    {
-        gameObject.transform.localScale += scaleChange;
-        transform.Rotate(Vector3.up * 20f, Space.World);
-        Clock -= Time.deltaTime;
-        if (Clock <= 0)
+        // Start is called before the first frame update
+        void Start()
         {
-            Instantiate(GivingTree, transform.position, Quaternion.identity);
-            GameObject.Destroy(gameObject);
+            Clock = 0.83f;
+            scaleChange = new Vector3(0.01f, 0.014f, 0.01f);
         }
-    }
 
-    private void OnTriggerStay(Collider OBJ)
-    {
-        if (OBJ.gameObject.tag == "Player")
+
+        // Update is called once per frame
+        void Update()
         {
-            if (PlayerInputReader.IsPrimaryHeld())
+            gameObject.transform.localScale += scaleChange;
+            transform.Rotate(Vector3.up * 20f, Space.World);
+            Clock -= Time.deltaTime;
+            if (Clock <= 0)
             {
-                Instantiate(Log1, transform.position, Quaternion.identity);
-                Instantiate(Log2, transform.position, Quaternion.identity);
-                Destroy(gameObject);
+                Instantiate(GivingTree, transform.position, Quaternion.identity);
+                GameObject.Destroy(gameObject);
+            }
+        }
+
+        private void OnTriggerStay(Collider OBJ)
+        {
+            if (OBJ.gameObject.tag == "Player")
+            {
+                if (PlayerInputReader.IsPrimaryHeld())
+                {
+                    Instantiate(Log1, transform.position, Quaternion.identity);
+                    Instantiate(Log2, transform.position, Quaternion.identity);
+                    Destroy(gameObject);
+                }
             }
         }
     }

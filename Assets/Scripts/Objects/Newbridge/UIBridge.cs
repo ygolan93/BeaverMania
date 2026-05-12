@@ -3,21 +3,25 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
-public class UIBridge : MonoBehaviour
+
+namespace Beavermania.Objects
 {
-
-    public NewConstructor Bridge;
-    public TextMeshProUGUI DisplayText;
-
-
-
-    //// Text LegacyText;
-    //private void Start()
-    //{
-    //}
-    // Update is called once per frame
-    void Update()
+    public class UIBridge : MonoBehaviour
     {
-        //Bridge.BridgeUI = DisplayText.text;
+
+        public NewConstructor Bridge;
+        public TextMeshProUGUI DisplayText;
+
+
+
+        //// Text LegacyText;
+        //private void Start()
+        //{
+        //}
+        // Update is called once per frame
+        void Update()
+        {
+            //Bridge.BridgeUI = DisplayText.text;
+        }
     }
 }

@@ -1,12 +1,13 @@
 using UnityEngine;
+using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 
 namespace Beavermania.Player
 {
 public class PlayerCheckpointRespawn : MonoBehaviour
 {
-    [SerializeField] global::Behaviour player;
+    [SerializeField] BeaverPlayer player;
 
-    public void Bind(global::Behaviour behaviour)
+    public void Bind(BeaverPlayer behaviour)
     {
         player = behaviour;
     }
@@ -15,7 +16,7 @@ public class PlayerCheckpointRespawn : MonoBehaviour
     {
         if (player == null)
         {
-            player = GetComponent<global::Behaviour>();
+            player = GetComponent<BeaverPlayer>();
         }
 
         player.HealthBar.SetHealth(player.MaxHealth);

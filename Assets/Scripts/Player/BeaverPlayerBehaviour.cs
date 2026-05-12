@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Beavermania.Audio;
 using Beavermania.Core.GameFlow;
+using Beavermania.Display;
 using Beavermania.Core.Input;
 using Beavermania.NPC;
 using Beavermania.Player.Combat;

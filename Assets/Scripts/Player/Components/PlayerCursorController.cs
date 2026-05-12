@@ -1,28 +1,39 @@
-using Beavermania.Core.GameFlow;
+using Beavermania.Display;
 using Cinemachine;
 using UnityEngine;
 
 namespace Beavermania.Player
 {
-public class PlayerCursorController : MonoBehaviour
-{
-    public Transform Root;
-    public CinemachineFreeLook FreeLook;
-
-    public void Bind(Transform root, CinemachineFreeLook freeLook)
+    public class PlayerCursorController : MonoBehaviour
     {
-        Root = root;
-        FreeLook = freeLook;
-    }
+        public Transform Root;
+        public CinemachineFreeLook FreeLook;
 
-    public void ShowCursor()
-    {
-        PlayerCursorRules.ApplyUnlockedVisible();
-    }
+        IPlayerCursorPresentation presentation;
 
-    public void HideCursor()
-    {
-        PlayerCursorRules.ApplyLockedHidden(FreeLook, Root);
+        public void Bind(Transform root, CinemachineFreeLook freeLook)
+        {
+            Root = root;
+            FreeLook = freeLook;
+            presentation = new CinemachinePlayerCursorPresentation(freeLook);
+        }
+
+        public void ShowCursor()
+        {
+            EnsurePresentation();
+            presentation.ApplyUnlockedVisible();
+        }
+
+        public void HideCursor()
+        {
+            EnsurePresentation();
+            presentation.ApplyLockedHidden(Root);
+        }
+
+        void EnsurePresentation()
+        {
+            if (presentation == null)
+                presentation = new CinemachinePlayerCursorPresentation(FreeLook);
+        }
     }
-}
 }

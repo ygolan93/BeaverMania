@@ -159,6 +159,9 @@ public class Behaviour : MonoBehaviour
     public string Wallet;
     public GameMaster GM;
     public GameObject AimIcon;
+    public PlayerHudState PlayerHudState;
+    public ObjectiveUI PlayerObjective;
+    bool loggedRuntimeHudStateFallback;
     public CinemachineFreeLook FreeLook;
     public CinemachineFreeLook CamForTraders;
     [SerializeField] PlayerCursorController cursorController;
@@ -808,6 +811,7 @@ public class Behaviour : MonoBehaviour
     }
     public void Start()
     {
+        BindHudState();
         arrowModel.SetActive(false);
         bowAim = new Vector3(-0.33f, 20f, -0.3f);
         CamForTraders.enabled = false;
@@ -870,6 +874,7 @@ public class Behaviour : MonoBehaviour
         FreeLook.m_Orbits[0].m_Radius = 4;
         FreeLook.m_Orbits[1].m_Radius = 6;
         FreeLook.m_Orbits[2].m_Radius = 5;
+        SyncHudState();
     }
     [System.Obsolete]
     public void Update()
@@ -1717,6 +1722,40 @@ public class Behaviour : MonoBehaviour
             }
         }
 
+        SyncHudState();
+    }
+
+    void BindHudState()
+    {
+        if (PlayerHudState == null)
+            PlayerHudState = GetComponent<PlayerHudState>();
+
+        if (PlayerHudState == null)
+        {
+            PlayerHudState = gameObject.AddComponent<PlayerHudState>();
+            LogHudStateFallback();
+        }
+
+        if (PlayerObjective == null)
+            PlayerObjective = GetComponent<ObjectiveUI>();
+    }
+
+    void LogHudStateFallback()
+    {
+        if (loggedRuntimeHudStateFallback)
+            return;
+
+        loggedRuntimeHudStateFallback = true;
+        Debug.LogWarning($"{nameof(Behaviour)} added a missing {nameof(PlayerHudState)} component to {name} at runtime so HUD text can update.", this);
+    }
+
+    void SyncHudState()
+    {
+        if (PlayerHudState == null)
+            BindHudState();
+
+        if (PlayerHudState != null)
+            PlayerHudState.CopyFrom(this, PlayerObjective);
     }
 }
 

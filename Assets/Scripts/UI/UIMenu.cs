@@ -5,13 +5,15 @@ using UnityEngine.SceneManagement;
 
 public class UIMenu : MonoBehaviour
 {
-    public GameObject PauseMenu;
-    public GameObject Question;
+    [SerializeField] public GameObject PauseMenu;
+    [SerializeField] public GameObject Question;
     [SerializeField] public Behaviour Player;
     [SerializeField] Slider volumeSlider;
     [SerializeField] AudioSource Music;
 
     PauseController pauseController;
+    bool loggedMissingPlayer;
+    bool loggedMissingMusic;
 
     PauseController PauseController
     {
@@ -37,7 +39,7 @@ public class UIMenu : MonoBehaviour
                 Player = playerObject.GetComponent<Behaviour>();
 
             if (Player == null)
-                LogMissingReference(nameof(Player));
+                LogMissingReference(nameof(Player), ref loggedMissingPlayer);
         }
 
         if (Player != null && Player.seekMusic == true && Music == null)
@@ -47,7 +49,7 @@ public class UIMenu : MonoBehaviour
                 Music = musicObject.GetComponent<AudioSource>();
 
             if (Music == null)
-                LogMissingReference(nameof(Music));
+                LogMissingReference(nameof(Music), ref loggedMissingMusic);
         }
 
         PauseController.Bind(PauseMenu, Question, Player);
@@ -89,8 +91,12 @@ public class UIMenu : MonoBehaviour
         }
     }
 
-    void LogMissingReference(string referenceName)
+    void LogMissingReference(string referenceName, ref bool logged)
     {
+        if (logged)
+            return;
+
+        logged = true;
 #if DEVELOPMENT_BUILD
         Debug.LogWarning($"{nameof(UIMenu)} could not resolve {referenceName} fallback.", this);
 #endif

@@ -7,7 +7,7 @@ public class UIMenu : MonoBehaviour
 {
     public GameObject PauseMenu;
     public GameObject Question;
-    public Behaviour Player;
+    [SerializeField] public Behaviour Player;
     [SerializeField] Slider volumeSlider;
     [SerializeField] AudioSource Music;
 
@@ -30,10 +30,24 @@ public class UIMenu : MonoBehaviour
     // Start is called before the first frame update
     private void Start()
     {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
-        if (Player.seekMusic == true)
+        if (Player == null)
         {
-            Music = GameObject.FindGameObjectWithTag("Music").GetComponent<AudioSource>();
+            GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+            if (playerObject != null)
+                Player = playerObject.GetComponent<Behaviour>();
+
+            if (Player == null)
+                LogMissingReference(nameof(Player));
+        }
+
+        if (Player != null && Player.seekMusic == true && Music == null)
+        {
+            GameObject musicObject = GameObject.FindGameObjectWithTag("Music");
+            if (musicObject != null)
+                Music = musicObject.GetComponent<AudioSource>();
+
+            if (Music == null)
+                LogMissingReference(nameof(Music));
         }
 
         PauseController.Bind(PauseMenu, Question, Player);
@@ -51,6 +65,9 @@ public class UIMenu : MonoBehaviour
 
     public void RestartCheckpointFromMenu()
     {
+        if (Player == null)
+            return;
+
         Player.RestartCheckpoint();
         PauseController.HideQuestion();
     }
@@ -66,9 +83,16 @@ public class UIMenu : MonoBehaviour
     public void Volume()
     {
         //AudioListener.volume = volumeSlider.value;
-        if (Player.seekMusic == true)
+        if (Player != null && Player.seekMusic == true && Music != null)
         {
             Music.volume = volumeSlider.value;
         }
+    }
+
+    void LogMissingReference(string referenceName)
+    {
+#if DEVELOPMENT_BUILD
+        Debug.LogWarning($"{nameof(UIMenu)} could not resolve {referenceName} fallback.", this);
+#endif
     }
 }

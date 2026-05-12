@@ -4,9 +4,9 @@ using UnityEngine;
 using TMPro;
 public class Dialogue : MonoBehaviour
 {
-    public Behaviour Player;
+    [SerializeField] public Behaviour Player;
     public ScorpionScript Scorpion;
-    public ObjectiveUI PlayerObjective;
+    [SerializeField] public ObjectiveUI PlayerObjective;
     public TextMeshProUGUI textComponent;
     public GameObject ContinueButton;
     public GameObject SkipButton;
@@ -19,9 +19,29 @@ public class Dialogue : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
+        if (PlayerObjective == null && Player != null)
+            PlayerObjective = Player.GetComponent<ObjectiveUI>();
+
+        if (Player == null || PlayerObjective == null)
+        {
+            GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+            if (playerObject != null)
+            {
+                if (Player == null)
+                    Player = playerObject.GetComponent<Behaviour>();
+
+                if (PlayerObjective == null)
+                    PlayerObjective = playerObject.GetComponent<ObjectiveUI>();
+            }
+
+            if (Player == null)
+                LogMissingReference(nameof(Player));
+
+            if (PlayerObjective == null)
+                LogMissingReference(nameof(PlayerObjective));
+        }
+
         //Boss = GameObject.FindGameObjectWithTag("Boss").GetComponent<BossScript>();
-        PlayerObjective = GameObject.FindGameObjectWithTag("Player").GetComponent<ObjectiveUI>();
         panel = gameObject.transform.parent.GetComponent<Transform>();
         SkipButton.SetActive(true);
         textComponent.text = string.Empty;
@@ -74,7 +94,9 @@ public class Dialogue : MonoBehaviour
 
     public void EndConversation()
     {
-        PlayerObjective.UpdateObjective();
+        if (PlayerObjective != null)
+            PlayerObjective.UpdateObjective();
+
         if (isBoss==true)
         {
             EndBossDialogue();
@@ -87,8 +109,18 @@ public class Dialogue : MonoBehaviour
 
     public void EndBossDialogue()
     {
-        PlayerObjective.UpdateObjective();
-        Player.GetComponent<BossHandler>().SkipBossChat();
+        if (PlayerObjective != null)
+            PlayerObjective.UpdateObjective();
+
+        if (Player != null)
+            Player.GetComponent<BossHandler>().SkipBossChat();
         //Scorpion.InitiateCharge();
+    }
+
+    void LogMissingReference(string referenceName)
+    {
+#if DEVELOPMENT_BUILD
+        Debug.LogWarning($"{nameof(Dialogue)} could not resolve {referenceName} fallback.", this);
+#endif
     }
 }

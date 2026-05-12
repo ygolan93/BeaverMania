@@ -5,9 +5,9 @@ using TMPro;
 using UnityEngine.UI;
 public class DebugReference : MonoBehaviour
 {
-    public Behaviour Player;
-    public PlayerHudState PlayerHudState;
-    public ObjectiveUI PlayerObjective;
+    [SerializeField] public Behaviour Player;
+    [SerializeField] public PlayerHudState PlayerHudState;
+    [SerializeField] public ObjectiveUI PlayerObjective;
 
     public TextMeshProUGUI ObjectiveText;
     public TextMeshProUGUI DisplayText;
@@ -19,6 +19,10 @@ public class DebugReference : MonoBehaviour
     public TextMeshProUGUI GobletCount;
     public TextMeshProUGUI AppleCount;
     public TextMeshProUGUI ArrowMunition;
+
+    bool loggedMissingPlayer;
+    bool loggedMissingPlayerObjective;
+
     private void Start()
     {
         BindPlayerHudState();
@@ -27,7 +31,17 @@ public class DebugReference : MonoBehaviour
     void BindPlayerHudState()
     {
         if (Player == null)
-            Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
+        {
+            GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+            if (playerObject != null)
+                Player = playerObject.GetComponent<Behaviour>();
+
+            if (Player == null)
+            {
+                LogMissingReference(nameof(Player), ref loggedMissingPlayer);
+                return;
+            }
+        }
 
         if (PlayerHudState == null)
             PlayerHudState = Player.GetComponent<PlayerHudState>();
@@ -37,12 +51,18 @@ public class DebugReference : MonoBehaviour
 
         if (PlayerObjective == null)
             PlayerObjective = Player.GetComponent<ObjectiveUI>();
+
+        if (PlayerObjective == null)
+            LogMissingReference(nameof(PlayerObjective), ref loggedMissingPlayerObjective);
     }
 
     void Update()
     {
         if (PlayerHudState == null)
             BindPlayerHudState();
+
+        if (PlayerHudState == null)
+            return;
 
         PlayerHudState.CopyFrom(Player, PlayerObjective);
 
@@ -56,5 +76,16 @@ public class DebugReference : MonoBehaviour
         GobletCount.text = PlayerHudState.GobletText;
         AppleCount.text = PlayerHudState.AppleText;
         ArrowMunition.text = PlayerHudState.ArrowText;
+    }
+
+    void LogMissingReference(string referenceName, ref bool logged)
+    {
+        if (logged)
+            return;
+
+        logged = true;
+#if DEVELOPMENT_BUILD
+        Debug.LogWarning($"{nameof(DebugReference)} could not resolve {referenceName} fallback.", this);
+#endif
     }
 }

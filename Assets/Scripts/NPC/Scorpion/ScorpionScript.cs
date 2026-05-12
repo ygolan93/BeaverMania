@@ -4,6 +4,14 @@ using UnityEngine;
 
 public class ScorpionScript : MonoBehaviour
 {
+    private const string StateIdle = "Idle";
+    private const string StateLook = "Look";
+    private const string StateCharge = "Charge";
+    private const string StateStop = "Stop";
+    private const string StateReverse = "Reverse";
+    private const string StateStunned = "Stunned";
+    private const string StateRecovered = "Recovered";
+
     [Header("General Stats")]
     Rigidbody RBScorpion;
     [SerializeField] Animator Scorpion;
@@ -29,7 +37,7 @@ public class ScorpionScript : MonoBehaviour
     public Collider Jaw2A;
     public Collider Jaw2B;
     public Collider Sting;
-    public string state = "Idle";
+    public string state = StateIdle;
 
     [Header("Mobility")]
     public float lookDistance;
@@ -69,17 +77,17 @@ public class ScorpionScript : MonoBehaviour
         currentDistance = Mathf.Abs(Distance.magnitude);
         switch (state)
         {
-            case "Idle":
+            case StateIdle:
                 {
                     Idle();
                     break;
                 }
-            case "Look":
+            case StateLook:
                 {
                     LookAtPlayer();
                     break;
                 }
-            case "Charge":
+            case StateCharge:
                 {
                     var speed = chargeSpeed;
                     if (Input.GetKey(KeyCode.LeftShift))
@@ -96,22 +104,22 @@ public class ScorpionScript : MonoBehaviour
                     Charge(speed);
                     break;
                 }
-            case "Stop":
+            case StateStop:
                 {
                     StopAndAttack();
                     break;
                 }
-            case "Reverse":
+            case StateReverse:
                 {
                     Reverse();
                     break;
                 }
-            case "Stunned":
+            case StateStunned:
                 {
                     Stunned();
                     break;
                 }
-            case "Recovered":
+            case StateRecovered:
                 {
                     Recovered();
                     break;
@@ -141,15 +149,15 @@ public class ScorpionScript : MonoBehaviour
         {
             if (combo==1)
             {
-                state = "Look";
+                state = StateLook;
             }
             if (combo==3)
             {
-                state = "Charge";
+                state = StateCharge;
             }
             if (currentDistance > lookDistance)
             {
-                state = "Idle";
+                state = StateIdle;
             }
             if(currentDistance <= lookDistance)
             {
@@ -159,11 +167,11 @@ public class ScorpionScript : MonoBehaviour
                     {
                         if (currentDistance<chargeDistance-10)
                         {
-                            state = "Reverse";
+                            state = StateReverse;
                         }
                         else
                         {
-                            state = "Look";
+                            state = StateLook;
                         }
                         
                     }
@@ -171,25 +179,25 @@ public class ScorpionScript : MonoBehaviour
                     {
                         if (currentDistance > chargeDistance)
                         {
-                            state = "Look";
+                            state = StateLook;
                         }
                         if (currentDistance <= chargeDistance)
                         {
 
                             if (chargeClock > 0)
                             {
-                                state = "Charge";
+                                state = StateCharge;
                                 chargeClock -= Time.deltaTime;
                             }
                             if (chargeClock <= 0)
                             {
                                 if (currentDistance > attackDistance)
                                 {
-                                    state = "Charge";
+                                    state = StateCharge;
                                 }
                                 else
                                 {
-                                    state = "Stop";
+                                    state = StateStop;
 
                                     if (Input.GetKeyUp(KeyCode.Mouse0) || Input.GetKeyUp(KeyCode.Mouse1))
                                     {
@@ -202,7 +210,7 @@ public class ScorpionScript : MonoBehaviour
                 }
                 else
                 {
-                    state = "Charge";
+                    state = StateCharge;
                 }
       
             }
@@ -211,11 +219,11 @@ public class ScorpionScript : MonoBehaviour
         }
         if (combo >= comboLimit)
         {
-            state = "Stunned";
+            state = StateStunned;
             StunnedClock -= Time.deltaTime;
             if (StunnedClock <= 0)
             {
-                state = "Recovered";
+                state = StateRecovered;
             }
         }
 

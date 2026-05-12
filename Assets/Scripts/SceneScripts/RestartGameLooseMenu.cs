@@ -1,12 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
+using Beavermania.Core.GameFlow;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class RestartGameLooseMenu : MonoBehaviour
 {
     public void ResetartGame()
     {
-        SceneManager.LoadScene("Level 1");
+        SceneRestartController.LoadLevel1Single();
     }
 }

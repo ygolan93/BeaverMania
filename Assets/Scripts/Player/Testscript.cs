@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+namespace Beavermania.Player
+{
 public class Testscript : MonoBehaviour
 {
     const float LookRotationEpsilon = 0.0001f;
@@ -77,4 +79,5 @@ public class Testscript : MonoBehaviour
             RotatePlayer(XZBackLeft);
         }
     }
+}
 }

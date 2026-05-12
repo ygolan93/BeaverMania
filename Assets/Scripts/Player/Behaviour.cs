@@ -756,12 +756,23 @@ public class Behaviour : MonoBehaviour
         HideCursor();
     }
 
+    PauseController ResolvePauseController()
+    {
+        if (pauseController == null)
+            pauseController = FindObjectOfType<PauseController>();
+
+        return pauseController;
+    }
+
     public bool IsGameplayInputLocked()
     {
         if (isAtTrader)
             return true;
-        if (pauseController != null && pauseController.ActivePause)
+
+        PauseController activePauseController = ResolvePauseController();
+        if (activePauseController != null && activePauseController.ActivePause)
             return true;
+
         if (LooseScreen != null && LooseScreen.activeSelf)
             return true;
         return false;
@@ -769,8 +780,10 @@ public class Behaviour : MonoBehaviour
 
     bool IsPauseLikeFullscreenUi()
     {
-        if (pauseController != null && pauseController.ActivePause)
+        PauseController activePauseController = ResolvePauseController();
+        if (activePauseController != null && activePauseController.ActivePause)
             return true;
+
         if (LooseScreen != null && LooseScreen.activeSelf)
             return true;
         return false;

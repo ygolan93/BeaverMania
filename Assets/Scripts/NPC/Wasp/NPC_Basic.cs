@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class NPC_Basic : MonoBehaviour
 {
+    const float LookRotationEpsilon = 0.0001f;
     [Header("Core References")]
     public Rigidbody NPC;
     [SerializeField] Animator Wasp;
@@ -94,7 +95,8 @@ public class NPC_Basic : MonoBehaviour
             }
             else
             {
-                rotGoal = Quaternion.LookRotation(NPC.velocity);
+                if (NPC.velocity.sqrMagnitude > LookRotationEpsilon)
+                    rotGoal = Quaternion.LookRotation(NPC.velocity);
                 transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
                 if (Distance.magnitude >= 50)
                 {
@@ -129,7 +131,8 @@ public class NPC_Basic : MonoBehaviour
                     {
                         Wasp.SetBool("Sting", false);
                         NPC.AddForce(new Vector3(-Distance.x, 0.01f, -Distance.z).normalized * 0.1f);
-                        transform.rotation = (Quaternion.LookRotation(Distance));
+                        if (Distance.sqrMagnitude > LookRotationEpsilon)
+                            transform.rotation = (Quaternion.LookRotation(Distance));
                         ChargeClock -= Time.deltaTime;
                         if (ChargeClock <= 0)
                             Contact = false;
@@ -309,8 +312,12 @@ public class NPC_Basic : MonoBehaviour
     public void TakeDamage(int Damage)
     {
         BuzzSource.SetActive(false);
-        rotGoal = Quaternion.LookRotation(Distance);
-        transform.rotation = rotGoal;
+        Vector3 towardPlayer = PlayerTarget != null ? PlayerTarget.transform.position - transform.position : Distance;
+        if (towardPlayer.sqrMagnitude > LookRotationEpsilon)
+        {
+            rotGoal = Quaternion.LookRotation(towardPlayer);
+            transform.rotation = rotGoal;
+        }
         NPC.useGravity = true;
         Wasp.SetBool("Beat", true);
         Wasp.SetBool("Sting", false);

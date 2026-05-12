@@ -1,3 +1,4 @@
+using Beavermania.Core.GameFlow;
 using Cinemachine;
 using UnityEngine;
 
@@ -16,19 +17,12 @@ public class PlayerCursorController : MonoBehaviour
 
     public void ShowCursor()
     {
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+        PlayerCursorRules.ApplyUnlockedVisible();
     }
 
     public void HideCursor()
     {
-        if (FreeLook != null && Root != null)
-        {
-            FreeLook.m_LookAt = Root;
-        }
-
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        PlayerCursorRules.ApplyLockedHidden(FreeLook, Root);
     }
 }
 }

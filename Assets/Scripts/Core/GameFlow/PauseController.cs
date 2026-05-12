@@ -23,7 +23,13 @@ namespace Beavermania.Core.GameFlow
 
         public void Pause()
         {
-            ApplyPauseState();
+            SetPaused(true);
+        }
+
+        public void ResumeIfPaused()
+        {
+            if (ActivePause)
+                SetPaused(false);
         }
 
         public void HideQuestion()
@@ -53,7 +59,7 @@ namespace Beavermania.Core.GameFlow
             if (ActivePause)
             {
                 SetMenuVisible(true);
-                Time.timeScale = 0;
+                GameTimeScaleGate.SetFreeze(GameTimeScaleGate.FreezeToken.PauseMenu, true);
 
                 if (player != null)
                     player.ShowCursor();
@@ -62,10 +68,10 @@ namespace Beavermania.Core.GameFlow
             }
 
             SetMenuVisible(false);
-            Time.timeScale = 1f;
+            GameTimeScaleGate.SetFreeze(GameTimeScaleGate.FreezeToken.PauseMenu, false);
             SetQuestionVisible(false);
 
-            if (player != null && player.isAtTrader == false)
+            if (player != null && !player.IsGameplayInputLocked())
                 player.HideCursor();
         }
 
@@ -79,6 +85,15 @@ namespace Beavermania.Core.GameFlow
         {
             if (question != null)
                 question.SetActive(visible);
+        }
+
+        void OnDisable()
+        {
+            if (!ActivePause)
+                return;
+
+            ActivePause = false;
+            GameTimeScaleGate.SetFreeze(GameTimeScaleGate.FreezeToken.PauseMenu, false);
         }
     }
 }

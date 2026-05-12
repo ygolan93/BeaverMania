@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class WaspSpawner : MonoBehaviour
 {
+    const float LookRotationEpsilon = 0.0001f;
     public GameObject Wasp;
     public GameObject Hive;
     public Behaviour Player;
@@ -30,7 +31,7 @@ public class WaspSpawner : MonoBehaviour
         {
             if (Counter > 0)
             {
-               Quaternion RotWasp = Quaternion.LookRotation(Distance);
+               Quaternion RotWasp = Distance.sqrMagnitude > LookRotationEpsilon ? Quaternion.LookRotation(Distance) : Quaternion.identity;
                Instantiate(Wasp, Hive.transform.position, RotWasp);
                 Counter--;
             }

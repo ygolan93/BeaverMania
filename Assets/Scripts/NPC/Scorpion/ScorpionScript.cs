@@ -11,6 +11,7 @@ public class ScorpionScript : MonoBehaviour
     private const string StateReverse = "Reverse";
     private const string StateStunned = "Stunned";
     private const string StateRecovered = "Recovered";
+    const float LookRotationEpsilon = 0.0001f;
 
     [Header("General Stats")]
     Rigidbody RBScorpion;
@@ -244,7 +245,9 @@ public class ScorpionScript : MonoBehaviour
     {
         isAttacking = false;
         RBScorpion.velocity = new Vector3(0, RBScorpion.velocity.y, 0);
-        rotGoal = Quaternion.LookRotation(new Vector3(Distance.x, 0, Distance.z));
+        Vector3 hz = new Vector3(Distance.x, 0, Distance.z);
+        if (hz.sqrMagnitude > LookRotationEpsilon)
+            rotGoal = Quaternion.LookRotation(hz);
         RBScorpion.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
         if (transform.rotation != rotGoal)
         {
@@ -262,10 +265,15 @@ public class ScorpionScript : MonoBehaviour
     public void Charge(float speed)
     {
         isAttacking = true;
-        rotGoal = Quaternion.LookRotation(new Vector3(Distance.x, 0, Distance.z));
+        Vector3 hz = new Vector3(Distance.x, 0, Distance.z);
+        if (hz.sqrMagnitude > LookRotationEpsilon)
+        {
+            rotGoal = Quaternion.LookRotation(hz);
+            RBScorpion.velocity = hz.normalized * speed + new Vector3(0, RBScorpion.velocity.y, 0);
+        }
+        else
+            RBScorpion.velocity = new Vector3(0, RBScorpion.velocity.y, 0);
         RBScorpion.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
-        RBScorpion.velocity = new Vector3(Distance.x, 0, Distance.z).normalized * speed + new Vector3(0, RBScorpion.velocity.y, 0);
-
         HitEffect.SetActive(false);
         Scorpion.SetBool("Walk", true);
         Scorpion.SetBool("Backwards", false);
@@ -278,15 +286,23 @@ public class ScorpionScript : MonoBehaviour
         Scorpion.SetBool("Walk", false);
         Scorpion.SetBool("Backwards", false);
         Scorpion.SetBool("Attack", true);
-        rotGoal = Quaternion.LookRotation(new Vector3(Distance.x, 0, Distance.z));
+        Vector3 hz = new Vector3(Distance.x, 0, Distance.z);
+        if (hz.sqrMagnitude > LookRotationEpsilon)
+            rotGoal = Quaternion.LookRotation(hz);
         RBScorpion.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
     }
     private void Reverse()
     {
         isAttacking = true;
-        rotGoal = Quaternion.LookRotation(new Vector3(Distance.x, 0, Distance.z));
+        Vector3 hz = new Vector3(Distance.x, 0, Distance.z);
+        if (hz.sqrMagnitude > LookRotationEpsilon)
+        {
+            rotGoal = Quaternion.LookRotation(hz);
+            RBScorpion.velocity = new Vector3(-Distance.x, 0, -Distance.z).normalized * 5 + new Vector3(0, RBScorpion.velocity.y, 0);
+        }
+        else
+            RBScorpion.velocity = new Vector3(0, RBScorpion.velocity.y, 0);
         RBScorpion.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.05f);
-        RBScorpion.velocity = new Vector3(-Distance.x, 0, -Distance.z).normalized * 5 + new Vector3(0, RBScorpion.velocity.y, 0);
         Scorpion.SetBool("Walk", false);
         Scorpion.SetBool("Backwards", true);
         Scorpion.SetBool("Attack", false);

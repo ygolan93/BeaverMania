@@ -5,6 +5,7 @@ using TMPro;
 
 public class Trader : MonoBehaviour
 {
+    const float LookRotationEpsilon = 0.0001f;
     public GameObject Merchant;
     public Transform PlayerRoot;
     public Behaviour Player;
@@ -15,7 +16,13 @@ public class Trader : MonoBehaviour
     public bool skipPressed = false;
     [SerializeField] bool Rotate;
     [SerializeField] float PanelPopUp;
+    bool traderOfferPresentationActive;
     Quaternion FormalLook;
+
+    public float GetOfferPanelDistance()
+    {
+        return PanelPopUp;
+    }
     // Start is called before the first frame update
     void Start()
     {
@@ -30,14 +37,29 @@ public class Trader : MonoBehaviour
 
         PlayerDistance = Player.transform.position - Merchant.transform.position;
         var Distance = Mathf.Abs(PlayerDistance.magnitude);
+        bool wantOfferPresentation = Player != null && Distance < PanelPopUp && skipPressed == false;
+        if (wantOfferPresentation)
+        {
+            traderOfferPresentationActive = true;
+            Player.ApplyTraderOfferPresentation(transform);
+        }
+        else if (traderOfferPresentationActive && Player != null)
+        {
+            traderOfferPresentationActive = false;
+            Player.RestoreGameplayAfterTrader();
+        }
+
         if (Distance<PanelPopUp&&skipPressed==false)
         {
             TradeText.SetActive(true);
             DialoguePanel.SetActive(true);
             if (Rotate == true)
             {
-                Player.rotGoal = Quaternion.LookRotation(Player.transform.position - Merchant.transform.position);
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(PlayerDistance), 0.1f);
+                Vector3 toPlayer = Player.transform.position - Merchant.transform.position;
+                if (toPlayer.sqrMagnitude > LookRotationEpsilon)
+                    Player.rotGoal = Quaternion.LookRotation(toPlayer);
+                if (PlayerDistance.sqrMagnitude > LookRotationEpsilon)
+                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(PlayerDistance), 0.1f);
             }
         }
 
@@ -57,9 +79,12 @@ public class Trader : MonoBehaviour
     public void activateSkip()
     {
         skipPressed = true;
+        traderOfferPresentationActive = false;
         TradeText.SetActive(false);
         DialoguePanel.SetActive(false);
         Shop.SetActive(false);
+        if (Player != null)
+            Player.RestoreGameplayAfterTrader();
     }
 
     public void CloseShop()
@@ -70,6 +95,13 @@ public class Trader : MonoBehaviour
     public void Honey()
     {
         Player.HoneyON();
+    }
+
+    void OnDisable()
+    {
+        traderOfferPresentationActive = false;
+        if (Player != null && Player.isAtTrader)
+            Player.RestoreGameplayAfterTrader();
     }
 }
 

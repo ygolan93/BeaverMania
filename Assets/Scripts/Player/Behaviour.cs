@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Beavermania.Core.GameFlow;
 using Beavermania.Player;
 using Cinemachine;
 using Cinemachine.Utility;
@@ -146,6 +147,9 @@ public class Behaviour : MonoBehaviour
     public float moveSpeed = 5.0f;
     public GameObject LooseScreen;
     public bool isAtTrader = false;
+    PauseController pauseController;
+    float initialCamForTradersXAxisSpeed;
+    float initialCamForTradersYAxisSpeed;
     public string LogCount;
     public string DebugText;
     public string StaminaText;
@@ -164,9 +168,10 @@ public class Behaviour : MonoBehaviour
     bool loggedRuntimeHudStateFallback;
     public CinemachineFreeLook FreeLook;
     public CinemachineFreeLook CamForTraders;
-    [SerializeField] PlayerCursorController cursorController;
     [SerializeField] PlayerCheckpointRespawn checkpointRespawn;
     public float ChangeSpeech = 1F;
+    Vector3 stableCameraForwardXZ = Vector3.forward;
+    const float LookRotationEpsilon = 0.0001f;
 
     public void OnCollisionEnter(Collision OBJ)
     {
@@ -329,7 +334,8 @@ public class Behaviour : MonoBehaviour
             Plattering = "Get off me ya nasty bastards!";
             ChangeSpeech = 3;
             var ParryDirection = new Vector3((OBJ.transform.position - transform.position).x, 0, (OBJ.transform.position - transform.position).z);
-            transform.rotation = Quaternion.LookRotation(ParryDirection);
+            if (ParryDirection.sqrMagnitude > LookRotationEpsilon)
+                transform.rotation = Quaternion.LookRotation(ParryDirection);
         }
         if (OBJ.gameObject.CompareTag("Strike"))
         {
@@ -440,22 +446,19 @@ public class Behaviour : MonoBehaviour
         }
         if (OBJ.gameObject.CompareTag("Trader"))
         {
-            var skip = OBJ.gameObject.GetComponent<Trader>().skipPressed;
-            if (skip ==false)
+            var trader = OBJ.GetComponentInParent<Trader>();
+            if (trader == null)
+                trader = OBJ.GetComponent<Trader>();
+            if (trader != null)
             {
-                ShowCursor();
-                isAtTrader = true;
-                FreeLook.enabled = false;
-                CamForTraders.enabled = true;
-                CamForTraders.m_LookAt = OBJ.transform;
-            }
-            if (skip ==true)
-            {
-                isAtTrader = false;
-                CamForTraders.enabled = false;
-                CamForTraders.m_LookAt = null;
-                FreeLook.enabled = true;
-                FreeLook.m_LookAt.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Root.position), 0.5f);
+                var skip = trader.skipPressed;
+                bool inOfferRadius = trader.Merchant != null
+                    && Vector3.Distance(transform.position, trader.Merchant.transform.position) < trader.GetOfferPanelDistance();
+
+                if (skip == false && inOfferRadius)
+                    ApplyTraderOfferPresentation(OBJ.transform);
+                if (skip == true)
+                    RestoreGameplayAfterTrader();
             }
         }
         if (OBJ.gameObject.CompareTag("House"))
@@ -488,11 +491,7 @@ public class Behaviour : MonoBehaviour
         }
         if (OBJ.gameObject.CompareTag("Trader"))
         {
-            isAtTrader = false;
-            CamForTraders.enabled = false;
-            CamForTraders.m_LookAt = null;
-            FreeLook.enabled = true;
-            FreeLook.m_LookAt.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Root.position), 0.5f);
+            RestoreGameplayAfterTrader();
         }
         if (OBJ.gameObject.CompareTag("House"))
         {
@@ -534,20 +533,30 @@ public class Behaviour : MonoBehaviour
     }
     public void PlayerMove(Vector3 Direction)
     {
+        Direction = ResolveHorizontalMoveDirection(Direction);
         movementInvoked = true;
         //Regular walk
         if (keepLooking==false)
         {
-            rotGoal = Quaternion.LookRotation(Direction);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            if (Direction.sqrMagnitude > LookRotationEpsilon)
+            {
+                rotGoal = Quaternion.LookRotation(Direction);
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            }
             Otter.SetBool("walk", true);
         }
         //Strafe
         if (keepLooking == true)
         {
-            Vector3 forwardFace = Camera.main.transform.TransformDirection(Vector3.forward);
-            rotGoal = Quaternion.LookRotation(new Vector3(forwardFace.x, 0, forwardFace.z));
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            Vector3 forwardFace = ResolveMainCameraTransform().TransformDirection(Vector3.forward);
+            Vector3 flatFace = new Vector3(forwardFace.x, 0, forwardFace.z);
+            if (flatFace.sqrMagnitude < 1e-8f)
+                flatFace = ResolveHorizontalMoveDirection(flatFace);
+            if (flatFace.sqrMagnitude > LookRotationEpsilon)
+            {
+                rotGoal = Quaternion.LookRotation(flatFace);
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            }
             Otter.SetBool("walk", false);
             if (Input.GetKey(KeyCode.W))
             {
@@ -608,7 +617,11 @@ public class Behaviour : MonoBehaviour
     }
     public void PlayerRoll(Vector3 Direction)
     {
-        rotGoal = Quaternion.LookRotation(new Vector3(Direction.x, 0, Direction.z));
+        Vector3 flat = new Vector3(Direction.x, 0, Direction.z);
+        if (flat.sqrMagnitude < 1e-8f)
+            flat = ResolveHorizontalMoveDirection(flat);
+        if (flat.sqrMagnitude > LookRotationEpsilon)
+            rotGoal = Quaternion.LookRotation(flat);
         transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.11f);
         //Evading Roll action
         {
@@ -633,15 +646,21 @@ public class Behaviour : MonoBehaviour
     [Obsolete]
     public void RotateForward()
     {
-        Vector3 camForward = Camera.main.transform.TransformDirection(Vector3.forward);
-        Quaternion direction = Quaternion.LookRotation(camForward);
-        if (bowEquipped==false)
+        Transform camT = ResolveMainCameraTransform();
+        Vector3 camForward = camT.TransformDirection(Vector3.forward);
+        if (camForward.sqrMagnitude < 1e-8f)
+            camForward = transform.forward;
+        if (camForward.sqrMagnitude > LookRotationEpsilon)
         {
-            Spine.rotation = direction;
-        }
-        if (bowEquipped == true && Input.GetKey(KeyCode.Mouse1) && arrowMunition > 0)
-        {
-            Spine.rotation = direction*Quaternion.EulerRotation(bowAim);
+            Quaternion direction = Quaternion.LookRotation(camForward);
+            if (bowEquipped==false)
+            {
+                Spine.rotation = direction;
+            }
+            if (bowEquipped == true && Input.GetKey(KeyCode.Mouse1) && arrowMunition > 0)
+            {
+                Spine.rotation = direction*Quaternion.EulerRotation(bowAim);
+            }
         }
   
     }
@@ -663,45 +682,173 @@ public class Behaviour : MonoBehaviour
     }
     public GameObject CheckpointPopUpEffect => PopUpEffect;
 
-    PlayerCursorController CursorController
-    {
-        get
-        {
-            if (cursorController == null)
-            {
-                cursorController = GetComponent<PlayerCursorController>();
-            }
-
-            if (cursorController == null)
-            {
-                cursorController = gameObject.AddComponent<PlayerCursorController>();
-            }
-
-            cursorController.Bind(Root, FreeLook);
-            return cursorController;
-        }
-    }
     public void ShowCursor()
     {
-        CursorController.ShowCursor();
+        PlayerCursorRules.ApplyUnlockedVisible();
     }
+
     public void HideCursor()
     {
-        CursorController.HideCursor();
+        PlayerCursorRules.ApplyLockedHidden(FreeLook, Root);
     }
+
+    public void ApplyTraderOfferPresentation(Transform traderLookTarget)
+    {
+        if (traderLookTarget == null)
+            return;
+
+        ShowCursor();
+        isAtTrader = true;
+        if (FreeLook != null)
+            FreeLook.enabled = false;
+        if (CamForTraders != null)
+        {
+            CamForTraders.enabled = true;
+            CamForTraders.m_LookAt = traderLookTarget;
+            CamForTraders.m_XAxis.m_MaxSpeed = 0f;
+            CamForTraders.m_YAxis.m_MaxSpeed = 0f;
+        }
+    }
+
+    public void RestoreGameplayAfterTrader()
+    {
+        isAtTrader = false;
+        if (CamForTraders != null)
+        {
+            CamForTraders.enabled = false;
+            CamForTraders.m_LookAt = null;
+            CamForTraders.m_XAxis.m_MaxSpeed = initialCamForTradersXAxisSpeed;
+            CamForTraders.m_YAxis.m_MaxSpeed = initialCamForTradersYAxisSpeed;
+        }
+        if (FreeLook != null && FreeLook.m_LookAt != null)
+        {
+            FreeLook.enabled = true;
+            Vector3 safeLookDir = Vector3.forward;
+            if (Root != null)
+            {
+                safeLookDir = Root.position - transform.position;
+                safeLookDir.y = 0f;
+            }
+
+            if (safeLookDir.sqrMagnitude < 1e-6f)
+            {
+                safeLookDir = new Vector3(transform.forward.x, 0, transform.forward.z);
+            }
+
+            if (safeLookDir.sqrMagnitude < 1e-6f)
+                safeLookDir = Vector3.forward;
+            safeLookDir.Normalize();
+
+            if (safeLookDir.sqrMagnitude > LookRotationEpsilon)
+            {
+                var targetLookRot = Quaternion.LookRotation(safeLookDir, Vector3.up);
+                FreeLook.m_LookAt.rotation = Quaternion.Slerp(transform.rotation, targetLookRot, 0.5f);
+            }
+        }
+        HideCursorUnlessGamePaused();
+    }
+
+    void HideCursorUnlessGamePaused()
+    {
+        if (IsPauseLikeFullscreenUi())
+            return;
+
+        HideCursor();
+    }
+
+    PauseController ResolvePauseController()
+    {
+        if (pauseController == null)
+            pauseController = FindObjectOfType<PauseController>();
+
+        return pauseController;
+    }
+
+    public bool IsGameplayInputLocked()
+    {
+        if (isAtTrader)
+            return true;
+
+        PauseController activePauseController = ResolvePauseController();
+        if (activePauseController != null && activePauseController.ActivePause)
+            return true;
+
+        if (LooseScreen != null && LooseScreen.activeSelf)
+            return true;
+        return false;
+    }
+
+    bool IsPauseLikeFullscreenUi()
+    {
+        PauseController activePauseController = ResolvePauseController();
+        if (activePauseController != null && activePauseController.ActivePause)
+            return true;
+
+        if (LooseScreen != null && LooseScreen.activeSelf)
+            return true;
+        return false;
+    }
+
+    void ApplyPauseLikeUiCameraState()
+    {
+        if (IsPauseLikeFullscreenUi())
+        {
+            PlayerCursorRules.ApplyUnlockedVisible();
+            if (FreeLook != null)
+                FreeLook.enabled = false;
+            if (CamForTraders != null)
+                CamForTraders.enabled = false;
+            return;
+        }
+
+        if (isAtTrader)
+        {
+            PlayerCursorRules.ApplyUnlockedVisible();
+            if (CamForTraders != null && CamForTraders.m_LookAt != null)
+            {
+                if (FreeLook != null)
+                    FreeLook.enabled = false;
+                CamForTraders.enabled = true;
+                CamForTraders.m_XAxis.m_MaxSpeed = 0f;
+                CamForTraders.m_YAxis.m_MaxSpeed = 0f;
+            }
+            else
+            {
+                if (CamForTraders != null)
+                    CamForTraders.enabled = false;
+                if (FreeLook != null)
+                    FreeLook.enabled = true;
+            }
+
+            return;
+        }
+
+        if (CamForTraders != null)
+        {
+            CamForTraders.enabled = false;
+            CamForTraders.m_LookAt = null;
+            CamForTraders.m_XAxis.m_MaxSpeed = initialCamForTradersXAxisSpeed;
+            CamForTraders.m_YAxis.m_MaxSpeed = initialCamForTradersYAxisSpeed;
+        }
+
+        if (FreeLook != null)
+            FreeLook.enabled = true;
+    }
+
     public void ActivateLooseMenu()
     {
         //MusicOP.StopMusic();
-        Time.timeScale = 0;
+        GameTimeScaleGate.SetFreeze(GameTimeScaleGate.FreezeToken.LooseScreen, true);
         ShowCursor();
         LooseScreen.SetActive(true);
     }
     public void HideLooseMenu()
     {
         //MusicOP.ResumeMusic();
-        Time.timeScale = 1;
-        HideCursor();
+        GameTimeScaleGate.SetFreeze(GameTimeScaleGate.FreezeToken.LooseScreen, false);
         LooseScreen.SetActive(false);
+        if (!IsGameplayInputLocked())
+            HideCursor();
     }
     PlayerCheckpointRespawn CheckpointRespawn
     {
@@ -728,6 +875,7 @@ public class Behaviour : MonoBehaviour
     }
     public void RestartGame()
     {
+        GameTimeScaleGate.ClearAll();
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
     public void GobletON()
@@ -814,7 +962,8 @@ public class Behaviour : MonoBehaviour
         BindHudState();
         arrowModel.SetActive(false);
         bowAim = new Vector3(-0.33f, 20f, -0.3f);
-        CamForTraders.enabled = false;
+        if (CamForTraders != null)
+            CamForTraders.enabled = false;
         Instantiate(PopUpEffect, Root.position, Quaternion.identity);
         HideCursor();
         AimIcon.SetActive(false);
@@ -874,13 +1023,24 @@ public class Behaviour : MonoBehaviour
         FreeLook.m_Orbits[0].m_Radius = 4;
         FreeLook.m_Orbits[1].m_Radius = 6;
         FreeLook.m_Orbits[2].m_Radius = 5;
+        pauseController = FindObjectOfType<PauseController>();
+        if (CamForTraders != null)
+        {
+            initialCamForTradersXAxisSpeed = CamForTraders.m_XAxis.m_MaxSpeed;
+            initialCamForTradersYAxisSpeed = CamForTraders.m_YAxis.m_MaxSpeed;
+        }
+        var flatFwd = new Vector3(transform.forward.x, 0, transform.forward.z);
+        stableCameraForwardXZ = flatFwd.sqrMagnitude > 1e-6f ? flatFwd.normalized : Vector3.forward;
         SyncHudState();
     }
     [System.Obsolete]
     public void Update()
     {
+        ApplyPauseLikeUiCameraState();
+        bool inputLocked = IsGameplayInputLocked();
+
         //Parry animations
-        if (Defend == true)
+        if (!inputLocked && Defend == true)
         {
             DefendAnim -= Time.deltaTime;
             if (DefendAnim > 0)
@@ -899,7 +1059,7 @@ public class Behaviour : MonoBehaviour
         }
 
         //Turn off glow attack effect
-        if (!Input.GetKey(KeyCode.Mouse0))
+        if (!inputLocked && !Input.GetKey(KeyCode.Mouse0))
         {
             otterAction.TurnOffGlow();
         }
@@ -921,9 +1081,14 @@ public class Behaviour : MonoBehaviour
             {
                 CurrentStamina = MaxStamina;
             }
-            if (CurrentStamina < MaxStamina && !Input.GetKey(KeyCode.LeftControl))
+            if (CurrentStamina < MaxStamina)
             {
-                if (!Input.GetKey(KeyCode.Mouse1) && isParried == false && !Input.GetKey(KeyCode.Mouse0) && !Input.GetKey(KeyCode.F))
+                bool regenBlockedByCombatInput = !inputLocked
+                    && (Input.GetKey(KeyCode.LeftControl)
+                        || Input.GetKey(KeyCode.Mouse1)
+                        || Input.GetKey(KeyCode.Mouse0)
+                        || Input.GetKey(KeyCode.F));
+                if (!regenBlockedByCombatInput)
                 {
                     StaminaClock -= Time.deltaTime;
                     if (StaminaClock <= 0)
@@ -979,6 +1144,8 @@ public class Behaviour : MonoBehaviour
                 ICON_3.SetActive(true);
             }
         }
+        if (!inputLocked)
+        {
         //Jump action
         {
             if (Input.GetKeyDown(KeyCode.Space) && JumpNum > 0)
@@ -1001,6 +1168,7 @@ public class Behaviour : MonoBehaviour
             if (Input.GetKey(KeyCode.Space) || Input.GetKeyUp(KeyCode.Space))
                 JumpNum = JumpNumPreserve;
         }
+        }
         //Load Loose screen on death
         if (CurrentHealth <= 0)
         {
@@ -1019,6 +1187,8 @@ public class Behaviour : MonoBehaviour
             ParryOFF();
             CurrentStamina = 0;
         }
+        if (!inputLocked)
+        {
         //Crouch action - Place Logs
         {
             if (Input.GetKey(KeyCode.LeftControl)&& FreeLook.m_Lens.FieldOfView<20)
@@ -1231,13 +1401,22 @@ public class Behaviour : MonoBehaviour
                 appleOBJ.SetActive(false);
             }
         }
+        }
         //Use Goblet
         {
-            if (Input.GetKeyDown(KeyCode.Y) && GobletPickup > 0)
+            if (!inputLocked)
             {
-                Otter.Play("Consume");
-                Sound.Drink();
-                GobletON();
+                if (Input.GetKeyDown(KeyCode.Y) && GobletPickup > 0)
+                {
+                    Otter.Play("Consume");
+                    Sound.Drink();
+                    GobletON();
+                }
+
+                if (Input.GetKeyUp(KeyCode.Y))
+                {
+                    gobletOBJ.SetActive(false);
+                }
             }
             if (GobletPicked == true)
             {
@@ -1249,14 +1428,9 @@ public class Behaviour : MonoBehaviour
                     GobletOFF();
                 }
             }
-
-            if (Input.GetKeyUp(KeyCode.Y))
-            {
-                gobletOBJ.SetActive(false);
-            }
         }
 
-        if (isAtTrader == false /*&& ParryShield.active == false*/)
+        if (!inputLocked /*&& ParryShield.active == false*/)
         {
             //Melee action
             {
@@ -1381,6 +1555,9 @@ public class Behaviour : MonoBehaviour
     [Obsolete]
     public void LateUpdate()
     {
+        if (IsGameplayInputLocked())
+            return;
+
         if (Input.GetKey(KeyCode.Mouse1))
         {
             RotateForward();
@@ -1395,20 +1572,72 @@ public class Behaviour : MonoBehaviour
         }
     }
 
+    Transform ResolveMainCameraTransform()
+    {
+        return Camera.main != null ? Camera.main.transform : transform;
+    }
+
+    void ReconcileHorizontalCameraAxes(ref Vector3 xzForward, ref Vector3 xzBack, ref Vector3 xzRight, ref Vector3 xzLeft)
+    {
+        if (xzForward.sqrMagnitude > 1e-8f)
+        {
+            stableCameraForwardXZ = xzForward;
+            return;
+        }
+
+        Vector3 fallback = new Vector3(transform.forward.x, 0, transform.forward.z);
+        if (fallback.sqrMagnitude > 1e-8f)
+            xzForward = fallback;
+        else if (stableCameraForwardXZ.sqrMagnitude > 1e-8f)
+            xzForward = stableCameraForwardXZ;
+        else
+            xzForward = Vector3.forward;
+
+        xzBack = new Vector3(-xzForward.x, 0, -xzForward.z);
+        xzRight = new Vector3(xzForward.z, 0, -xzForward.x);
+        xzLeft = new Vector3(-xzForward.z, 0, xzForward.x);
+        stableCameraForwardXZ = xzForward;
+    }
+
+    Vector3 ResolveHorizontalMoveDirection(Vector3 direction)
+    {
+        if (direction.sqrMagnitude > 1e-8f)
+            return direction;
+        Vector3 f = new Vector3(transform.forward.x, 0, transform.forward.z);
+        if (f.sqrMagnitude > 1e-8f)
+            return f;
+        if (stableCameraForwardXZ.sqrMagnitude > 1e-8f)
+            return stableCameraForwardXZ;
+        return Vector3.forward;
+    }
+
     [System.Obsolete]
     public void FixedUpdate()
     {
         //Camera vectors setup
-        Vector3 cameraRelativeForward = Camera.main.transform.TransformDirection(Vector3.forward);
-        Vector3 cameraRelativeBack = Camera.main.transform.TransformDirection(Vector3.back);
-        Vector3 cameraRelativeRight = Camera.main.transform.TransformDirection(Vector3.right);
-        Vector3 cameraRelativeLeft = Camera.main.transform.TransformDirection(Vector3.left);
+        Transform camTransform = ResolveMainCameraTransform();
+        Vector3 cameraRelativeForward = camTransform.TransformDirection(Vector3.forward);
+        Vector3 cameraRelativeBack = camTransform.TransformDirection(Vector3.back);
+        Vector3 cameraRelativeRight = camTransform.TransformDirection(Vector3.right);
+        Vector3 cameraRelativeLeft = camTransform.TransformDirection(Vector3.left);
 
         //Horizontal camera vectors
         Vector3 XZForward = new(cameraRelativeForward.x, 0, cameraRelativeForward.z);
         Vector3 XZBack = new(cameraRelativeBack.x, 0, cameraRelativeBack.z);
         Vector3 XZRight = new(cameraRelativeRight.x, 0, cameraRelativeRight.z);
         Vector3 XZLeft = new(cameraRelativeLeft.x, 0, cameraRelativeLeft.z);
+
+        ReconcileHorizontalCameraAxes(ref XZForward, ref XZBack, ref XZRight, ref XZLeft);
+
+        bool inputLocked = IsGameplayInputLocked();
+
+        if (inputLocked)
+        {
+            if (Stone != null)
+                Stone.SetActive(false);
+            if (AimIcon != null)
+                AimIcon.SetActive(false);
+        }
 
         //Switch off additional animations if not invoked
         {
@@ -1427,6 +1656,8 @@ public class Behaviour : MonoBehaviour
             movementInvoked = false;
             //keepLooking = false;
         }
+        if (!inputLocked)
+        {
         //Stoning action
         if (bowEquipped == false)
         {
@@ -1441,8 +1672,11 @@ public class Behaviour : MonoBehaviour
                 Otter.Play("Aim");
                 if (Input.GetKeyDown(KeyCode.Mouse1))
                 {
-                    rotGoal = Quaternion.LookRotation(cameraRelativeForward);
-                    transform.rotation = rotGoal;
+                    if (XZForward.sqrMagnitude > LookRotationEpsilon)
+                    {
+                        rotGoal = Quaternion.LookRotation(XZForward);
+                        transform.rotation = rotGoal;
+                    }
                     Otter.Play("Crouch");
                 }
                 keepLooking = true;
@@ -1466,8 +1700,11 @@ public class Behaviour : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.Mouse1) && !Input.GetKeyUp(KeyCode.Mouse1))
             {
-                rotGoal = Quaternion.LookRotation(cameraRelativeForward);
-                transform.rotation = rotGoal;
+                if (XZForward.sqrMagnitude > LookRotationEpsilon)
+                {
+                    rotGoal = Quaternion.LookRotation(XZForward);
+                    transform.rotation = rotGoal;
+                }
                 if (arrowMunition > 0 &&
                 CurrentStamina > 0)
                 {
@@ -1501,7 +1738,15 @@ public class Behaviour : MonoBehaviour
             if (arrowReady == true && Input.GetKeyUp(KeyCode.Mouse1) && CurrentStamina > 0)
             {
                 Sound.ArrowShoot();
-                Instantiate(Arrow, Spine.position + new Vector3(0,1.4f * cameraRelativeForward.normalized.y, 1.4f * cameraRelativeForward.normalized.z), Quaternion.LookRotation(cameraRelativeForward)* Quaternion.Euler(90, 0, 0));
+                Vector3 shootDir = cameraRelativeForward.sqrMagnitude > LookRotationEpsilon
+                    ? cameraRelativeForward.normalized
+                    : (XZForward.sqrMagnitude > LookRotationEpsilon ? XZForward.normalized : Vector3.zero);
+                if (shootDir.sqrMagnitude <= LookRotationEpsilon)
+                {
+                    Vector3 flatF = new Vector3(transform.forward.x, 0, transform.forward.z);
+                    shootDir = flatF.sqrMagnitude > LookRotationEpsilon ? flatF.normalized : Vector3.forward;
+                }
+                Instantiate(Arrow, Spine.position + new Vector3(0, 1.4f * shootDir.y, 1.4f * shootDir.z), Quaternion.LookRotation(shootDir) * Quaternion.Euler(90, 0, 0));
                 CurrentStamina -= 30;
                 HealthBar.SetStamina(CurrentStamina);
                 arrowModel.SetActive(false);
@@ -1622,6 +1867,7 @@ public class Behaviour : MonoBehaviour
                 }
             }
         }
+        }
        
         
         //Aurborne and landing sequence animations conditioning
@@ -1668,8 +1914,16 @@ public class Behaviour : MonoBehaviour
             {
                 if (isParried == false)
                 {
-                    rotGoal = Quaternion.LookRotation(new Vector3(Player.velocity.x, 0, Player.velocity.z));
-                    transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.5f);
+                    Vector3 velFlat = new Vector3(Player.velocity.x, 0, Player.velocity.z);
+                    if (velFlat.sqrMagnitude < 1e-8f)
+                        velFlat = ResolveHorizontalMoveDirection(velFlat);
+                    else
+                        velFlat.Normalize();
+                    if (velFlat.sqrMagnitude > LookRotationEpsilon)
+                    {
+                        rotGoal = Quaternion.LookRotation(velFlat);
+                        transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.5f);
+                    }
                 }
                 Otter.SetBool("moving", true);
                 SlideEffect.enableEmission = true;

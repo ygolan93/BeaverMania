@@ -70,8 +70,9 @@ public class UIMenu : MonoBehaviour
         if (Player == null)
             return;
 
-        Player.RestartCheckpoint();
         PauseController.HideQuestion();
+        PauseController.ResumeIfPaused();
+        Player.RestartCheckpoint();
     }
     public void QuitGame()
     {
@@ -80,6 +81,7 @@ public class UIMenu : MonoBehaviour
 
     public void MainMenu()
     {
+        GameTimeScaleGate.ClearAll();
         SceneManager.LoadScene("Menu");
     }
     public void Volume()

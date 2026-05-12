@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Testscript : MonoBehaviour
 {
+    const float LookRotationEpsilon = 0.0001f;
     public Rigidbody Player;
     Quaternion rotGoal;
 
@@ -16,8 +17,11 @@ public class Testscript : MonoBehaviour
     public void RotatePlayer(Vector3 Target)
     {
             Player.velocity = (Target  + new Vector3(0, Player.velocity.y, 0));
-            rotGoal = Quaternion.LookRotation(Target);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.2f);
+            if (Target.sqrMagnitude > LookRotationEpsilon)
+            {
+                rotGoal = Quaternion.LookRotation(Target);
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.2f);
+            }
     }
     // Update is called once per frame
     void FixedUpdate()

@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class IKFootPlacement : MonoBehaviour
 {
+    const float LookRotationEpsilon = 0.0001f;
    [SerializeField] Animator anim;
     [Range(0, 1f)]
     public float DistanceToGround;
@@ -32,7 +33,8 @@ public class IKFootPlacement : MonoBehaviour
                     Vector3 footPosition = hitL.point;
                     footPosition.y += DistanceToGround;
                     anim.SetIKPosition(AvatarIKGoal.LeftFoot, footPosition);
-                    anim.SetIKRotation(AvatarIKGoal.LeftFoot, Quaternion.LookRotation(transform.forward, hitL.normal));
+                    if (transform.forward.sqrMagnitude > LookRotationEpsilon && hitL.normal.sqrMagnitude > LookRotationEpsilon)
+                        anim.SetIKRotation(AvatarIKGoal.LeftFoot, Quaternion.LookRotation(transform.forward, hitL.normal));
                 }
             }
             //Right Foot
@@ -46,7 +48,8 @@ public class IKFootPlacement : MonoBehaviour
                     Vector3 footPosition = hitR.point;
                     footPosition.y += DistanceToGround;
                     anim.SetIKPosition(AvatarIKGoal.RightFoot, footPosition);
-                    anim.SetIKRotation(AvatarIKGoal.RightFoot, Quaternion.LookRotation(transform.forward, hitR.normal));
+                    if (transform.forward.sqrMagnitude > LookRotationEpsilon && hitR.normal.sqrMagnitude > LookRotationEpsilon)
+                        anim.SetIKRotation(AvatarIKGoal.RightFoot, Quaternion.LookRotation(transform.forward, hitR.normal));
                 }
             }
         }

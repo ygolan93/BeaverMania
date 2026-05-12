@@ -24,8 +24,15 @@ This document tracks **frozen script GUIDs** and **post-Steam** moves. Do not ha
 | PlayerInputReader | `Assets/Scripts/Core/Input/PlayerInputReader.cs` | `85da84c7191c4b60ab0add9089244848` |
 | SceneRestartController | `Assets/Scripts/Core/GameFlow/SceneRestartController.cs` | `75a115eb099b4aeb92c17c4f6144175c` |
 | CheckpointState | `Assets/Scripts/Core/GameFlow/CheckpointState.cs` | `0217cbccfd30409cbd436c3920640b45` |
+| GameTimeScaleGate | `Assets/Scripts/Core/GameFlow/GameTimeScaleGate.cs` | `4d8ed5eb5dc14a15a8b82176f780629d` |
 
 After any migration step: open primary prefabs (player, `PlayerCanvas`, `GameMusic`, NPCs, bridges), load Level 1 / Menu / Tutorial, confirm **no missing script** components, and diff YAML for unintended `m_Script` GUID changes.
+
+## Time scale and camera (runtime rules)
+
+- **`GameTimeScaleGate`**: pause menu and lose screen each set their own `FreezeToken`; time stays at `0` until **all** tokens are cleared. Scene loads and main-menu navigation call `ClearAll()` first.
+- **Presentation priority in `Behaviour.ApplyPauseLikeUiCameraState`**: fullscreen UI (pause or lose screen) forces unlocked cursor and disables both `FreeLook` and `CamForTraders`; trader presentation (`isAtTrader` with valid `CamForTraders.m_LookAt`) uses trader cam with locked orbit speeds; otherwise gameplay uses `FreeLook` and clears trader look target.
+- **`HideCursorUnlessGamePaused`**: defers hiding the cursor whenever **any** pause-like fullscreen UI is active (pause **or** lose screen), not only the pause menu.
 
 ## Post-Steam (meta-preserving moves)
 

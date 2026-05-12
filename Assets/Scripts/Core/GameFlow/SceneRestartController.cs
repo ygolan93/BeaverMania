@@ -13,19 +13,19 @@ namespace Beavermania.Core.GameFlow
 
         public static void LoadLevel1Single()
         {
-            Time.timeScale = 1f;
+            GameTimeScaleGate.ClearAll();
             SceneManager.LoadScene(DefaultLevelSceneName, LoadSceneMode.Single);
         }
 
         public static void LoadSceneSingle(string sceneName)
         {
-            Time.timeScale = 1f;
+            GameTimeScaleGate.ClearAll();
             SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
         }
 
         public static void ReloadActiveSceneSingle()
         {
-            Time.timeScale = 1f;
+            GameTimeScaleGate.ClearAll();
             var active = SceneManager.GetActiveScene();
             SceneManager.LoadScene(active.buildIndex, LoadSceneMode.Single);
         }

@@ -147,6 +147,9 @@ public class Behaviour : MonoBehaviour
     public float moveSpeed = 5.0f;
     public GameObject LooseScreen;
     public bool isAtTrader = false;
+    PauseController pauseController;
+    float initialCamForTradersXAxisSpeed;
+    float initialCamForTradersYAxisSpeed;
     public string LogCount;
     public string DebugText;
     public string StaminaText;
@@ -440,22 +443,19 @@ public class Behaviour : MonoBehaviour
         }
         if (OBJ.gameObject.CompareTag("Trader"))
         {
-            var skip = OBJ.gameObject.GetComponent<Trader>().skipPressed;
-            if (skip ==false)
+            var trader = OBJ.GetComponentInParent<Trader>();
+            if (trader == null)
+                trader = OBJ.GetComponent<Trader>();
+            if (trader != null)
             {
-                ShowCursor();
-                isAtTrader = true;
-                FreeLook.enabled = false;
-                CamForTraders.enabled = true;
-                CamForTraders.m_LookAt = OBJ.transform;
-            }
-            if (skip ==true)
-            {
-                isAtTrader = false;
-                CamForTraders.enabled = false;
-                CamForTraders.m_LookAt = null;
-                FreeLook.enabled = true;
-                FreeLook.m_LookAt.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Root.position), 0.5f);
+                var skip = trader.skipPressed;
+                bool inOfferRadius = trader.Merchant != null
+                    && Vector3.Distance(transform.position, trader.Merchant.transform.position) < trader.GetOfferPanelDistance();
+
+                if (skip == false && inOfferRadius)
+                    ApplyTraderOfferPresentation(OBJ.transform);
+                if (skip == true)
+                    RestoreGameplayAfterTrader();
             }
         }
         if (OBJ.gameObject.CompareTag("House"))
@@ -488,11 +488,7 @@ public class Behaviour : MonoBehaviour
         }
         if (OBJ.gameObject.CompareTag("Trader"))
         {
-            isAtTrader = false;
-            CamForTraders.enabled = false;
-            CamForTraders.m_LookAt = null;
-            FreeLook.enabled = true;
-            FreeLook.m_LookAt.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Root.position), 0.5f);
+            RestoreGameplayAfterTrader();
         }
         if (OBJ.gameObject.CompareTag("House"))
         {
@@ -672,19 +668,131 @@ public class Behaviour : MonoBehaviour
     {
         PlayerCursorRules.ApplyLockedHidden(FreeLook, Root);
     }
+
+    public void ApplyTraderOfferPresentation(Transform traderLookTarget)
+    {
+        if (traderLookTarget == null)
+            return;
+
+        ShowCursor();
+        isAtTrader = true;
+        if (FreeLook != null)
+            FreeLook.enabled = false;
+        if (CamForTraders != null)
+        {
+            CamForTraders.enabled = true;
+            CamForTraders.m_LookAt = traderLookTarget;
+            CamForTraders.m_XAxis.m_MaxSpeed = 0f;
+            CamForTraders.m_YAxis.m_MaxSpeed = 0f;
+        }
+    }
+
+    public void RestoreGameplayAfterTrader()
+    {
+        isAtTrader = false;
+        if (CamForTraders != null)
+        {
+            CamForTraders.enabled = false;
+            CamForTraders.m_LookAt = null;
+            CamForTraders.m_XAxis.m_MaxSpeed = initialCamForTradersXAxisSpeed;
+            CamForTraders.m_YAxis.m_MaxSpeed = initialCamForTradersYAxisSpeed;
+        }
+        if (FreeLook != null)
+        {
+            FreeLook.enabled = true;
+            FreeLook.m_LookAt.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Root.position), 0.5f);
+        }
+        HideCursorUnlessGamePaused();
+    }
+
+    void HideCursorUnlessGamePaused()
+    {
+        if (IsPauseLikeFullscreenUi())
+            return;
+
+        HideCursor();
+    }
+
+    public bool IsGameplayInputLocked()
+    {
+        if (isAtTrader)
+            return true;
+        if (pauseController != null && pauseController.ActivePause)
+            return true;
+        if (LooseScreen != null && LooseScreen.activeSelf)
+            return true;
+        return false;
+    }
+
+    bool IsPauseLikeFullscreenUi()
+    {
+        if (pauseController != null && pauseController.ActivePause)
+            return true;
+        if (LooseScreen != null && LooseScreen.activeSelf)
+            return true;
+        return false;
+    }
+
+    void ApplyPauseLikeUiCameraState()
+    {
+        if (IsPauseLikeFullscreenUi())
+        {
+            PlayerCursorRules.ApplyUnlockedVisible();
+            if (FreeLook != null)
+                FreeLook.enabled = false;
+            if (CamForTraders != null)
+                CamForTraders.enabled = false;
+            return;
+        }
+
+        if (isAtTrader)
+        {
+            PlayerCursorRules.ApplyUnlockedVisible();
+            if (CamForTraders != null && CamForTraders.m_LookAt != null)
+            {
+                if (FreeLook != null)
+                    FreeLook.enabled = false;
+                CamForTraders.enabled = true;
+                CamForTraders.m_XAxis.m_MaxSpeed = 0f;
+                CamForTraders.m_YAxis.m_MaxSpeed = 0f;
+            }
+            else
+            {
+                if (CamForTraders != null)
+                    CamForTraders.enabled = false;
+                if (FreeLook != null)
+                    FreeLook.enabled = true;
+            }
+
+            return;
+        }
+
+        if (CamForTraders != null)
+        {
+            CamForTraders.enabled = false;
+            CamForTraders.m_LookAt = null;
+            CamForTraders.m_XAxis.m_MaxSpeed = initialCamForTradersXAxisSpeed;
+            CamForTraders.m_YAxis.m_MaxSpeed = initialCamForTradersYAxisSpeed;
+        }
+
+        if (FreeLook != null)
+            FreeLook.enabled = true;
+    }
+
     public void ActivateLooseMenu()
     {
         //MusicOP.StopMusic();
-        Time.timeScale = 0;
+        GameTimeScaleGate.SetFreeze(GameTimeScaleGate.FreezeToken.LooseScreen, true);
         ShowCursor();
         LooseScreen.SetActive(true);
     }
     public void HideLooseMenu()
     {
         //MusicOP.ResumeMusic();
-        Time.timeScale = 1;
-        HideCursor();
+        GameTimeScaleGate.SetFreeze(GameTimeScaleGate.FreezeToken.LooseScreen, false);
         LooseScreen.SetActive(false);
+        if (!IsGameplayInputLocked())
+            HideCursor();
     }
     PlayerCheckpointRespawn CheckpointRespawn
     {
@@ -711,6 +819,7 @@ public class Behaviour : MonoBehaviour
     }
     public void RestartGame()
     {
+        GameTimeScaleGate.ClearAll();
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
     public void GobletON()
@@ -797,7 +906,8 @@ public class Behaviour : MonoBehaviour
         BindHudState();
         arrowModel.SetActive(false);
         bowAim = new Vector3(-0.33f, 20f, -0.3f);
-        CamForTraders.enabled = false;
+        if (CamForTraders != null)
+            CamForTraders.enabled = false;
         Instantiate(PopUpEffect, Root.position, Quaternion.identity);
         HideCursor();
         AimIcon.SetActive(false);
@@ -857,13 +967,22 @@ public class Behaviour : MonoBehaviour
         FreeLook.m_Orbits[0].m_Radius = 4;
         FreeLook.m_Orbits[1].m_Radius = 6;
         FreeLook.m_Orbits[2].m_Radius = 5;
+        pauseController = FindObjectOfType<PauseController>();
+        if (CamForTraders != null)
+        {
+            initialCamForTradersXAxisSpeed = CamForTraders.m_XAxis.m_MaxSpeed;
+            initialCamForTradersYAxisSpeed = CamForTraders.m_YAxis.m_MaxSpeed;
+        }
         SyncHudState();
     }
     [System.Obsolete]
     public void Update()
     {
+        ApplyPauseLikeUiCameraState();
+        bool inputLocked = IsGameplayInputLocked();
+
         //Parry animations
-        if (Defend == true)
+        if (!inputLocked && Defend == true)
         {
             DefendAnim -= Time.deltaTime;
             if (DefendAnim > 0)
@@ -882,7 +1001,7 @@ public class Behaviour : MonoBehaviour
         }
 
         //Turn off glow attack effect
-        if (!Input.GetKey(KeyCode.Mouse0))
+        if (!inputLocked && !Input.GetKey(KeyCode.Mouse0))
         {
             otterAction.TurnOffGlow();
         }
@@ -904,9 +1023,14 @@ public class Behaviour : MonoBehaviour
             {
                 CurrentStamina = MaxStamina;
             }
-            if (CurrentStamina < MaxStamina && !Input.GetKey(KeyCode.LeftControl))
+            if (CurrentStamina < MaxStamina)
             {
-                if (!Input.GetKey(KeyCode.Mouse1) && isParried == false && !Input.GetKey(KeyCode.Mouse0) && !Input.GetKey(KeyCode.F))
+                bool regenBlockedByCombatInput = !inputLocked
+                    && (Input.GetKey(KeyCode.LeftControl)
+                        || Input.GetKey(KeyCode.Mouse1)
+                        || Input.GetKey(KeyCode.Mouse0)
+                        || Input.GetKey(KeyCode.F));
+                if (!regenBlockedByCombatInput)
                 {
                     StaminaClock -= Time.deltaTime;
                     if (StaminaClock <= 0)
@@ -962,6 +1086,8 @@ public class Behaviour : MonoBehaviour
                 ICON_3.SetActive(true);
             }
         }
+        if (!inputLocked)
+        {
         //Jump action
         {
             if (Input.GetKeyDown(KeyCode.Space) && JumpNum > 0)
@@ -984,6 +1110,7 @@ public class Behaviour : MonoBehaviour
             if (Input.GetKey(KeyCode.Space) || Input.GetKeyUp(KeyCode.Space))
                 JumpNum = JumpNumPreserve;
         }
+        }
         //Load Loose screen on death
         if (CurrentHealth <= 0)
         {
@@ -1002,6 +1129,8 @@ public class Behaviour : MonoBehaviour
             ParryOFF();
             CurrentStamina = 0;
         }
+        if (!inputLocked)
+        {
         //Crouch action - Place Logs
         {
             if (Input.GetKey(KeyCode.LeftControl)&& FreeLook.m_Lens.FieldOfView<20)
@@ -1214,13 +1343,22 @@ public class Behaviour : MonoBehaviour
                 appleOBJ.SetActive(false);
             }
         }
+        }
         //Use Goblet
         {
-            if (Input.GetKeyDown(KeyCode.Y) && GobletPickup > 0)
+            if (!inputLocked)
             {
-                Otter.Play("Consume");
-                Sound.Drink();
-                GobletON();
+                if (Input.GetKeyDown(KeyCode.Y) && GobletPickup > 0)
+                {
+                    Otter.Play("Consume");
+                    Sound.Drink();
+                    GobletON();
+                }
+
+                if (Input.GetKeyUp(KeyCode.Y))
+                {
+                    gobletOBJ.SetActive(false);
+                }
             }
             if (GobletPicked == true)
             {
@@ -1232,14 +1370,9 @@ public class Behaviour : MonoBehaviour
                     GobletOFF();
                 }
             }
-
-            if (Input.GetKeyUp(KeyCode.Y))
-            {
-                gobletOBJ.SetActive(false);
-            }
         }
 
-        if (isAtTrader == false /*&& ParryShield.active == false*/)
+        if (!inputLocked /*&& ParryShield.active == false*/)
         {
             //Melee action
             {
@@ -1364,6 +1497,9 @@ public class Behaviour : MonoBehaviour
     [Obsolete]
     public void LateUpdate()
     {
+        if (IsGameplayInputLocked())
+            return;
+
         if (Input.GetKey(KeyCode.Mouse1))
         {
             RotateForward();
@@ -1393,6 +1529,16 @@ public class Behaviour : MonoBehaviour
         Vector3 XZRight = new(cameraRelativeRight.x, 0, cameraRelativeRight.z);
         Vector3 XZLeft = new(cameraRelativeLeft.x, 0, cameraRelativeLeft.z);
 
+        bool inputLocked = IsGameplayInputLocked();
+
+        if (inputLocked)
+        {
+            if (Stone != null)
+                Stone.SetActive(false);
+            if (AimIcon != null)
+                AimIcon.SetActive(false);
+        }
+
         //Switch off additional animations if not invoked
         {
             Otter.SetBool("walk", false);
@@ -1410,6 +1556,8 @@ public class Behaviour : MonoBehaviour
             movementInvoked = false;
             //keepLooking = false;
         }
+        if (!inputLocked)
+        {
         //Stoning action
         if (bowEquipped == false)
         {
@@ -1604,6 +1752,7 @@ public class Behaviour : MonoBehaviour
                     PlayerRoll(XZBack + XZLeft);
                 }
             }
+        }
         }
        
         

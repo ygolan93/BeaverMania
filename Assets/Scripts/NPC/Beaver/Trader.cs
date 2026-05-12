@@ -15,7 +15,13 @@ public class Trader : MonoBehaviour
     public bool skipPressed = false;
     [SerializeField] bool Rotate;
     [SerializeField] float PanelPopUp;
+    bool traderOfferPresentationActive;
     Quaternion FormalLook;
+
+    public float GetOfferPanelDistance()
+    {
+        return PanelPopUp;
+    }
     // Start is called before the first frame update
     void Start()
     {
@@ -30,6 +36,18 @@ public class Trader : MonoBehaviour
 
         PlayerDistance = Player.transform.position - Merchant.transform.position;
         var Distance = Mathf.Abs(PlayerDistance.magnitude);
+        bool wantOfferPresentation = Player != null && Distance < PanelPopUp && skipPressed == false;
+        if (wantOfferPresentation)
+        {
+            traderOfferPresentationActive = true;
+            Player.ApplyTraderOfferPresentation(transform);
+        }
+        else if (traderOfferPresentationActive && Player != null)
+        {
+            traderOfferPresentationActive = false;
+            Player.RestoreGameplayAfterTrader();
+        }
+
         if (Distance<PanelPopUp&&skipPressed==false)
         {
             TradeText.SetActive(true);
@@ -57,9 +75,12 @@ public class Trader : MonoBehaviour
     public void activateSkip()
     {
         skipPressed = true;
+        traderOfferPresentationActive = false;
         TradeText.SetActive(false);
         DialoguePanel.SetActive(false);
         Shop.SetActive(false);
+        if (Player != null)
+            Player.RestoreGameplayAfterTrader();
     }
 
     public void CloseShop()
@@ -70,6 +91,13 @@ public class Trader : MonoBehaviour
     public void Honey()
     {
         Player.HoneyON();
+    }
+
+    void OnDisable()
+    {
+        traderOfferPresentationActive = false;
+        if (Player != null && Player.isAtTrader)
+            Player.RestoreGameplayAfterTrader();
     }
 }
 

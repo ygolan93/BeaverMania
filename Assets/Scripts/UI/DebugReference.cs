@@ -50,8 +50,19 @@ namespace Beavermania.UI
             if (PlayerHudState == null)
             {
                 PlayerHudState = Player.gameObject.AddComponent<PlayerHudState>();
-                PlayerHudState.CopyFrom(Player, Player.GetComponent<ObjectiveUI>());
+                PlayerHudState.CopyFrom(Player, ResolvePlayerObjective());
             }
+        }
+
+        ObjectiveUI ResolvePlayerObjective()
+        {
+            if (Player == null)
+                return null;
+
+            if (Player.PlayerObjective != null)
+                return Player.PlayerObjective;
+
+            return Player.GetComponent<ObjectiveUI>();
         }
 
         void Update()
@@ -61,6 +72,9 @@ namespace Beavermania.UI
 
             if (PlayerHudState == null)
                 return;
+
+            if (Player != null)
+                PlayerHudState.CopyFrom(Player, ResolvePlayerObjective());
 
             SetText(ObjectiveText, PlayerHudState.ObjectiveText);
             SetText(DisplayText, PlayerHudState.DebugText);
@@ -77,7 +91,7 @@ namespace Beavermania.UI
         static void SetText(TextMeshProUGUI text, string value)
         {
             if (text != null)
-                text.text = value;
+                text.text = value ?? string.Empty;
         }
 
         void LogMissingReference(string referenceName, ref bool logged)

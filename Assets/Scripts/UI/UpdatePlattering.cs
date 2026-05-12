@@ -15,7 +15,10 @@ namespace Beavermania.UI.Hud
         // Update is called once per frame
         void Update()
         {
-            PlatetringText.text = Player.Plattering;
+            if (PlatetringText == null || Player == null)
+                return;
+
+            PlatetringText.text = Player.Plattering ?? string.Empty;
         }
     }
 }

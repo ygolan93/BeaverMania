@@ -1982,7 +1982,6 @@ namespace Beavermania.Player
                 }
             }
 
-            SyncHudState();
         }
 
         void BindHudState()

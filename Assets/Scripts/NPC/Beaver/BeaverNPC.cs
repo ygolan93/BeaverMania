@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class BeaverNPC : MonoBehaviour
 {
+    const float LookRotationEpsilon = 0.0001f;
     // Start is called before the first frame update
     Rigidbody Beaver;
     Animator BeaverAnimator;
@@ -109,8 +110,11 @@ public class BeaverNPC : MonoBehaviour
         if (wait>0&&moving==false)
         {
             transform.gameObject.layer = LayerMask.NameToLayer("IgnoreOtherBeavers".ToString());
-            rotGoal = Quaternion.LookRotation(Direction);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            if (Direction.sqrMagnitude > LookRotationEpsilon)
+            {
+                rotGoal = Quaternion.LookRotation(Direction);
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            }
             BeaverAnimator.SetBool("Walk", false);
             wait -= Time.deltaTime;
         }
@@ -132,9 +136,12 @@ public class BeaverNPC : MonoBehaviour
             BeaverAnimator.SetBool("Walk", true);
             Wander = wayPoints[currentPoint].position - transform.position;
             Wander.y = 0;
-            rotGoal = Quaternion.LookRotation(Wander);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
-            Beaver.velocity = Wander.normalized * speed;
+            if (Wander.sqrMagnitude > LookRotationEpsilon)
+            {
+                rotGoal = Quaternion.LookRotation(Wander);
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            }
+            Beaver.velocity = Wander.sqrMagnitude > LookRotationEpsilon ? Wander.normalized * speed : new Vector3(0f, Beaver.velocity.y, 0f);
         }
         if (moveClock <= 0)
         {

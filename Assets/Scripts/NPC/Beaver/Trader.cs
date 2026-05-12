@@ -5,6 +5,7 @@ using TMPro;
 
 public class Trader : MonoBehaviour
 {
+    const float LookRotationEpsilon = 0.0001f;
     public GameObject Merchant;
     public Transform PlayerRoot;
     public Behaviour Player;
@@ -54,8 +55,11 @@ public class Trader : MonoBehaviour
             DialoguePanel.SetActive(true);
             if (Rotate == true)
             {
-                Player.rotGoal = Quaternion.LookRotation(Player.transform.position - Merchant.transform.position);
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(PlayerDistance), 0.1f);
+                Vector3 toPlayer = Player.transform.position - Merchant.transform.position;
+                if (toPlayer.sqrMagnitude > LookRotationEpsilon)
+                    Player.rotGoal = Quaternion.LookRotation(toPlayer);
+                if (PlayerDistance.sqrMagnitude > LookRotationEpsilon)
+                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(PlayerDistance), 0.1f);
             }
         }
 

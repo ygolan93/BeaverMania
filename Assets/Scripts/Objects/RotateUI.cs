@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class RotateUI : MonoBehaviour
 {
+    const float LookRotationEpsilon = 0.0001f;
    GameObject CameraTarget;
     public Vector3 Distance;
     private void Awake()
@@ -14,9 +15,11 @@ public class RotateUI : MonoBehaviour
     private void Update()
     {
         Distance = CameraTarget.transform.position - transform.position;
-        Quaternion rotGoal = Quaternion.LookRotation(Distance);
-        if (Distance.magnitude>0.5f)
-        transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.1f);
+        if (Distance.sqrMagnitude > LookRotationEpsilon && Distance.magnitude > 0.5f)
+        {
+            Quaternion rotGoal = Quaternion.LookRotation(Distance);
+            transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.1f);
+        }
 
     }
 

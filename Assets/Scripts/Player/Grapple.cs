@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Grapple : MonoBehaviour
 {
+    const float LookRotationEpsilon = 0.0001f;
     [Header ("References")]
     [SerializeField] Behaviour Player;
     Rigidbody rb_player;
@@ -46,7 +47,9 @@ public class Grapple : MonoBehaviour
 
     void ExecuteGrapple()
     {
-        Player.transform.rotation = Quaternion.LookRotation(grapplePoint);
+        Vector3 lookDir = grapplePoint - Player.transform.position;
+        if (lookDir.sqrMagnitude > LookRotationEpsilon)
+            Player.transform.rotation = Quaternion.LookRotation(lookDir);
     }
     void StopGrapple()
     {

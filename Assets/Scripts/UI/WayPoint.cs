@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 public class WayPoint : MonoBehaviour
 {
+    const float LookRotationEpsilon = 0.0001f;
     public Image Mark;
     private Transform target;
     public Transform[] Locations;
@@ -47,7 +48,9 @@ public class WayPoint : MonoBehaviour
 
         if (target != null)
         {
-            Arrow.gameObject.transform.rotation = Quaternion.LookRotation(target.position - transform.position);
+            Vector3 toTarget = target.position - transform.position;
+            if (toTarget.sqrMagnitude > LookRotationEpsilon)
+                Arrow.gameObject.transform.rotation = Quaternion.LookRotation(toTarget);
         }
 
         // Waypoint Mark

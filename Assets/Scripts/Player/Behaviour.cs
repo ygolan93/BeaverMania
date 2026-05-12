@@ -170,6 +170,8 @@ public class Behaviour : MonoBehaviour
     public CinemachineFreeLook CamForTraders;
     [SerializeField] PlayerCheckpointRespawn checkpointRespawn;
     public float ChangeSpeech = 1F;
+    Vector3 stableCameraForwardXZ = Vector3.forward;
+    const float LookRotationEpsilon = 0.0001f;
 
     public void OnCollisionEnter(Collision OBJ)
     {
@@ -332,7 +334,8 @@ public class Behaviour : MonoBehaviour
             Plattering = "Get off me ya nasty bastards!";
             ChangeSpeech = 3;
             var ParryDirection = new Vector3((OBJ.transform.position - transform.position).x, 0, (OBJ.transform.position - transform.position).z);
-            transform.rotation = Quaternion.LookRotation(ParryDirection);
+            if (ParryDirection.sqrMagnitude > LookRotationEpsilon)
+                transform.rotation = Quaternion.LookRotation(ParryDirection);
         }
         if (OBJ.gameObject.CompareTag("Strike"))
         {
@@ -530,20 +533,30 @@ public class Behaviour : MonoBehaviour
     }
     public void PlayerMove(Vector3 Direction)
     {
+        Direction = ResolveHorizontalMoveDirection(Direction);
         movementInvoked = true;
         //Regular walk
         if (keepLooking==false)
         {
-            rotGoal = Quaternion.LookRotation(Direction);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            if (Direction.sqrMagnitude > LookRotationEpsilon)
+            {
+                rotGoal = Quaternion.LookRotation(Direction);
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            }
             Otter.SetBool("walk", true);
         }
         //Strafe
         if (keepLooking == true)
         {
-            Vector3 forwardFace = Camera.main.transform.TransformDirection(Vector3.forward);
-            rotGoal = Quaternion.LookRotation(new Vector3(forwardFace.x, 0, forwardFace.z));
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            Vector3 forwardFace = ResolveMainCameraTransform().TransformDirection(Vector3.forward);
+            Vector3 flatFace = new Vector3(forwardFace.x, 0, forwardFace.z);
+            if (flatFace.sqrMagnitude < 1e-8f)
+                flatFace = ResolveHorizontalMoveDirection(flatFace);
+            if (flatFace.sqrMagnitude > LookRotationEpsilon)
+            {
+                rotGoal = Quaternion.LookRotation(flatFace);
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
+            }
             Otter.SetBool("walk", false);
             if (Input.GetKey(KeyCode.W))
             {
@@ -604,7 +617,11 @@ public class Behaviour : MonoBehaviour
     }
     public void PlayerRoll(Vector3 Direction)
     {
-        rotGoal = Quaternion.LookRotation(new Vector3(Direction.x, 0, Direction.z));
+        Vector3 flat = new Vector3(Direction.x, 0, Direction.z);
+        if (flat.sqrMagnitude < 1e-8f)
+            flat = ResolveHorizontalMoveDirection(flat);
+        if (flat.sqrMagnitude > LookRotationEpsilon)
+            rotGoal = Quaternion.LookRotation(flat);
         transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.11f);
         //Evading Roll action
         {
@@ -629,15 +646,21 @@ public class Behaviour : MonoBehaviour
     [Obsolete]
     public void RotateForward()
     {
-        Vector3 camForward = Camera.main.transform.TransformDirection(Vector3.forward);
-        Quaternion direction = Quaternion.LookRotation(camForward);
-        if (bowEquipped==false)
+        Transform camT = ResolveMainCameraTransform();
+        Vector3 camForward = camT.TransformDirection(Vector3.forward);
+        if (camForward.sqrMagnitude < 1e-8f)
+            camForward = transform.forward;
+        if (camForward.sqrMagnitude > LookRotationEpsilon)
         {
-            Spine.rotation = direction;
-        }
-        if (bowEquipped == true && Input.GetKey(KeyCode.Mouse1) && arrowMunition > 0)
-        {
-            Spine.rotation = direction*Quaternion.EulerRotation(bowAim);
+            Quaternion direction = Quaternion.LookRotation(camForward);
+            if (bowEquipped==false)
+            {
+                Spine.rotation = direction;
+            }
+            if (bowEquipped == true && Input.GetKey(KeyCode.Mouse1) && arrowMunition > 0)
+            {
+                Spine.rotation = direction*Quaternion.EulerRotation(bowAim);
+            }
         }
   
     }
@@ -697,10 +720,30 @@ public class Behaviour : MonoBehaviour
             CamForTraders.m_XAxis.m_MaxSpeed = initialCamForTradersXAxisSpeed;
             CamForTraders.m_YAxis.m_MaxSpeed = initialCamForTradersYAxisSpeed;
         }
-        if (FreeLook != null)
+        if (FreeLook != null && FreeLook.m_LookAt != null)
         {
             FreeLook.enabled = true;
-            FreeLook.m_LookAt.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Root.position), 0.5f);
+            Vector3 safeLookDir = Vector3.forward;
+            if (Root != null)
+            {
+                safeLookDir = Root.position - transform.position;
+                safeLookDir.y = 0f;
+            }
+
+            if (safeLookDir.sqrMagnitude < 1e-6f)
+            {
+                safeLookDir = new Vector3(transform.forward.x, 0, transform.forward.z);
+            }
+
+            if (safeLookDir.sqrMagnitude < 1e-6f)
+                safeLookDir = Vector3.forward;
+            safeLookDir.Normalize();
+
+            if (safeLookDir.sqrMagnitude > LookRotationEpsilon)
+            {
+                var targetLookRot = Quaternion.LookRotation(safeLookDir, Vector3.up);
+                FreeLook.m_LookAt.rotation = Quaternion.Slerp(transform.rotation, targetLookRot, 0.5f);
+            }
         }
         HideCursorUnlessGamePaused();
     }
@@ -973,6 +1016,8 @@ public class Behaviour : MonoBehaviour
             initialCamForTradersXAxisSpeed = CamForTraders.m_XAxis.m_MaxSpeed;
             initialCamForTradersYAxisSpeed = CamForTraders.m_YAxis.m_MaxSpeed;
         }
+        var flatFwd = new Vector3(transform.forward.x, 0, transform.forward.z);
+        stableCameraForwardXZ = flatFwd.sqrMagnitude > 1e-6f ? flatFwd.normalized : Vector3.forward;
         SyncHudState();
     }
     [System.Obsolete]
@@ -1514,20 +1559,62 @@ public class Behaviour : MonoBehaviour
         }
     }
 
+    Transform ResolveMainCameraTransform()
+    {
+        return Camera.main != null ? Camera.main.transform : transform;
+    }
+
+    void ReconcileHorizontalCameraAxes(ref Vector3 xzForward, ref Vector3 xzBack, ref Vector3 xzRight, ref Vector3 xzLeft)
+    {
+        if (xzForward.sqrMagnitude > 1e-8f)
+        {
+            stableCameraForwardXZ = xzForward;
+            return;
+        }
+
+        Vector3 fallback = new Vector3(transform.forward.x, 0, transform.forward.z);
+        if (fallback.sqrMagnitude > 1e-8f)
+            xzForward = fallback;
+        else if (stableCameraForwardXZ.sqrMagnitude > 1e-8f)
+            xzForward = stableCameraForwardXZ;
+        else
+            xzForward = Vector3.forward;
+
+        xzBack = new Vector3(-xzForward.x, 0, -xzForward.z);
+        xzRight = new Vector3(xzForward.z, 0, -xzForward.x);
+        xzLeft = new Vector3(-xzForward.z, 0, xzForward.x);
+        stableCameraForwardXZ = xzForward;
+    }
+
+    Vector3 ResolveHorizontalMoveDirection(Vector3 direction)
+    {
+        if (direction.sqrMagnitude > 1e-8f)
+            return direction;
+        Vector3 f = new Vector3(transform.forward.x, 0, transform.forward.z);
+        if (f.sqrMagnitude > 1e-8f)
+            return f;
+        if (stableCameraForwardXZ.sqrMagnitude > 1e-8f)
+            return stableCameraForwardXZ;
+        return Vector3.forward;
+    }
+
     [System.Obsolete]
     public void FixedUpdate()
     {
         //Camera vectors setup
-        Vector3 cameraRelativeForward = Camera.main.transform.TransformDirection(Vector3.forward);
-        Vector3 cameraRelativeBack = Camera.main.transform.TransformDirection(Vector3.back);
-        Vector3 cameraRelativeRight = Camera.main.transform.TransformDirection(Vector3.right);
-        Vector3 cameraRelativeLeft = Camera.main.transform.TransformDirection(Vector3.left);
+        Transform camTransform = ResolveMainCameraTransform();
+        Vector3 cameraRelativeForward = camTransform.TransformDirection(Vector3.forward);
+        Vector3 cameraRelativeBack = camTransform.TransformDirection(Vector3.back);
+        Vector3 cameraRelativeRight = camTransform.TransformDirection(Vector3.right);
+        Vector3 cameraRelativeLeft = camTransform.TransformDirection(Vector3.left);
 
         //Horizontal camera vectors
         Vector3 XZForward = new(cameraRelativeForward.x, 0, cameraRelativeForward.z);
         Vector3 XZBack = new(cameraRelativeBack.x, 0, cameraRelativeBack.z);
         Vector3 XZRight = new(cameraRelativeRight.x, 0, cameraRelativeRight.z);
         Vector3 XZLeft = new(cameraRelativeLeft.x, 0, cameraRelativeLeft.z);
+
+        ReconcileHorizontalCameraAxes(ref XZForward, ref XZBack, ref XZRight, ref XZLeft);
 
         bool inputLocked = IsGameplayInputLocked();
 
@@ -1572,8 +1659,11 @@ public class Behaviour : MonoBehaviour
                 Otter.Play("Aim");
                 if (Input.GetKeyDown(KeyCode.Mouse1))
                 {
-                    rotGoal = Quaternion.LookRotation(cameraRelativeForward);
-                    transform.rotation = rotGoal;
+                    if (XZForward.sqrMagnitude > LookRotationEpsilon)
+                    {
+                        rotGoal = Quaternion.LookRotation(XZForward);
+                        transform.rotation = rotGoal;
+                    }
                     Otter.Play("Crouch");
                 }
                 keepLooking = true;
@@ -1597,8 +1687,11 @@ public class Behaviour : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.Mouse1) && !Input.GetKeyUp(KeyCode.Mouse1))
             {
-                rotGoal = Quaternion.LookRotation(cameraRelativeForward);
-                transform.rotation = rotGoal;
+                if (XZForward.sqrMagnitude > LookRotationEpsilon)
+                {
+                    rotGoal = Quaternion.LookRotation(XZForward);
+                    transform.rotation = rotGoal;
+                }
                 if (arrowMunition > 0 &&
                 CurrentStamina > 0)
                 {
@@ -1632,7 +1725,15 @@ public class Behaviour : MonoBehaviour
             if (arrowReady == true && Input.GetKeyUp(KeyCode.Mouse1) && CurrentStamina > 0)
             {
                 Sound.ArrowShoot();
-                Instantiate(Arrow, Spine.position + new Vector3(0,1.4f * cameraRelativeForward.normalized.y, 1.4f * cameraRelativeForward.normalized.z), Quaternion.LookRotation(cameraRelativeForward)* Quaternion.Euler(90, 0, 0));
+                Vector3 shootDir = cameraRelativeForward.sqrMagnitude > LookRotationEpsilon
+                    ? cameraRelativeForward.normalized
+                    : (XZForward.sqrMagnitude > LookRotationEpsilon ? XZForward.normalized : Vector3.zero);
+                if (shootDir.sqrMagnitude <= LookRotationEpsilon)
+                {
+                    Vector3 flatF = new Vector3(transform.forward.x, 0, transform.forward.z);
+                    shootDir = flatF.sqrMagnitude > LookRotationEpsilon ? flatF.normalized : Vector3.forward;
+                }
+                Instantiate(Arrow, Spine.position + new Vector3(0, 1.4f * shootDir.y, 1.4f * shootDir.z), Quaternion.LookRotation(shootDir) * Quaternion.Euler(90, 0, 0));
                 CurrentStamina -= 30;
                 HealthBar.SetStamina(CurrentStamina);
                 arrowModel.SetActive(false);
@@ -1800,8 +1901,16 @@ public class Behaviour : MonoBehaviour
             {
                 if (isParried == false)
                 {
-                    rotGoal = Quaternion.LookRotation(new Vector3(Player.velocity.x, 0, Player.velocity.z));
-                    transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.5f);
+                    Vector3 velFlat = new Vector3(Player.velocity.x, 0, Player.velocity.z);
+                    if (velFlat.sqrMagnitude < 1e-8f)
+                        velFlat = ResolveHorizontalMoveDirection(velFlat);
+                    else
+                        velFlat.Normalize();
+                    if (velFlat.sqrMagnitude > LookRotationEpsilon)
+                    {
+                        rotGoal = Quaternion.LookRotation(velFlat);
+                        transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.5f);
+                    }
                 }
                 Otter.SetBool("moving", true);
                 SlideEffect.enableEmission = true;

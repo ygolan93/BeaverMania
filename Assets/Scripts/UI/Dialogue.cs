@@ -19,6 +19,9 @@ public class Dialogue : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        if (PlayerObjective == null && Player != null)
+            PlayerObjective = Player.GetComponent<ObjectiveUI>();
+
         if (Player == null || PlayerObjective == null)
         {
             GameObject playerObject = GameObject.FindGameObjectWithTag("Player");

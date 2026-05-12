@@ -66564,6 +66564,7 @@ GameObject:
   - component: {fileID: 7370122799389070937}
   - component: {fileID: 8668838197977538417}
   - component: {fileID: 7624992565179513156}
+  - component: {fileID: 7624992565179513160}
   - component: {fileID: 7624992565179513157}
   - component: {fileID: 7624992565179513154}
   - component: {fileID: 8668838197977538418}
@@ -66838,6 +66839,28 @@ MonoBehaviour:
   FreeLook: {fileID: 1427810939599441655}
   CamForTraders: {fileID: 3156488547051756512}
   ChangeSpeech: 1
+--- !u!114 &7624992565179513160
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7624992565179513158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f356bc3e4f94e4ba9c5e178afeb4ff3, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  ObjectiveText:
+  DebugText:
+  StaminaText:
+  LogCount:
+  HealingText:
+  Wallet:
+  SeedText:
+  GobletText:
+  AppleText:
+  ArrowText:
 --- !u!114 &7624992565179513157
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class DebugReference : MonoBehaviour
 {
     public Behaviour Player;
+    public PlayerHudState PlayerHudState;
     public ObjectiveUI PlayerObjective;
 
     public TextMeshProUGUI ObjectiveText;
@@ -20,21 +21,40 @@ public class DebugReference : MonoBehaviour
     public TextMeshProUGUI ArrowMunition;
     private void Start()
     {
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
-        PlayerObjective = GameObject.FindGameObjectWithTag("Player").GetComponent<ObjectiveUI>();
+        BindPlayerHudState();
+    }
+
+    void BindPlayerHudState()
+    {
+        if (Player == null)
+            Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Behaviour>();
+
+        if (PlayerHudState == null)
+            PlayerHudState = Player.GetComponent<PlayerHudState>();
+
+        if (PlayerHudState == null)
+            PlayerHudState = Player.gameObject.AddComponent<PlayerHudState>();
+
+        if (PlayerObjective == null)
+            PlayerObjective = Player.GetComponent<ObjectiveUI>();
     }
 
     void Update()
     {
-        ObjectiveText.text = PlayerObjective.Instruction;
-        DisplayText.text = Player.DebugText;
-        StaminaText.text = Player.StaminaText;
-        LogCountText.text = Player.LogCount;
-        CurrencyCount.text = Player.Wallet;
-        HealingDisplay.text = Player.HealingText;
-        SeedCount.text = Player.SeedText;
-        GobletCount.text = Player.GobletText;
-        AppleCount.text = Player.AppleText;
-        ArrowMunition.text = Player.ArrowText;
+        if (PlayerHudState == null)
+            BindPlayerHudState();
+
+        PlayerHudState.CopyFrom(Player, PlayerObjective);
+
+        ObjectiveText.text = PlayerHudState.ObjectiveText;
+        DisplayText.text = PlayerHudState.DebugText;
+        StaminaText.text = PlayerHudState.StaminaText;
+        LogCountText.text = PlayerHudState.LogCount;
+        CurrencyCount.text = PlayerHudState.Wallet;
+        HealingDisplay.text = PlayerHudState.HealingText;
+        SeedCount.text = PlayerHudState.SeedText;
+        GobletCount.text = PlayerHudState.GobletText;
+        AppleCount.text = PlayerHudState.AppleText;
+        ArrowMunition.text = PlayerHudState.ArrowText;
     }
 }

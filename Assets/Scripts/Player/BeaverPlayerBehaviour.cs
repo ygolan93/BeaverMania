@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Beavermania.Audio;
 using Beavermania.Core.GameFlow;
+using Beavermania.Core.Input;
 using Beavermania.NPC;
 using Beavermania.Player.Combat;
 using Beavermania.Player.Movement;
@@ -182,7 +183,7 @@ namespace Beavermania.Player
 
         public void OnCollisionEnter(Collision OBJ)
         {
-            if (OBJ.gameObject.CompareTag("Part")&& Load.CanCarry == true && grounded==true && !Input.GetKey(KeyCode.Mouse0)&& !Input.GetKey(KeyCode.Mouse1))
+            if (OBJ.gameObject.CompareTag("Part")&& Load.CanCarry == true && grounded==true && !PlayerInputReader.IsPrimaryHeld()&& !PlayerInputReader.IsSecondaryHeld())
             {
                 Otter.Play("Crouch");
                 Sound.PickItem();
@@ -217,7 +218,7 @@ namespace Beavermania.Player
             if (OBJ.gameObject.CompareTag("Isle") || OBJ.gameObject.CompareTag("Bridge") || OBJ.gameObject.CompareTag("stairs") || OBJ.gameObject.CompareTag("Tile"))
             {
                 FallClock = InitialFall;
-                if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.D))
+                if (PlayerInputReader.WasAnyMoveAxisPressedDown())
                 {
                     if (OBJ.gameObject.CompareTag("stairs"))
                     {
@@ -335,8 +336,8 @@ namespace Beavermania.Player
             }
             if (OBJ.gameObject.CompareTag("NPC") && isParried == true 
                 || OBJ.gameObject.CompareTag("Scorpion") && isParried == true 
-                || OBJ.gameObject.CompareTag("Scorpion") && Input.GetKey(KeyCode.Mouse0) 
-                || OBJ.gameObject.CompareTag("Scorpion") && Input.GetKey(KeyCode.Mouse1))
+                || OBJ.gameObject.CompareTag("Scorpion") && PlayerInputReader.IsPrimaryHeld() 
+                || OBJ.gameObject.CompareTag("Scorpion") && PlayerInputReader.IsSecondaryHeld())
             {
                 Plattering = "Get off me ya nasty bastards!";
                 ChangeSpeech = 3;
@@ -565,19 +566,19 @@ namespace Beavermania.Player
                     transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
                 }
                 Otter.SetBool("walk", false);
-                if (Input.GetKey(KeyCode.W))
+                if (PlayerInputReader.IsMoveForwardHeld())
                 {
                     Otter.SetBool("strafeForward", true);
                 }
-                if (Input.GetKey(KeyCode.S))
+                if (PlayerInputReader.IsMoveBackHeld())
                 {
                     Otter.SetBool("strafeBack", true);
                 }
-                if (Input.GetKey(KeyCode.A))
+                if (PlayerInputReader.IsMoveLeftHeld())
                 {
                     Otter.SetBool("strafeLeft", true);
                 }
-                if (Input.GetKey(KeyCode.D))
+                if (PlayerInputReader.IsMoveRightHeld())
                 {
                     Otter.SetBool("strafeRight", true);
                 }
@@ -594,7 +595,7 @@ namespace Beavermania.Player
             //Sprint
             if (grounded == true)
             {
-                if (Input.GetKey(KeyCode.LeftShift) && Input.anyKey && Rolling == false && keepLooking==false)
+                if (PlayerInputReader.IsSprintHeld() && PlayerInputReader.IsAnyKeyHeld() && Rolling == false && keepLooking==false)
                 {
                     if (ArmorEquipped==true)
                     {
@@ -619,7 +620,7 @@ namespace Beavermania.Player
                 }
                 Player.velocity = (Direction.normalized * speed) + new Vector3(0, Player.velocity.y, 0);
             }
-            if (grounded == false && Input.GetKey(KeyCode.LeftShift))
+            if (grounded == false && PlayerInputReader.IsSprintHeld())
                 Player.AddForce(Direction.normalized * 5);
         }
         public void PlayerRoll(Vector3 Direction)
@@ -632,7 +633,7 @@ namespace Beavermania.Player
             transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.11f);
             //Evading Roll action
             {
-                if (Input.GetKey(KeyCode.LeftControl) && CurrentStamina > 0 && grounded == true)
+                if (PlayerInputReader.IsRollHeld() && CurrentStamina > 0 && grounded == true)
                 {
                     Rolling = true;
                     Otter.SetBool("roll", true);
@@ -641,7 +642,7 @@ namespace Beavermania.Player
                     HealthBar.SetStamina(CurrentStamina);
                     Player.velocity = (Direction.normalized * 6) + new Vector3(0, Player.velocity.y, 0);
                 }
-                if (!Input.GetKey(KeyCode.LeftControl) || CurrentStamina <= 0 || grounded == false)
+                if (!PlayerInputReader.IsRollHeld() || CurrentStamina <= 0 || grounded == false)
                 {
                     Rolling = false;
                     Otter.SetBool("roll", false);
@@ -664,7 +665,7 @@ namespace Beavermania.Player
                 {
                     Spine.rotation = direction;
                 }
-                if (bowEquipped == true && Input.GetKey(KeyCode.Mouse1) && arrowMunition > 0)
+                if (bowEquipped == true && PlayerInputReader.IsSecondaryHeld() && arrowMunition > 0)
                 {
                     Spine.rotation = direction*Quaternion.EulerRotation(bowAim);
                 }
@@ -1066,7 +1067,7 @@ namespace Beavermania.Player
             }
 
             //Turn off glow attack effect
-            if (!inputLocked && !Input.GetKey(KeyCode.Mouse0))
+            if (!inputLocked && !PlayerInputReader.IsPrimaryHeld())
             {
                 otterAction.TurnOffGlow();
             }
@@ -1091,10 +1092,10 @@ namespace Beavermania.Player
                 if (CurrentStamina < MaxStamina)
                 {
                     bool regenBlockedByCombatInput = !inputLocked
-                        && (Input.GetKey(KeyCode.LeftControl)
-                            || Input.GetKey(KeyCode.Mouse1)
-                            || Input.GetKey(KeyCode.Mouse0)
-                            || Input.GetKey(KeyCode.F));
+                        && (PlayerInputReader.IsRollHeld()
+                            || PlayerInputReader.IsSecondaryHeld()
+                            || PlayerInputReader.IsPrimaryHeld()
+                            || PlayerInputReader.IsDefendKeyHeld());
                     if (!regenBlockedByCombatInput)
                     {
                         StaminaClock -= Time.deltaTime;
@@ -1155,7 +1156,7 @@ namespace Beavermania.Player
             {
             //Jump action
             {
-                if (Input.GetKeyDown(KeyCode.Space) && JumpNum > 0)
+                if (PlayerInputReader.WasJumpPressed() && JumpNum > 0)
                 {
                     Rolling = false;
                     Otter.SetBool("roll", false);
@@ -1172,7 +1173,7 @@ namespace Beavermania.Player
                     JumpNumPreserve = JumpNum;
                 }
                 //Decrease Jump num by 1 on jump action 
-                if (Input.GetKey(KeyCode.Space) || Input.GetKeyUp(KeyCode.Space))
+                if (PlayerInputReader.IsJumpHeld() || PlayerInputReader.WasJumpReleased())
                     JumpNum = JumpNumPreserve;
             }
             }
@@ -1198,16 +1199,16 @@ namespace Beavermania.Player
             {
             //Crouch action - Place Logs
             {
-                if (Input.GetKey(KeyCode.LeftControl)&& FreeLook.m_Lens.FieldOfView<20)
+                if (PlayerInputReader.IsRollHeld() && FreeLook.m_Lens.FieldOfView<20)
                 {
                     FreeLook.m_LookAt = Face;
                 }
 
-                if (Input.GetKey(KeyCode.LeftControl) && grounded == true && Rolling == false && !Input.GetKey(KeyCode.Space))
+                if (PlayerInputReader.IsRollHeld() && grounded == true && Rolling == false && !PlayerInputReader.IsJumpHeld())
                 {
                     if (Load.i == 9)
                         HologramedBridge.SetActive(true);
-                    if (!Input.GetKey(KeyCode.W) || !Input.GetKey(KeyCode.Mouse0))
+                    if (!PlayerInputReader.IsMoveForwardHeld() || !PlayerInputReader.IsPrimaryHeld())
                     {
                         speed = 0;
                         Otter.SetBool("crouch", true);
@@ -1236,7 +1237,7 @@ namespace Beavermania.Player
             }
             //Browse Arsenal
             {
-                if (Input.GetKeyDown(KeyCode.C))
+                if (PlayerInputReader.WasArsenalBrowsePressed())
                 {
                     if (ArsenalCounter==0)
                     {
@@ -1377,7 +1378,7 @@ namespace Beavermania.Player
             }
             //Plant Seed action
             {
-                if (Input.GetKeyDown(KeyCode.R) && NutCount > 0)
+                if (PlayerInputReader.WasNutThrowPressed() && NutCount > 0)
                 {
                     Otter.Play("Crouch");
                     Instantiate(Seed, AttackPoint.position, Quaternion.identity);
@@ -1386,7 +1387,7 @@ namespace Beavermania.Player
             }
             //Eat Apple
             {
-                if (Input.GetKeyDown(KeyCode.T) && Apple > 0)
+                if (PlayerInputReader.WasAppleUsePressed() && Apple > 0)
                 {
                     appleOBJ.SetActive(true);
                     Otter.Play("Consume");
@@ -1403,7 +1404,7 @@ namespace Beavermania.Player
                     }
                     Apple--;
                 }
-                if (Input.GetKeyUp(KeyCode.T))
+                if (PlayerInputReader.WasAppleUseReleased())
                 {
                     appleOBJ.SetActive(false);
                 }
@@ -1413,14 +1414,14 @@ namespace Beavermania.Player
             {
                 if (!inputLocked)
                 {
-                    if (Input.GetKeyDown(KeyCode.Y) && GobletPickup > 0)
+                    if (PlayerInputReader.WasGobletUsePressed() && GobletPickup > 0)
                     {
                         Otter.Play("Consume");
                         Sound.Drink();
                         GobletON();
                     }
 
-                    if (Input.GetKeyUp(KeyCode.Y))
+                    if (PlayerInputReader.WasGobletUseReleased())
                     {
                         gobletOBJ.SetActive(false);
                     }
@@ -1441,7 +1442,7 @@ namespace Beavermania.Player
             {
                 //Melee action
                 {
-                    if (Input.GetKey(KeyCode.Mouse0) && CurrentStamina > 0)
+                    if (PlayerInputReader.IsPrimaryHeld() && CurrentStamina > 0)
                     {
                         if (ArmorEquipped==false && HammerHeld==false)
                         {
@@ -1550,7 +1551,7 @@ namespace Beavermania.Player
                 }
                 //Parry Action
                 {
-                    if (Input.GetKey(KeyCode.F) && CurrentStamina > 0 && !Input.GetKey(KeyCode.Mouse0) && !Input.GetKey(KeyCode.Mouse1))
+                    if (PlayerInputReader.IsDefendKeyHeld() && CurrentStamina > 0 && !PlayerInputReader.IsPrimaryHeld() && !PlayerInputReader.IsSecondaryHeld())
                         ParryON();
                     else
                         ParryOFF();
@@ -1564,15 +1565,15 @@ namespace Beavermania.Player
             if (IsGameplayInputLocked())
                 return;
 
-            if (Input.GetKey(KeyCode.Mouse1))
+            if (PlayerInputReader.IsSecondaryHeld())
             {
                 RotateForward();
             }
-            if (Input.anyKeyDown && !Input.GetKey(KeyCode.Mouse1))
+            if (PlayerInputReader.WasAnyKeyPressedDown() && !PlayerInputReader.IsSecondaryHeld())
             {
                 keepLooking = false;
             }
-            if (bowEquipped==true && Input.GetKeyDown(KeyCode.Mouse1)&&arrowMunition>0 && CurrentStamina>0)
+            if (bowEquipped==true && PlayerInputReader.WasInteractPressed()&&arrowMunition>0 && CurrentStamina>0)
             {
                 arrowMunition--;
             }
@@ -1667,16 +1668,16 @@ namespace Beavermania.Player
             //Stoning action
             if (bowEquipped == false)
             {
-                if (Input.GetKey(KeyCode.Mouse1)
+                if (PlayerInputReader.IsSecondaryHeld()
                     && CurrentStamina > 0
-                    && !Input.GetKey(KeyCode.LeftControl)
+                    && !PlayerInputReader.IsRollHeld()
                     && bowEquipped == false && grounded == true)
                 {
                     Stone.SetActive(true);
                     AimIcon.SetActive(true);
                     Otter.SetBool("aim", true);
                     Otter.Play("Aim");
-                    if (Input.GetKeyDown(KeyCode.Mouse1))
+                    if (PlayerInputReader.WasInteractPressed())
                     {
                         if (XZForward.sqrMagnitude > LookRotationEpsilon)
                         {
@@ -1687,7 +1688,7 @@ namespace Beavermania.Player
                     }
                     keepLooking = true;
                 }
-                if (Input.GetKeyUp(KeyCode.Mouse1) && Stone.active && CurrentStamina > 0)
+                if (PlayerInputReader.WasSecondaryReleased() && Stone.active && CurrentStamina > 0)
                 {
                     Otter.SetBool("slash", false);
                     Otter.Play("Throw");
@@ -1695,7 +1696,7 @@ namespace Beavermania.Player
                     CurrentStamina -= 20;
                     HealthBar.SetStamina(CurrentStamina);
                 }
-                if (!Input.GetKey(KeyCode.Mouse1))
+                if (!PlayerInputReader.IsSecondaryHeld())
                 {
                     Stone.SetActive(false);
                     AimIcon.SetActive(false);
@@ -1704,7 +1705,7 @@ namespace Beavermania.Player
             //Bow action       
             if (bowEquipped == true)
             {
-                if (Input.GetKeyDown(KeyCode.Mouse1) && !Input.GetKeyUp(KeyCode.Mouse1))
+                if (PlayerInputReader.WasInteractPressed() && !PlayerInputReader.WasSecondaryReleased())
                 {
                     if (XZForward.sqrMagnitude > LookRotationEpsilon)
                     {
@@ -1741,7 +1742,7 @@ namespace Beavermania.Player
                         ChangeSpeech = 1f;
                     }
                 }
-                if (arrowReady == true && Input.GetKeyUp(KeyCode.Mouse1) && CurrentStamina > 0)
+                if (arrowReady == true && PlayerInputReader.WasSecondaryReleased() && CurrentStamina > 0)
                 {
                     Sound.ArrowShoot();
                     Vector3 shootDir = cameraRelativeForward.sqrMagnitude > LookRotationEpsilon
@@ -1797,77 +1798,77 @@ namespace Beavermania.Player
             //Basic movement setup
             {
                 //No Crouch = Regular Movement
-                if (!Input.GetKey(KeyCode.LeftControl))
+                if (!PlayerInputReader.IsRollHeld())
                 {
                     HealQue = 3;
-                    if (Input.GetKey(KeyCode.W))
+                    if (PlayerInputReader.IsMoveForwardHeld())
                     {
                         PlayerMove(XZForward);
                     }
-                    if (Input.GetKey(KeyCode.S))
+                    if (PlayerInputReader.IsMoveBackHeld())
                     {
                         PlayerMove(XZBack);
                     }
-                    if (Input.GetKey(KeyCode.D))
+                    if (PlayerInputReader.IsMoveRightHeld())
                     {
                         //Otter.Play("Walk Right");
                         PlayerMove(XZRight);
                     }
-                    if (Input.GetKey(KeyCode.A))
+                    if (PlayerInputReader.IsMoveLeftHeld())
                     {
                         //Otter.Play("Walk Left");
                         PlayerMove(XZLeft);
                     }
-                    if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.D))
+                    if (PlayerInputReader.IsMoveForwardHeld() && PlayerInputReader.IsMoveRightHeld())
                     {
                         PlayerMove(XZForward + XZRight);
                     }
-                    if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.A))
+                    if (PlayerInputReader.IsMoveForwardHeld() && PlayerInputReader.IsMoveLeftHeld())
                     {
                         PlayerMove(XZForward + XZLeft);
                     }
-                    if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.D))
+                    if (PlayerInputReader.IsMoveBackHeld() && PlayerInputReader.IsMoveRightHeld())
                     {
                         PlayerMove(XZBack + XZRight);
                     }
-                    if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.A))
+                    if (PlayerInputReader.IsMoveBackHeld() && PlayerInputReader.IsMoveLeftHeld())
                     {
                         PlayerMove(XZBack + XZLeft);
                     }
                 }
                 //Movement + Crouch = Roll & Evade
-                if (Input.GetKey(KeyCode.LeftControl) && CurrentStamina > 0)
+                if (PlayerInputReader.IsRollHeld() && CurrentStamina > 0)
                 {
                     HealQue = 3;
-                    if (Input.GetKey(KeyCode.W))
+                    if (PlayerInputReader.IsMoveForwardHeld())
                     {
                         PlayerRoll(XZForward);
                     }
-                    if (Input.GetKey(KeyCode.S))
+                    if (PlayerInputReader.IsMoveBackHeld())
                     {
                         PlayerRoll(XZBack);
                     }
-                    if (Input.GetKey(KeyCode.D))
+                    if (PlayerInputReader.IsMoveRightHeld())
                     {
                         PlayerRoll(XZRight);
                     }
-                    if (Input.GetKey(KeyCode.A))
+                    if (PlayerInputReader.IsMoveLeftHeld())
                     {
                         PlayerRoll(XZLeft);
                     }
-                    if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.D))
+                    if (PlayerInputReader.IsMoveForwardHeld() && PlayerInputReader.IsMoveRightHeld())
                     {
                         PlayerRoll(XZForward + XZRight);
                     }
-                    if (Input.GetKey(KeyCode.W) && Input.GetKey(KeyCode.A))
+                    if (PlayerInputReader.IsMoveForwardHeld() && PlayerInputReader.IsMoveLeftHeld())
                     {
                         PlayerRoll(XZForward + XZLeft);
                     }
-                    if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.D))
+                    if (PlayerInputReader.IsMoveBackHeld() && PlayerInputReader.IsMoveRightHeld())
                     {
                         PlayerRoll(XZBack + XZRight);
                     }
-                    if (Input.GetKey(KeyCode.S) && Input.GetKey(KeyCode.A))
+                    if (PlayerInputReader.IsMoveBackHeld() && PlayerInputReader.IsMoveLeftHeld())
                     {
                         PlayerRoll(XZBack + XZLeft);
                     }

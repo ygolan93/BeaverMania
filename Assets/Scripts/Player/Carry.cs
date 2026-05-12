@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Beavermania.Core.Input;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using UnityEngine;
 
@@ -28,7 +29,7 @@ namespace Beavermania.Player.Movement
         {
             if (OBJ.gameObject.CompareTag("Part"))
             {
-                if (i < CarryPoint.Length - 1 && !Input.GetKey(KeyCode.Mouse0))
+                if (i < CarryPoint.Length - 1 && !PlayerInputReader.IsPrimaryHeld())
                 {
                     //Goal.Otter.Play("Crouch");
                     CarryPoint[i].SetActive(true);
@@ -51,7 +52,7 @@ namespace Beavermania.Player.Movement
             {
                 if (i == 9)
                     Goal.LogCount = ("Log count: 9/9. Press LCtrl+Rmouse for bridge construction");
-                if (Input.GetKeyUp(KeyCode.LeftControl) && i > 0)
+                if (PlayerInputReader.WasRollReleased() && i > 0)
                 {
                     i--;
                     Goal.JumpForce += JumpFactor;
@@ -62,7 +63,7 @@ namespace Beavermania.Player.Movement
                     CarryPoint[i].SetActive(false);
                 }
 
-                if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Mouse1) && i == 9)
+                if (PlayerInputReader.IsRollHeld() && PlayerInputReader.WasInteractPressed() && i == 9)
                 {
                     Goal.JumpForce += 9 * JumpFactor;
                     Goal.Otter.speed = 1;

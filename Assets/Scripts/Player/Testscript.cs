@@ -9,11 +9,14 @@ public class Testscript : MonoBehaviour
     const float LookRotationEpsilon = 0.0001f;
     public Rigidbody Player;
     Quaternion rotGoal;
+    Transform cachedMainCameraTransform;
 
     // Start is called before the first frame update
     void Start()
     {
         Player = GetComponent<Rigidbody>();
+        Camera mainCamera = Camera.main;
+        cachedMainCameraTransform = mainCamera != null ? mainCamera.transform : null;
     }
     //Rotate and grant velocity to player in accordance to movement input and camera position
     public void RotatePlayer(Vector3 Target)
@@ -29,10 +32,12 @@ public class Testscript : MonoBehaviour
     void FixedUpdate()
     {
         //Camera direction vectors
-        Vector3 cameraRelativeForward = Camera.main.transform.TransformDirection(Vector3.forward);
-        Vector3 cameraRelativeBack = Camera.main.transform.TransformDirection(Vector3.back);
-        Vector3 cameraRelativeRight = Camera.main.transform.TransformDirection(Vector3.right);
-        Vector3 cameraRelativeLeft = Camera.main.transform.TransformDirection(Vector3.left);
+        if (cachedMainCameraTransform == null)
+            cachedMainCameraTransform = Camera.main.transform;
+        Vector3 cameraRelativeForward = cachedMainCameraTransform.TransformDirection(Vector3.forward);
+        Vector3 cameraRelativeBack = cachedMainCameraTransform.TransformDirection(Vector3.back);
+        Vector3 cameraRelativeRight = cachedMainCameraTransform.TransformDirection(Vector3.right);
+        Vector3 cameraRelativeLeft = cachedMainCameraTransform.TransformDirection(Vector3.left);
 
 
         //Camera vectors on horizontal plane 

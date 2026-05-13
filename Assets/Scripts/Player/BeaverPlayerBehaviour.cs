@@ -1708,7 +1708,7 @@ namespace Beavermania.Player
                 {
                     Otter.SetBool("slash", false);
                     Otter.Play("Throw");
-                    Instantiate(Ball, AttackPoint.position + new Vector3(0, 0.6f, 0), Spine.rotation);
+                    Projectile.Spawn(Ball, AttackPoint.position + new Vector3(0, 0.6f, 0), Spine.rotation);
                     CurrentStamina -= 20;
                     HealthBar.SetStamina(CurrentStamina);
                 }
@@ -1769,7 +1769,7 @@ namespace Beavermania.Player
                         Vector3 flatF = new Vector3(transform.forward.x, 0, transform.forward.z);
                         shootDir = flatF.sqrMagnitude > LookRotationEpsilon ? flatF.normalized : Vector3.forward;
                     }
-                    Instantiate(Arrow, Spine.position + new Vector3(0, 1.4f * shootDir.y, 1.4f * shootDir.z), Quaternion.LookRotation(shootDir) * Quaternion.Euler(90, 0, 0));
+                    Projectile.Spawn(Arrow, Spine.position + new Vector3(0, 1.4f * shootDir.y, 1.4f * shootDir.z), Quaternion.LookRotation(shootDir) * Quaternion.Euler(90, 0, 0));
                     CurrentStamina -= 30;
                     HealthBar.SetStamina(CurrentStamina);
                     arrowModel.SetActive(false);

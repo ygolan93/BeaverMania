@@ -222,12 +222,7 @@ namespace Beavermania.Player.Combat
         {
             clock -= Time.deltaTime;
             if (clock <= 0)
-            {
-                if (isArrow == true)
-                    Instantiate(arrowPickup, transform.position, Quaternion.identity);
-
-                CompleteProjectile();
-            }
+                CompleteProjectile(isArrow);
         }
 
 
@@ -247,10 +242,13 @@ namespace Beavermania.Player.Combat
             Sound.PlayOneShot(Sound.clip);
         }
 
-        void CompleteProjectile()
+        void CompleteProjectile(bool spawnArrowPickup = false)
         {
             if (released)
                 return;
+
+            if (spawnArrowPickup)
+                SpawnArrowPickup();
 
             if (pool != null && !overflowInstance)
             {
@@ -260,6 +258,12 @@ namespace Beavermania.Player.Combat
 
             released = true;
             Destroy(gameObject);
+        }
+
+        void SpawnArrowPickup()
+        {
+            if (arrowPickup != null)
+                Instantiate(arrowPickup, transform.position, Quaternion.identity);
         }
 
         private void OnCollisionEnter(Collision OBJ)
@@ -338,7 +342,7 @@ namespace Beavermania.Player.Combat
             }
 
             if (hit && isFireBall == false)
-                CompleteProjectile();
+                CompleteProjectile(isArrow);
         }
     }
 }

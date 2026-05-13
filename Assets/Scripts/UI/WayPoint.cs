@@ -15,10 +15,12 @@ namespace Beavermania.UI.Objectives
         public Transform[] Locations;
         public Transform Arrow;
         public int i;
+        Camera cachedMainCamera;
 
         // Start is called before the first frame update
         void Start()
         {
+            cachedMainCamera = Camera.main;
             Arrow.gameObject.SetActive(false);
             for (int index = 0; index < Locations.Length; index++)
             {
@@ -64,7 +66,9 @@ namespace Beavermania.UI.Objectives
                 float maxX = Screen.width - minX;
                 float minY = Mark.GetPixelAdjustedRect().height / 2;
                 float maxY = Screen.height - minY;
-                Vector2 pos = Camera.main.WorldToScreenPoint(target.position + new Vector3(0, 2, 0));
+                if (cachedMainCamera == null)
+                    cachedMainCamera = Camera.main;
+                Vector2 pos = cachedMainCamera.WorldToScreenPoint(target.position + new Vector3(0, 2, 0));
 
                 if (Vector3.Dot((target.position - transform.position), transform.forward) < 0)
                 {

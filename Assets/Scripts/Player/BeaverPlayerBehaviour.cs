@@ -180,6 +180,8 @@ namespace Beavermania.Player
         [SerializeField] PlayerCheckpointRespawn checkpointRespawn;
         public float ChangeSpeech = 1F;
         Vector3 stableCameraForwardXZ = Vector3.forward;
+        Camera cachedMainCamera;
+        Transform cachedMainCameraTransform;
         const float LookRotationEpsilon = 0.0001f;
 
         public void OnCollisionEnter(Collision OBJ)
@@ -972,6 +974,7 @@ namespace Beavermania.Player
         }
         public void Start()
         {
+            CacheMainCamera();
             BindHudState();
             arrowModel.SetActive(false);
             bowAim = new Vector3(-0.33f, 20f, -0.3f);
@@ -1584,9 +1587,17 @@ namespace Beavermania.Player
             }
         }
 
+        void CacheMainCamera()
+        {
+            cachedMainCamera = Camera.main;
+            cachedMainCameraTransform = cachedMainCamera != null ? cachedMainCamera.transform : null;
+        }
+
         Transform ResolveMainCameraTransform()
         {
-            return Camera.main != null ? Camera.main.transform : transform;
+            if (cachedMainCamera == null)
+                CacheMainCamera();
+            return cachedMainCameraTransform != null ? cachedMainCameraTransform : transform;
         }
 
         void ReconcileHorizontalCameraAxes(ref Vector3 xzForward, ref Vector3 xzBack, ref Vector3 xzRight, ref Vector3 xzLeft)

@@ -22,10 +22,12 @@ namespace Beavermania.Player.Combat
         [SerializeField] GameObject Explosion;
         [SerializeField] int Damage;
         [SerializeField] GameObject arrowPickup;
+        Camera cachedMainCamera;
         // Start is called before the first frame update
         void Start()
         {
-            Vector3 launchDirection = Camera.main.transform.TransformDirection(Vector3.forward);
+            cachedMainCamera = Camera.main;
+            Vector3 launchDirection = cachedMainCamera.transform.TransformDirection(Vector3.forward);
             Physics.IgnoreLayerCollision(1, 3);
             Player = GameObject.FindGameObjectWithTag("Player").GetComponent<BeaverPlayer>();
             Ball.velocity = launchDirection * forwardVel + Vector3.up * upwardVel;

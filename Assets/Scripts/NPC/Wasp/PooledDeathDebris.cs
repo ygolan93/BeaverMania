@@ -17,6 +17,7 @@ namespace Beavermania.NPC
         Rigidbody[] rigidbodies;
         Collider[] colliders;
         EffectObject[] lifetimeScripts;
+        global::Destroy[] selfDestroyScripts;
         float[] lifetimeDurations;
         Vector3 defaultScale;
         float safeLifetime;
@@ -101,6 +102,7 @@ namespace Beavermania.NPC
             rigidbodies = GetComponentsInChildren<Rigidbody>(true);
             colliders = GetComponentsInChildren<Collider>(true);
             lifetimeScripts = GetComponentsInChildren<EffectObject>(true);
+            selfDestroyScripts = GetComponentsInChildren<global::Destroy>(true);
             lifetimeDurations = new float[lifetimeScripts.Length];
             safeLifetime = DefaultLifetime;
 
@@ -110,6 +112,8 @@ namespace Beavermania.NPC
                 safeLifetime = Mathf.Max(safeLifetime, lifetimeDurations[i]);
                 lifetimeScripts[i].enabled = false;
             }
+
+            DisableSelfDestroyScripts();
         }
 
         void Spawn(Vector3 position, Quaternion rotation, Vector3 scale, bool isOverflowInstance)
@@ -139,6 +143,14 @@ namespace Beavermania.NPC
                 lifetimeScripts[i].time = lifetimeDurations[i];
                 lifetimeScripts[i].enabled = false;
             }
+
+            DisableSelfDestroyScripts();
+        }
+
+        void DisableSelfDestroyScripts()
+        {
+            for (var i = 0; i < selfDestroyScripts.Length; i++)
+                selfDestroyScripts[i].enabled = false;
         }
 
         IEnumerator ReturnAfterLifetime(float lifetime)

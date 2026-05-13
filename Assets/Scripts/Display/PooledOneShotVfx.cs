@@ -18,6 +18,7 @@ namespace Beavermania.Display
         AudioSource[] audioSources;
         float[] defaultVolumes;
         float[] defaultPitches;
+        bool[] defaultPlayOnAwake;
         float cachedLifetime;
         Coroutine returnRoutine;
         bool released;
@@ -137,14 +138,16 @@ namespace Beavermania.Display
             audioSources = GetComponentsInChildren<AudioSource>(true);
             defaultVolumes = new float[audioSources.Length];
             defaultPitches = new float[audioSources.Length];
+            defaultPlayOnAwake = new bool[audioSources.Length];
 
             for (var i = 0; i < audioSources.Length; i++)
             {
                 defaultVolumes[i] = audioSources[i].volume;
                 defaultPitches[i] = audioSources[i].pitch;
+                defaultPlayOnAwake[i] = audioSources[i].playOnAwake;
             }
 
-            cachedLifetime = Mathf.Max(GetLifetime(particleSystems), GetLifetime(audioSources));
+            cachedLifetime = Mathf.Max(GetLifetime(particleSystems), GetLifetime(audioSources, defaultPlayOnAwake));
 
             var rootParticles = GetComponent<ParticleSystem>();
             if (rootParticles != null)
@@ -161,7 +164,7 @@ namespace Beavermania.Display
 
             Replay(particleSystems);
             ResetAudioSources();
-            Replay(audioSources);
+            Replay(audioSources, defaultPlayOnAwake);
 
             returnRoutine = StartCoroutine(ReturnAfterLifetime(cachedLifetime));
         }
@@ -216,6 +219,7 @@ namespace Beavermania.Display
                 audioSources[i].Stop();
                 audioSources[i].volume = defaultVolumes[i];
                 audioSources[i].pitch = defaultPitches[i];
+                audioSources[i].playOnAwake = defaultPlayOnAwake[i];
             }
         }
 
@@ -233,7 +237,17 @@ namespace Beavermania.Display
             for (var i = 0; i < sources.Length; i++)
             {
                 sources[i].Stop();
-                if (sources[i].isActiveAndEnabled && sources[i].clip != null)
+                if (sources[i].playOnAwake && sources[i].isActiveAndEnabled && sources[i].clip != null)
+                    sources[i].Play();
+            }
+        }
+
+        static void Replay(AudioSource[] sources, bool[] playOnAwake)
+        {
+            for (var i = 0; i < sources.Length; i++)
+            {
+                sources[i].Stop();
+                if (playOnAwake[i] && sources[i].isActiveAndEnabled && sources[i].clip != null)
                     sources[i].Play();
             }
         }
@@ -258,7 +272,21 @@ namespace Beavermania.Display
             var lifetime = 0f;
             for (var i = 0; i < sources.Length; i++)
             {
-                if (sources[i].loop || sources[i].clip == null)
+                if (!sources[i].playOnAwake || sources[i].loop || sources[i].clip == null)
+                    continue;
+
+                lifetime = Mathf.Max(lifetime, sources[i].clip.length / Mathf.Max(Mathf.Abs(sources[i].pitch), 0.01f));
+            }
+
+            return lifetime;
+        }
+
+        static float GetLifetime(AudioSource[] sources, bool[] playOnAwake)
+        {
+            var lifetime = 0f;
+            for (var i = 0; i < sources.Length; i++)
+            {
+                if (!playOnAwake[i] || sources[i].loop || sources[i].clip == null)
                     continue;
 
                 lifetime = Mathf.Max(lifetime, sources[i].clip.length / Mathf.Max(Mathf.Abs(sources[i].pitch), 0.01f));

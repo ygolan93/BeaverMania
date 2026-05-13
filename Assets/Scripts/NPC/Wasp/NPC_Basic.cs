@@ -11,12 +11,14 @@ namespace Beavermania.NPC
     public class NPC_Basic : MonoBehaviour
     {
         const float LookRotationEpsilon = 0.0001f;
+        const float AnotherWaspLookupCooldown = 1.0f;
         [Header("Core References")]
         public Rigidbody NPC;
         [SerializeField] Animator Wasp;
         Collider npcCollider;
         GameObject AnotherWasp;
         Collider AnotherWaspCollider;
+        float AnotherWaspLookupTimer;
 
         [Header("Player References")]
         GameObject PlayerTarget;
@@ -86,7 +88,7 @@ namespace Beavermania.NPC
         // Update is called once per frame
         public void FixedUpdate()
         {
-            AnotherWasp = GameObject.FindGameObjectWithTag("NPC");
+            AnotherWaspLookupTimer -= Time.deltaTime;
             Vector3 Distance = PlayerTarget.transform.position - transform.position;
             PlayerDistance = Distance.magnitude;
             ChangeNav -= Time.deltaTime;
@@ -123,11 +125,11 @@ namespace Beavermania.NPC
                         {
                             BuzzSource.SetActive(true);
                             ChargeClock = 0.7f;
-                            if (AnotherWaspCollider == null || AnotherWaspCollider.gameObject != AnotherWasp)
+                            RefreshAnotherWaspCollider();
+                            if (AnotherWaspCollider != null && npcCollider != null)
                             {
-                                AnotherWaspCollider = AnotherWasp.GetComponent<Collider>();
+                                Physics.IgnoreCollision(AnotherWaspCollider, npcCollider);
                             }
-                            Physics.IgnoreCollision(AnotherWaspCollider, npcCollider);
                             NPC.velocity = (Distance.normalized * 50f);
                             Wasp.SetBool("Sting", true);
                             ChangeNav = 0;
@@ -173,6 +175,42 @@ namespace Beavermania.NPC
             if (CurrentHealth <= 0)
             {
                 Death();
+            }
+        }
+
+        private void RefreshAnotherWaspCollider()
+        {
+            if (AnotherWaspCollider != null && AnotherWasp != null && AnotherWasp != gameObject && AnotherWaspCollider.gameObject == AnotherWasp)
+            {
+                return;
+            }
+
+            if (AnotherWaspLookupTimer > 0)
+            {
+                return;
+            }
+
+            AnotherWaspLookupTimer = AnotherWaspLookupCooldown;
+            AnotherWasp = null;
+            AnotherWaspCollider = null;
+
+            GameObject[] npcs = GameObject.FindGameObjectsWithTag("NPC");
+            foreach (GameObject npc in npcs)
+            {
+                if (npc == null || npc == gameObject)
+                {
+                    continue;
+                }
+
+                Collider collider = npc.GetComponent<Collider>();
+                if (collider == null)
+                {
+                    continue;
+                }
+
+                AnotherWasp = npc;
+                AnotherWaspCollider = collider;
+                return;
             }
         }
 

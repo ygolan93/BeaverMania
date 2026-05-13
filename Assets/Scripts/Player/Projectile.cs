@@ -61,8 +61,11 @@ namespace Beavermania.Player.Combat
         {
             if (OBJ.gameObject.CompareTag("NPC"))
             {
-                OBJ.gameObject.GetComponent<NPC_Basic>().TakeDamage(Damage);
-                OBJ.gameObject.GetComponent<NPC_Basic>().combo += OBJ.gameObject.GetComponent<NPC_Basic>().hit2stun;
+                if (OBJ.gameObject.TryGetComponent(out NPC_Basic npc))
+                {
+                    npc.TakeDamage(Damage);
+                    npc.combo += npc.hit2stun;
+                }
                 if (isFireBall == true)
                 {
                     Explode();
@@ -76,8 +79,11 @@ namespace Beavermania.Player.Combat
             }
             if (OBJ.gameObject.CompareTag("Scorpion"))
             {
-                OBJ.gameObject.GetComponent<ScorpionScript>().TakeDamage(Damage);
-                OBJ.gameObject.GetComponent<ScorpionScript>().combo += 3;
+                if (OBJ.gameObject.TryGetComponent(out ScorpionScript scorpion))
+                {
+                    scorpion.TakeDamage(Damage);
+                    scorpion.combo += 3;
+                }
                 if (isFireBall == true)
                 {
                     Explode();
@@ -89,7 +95,10 @@ namespace Beavermania.Player.Combat
             }
             if (OBJ.gameObject.CompareTag("Hive"))
             {
-                OBJ.gameObject.GetComponent<Static_Hive>().TakeDamage(Damage);
+                if (OBJ.gameObject.TryGetComponent(out Static_Hive hive))
+                {
+                    hive.TakeDamage(Damage);
+                }
                 if (isFireBall == true)
                 {
                     Explode();

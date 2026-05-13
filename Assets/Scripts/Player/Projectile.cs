@@ -47,7 +47,7 @@ namespace Beavermania.Player.Combat
 
         public void Explode()
         {
-            PooledOneShotVfx.Spawn(Explosion, transform.position, transform.rotation, Explosion.transform.localScale + Vector3.one);
+            PooledOneShotVfx.Spawn(Explosion, transform.position, transform.rotation);
             Destroy(transform.gameObject);
         }
 

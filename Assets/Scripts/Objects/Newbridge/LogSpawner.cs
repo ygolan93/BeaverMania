@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Beavermania.Display;
 using Beavermania.Core.Input;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 
@@ -42,7 +43,7 @@ namespace Beavermania.Objects
 
         public void DestroyTree(Transform OBJ)
         {
-            Instantiate(TreeDeath, new Vector3(SpawnPoint.position.x, OBJ.transform.position.y, SpawnPoint.position.z), Quaternion.identity);
+            PooledOneShotVfx.Spawn(TreeDeath, new Vector3(SpawnPoint.position.x, OBJ.transform.position.y, SpawnPoint.position.z), Quaternion.identity);
             var counter = 0;
             foreach (var item in Prefab)
             {

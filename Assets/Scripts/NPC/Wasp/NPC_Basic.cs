@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Beavermania.Core.Input;
+using Beavermania.Display;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using UnityEngine;
 
@@ -218,7 +219,7 @@ namespace Beavermania.NPC
         {
             PlayerHealth.Plattering = ("HA! gotcha");
             PlayerHealth.ChangeSpeech = 1;
-            Instantiate(Explosion, transform.position + new Vector3(0, 1, 0), transform.rotation);
+            PooledOneShotVfx.Spawn(Explosion, transform.position + new Vector3(0, 1, 0), transform.rotation);
             Instantiate(Body, transform.position + new Vector3(0, 1, 0), transform.rotation);
             Instantiate(Head, transform.position + new Vector3(0, 1, 0), transform.rotation);
             Instantiate(Wing, transform.position + new Vector3(0, 1, 0), transform.rotation);

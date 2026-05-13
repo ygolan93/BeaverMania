@@ -8,10 +8,17 @@ namespace Beavermania.Display
 {
     public sealed class PooledOneShotVfx : MonoBehaviour
     {
+        const int DefaultPoolCapacity = 8;
+        const int MaxActiveInstances = 64;
+
         static readonly Dictionary<GameObject, ObjectPool<PooledOneShotVfx>> Pools = new Dictionary<GameObject, ObjectPool<PooledOneShotVfx>>();
 
         ObjectPool<PooledOneShotVfx> pool;
         ParticleSystem[] particleSystems;
+        AudioSource[] audioSources;
+        float[] defaultVolumes;
+        float[] defaultPitches;
+        bool[] defaultPlayOnAwake;
         float cachedLifetime;
         Coroutine returnRoutine;
         bool released;
@@ -28,6 +35,9 @@ namespace Beavermania.Display
                 Pools.Add(prefab, pool);
             }
 
+            if (pool.CountActive >= MaxActiveInstances)
+                return SpawnOverflow(prefab, position, rotation, prefab.transform.localScale);
+
             var vfx = pool.Get();
             vfx.Spawn(position, rotation, prefab.transform.localScale);
             return vfx.gameObject;
@@ -43,6 +53,9 @@ namespace Beavermania.Display
                 pool = CreatePool(prefab);
                 Pools.Add(prefab, pool);
             }
+
+            if (pool.CountActive >= MaxActiveInstances)
+                return SpawnOverflow(prefab, position, rotation, scale);
 
             var vfx = pool.Get();
             vfx.Spawn(position, rotation, scale);
@@ -69,9 +82,29 @@ namespace Beavermania.Display
                     vfx.gameObject.SetActive(false);
                 },
                 vfx => Destroy(vfx.gameObject),
-                true);
+                true,
+                DefaultPoolCapacity,
+                MaxActiveInstances);
 
             return pool;
+        }
+
+        static GameObject SpawnOverflow(GameObject prefab, Vector3 position, Quaternion rotation, Vector3 scale)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            var instance = Instantiate(prefab, position, rotation);
+            instance.transform.localScale = scale;
+            var particleSystems = instance.GetComponentsInChildren<ParticleSystem>(true);
+            var audioSources = instance.GetComponentsInChildren<AudioSource>(true);
+            var lifetime = Mathf.Max(GetLifetime(particleSystems), GetLifetime(audioSources));
+
+            Replay(particleSystems);
+            Replay(audioSources);
+            Destroy(instance, lifetime);
+            return instance;
+#else
+            return null;
+#endif
         }
 
         static PooledOneShotVfx CreateInstance(GameObject prefab, ObjectPool<PooledOneShotVfx> pool)
@@ -102,7 +135,19 @@ namespace Beavermania.Display
         {
             pool = sourcePool;
             particleSystems = GetComponentsInChildren<ParticleSystem>(true);
-            cachedLifetime = GetLifetime(particleSystems);
+            audioSources = GetComponentsInChildren<AudioSource>(true);
+            defaultVolumes = new float[audioSources.Length];
+            defaultPitches = new float[audioSources.Length];
+            defaultPlayOnAwake = new bool[audioSources.Length];
+
+            for (var i = 0; i < audioSources.Length; i++)
+            {
+                defaultVolumes[i] = audioSources[i].volume;
+                defaultPitches[i] = audioSources[i].pitch;
+                defaultPlayOnAwake[i] = audioSources[i].playOnAwake;
+            }
+
+            cachedLifetime = Mathf.Max(GetLifetime(particleSystems), GetLifetime(audioSources, defaultPlayOnAwake));
 
             var rootParticles = GetComponent<ParticleSystem>();
             if (rootParticles != null)
@@ -117,22 +162,23 @@ namespace Beavermania.Display
             transform.SetPositionAndRotation(position, rotation);
             transform.localScale = scale;
 
-            for (var i = 0; i < particleSystems.Length; i++)
-                particleSystems[i].Play(true);
+            Replay(particleSystems);
+            ResetAudioSources();
+            Replay(audioSources, defaultPlayOnAwake);
 
-            if (cachedLifetime > 0)
-                returnRoutine = StartCoroutine(ReturnAfterLifetime(cachedLifetime));
+            returnRoutine = StartCoroutine(ReturnAfterLifetime(cachedLifetime));
         }
 
         void OnParticleSystemStopped()
         {
-            if (!suppressStopCallback)
+            if (!suppressStopCallback && returnRoutine == null)
                 Release();
         }
 
         IEnumerator ReturnAfterLifetime(float lifetime)
         {
             yield return new WaitForSeconds(lifetime);
+            returnRoutine = null;
             Release();
         }
 
@@ -158,7 +204,52 @@ namespace Beavermania.Display
             suppressStopCallback = true;
             for (var i = 0; i < particleSystems.Length; i++)
                 particleSystems[i].Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+            ResetAudioSources();
             suppressStopCallback = false;
+        }
+
+        void ResetAudioSources()
+        {
+            if (audioSources == null)
+                return;
+
+            for (var i = 0; i < audioSources.Length; i++)
+            {
+                audioSources[i].Stop();
+                audioSources[i].volume = defaultVolumes[i];
+                audioSources[i].pitch = defaultPitches[i];
+                audioSources[i].playOnAwake = defaultPlayOnAwake[i];
+            }
+        }
+
+        static void Replay(ParticleSystem[] systems)
+        {
+            for (var i = 0; i < systems.Length; i++)
+            {
+                systems[i].Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                systems[i].Play(true);
+            }
+        }
+
+        static void Replay(AudioSource[] sources)
+        {
+            for (var i = 0; i < sources.Length; i++)
+            {
+                sources[i].Stop();
+                if (sources[i].playOnAwake && sources[i].isActiveAndEnabled && sources[i].clip != null)
+                    sources[i].Play();
+            }
+        }
+
+        static void Replay(AudioSource[] sources, bool[] playOnAwake)
+        {
+            for (var i = 0; i < sources.Length; i++)
+            {
+                sources[i].Stop();
+                if (playOnAwake[i] && sources[i].isActiveAndEnabled && sources[i].clip != null)
+                    sources[i].Play();
+            }
         }
 
         static float GetLifetime(ParticleSystem[] systems)
@@ -171,6 +262,34 @@ namespace Beavermania.Display
                     continue;
 
                 lifetime = Mathf.Max(lifetime, Max(main.startDelay) + main.duration + Max(main.startLifetime));
+            }
+
+            return lifetime;
+        }
+
+        static float GetLifetime(AudioSource[] sources)
+        {
+            var lifetime = 0f;
+            for (var i = 0; i < sources.Length; i++)
+            {
+                if (!sources[i].playOnAwake || sources[i].loop || sources[i].clip == null)
+                    continue;
+
+                lifetime = Mathf.Max(lifetime, sources[i].clip.length / Mathf.Max(Mathf.Abs(sources[i].pitch), 0.01f));
+            }
+
+            return lifetime;
+        }
+
+        static float GetLifetime(AudioSource[] sources, bool[] playOnAwake)
+        {
+            var lifetime = 0f;
+            for (var i = 0; i < sources.Length; i++)
+            {
+                if (!playOnAwake[i] || sources[i].loop || sources[i].clip == null)
+                    continue;
+
+                lifetime = Mathf.Max(lifetime, sources[i].clip.length / Mathf.Max(Mathf.Abs(sources[i].pitch), 0.01f));
             }
 
             return lifetime;

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Beavermania.NPC;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -76,6 +77,8 @@ namespace Beavermania.Display
         static PooledOneShotVfx CreateInstance(GameObject prefab, ObjectPool<PooledOneShotVfx> pool)
         {
             var instance = Instantiate(prefab);
+            DisableSelfDestroyComponents(instance);
+
             var vfx = instance.GetComponent<PooledOneShotVfx>();
             if (vfx == null)
                 vfx = instance.AddComponent<PooledOneShotVfx>();
@@ -83,6 +86,16 @@ namespace Beavermania.Display
             vfx.Bind(pool);
             instance.SetActive(false);
             return vfx;
+        }
+
+        static void DisableSelfDestroyComponents(GameObject instance)
+        {
+            var effectObjects = instance.GetComponentsInChildren<EffectObject>(true);
+            for (var i = 0; i < effectObjects.Length; i++)
+            {
+                effectObjects[i].enabled = false;
+                Destroy(effectObjects[i]);
+            }
         }
 
         void Bind(ObjectPool<PooledOneShotVfx> sourcePool)

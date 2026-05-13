@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Beavermania.Display;
 using Beavermania.NPC;
 using Beavermania.Objects;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
@@ -46,8 +47,7 @@ namespace Beavermania.Player.Combat
 
         public void Explode()
         {
-            var explode = Instantiate(Explosion, transform.position, transform.rotation);
-            explode.transform.localScale += new Vector3(1, 1, 1);
+            PooledOneShotVfx.Spawn(Explosion, transform.position, transform.rotation, Explosion.transform.localScale + Vector3.one);
             Destroy(transform.gameObject);
         }
 

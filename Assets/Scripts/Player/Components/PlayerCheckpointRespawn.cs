@@ -22,7 +22,7 @@ public class PlayerCheckpointRespawn : MonoBehaviour
         player.HealthBar.SetHealth(player.MaxHealth);
         player.CurrentHealth = player.MaxHealth;
         player.transform.position = player.GM.lastCheckPointPos;
-        Instantiate(player.CheckpointPopUpEffect, player.transform.position, Quaternion.identity);
+        player.SpawnCheckpointPopUpEffect(player.transform.position);
         player.Lives--;
     }
 }

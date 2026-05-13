@@ -188,13 +188,13 @@ namespace Beavermania.Player
             {
                 Otter.Play("Crouch");
                 Sound.PickItem();
-                Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+                SpawnPickUpEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
                 Destroy(OBJ.gameObject);
             }
             if ( OBJ.gameObject.CompareTag("Seed") || OBJ.gameObject.CompareTag("Apple") || OBJ.gameObject.CompareTag("GobletKey"))
             {
                 Otter.Play("Crouch");
-                Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+                SpawnPickUpEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
                 Destroy(OBJ.gameObject);
 
                 if (OBJ.gameObject.CompareTag("Seed"))
@@ -211,7 +211,7 @@ namespace Beavermania.Player
                 {
                     Sound.PickUp2();
                     GobletPickup++;
-                    Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+                    SpawnPickUpEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
                     Destroy(OBJ.gameObject);
                 }
 
@@ -230,7 +230,7 @@ namespace Beavermania.Player
             }
             if (OBJ.gameObject.CompareTag("Coin"))
             {
-                Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+                SpawnPickUpEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
                 Sound.Coin();
             }
             if (arrowMunition<Arrows.Length && bowEquipped==true)
@@ -240,7 +240,7 @@ namespace Beavermania.Player
                     Otter.Play("Crouch");
                     Sound.PickUp2();
                     arrowMunition++;
-                    Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+                    SpawnPickUpEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
                     if (bowEquipped == true)
                     {
                         CountArrows();
@@ -251,7 +251,7 @@ namespace Beavermania.Player
                 {
                     Otter.Play("Crouch");
                     Sound.PickUp2();
-                    Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+                    SpawnPickUpEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
                     if (arrowMunition + 10 < Arrows.Length)
                     {
                         arrowMunition += 10;
@@ -293,7 +293,7 @@ namespace Beavermania.Player
                 Arsenal.Add("Hammers");
                 ArsenalCounter++;
                 Sound.PickItem();
-                Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+                SpawnPickUpEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
                 Destroy(OBJ.gameObject);
             }
             if (OBJ.gameObject.CompareTag("Bow"))
@@ -306,7 +306,7 @@ namespace Beavermania.Player
                 Sound.PickItem();
                 arrowMunition = 5;
                 CountArrows();
-                Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+                SpawnPickUpEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
                 Destroy(OBJ.gameObject);
             }
             if (OBJ.gameObject.CompareTag("Armor"))
@@ -317,7 +317,7 @@ namespace Beavermania.Player
                 Arsenal.Add("ArmorSet");
                 ArsenalCounter++;
                 Sound.PickItem();
-                Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+                SpawnPickUpEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
                 Destroy(OBJ.gameObject);
             }
             if (OBJ.gameObject.CompareTag("Honey") && Honeypicked == false)
@@ -325,7 +325,7 @@ namespace Beavermania.Player
                 Otter.Play("Crouch");
                 HoneyON();
                 Sound.PickItem();
-                Instantiate(PickUpEffect, OBJ.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+                SpawnPickUpEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
                 Destroy(OBJ.gameObject);
             }
             if (OBJ.gameObject.CompareTag("Gold") && GoldPicked == false)
@@ -351,7 +351,7 @@ namespace Beavermania.Player
                 if (Lives > 0)
                 {
                     transform.position = GM.lastCheckPointPos + new Vector3(1, 1, 1);
-                    Instantiate(PopUpEffect, transform.position, Quaternion.identity);
+                    SpawnPopUpEffect(transform.position);
                     Lives--;
                 }
                 if (Lives == 0)
@@ -689,7 +689,11 @@ namespace Beavermania.Player
                 i++;
             }
         }
-        public GameObject CheckpointPopUpEffect => PopUpEffect;
+        public void SpawnCheckpointPopUpEffect(Vector3 position) => SpawnPopUpEffect(position);
+
+        void SpawnPickUpEffect(Vector3 position) => PooledOneShotVfx.Spawn(PickUpEffect, position, Quaternion.identity);
+
+        void SpawnPopUpEffect(Vector3 position) => PooledOneShotVfx.Spawn(PopUpEffect, position, Quaternion.identity);
 
         public void ShowCursor()
         {
@@ -973,7 +977,7 @@ namespace Beavermania.Player
             bowAim = new Vector3(-0.33f, 20f, -0.3f);
             if (CamForTraders != null)
                 CamForTraders.enabled = false;
-            Instantiate(PopUpEffect, Root.position, Quaternion.identity);
+            SpawnPopUpEffect(Root.position);
             HideCursor();
             AimIcon.SetActive(false);
             MunitionDisplay.SetActive(false);

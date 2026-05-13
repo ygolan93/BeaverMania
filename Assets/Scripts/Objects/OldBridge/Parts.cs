@@ -11,7 +11,7 @@ namespace Beavermania.Objects
         // Start is called before the first frame update
         public void OnCollisionEnter(Collision collision)
         {
-            if (collision.gameObject.tag == "Part")
+            if (collision.gameObject.CompareTag("Part"))
             {
                 //Instantiate(transform, transform.position + transform.forward * 0.5f, transform.rotation);
                  collision.transform.position = Backwards.position + new Vector3 (0,1,0);

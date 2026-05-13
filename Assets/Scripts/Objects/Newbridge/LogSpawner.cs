@@ -21,7 +21,7 @@ namespace Beavermania.Objects
 
         public void OnTriggerStay(Collider OBJ)
         {
-            if (OBJ.gameObject.tag=="Player")
+            if (OBJ.gameObject.CompareTag("Player"))
             {
                var isGrounded= OBJ.gameObject.GetComponent<BeaverPlayer>().grounded;
                 if (PlayerInputReader.IsPrimaryHeld() && isGrounded == false)
@@ -32,7 +32,7 @@ namespace Beavermania.Objects
         }
         public void OnCollisionStay(Collision OBJ)
         {
-            if (OBJ.gameObject.tag == "Player")
+            if (OBJ.gameObject.CompareTag("Player"))
             {
                 if (PlayerInputReader.IsPrimaryHeld())
                 {

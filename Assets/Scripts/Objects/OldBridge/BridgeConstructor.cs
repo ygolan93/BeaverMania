@@ -12,7 +12,7 @@ namespace Beavermania.Objects
         public int i = 0;
         public void OnCollisionEnter(Collision collision)
         {
-            if(collision.gameObject.tag == "Part")
+            if(collision.gameObject.CompareTag("Part"))
             {
                 if (i < BridgeParts.Length)
                     BridgeParts[i].SetActive(true);

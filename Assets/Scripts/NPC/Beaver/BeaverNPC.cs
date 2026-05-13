@@ -168,7 +168,8 @@ namespace Beavermania.NPC
             }
             for (int i = 0; i < beavers.Length; i++)
             {
-                if (beavers[i].gameObject.GetComponent<BeaverNPC>().currentPoint != currentPoint)
+                var beaver = beavers[i].gameObject.GetComponent<BeaverNPC>();
+                if (beaver.currentPoint != currentPoint)
                 {
                     transform.gameObject.layer = LayerMask.NameToLayer("IgnoreOtherBeavers".ToString());
                 }

@@ -17,7 +17,7 @@ namespace Beavermania.Objects
    
         private void OnCollisionEnter(Collision OBJ)
         {
-            if (OBJ.gameObject.tag == "Strike")
+            if (OBJ.gameObject.CompareTag("Strike"))
             {
                 Destroy(gameObject);
             }
@@ -26,7 +26,7 @@ namespace Beavermania.Objects
         [System.Obsolete]
         private void OnTriggerStay(Collider OBJ)
         {
-            if (OBJ.gameObject.tag == "Player")
+            if (OBJ.gameObject.CompareTag("Player"))
             {
                 var Player = OBJ.GetComponent<BeaverPlayer>();
                 var PlayerLoad = OBJ.GetComponent<Carry>();

@@ -11,7 +11,7 @@ namespace Beavermania.Objects
         public GameObject FirstPart;
         void OnCollisionEnter(Collision collision)
         {
-            if (collision.gameObject.tag == "Player")
+            if (collision.gameObject.CompareTag("Player"))
             {
                 Debug.Log("Part added to bridge: " + collision.gameObject.name);
                 MergeColliders(FirstPart, collision.gameObject);

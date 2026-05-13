@@ -38,7 +38,7 @@ namespace Beavermania.Objects
 
         private void OnTriggerStay(Collider OBJ)
         {
-            if (OBJ.gameObject.tag == "Player")
+            if (OBJ.gameObject.CompareTag("Player"))
             {
                 if (PlayerInputReader.IsPrimaryHeld())
                 {

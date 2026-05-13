@@ -54,7 +54,7 @@ namespace Beavermania.NPC
 
             if (Physics.Raycast(ray, out hit, distance, collisionLayer))
             {
-                if (hit.transform.gameObject.tag == "Isle" && Wasp.combo>=3)
+                if (hit.transform.gameObject.CompareTag("Isle") && Wasp.combo>=3)
                 {
                     contact = true;
                 }

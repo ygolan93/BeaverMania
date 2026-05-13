@@ -12,7 +12,7 @@ namespace Beavermania.Objects
 
         private void OnTriggerStay(Collider OBJ)
         {
-            if (OBJ.gameObject.tag=="Bridge")
+            if (OBJ.gameObject.CompareTag("Bridge"))
             {
                 var Child = OBJ.GetComponent<Transform>();
                 Child.transform.parent = Ramp.transform;
@@ -21,7 +21,7 @@ namespace Beavermania.Objects
 
         //private void OnTriggerExit(Collider OBJ)
         //{
-        //    if (OBJ.gameObject.tag == "Player")
+        //    if (OBJ.gameObject.CompareTag("Player"))
         //    {
         //        var Child = OBJ.GetComponent<Rigidbody>();
         //        Child.transform.parent = null;

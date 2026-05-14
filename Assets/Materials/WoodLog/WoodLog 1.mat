@@ -8,15 +8,15 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: WoodLog 1
-  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
+  m_Shader: {fileID: 4800000, guid: 6697e1f185bc8b840a2f02567abf15b5, type: 3}
   m_ValidKeywords:
+  - LOD_FADE_CROSSFADE
+  m_InvalidKeywords:
   - _GLOSSYREFLECTIONS_OFF
   - _NORMALMAP
   - _PARALLAXMAP
   - _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
   - _SPECULARHIGHLIGHTS_OFF
-  m_InvalidKeywords:
-  - LOD_FADE_CROSSFADE
   - _WINDQUALITY_NONE
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -104,7 +104,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 4e44992d8a199a546aeaaa6ebc63b91a, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex2:
@@ -148,11 +148,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TrunkNormalMap:
-        m_Texture: {fileID: 2800000, guid: 7e83d686c39ad82498f860157058bbd9, type: 3}
+        m_Texture: {fileID: 2800000, guid: 3a0fe32e29f86c94cb6b12cbd849c942, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TunkTex:
-        m_Texture: {fileID: 2800000, guid: 45653f33c106ed5438704bc086d953e0, type: 3}
+        m_Texture: {fileID: 2800000, guid: 4e44992d8a199a546aeaaa6ebc63b91a, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _texcoord:
@@ -166,12 +166,12 @@ Material:
     - _BillboardKwToggle: 0
     - _BillboardShadowFade: 0.5
     - _BumpScale: 1
-    - _ColourNoiseLargeScale: 0
-    - _ColourNoiseSmallScale: 0
+    - _ColourNoiseLargeScale: 0.339
+    - _ColourNoiseSmallScale: 0.354
     - _Cutoff: 0.386
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
-    - _EmissiveAmount: 0
+    - _EmissiveAmount: 1.02
     - _FresnelBrightness: 0.09
     - _FresnelPower: 0
     - _FresnelShadowDropoff: 0.08
@@ -219,10 +219,10 @@ Material:
     - _SrcBlend: 1
     - _SubsurfaceIndirect: 0.25
     - _SubsurfaceKwToggle: 0
-    - _TotalWindAmount: 0.73
+    - _TotalWindAmount: 0.528
     - _TrunkFlatColourSwitch: 0
-    - _TrunkMetallic: 0
-    - _TrunkNormalAmount: 1
+    - _TrunkMetallic: 0.02
+    - _TrunkNormalAmount: 0.646
     - _TrunkSmoothness: 0
     - _TwoSided: 2
     - _UVSec: 0
@@ -234,10 +234,10 @@ Material:
     - __dirty: 1
     m_Colors:
     - _AlbedoColour: {r: 1, g: 0.7414931, b: 0.3622641, a: 0}
-    - _Color: {r: 0.33962262, g: 0.25071198, b: 0.16180134, a: 1}
+    - _Color: {r: 0.9811321, g: 0.9811321, b: 0.9811321, a: 1}
     - _EmissionColor: {r: 0.33962262, g: 0.28812996, b: 0.2675329, a: 1}
     - _Emissive2Colour: {r: 0, g: 0, b: 0, a: 0}
-    - _EmissiveColour: {r: 0.6509434, g: 0.6509434, b: 0.6509434, a: 0}
+    - _EmissiveColour: {r: 1, g: 1, b: 1, a: 0}
     - _FresnelColor: {r: 0.22700001, g: 0.15133336, b: 0.08673985, a: 0.35686275}
     - _FrostingColour: {r: 1, g: 1, b: 1, a: 0}
     - _GustHighlight: {r: 0, g: 0, b: 0, a: 0}
@@ -245,7 +245,7 @@ Material:
     - _HueVariationColor: {r: 1, g: 0.5, b: 0, a: 0.1}
     - _LeafBaseColour: {r: 0.49056602, g: 0.15526876, b: 0.043502998, a: 0}
     - _LeafNoiseColour: {r: 0.078431346, g: 0.02015968, b: 0, a: 0}
-    - _LeafNoiseLargeColour: {r: 0.078431346, g: 0.02015968, b: 0, a: 0}
+    - _LeafNoiseLargeColour: {r: 0.4339623, g: 0.26355022, b: 0.20674619, a: 0}
     - _LowColor: {r: 1, g: 1, b: 1, a: 1}
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _RimColor: {r: 0.2924528, g: 0.14883795, b: 0.04800639, a: 1}
@@ -253,7 +253,7 @@ Material:
     - _SubsurfaceColor: {r: 1, g: 1, b: 1, a: 1}
     - _TreeInstanceColor: {r: 1, g: 1, b: 1, a: 1}
     - _TreeInstanceScale: {r: 1, g: 1, b: 1, a: 1}
-    - _TrunkBaseColour: {r: 0.078431346, g: 0.02015968, b: 0, a: 0}
+    - _TrunkBaseColour: {r: 0.7169812, g: 0.49123356, b: 0.41598436, a: 1}
     - _TrunkEmissiveColour: {r: 0, g: 0, b: 0, a: 0}
-    - _TrunkNoiseColour: {r: 0.078431346, g: 0.02015968, b: 0, a: 0}
+    - _TrunkNoiseColour: {r: 0.05660379, g: 0.025472939, b: 0, a: 0}
   m_BuildTextureStacks: []

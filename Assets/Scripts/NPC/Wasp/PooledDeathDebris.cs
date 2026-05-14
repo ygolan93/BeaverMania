@@ -185,6 +185,18 @@ namespace Beavermania.NPC
             return selfDestroyScripts.Length > 0 ? selfDestroyScripts[0] : null;
         }
 
+        public bool HandleLegacyDestroy(global::Destroy destroy)
+        {
+            if (destroy == null)
+                return false;
+
+            if (released)
+                return true;
+
+            ApplyDestroySelfForPool(destroy);
+            return true;
+        }
+
         void ApplyDestroySelfForPool(global::Destroy destroy)
         {
             if (destroy.effect != null)

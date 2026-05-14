@@ -7,6 +7,14 @@ public class Destroy : MonoBehaviour
     [SerializeField] float Clock;
     public GameObject effect;
     public bool saveAfterKill;
+
+    bool destroySelfSuppressed;
+
+    public void SetDestroySelfSuppressed(bool suppressed)
+    {
+        destroySelfSuppressed = suppressed;
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -14,6 +22,9 @@ public class Destroy : MonoBehaviour
     }
     public void DestroySelf()
     {
+        if (destroySelfSuppressed)
+            return;
+
         if (effect!=null)
         {
             Instantiate(effect, gameObject.transform.position, Quaternion.identity);
@@ -31,6 +42,9 @@ public class Destroy : MonoBehaviour
     }
     private void OnCollisionEnter(Collision OBJ)
     {
+        if (destroySelfSuppressed)
+            return;
+
         if (OBJ.gameObject.CompareTag("Player"))
             DestroySelf();
     }

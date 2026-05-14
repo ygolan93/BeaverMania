@@ -150,7 +150,10 @@ namespace Beavermania.NPC
         void DisableSelfDestroyScripts()
         {
             for (var i = 0; i < selfDestroyScripts.Length; i++)
+            {
+                selfDestroyScripts[i].SetDestroySelfSuppressed(true);
                 selfDestroyScripts[i].enabled = false;
+            }
         }
 
         void OnCollisionEnter(Collision collision)

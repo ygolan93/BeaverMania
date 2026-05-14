@@ -7,6 +7,14 @@ public class Destroy : MonoBehaviour
     [SerializeField] float Clock;
     public GameObject effect;
     public bool saveAfterKill;
+
+    bool destroySelfSuppressed;
+
+    public void SetDestroySelfSuppressed(bool suppressed)
+    {
+        destroySelfSuppressed = suppressed;
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -14,8 +22,7 @@ public class Destroy : MonoBehaviour
     }
     public void DestroySelf()
     {
-        var pooledDebris = GetComponentInParent<Beavermania.NPC.PooledDeathDebris>();
-        if (pooledDebris != null && pooledDebris.HandleLegacyDestroy(this))
+        if (destroySelfSuppressed)
             return;
 
         if (effect!=null)
@@ -35,6 +42,9 @@ public class Destroy : MonoBehaviour
     }
     private void OnCollisionEnter(Collision OBJ)
     {
+        if (destroySelfSuppressed)
+            return;
+
         if (OBJ.gameObject.CompareTag("Player"))
             DestroySelf();
     }

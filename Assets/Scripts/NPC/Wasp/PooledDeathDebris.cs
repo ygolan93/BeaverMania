@@ -153,6 +153,68 @@ namespace Beavermania.NPC
                 selfDestroyScripts[i].enabled = false;
         }
 
+        void OnCollisionEnter(Collision collision)
+        {
+            if (released)
+                return;
+
+            if (!collision.gameObject.CompareTag("Player"))
+                return;
+
+            var destroy = ResolveDestroyForCollision(collision);
+            if (destroy == null)
+                return;
+
+            ApplyDestroySelfForPool(destroy);
+        }
+
+        global::Destroy ResolveDestroyForCollision(Collision collision)
+        {
+            if (collision.contactCount > 0)
+            {
+                var hitCollider = collision.GetContact(0).thisCollider;
+                var onCollider = hitCollider.GetComponent<global::Destroy>();
+                if (onCollider != null)
+                    return onCollider;
+
+                var inParent = hitCollider.GetComponentInParent<global::Destroy>();
+                if (inParent != null)
+                    return inParent;
+            }
+
+            return selfDestroyScripts.Length > 0 ? selfDestroyScripts[0] : null;
+        }
+
+        void ApplyDestroySelfForPool(global::Destroy destroy)
+        {
+            if (destroy.effect != null)
+                Object.Instantiate(destroy.effect, destroy.transform.position, Quaternion.identity);
+
+            if (destroy.saveAfterKill)
+            {
+                destroy.gameObject.SetActive(false);
+                if (destroy.gameObject == gameObject)
+                {
+                    StopReturnRoutine();
+                    Release();
+                }
+
+                return;
+            }
+
+            StopReturnRoutine();
+            if (destroy.gameObject == gameObject)
+            {
+                Release();
+                return;
+            }
+
+            destroy.gameObject.SetActive(false);
+            var fragmentColliders = destroy.GetComponentsInChildren<Collider>(true);
+            for (var i = 0; i < fragmentColliders.Length; i++)
+                fragmentColliders[i].enabled = false;
+        }
+
         IEnumerator ReturnAfterLifetime(float lifetime)
         {
             yield return new WaitForSeconds(lifetime);

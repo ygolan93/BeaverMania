@@ -25,6 +25,8 @@ namespace Beavermania.UI
         bool loggedMissingPlayer;
         bool loggedMissingPlayerObjective;
         bool loggedMissingPanel;
+        bool loggedMissingMerchant;
+        bool loggedMissingSkipButton;
         // Start is called before the first frame update
         void Start()
         {
@@ -57,7 +59,13 @@ namespace Beavermania.UI
             if (panel == null)
                 LogMissingReference(nameof(panel), ref loggedMissingPanel);
 
-            SkipButton.SetActive(true);
+            if (SkipButton != null)
+                SkipButton.SetActive(true);
+            else if (!loggedMissingSkipButton)
+            {
+                loggedMissingSkipButton = true;
+                Debug.LogError($"{nameof(Dialogue)} on '{name}' has no {nameof(SkipButton)} assigned.", this);
+            }
             textComponent.text = string.Empty;
             StartDialogue();
             index = 0;
@@ -117,7 +125,13 @@ namespace Beavermania.UI
             }
             else
             {
-                Merchant.activateSkip();
+                if (Merchant != null)
+                    Merchant.activateSkip();
+                else if (!loggedMissingMerchant)
+                {
+                    loggedMissingMerchant = true;
+                    Debug.LogError($"{nameof(Dialogue)} on '{name}' has no {nameof(Merchant)}; cannot close trader UI.", this);
+                }
             }
         }
 

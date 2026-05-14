@@ -22,6 +22,10 @@ namespace Beavermania.NPC
         [SerializeField] float PanelPopUp;
         bool traderOfferPresentationActive;
         Quaternion FormalLook;
+        bool loggedMissingMerchant;
+        bool loggedMissingDialoguePanel;
+        bool loggedMissingShop;
+        bool loggedMissingTradeText;
 
         public float GetOfferPanelDistance()
         {
@@ -31,13 +35,57 @@ namespace Beavermania.NPC
         void Start()
         {
             FormalLook = transform.rotation;
-            Player = GameObject.FindGameObjectWithTag("Player").GetComponent<BeaverPlayer>();
-            PlayerRoot = GameObject.FindGameObjectWithTag("PlayerRoot").GetComponent<Transform>();
+            var playerObject = GameObject.FindGameObjectWithTag("Player");
+            if (playerObject != null)
+                Player = playerObject.GetComponent<BeaverPlayer>();
+            var rootObject = GameObject.FindGameObjectWithTag("PlayerRoot");
+            if (rootObject != null)
+                PlayerRoot = rootObject.transform;
+            ValidateSerializedReferences();
+        }
+
+        void ValidateSerializedReferences()
+        {
+            if (Merchant == null)
+            {
+                Merchant = gameObject;
+                if (!loggedMissingMerchant)
+                {
+                    loggedMissingMerchant = true;
+                    Debug.LogError($"{nameof(Trader)} on '{name}' had null {nameof(Merchant)}; defaulted to this GameObject.", this);
+                }
+            }
+
+            if (DialoguePanel == null && !loggedMissingDialoguePanel)
+            {
+                loggedMissingDialoguePanel = true;
+                Debug.LogError($"{nameof(Trader)} on '{name}' has no {nameof(DialoguePanel)} assigned.", this);
+            }
+
+            if (Shop == null && !loggedMissingShop)
+            {
+                loggedMissingShop = true;
+                Debug.LogError($"{nameof(Trader)} on '{name}' has no {nameof(Shop)} assigned (assign an inactive placeholder if no shop).", this);
+            }
+
+            if (TradeText == null && !loggedMissingTradeText)
+            {
+                loggedMissingTradeText = true;
+                Debug.LogWarning($"{nameof(Trader)} on '{name}' has no {nameof(TradeText)}; proximity prompt will be skipped.", this);
+            }
+        }
+
+        static void SafeSetActive(GameObject go, bool active)
+        {
+            if (go != null)
+                go.SetActive(active);
         }
 
         // Update is called once per frame
         public void Update()
         {
+            if (Player == null || Merchant == null)
+                return;
 
             PlayerDistance = Player.transform.position - Merchant.transform.position;
             var Distance = Mathf.Abs(PlayerDistance.magnitude);
@@ -55,8 +103,8 @@ namespace Beavermania.NPC
 
             if (Distance<PanelPopUp&&skipPressed==false)
             {
-                TradeText.SetActive(true);
-                DialoguePanel.SetActive(true);
+                SafeSetActive(TradeText, true);
+                SafeSetActive(DialoguePanel, true);
                 if (Rotate == true)
                 {
                     Vector3 toPlayer = Player.transform.position - Merchant.transform.position;
@@ -70,9 +118,9 @@ namespace Beavermania.NPC
             else
             {
                 transform.rotation = Quaternion.Slerp(transform.rotation, FormalLook, 0.1f);
-                TradeText.SetActive(false);
-                DialoguePanel.SetActive(false);
-                Shop.SetActive(false);
+                SafeSetActive(TradeText, false);
+                SafeSetActive(DialoguePanel, false);
+                SafeSetActive(Shop, false);
             }
 
             if (Distance > PanelPopUp)
@@ -84,20 +132,25 @@ namespace Beavermania.NPC
         {
             skipPressed = true;
             traderOfferPresentationActive = false;
-            TradeText.SetActive(false);
-            DialoguePanel.SetActive(false);
-            Shop.SetActive(false);
+            SafeSetActive(TradeText, false);
+            SafeSetActive(DialoguePanel, false);
+            SafeSetActive(Shop, false);
             if (Player != null)
                 Player.RestoreGameplayAfterTrader();
         }
 
         public void CloseShop()
         {
-            Shop.SetActive(false);
+            SafeSetActive(Shop, false);
         }
 
         public void Honey()
         {
+            if (Player == null)
+            {
+                Debug.LogError($"{nameof(Trader)}.{nameof(Honey)} on '{name}' has null {nameof(Player)}.", this);
+                return;
+            }
             Player.HoneyON();
         }
 

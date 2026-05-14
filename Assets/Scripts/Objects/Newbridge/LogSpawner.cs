@@ -1,55 +1,90 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Beavermania.Display;
 using Beavermania.Core.Input;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 
 namespace Beavermania.Objects
 {
-
     public class LogSpawner : MonoBehaviour
     {
-        // Start is called before the first frame update
+        public const int DefaultLogsPerTree = 4;
+
         [SerializeField] Transform SpawnPoint;
+        [SerializeField] [Min(1)] [FormerlySerializedAs("_logsPerTree")]
+        int logsPerTree = DefaultLogsPerTree;
         public Transform[] Prefab;
         public GameObject TreeDeath;
-        //[SerializeField] Transform Log2;
-        //[SerializeField] Transform Log3;
-        //[SerializeField] Transform Log4;
 
+        bool _logsDropped;
+
+#if UNITY_EDITOR
+        void OnValidate()
+        {
+            if (logsPerTree < 1)
+                logsPerTree = 1;
+        }
+#endif
 
         public void OnTriggerStay(Collider OBJ)
         {
-            if (OBJ.gameObject.CompareTag("Player"))
-            {
-               var isGrounded= OBJ.gameObject.GetComponent<BeaverPlayer>().grounded;
-                if (PlayerInputReader.IsPrimaryHeld() && isGrounded == false)
-                {
-                    DestroyTree(OBJ.transform);
-                }
-            }
+            if (!OBJ.gameObject.CompareTag("Player"))
+                return;
+
+            var player = OBJ.gameObject.GetComponent<BeaverPlayer>();
+            if (player == null)
+                return;
+
+            if (PlayerInputReader.IsPrimaryHeld() && player.grounded == false)
+                DestroyTree(OBJ.transform);
         }
+
         public void OnCollisionStay(Collision OBJ)
         {
-            if (OBJ.gameObject.CompareTag("Player"))
-            {
-                if (PlayerInputReader.IsPrimaryHeld())
-                {
-                    DestroyTree(OBJ.transform);
-                }
-            }
+            if (!OBJ.gameObject.CompareTag("Player"))
+                return;
+
+            if (PlayerInputReader.IsPrimaryHeld())
+                DestroyTree(OBJ.transform);
         }
 
         public void DestroyTree(Transform OBJ)
         {
-            PooledOneShotVfx.Spawn(TreeDeath, new Vector3(SpawnPoint.position.x, OBJ.transform.position.y, SpawnPoint.position.z), Quaternion.identity);
-            var counter = 0;
-            foreach (var item in Prefab)
+            if (_logsDropped)
+                return;
+
+            _logsDropped = true;
+
+            var colliders = GetComponentsInChildren<Collider>(true);
+            for (int i = 0; i < colliders.Length; i++)
+                colliders[i].enabled = false;
+
+            if (TreeDeath != null && SpawnPoint != null)
+                PooledOneShotVfx.Spawn(TreeDeath, new Vector3(SpawnPoint.position.x, OBJ.position.y, SpawnPoint.position.z), Quaternion.identity);
+
+            if (Prefab != null && Prefab.Length > 0)
             {
-                Instantiate(item, SpawnPoint.position+new Vector3(0,counter,0), Quaternion.Euler(0, 0, 90));
-                counter++;
+                var origin = SpawnPoint != null ? SpawnPoint.position : transform.position;
+                int stackIndex = 0;
+                var primary = Prefab[0];
+                if (primary != null)
+                {
+                    for (int i = 0; i < logsPerTree; i++)
+                        Instantiate(primary, origin + new Vector3(0, stackIndex++, 0), Quaternion.Euler(0, 0, 90));
+                }
+                else
+                    Debug.LogError($"LogSpawner on '{name}' has no primary prefab at Prefab[0]; skipping primary log spawn.", this);
+
+                for (int r = 1; r < Prefab.Length; r++)
+                {
+                    var bonus = Prefab[r];
+                    if (bonus == null)
+                        continue;
+
+                    Instantiate(bonus, origin + new Vector3(0, stackIndex++, 0), Quaternion.Euler(0, 0, 90));
+                }
             }
+
             Destroy(gameObject);
         }
     }

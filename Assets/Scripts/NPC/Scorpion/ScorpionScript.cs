@@ -364,8 +364,7 @@ namespace Beavermania.NPC
             }
             if (OBJ.gameObject.CompareTag("Bridge"))
             {
-                var Tree = OBJ.gameObject.GetComponent<LogSpawner>();
-                Tree.DestroyTree(OBJ.transform);
+                OBJ.gameObject.GetComponent<LogSpawner>()?.DestroyTree(OBJ.transform);
                 TakeDamage(10);
                 combo = 10;
             }

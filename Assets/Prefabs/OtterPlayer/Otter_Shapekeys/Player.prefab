@@ -29802,6 +29802,9 @@ GameObject:
   - component: {fileID: 4580562239172740852}
   - component: {fileID: 8605846543303424432}
   - component: {fileID: 6562972538239049110}
+  - component: {fileID: 5724927208157140646}
+  - component: {fileID: 8156679125422380708}
+  - component: {fileID: 1190784083324918909}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -30102,8 +30105,11 @@ MonoBehaviour:
   Wallet: 
   GM: {fileID: 0}
   AimIcon: {fileID: 0}
+  PlayerHudState: {fileID: 0}
+  PlayerObjective: {fileID: 0}
   FreeLook: {fileID: 5012679269152501947}
   CamForTraders: {fileID: 9047202634484327852}
+  checkpointRespawn: {fileID: 0}
   ChangeSpeech: 1
 --- !u!114 &4580562239172740873
 MonoBehaviour:
@@ -30206,6 +30212,53 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.5, y: 1.227511, z: 0.5}
   m_Center: {x: 0, y: -0.62334055, z: 0}
+--- !u!114 &5724927208157140646
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4580562239172740874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f356bc3e4f94e4ba9c5e178afeb4ff3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObjectiveText: 
+  DebugText: 
+  StaminaText: 
+  LogCount: 
+  HealingText: 
+  Wallet: 
+  SeedText: 
+  GobletText: 
+  AppleText: 
+  ArrowText: 
+--- !u!114 &8156679125422380708
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4580562239172740874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c1e08ca17c34c7d8b8bc69b1e997a72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  player: {fileID: 4580562239172740872}
+--- !u!114 &1190784083324918909
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4580562239172740874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8ed0b11850145c4995dd76170bb2500, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &4622290205047029495
 GameObject:
   m_ObjectHideFlags: 0

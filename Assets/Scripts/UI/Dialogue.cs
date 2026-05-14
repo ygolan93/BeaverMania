@@ -12,7 +12,6 @@ namespace Beavermania.UI
     public class Dialogue : MonoBehaviour
     {
         [SerializeField] public BeaverPlayer Player;
-        public ScorpionScript Scorpion;
         [SerializeField] public ObjectiveUI PlayerObjective;
         [SerializeField] public TextMeshProUGUI textComponent;
         [SerializeField] public GameObject ContinueButton;
@@ -133,7 +132,6 @@ namespace Beavermania.UI
                 if (bossFlow != null)
                     bossFlow.SkipBossChat();
             }
-            //Scorpion.InitiateCharge();
         }
 
         void LogMissingReference(string referenceName, ref bool logged)

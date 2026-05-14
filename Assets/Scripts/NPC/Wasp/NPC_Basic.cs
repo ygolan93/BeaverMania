@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Beavermania.Core.Input;
+using Beavermania.Display;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using UnityEngine;
 
@@ -11,12 +12,14 @@ namespace Beavermania.NPC
     public class NPC_Basic : MonoBehaviour
     {
         const float LookRotationEpsilon = 0.0001f;
+        const float AnotherWaspLookupCooldown = 1.0f;
         [Header("Core References")]
         public Rigidbody NPC;
         [SerializeField] Animator Wasp;
         Collider npcCollider;
         GameObject AnotherWasp;
         Collider AnotherWaspCollider;
+        float AnotherWaspLookupTimer;
 
         [Header("Player References")]
         GameObject PlayerTarget;
@@ -86,7 +89,7 @@ namespace Beavermania.NPC
         // Update is called once per frame
         public void FixedUpdate()
         {
-            AnotherWasp = GameObject.FindGameObjectWithTag("NPC");
+            AnotherWaspLookupTimer -= Time.deltaTime;
             Vector3 Distance = PlayerTarget.transform.position - transform.position;
             PlayerDistance = Distance.magnitude;
             ChangeNav -= Time.deltaTime;
@@ -123,11 +126,11 @@ namespace Beavermania.NPC
                         {
                             BuzzSource.SetActive(true);
                             ChargeClock = 0.7f;
-                            if (AnotherWaspCollider == null || AnotherWaspCollider.gameObject != AnotherWasp)
+                            RefreshAnotherWaspCollider();
+                            if (AnotherWaspCollider != null && npcCollider != null)
                             {
-                                AnotherWaspCollider = AnotherWasp.GetComponent<Collider>();
+                                Physics.IgnoreCollision(AnotherWaspCollider, npcCollider);
                             }
-                            Physics.IgnoreCollision(AnotherWaspCollider, npcCollider);
                             NPC.velocity = (Distance.normalized * 50f);
                             Wasp.SetBool("Sting", true);
                             ChangeNav = 0;
@@ -176,21 +179,57 @@ namespace Beavermania.NPC
             }
         }
 
+        private void RefreshAnotherWaspCollider()
+        {
+            if (AnotherWaspCollider != null && AnotherWasp != null && AnotherWasp != gameObject && AnotherWaspCollider.gameObject == AnotherWasp)
+            {
+                return;
+            }
+
+            if (AnotherWaspLookupTimer > 0)
+            {
+                return;
+            }
+
+            AnotherWaspLookupTimer = AnotherWaspLookupCooldown;
+            AnotherWasp = null;
+            AnotherWaspCollider = null;
+
+            GameObject[] npcs = GameObject.FindGameObjectsWithTag("NPC");
+            foreach (GameObject npc in npcs)
+            {
+                if (npc == null || npc == gameObject)
+                {
+                    continue;
+                }
+
+                Collider collider = npc.GetComponent<Collider>();
+                if (collider == null)
+                {
+                    continue;
+                }
+
+                AnotherWasp = npc;
+                AnotherWaspCollider = collider;
+                return;
+            }
+        }
+
         private void Death()
         {
             PlayerHealth.Plattering = ("HA! gotcha");
             PlayerHealth.ChangeSpeech = 1;
-            Instantiate(Explosion, transform.position + new Vector3(0, 1, 0), transform.rotation);
-            Instantiate(Body, transform.position + new Vector3(0, 1, 0), transform.rotation);
-            Instantiate(Head, transform.position + new Vector3(0, 1, 0), transform.rotation);
-            Instantiate(Wing, transform.position + new Vector3(0, 1, 0), transform.rotation);
-            Instantiate(Wing, transform.position + new Vector3(0, 1, 0), transform.rotation);
-            Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-            Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-            Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-            Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-            Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-            Instantiate(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
+            PooledOneShotVfx.Spawn(Explosion, transform.position + new Vector3(0, 1, 0), transform.rotation);
+            PooledDeathDebris.Spawn(Body, transform.position + new Vector3(0, 1, 0), transform.rotation);
+            PooledDeathDebris.Spawn(Head, transform.position + new Vector3(0, 1, 0), transform.rotation);
+            PooledDeathDebris.Spawn(Wing, transform.position + new Vector3(0, 1, 0), transform.rotation);
+            PooledDeathDebris.Spawn(Wing, transform.position + new Vector3(0, 1, 0), transform.rotation);
+            PooledDeathDebris.Spawn(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
+            PooledDeathDebris.Spawn(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
+            PooledDeathDebris.Spawn(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
+            PooledDeathDebris.Spawn(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
+            PooledDeathDebris.Spawn(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
+            PooledDeathDebris.Spawn(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
             Instantiate(Reward, transform.position + new Vector3(0, 7, 0), transform.rotation);
             Instantiate(Reward, transform.position + new Vector3(0, 7, 0), transform.rotation);
             GameObject.Destroy(gameObject);

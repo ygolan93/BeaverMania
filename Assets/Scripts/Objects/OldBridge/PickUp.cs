@@ -25,11 +25,13 @@ namespace Beavermania.Objects
             }
 
 
+            var logRigidbody = Log.GetComponent<Rigidbody>();
+
             //Check if IsHolding
             if (IsHolding == true)
             {
-                Log.GetComponent<Rigidbody>().velocity = Vector3.zero;
-                Log.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+                logRigidbody.velocity = Vector3.zero;
+                logRigidbody.angularVelocity = Vector3.zero;
                 Log.transform.SetParent(tempParent.transform);
                 if (PlayerInputReader.WasInteractPressed())
                 {
@@ -40,7 +42,7 @@ namespace Beavermania.Objects
             {
                 objectPos = Log.transform.position;
                 Log.transform.SetParent(null);
-                Log.GetComponent<Rigidbody>().useGravity = true;
+                logRigidbody.useGravity = true;
                 Log.transform.position = objectPos;
             }
 
@@ -51,8 +53,9 @@ namespace Beavermania.Objects
             if (distance <= 2.5f && PlayerInputReader.IsSecondaryHeld())
             {
                 IsHolding = true;
-                Log.GetComponent<Rigidbody>().useGravity = false;
-                Log.GetComponent<Rigidbody>().detectCollisions = true;
+                var logRigidbody = Log.GetComponent<Rigidbody>();
+                logRigidbody.useGravity = false;
+                logRigidbody.detectCollisions = true;
             }
 
             else

@@ -14,6 +14,10 @@ public class Destroy : MonoBehaviour
     }
     public void DestroySelf()
     {
+        var pooledDebris = GetComponentInParent<Beavermania.NPC.PooledDeathDebris>();
+        if (pooledDebris != null && pooledDebris.HandleLegacyDestroy(this))
+            return;
+
         if (effect!=null)
         {
             Instantiate(effect, gameObject.transform.position, Quaternion.identity);

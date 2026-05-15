@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Beavermania.Audio;
-using Beavermania.Debugging;
 using Beavermania.Core.GameFlow;
 using Beavermania.Display;
 using Beavermania.Core.Input;
@@ -937,10 +936,6 @@ namespace Beavermania.Player
 
             ConsumeArrow(1);
             MarkBowShotResolved();
-            // #region agent log
-            AgentDebugLog.Write("H1", "BeaverPlayerBehaviour.TryFireBowFromScreenCenter", "consume after spawn",
-                $"{{\"ammoBefore\":{ammoBefore},\"ammoAfter\":{arrowMunition},\"spawnPos\":{AgentDebugLog.Vec3(spawnPos)},\"dir\":{AgentDebugLog.Vec3(fireDirection)}}}");
-            // #endregion
             if (debugBowCombat)
                 Debug.Log($"[Bow] Fired 1 arrow. Ammo {ammoBefore} -> {arrowMunition}", this);
 
@@ -2086,10 +2081,6 @@ namespace Beavermania.Player
                     {
                         _bowFiredThisAimSession = true;
                         _bowAimSessionOpen = false;
-                        // #region agent log
-                        AgentDebugLog.Write("H1", "BeaverPlayerBehaviour.FixedUpdate", "bow release edge",
-                            $"{{\"ammo\":{arrowMunition},\"secondaryRelease\":{secondaryReleaseEdge.ToString().ToLowerInvariant()},\"mouse1Up\":{mouse1Up.ToString().ToLowerInvariant()}}}");
-                        // #endregion
 
                         if (!HasArrowAmmo())
                         {

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Beavermania.Debugging;
 using Beavermania.Display;
 using Beavermania.NPC;
 using Beavermania.Objects;
@@ -299,14 +298,6 @@ namespace Beavermania.Player.Combat
                 Debug.Log($"[Projectile] Launch dir={launchDirection} arrowSpeed={spdDbg} vel={vel} mag={vel.magnitude} kinematic={(Ball != null && Ball.isKinematic)} pos={position}", this);
             }
 
-            // #region agent log
-            if (isArrow)
-            {
-                var vel = Ball != null ? Ball.velocity : Vector3.zero;
-                AgentDebugLog.Write("H2", "Projectile.Launch", "arrow launched",
-                    $"{{\"speed\":{Mathf.Abs(initialForwardVel)},\"velMag\":{vel.magnitude.ToString(System.Globalization.CultureInfo.InvariantCulture)},\"dir\":{AgentDebugLog.Vec3(launchDirection)},\"pos\":{AgentDebugLog.Vec3(position)},\"kinematic\":{(Ball != null && Ball.isKinematic).ToString().ToLowerInvariant()}}}");
-            }
-            // #endregion
         }
 
         void ResetRuntimeState()
@@ -485,14 +476,6 @@ namespace Beavermania.Player.Combat
 
             if (debugBowProjectile && isArrow)
                 Debug.Log($"[Projectile] CompleteProjectile spawnPickup={spawnArrowPickup} aliveTime={aliveTime:F3} clock={clock:F3} pos={transform.position}", this);
-
-            // #region agent log
-            if (isArrow)
-            {
-                AgentDebugLog.Write("H3", "Projectile.CompleteProjectile", "arrow completed",
-                    $"{{\"spawnPickup\":{spawnArrowPickup.ToString().ToLowerInvariant()},\"aliveTime\":{aliveTime.ToString(System.Globalization.CultureInfo.InvariantCulture)},\"pos\":{AgentDebugLog.Vec3(transform.position)}}}");
-            }
-            // #endregion
 
             if (spawnArrowPickup)
                 SpawnArrowPickup();

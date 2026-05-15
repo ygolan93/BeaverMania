@@ -20,69 +20,78 @@ namespace Beavermania.Player.Combat
         //public GameObject BossSkipButton;
 
 
-        // Start is called before the first frame update
         void Start()
         {
-            player = gameObject.GetComponent<BeaverPlayer>();
-            Boss = GameObject.Find("ScorpionBoss").GetComponent<ScorpionScript>();
-            //bossSound = Boss.GetComponent<NPC_Audio>();
-            BossBar.SetActive(false);
+            player = GetComponent<BeaverPlayer>();
+            var bossObject = GameObject.Find("ScorpionBoss");
+            if (bossObject != null)
+                Boss = bossObject.GetComponent<ScorpionScript>();
+            if (BossBar != null)
+                BossBar.SetActive(false);
         }
 
-
-        private void Update()
+        void Update()
         {
-            if (Boss.transform==null)
+            if (Boss == null)
             {
-                BossBar.SetActive(false);
+                if (BossBar != null && BossBar.activeSelf)
+                    BossBar.SetActive(false);
             }
         }
 
 
         public void SkipBossChat()
         {
-            ChatCollider.SetActive(false);
+            if (Boss == null || player == null)
+                return;
+
+            if (ChatCollider != null)
+                ChatCollider.SetActive(false);
             player.isAtTrader = false;
             player.HideCursor();
-            BossPanel.SetActive(false);
+            if (BossPanel != null)
+                BossPanel.SetActive(false);
             Boss.isAttacking = true;
-            BossBar.SetActive(true);
-            player.FreeLook.m_Orbits[1].m_Radius = 6;
-            player.FreeLook.m_XAxis.m_MaxSpeed = 300;
-            player.FreeLook.m_YAxis.m_MaxSpeed = 2;
-            player.FreeLook.m_LookAt = player.Root;
+            if (BossBar != null)
+                BossBar.SetActive(true);
+            if (player.FreeLook != null)
+            {
+                player.FreeLook.m_Orbits[1].m_Radius = 6;
+                player.FreeLook.m_XAxis.m_MaxSpeed = 300;
+                player.FreeLook.m_YAxis.m_MaxSpeed = 2;
+                if (player.Root != null)
+                    player.FreeLook.m_LookAt = player.Root;
+            }
         }
+
         public void OnTriggerStay(Collider OBJ)
         {
+            if (Boss == null || player == null || player.FreeLook == null)
+                return;
+
             if (OBJ.gameObject.CompareTag("Arena"))
-            {  
+            {
                 player.ShowCursor();
                 player.isAtTrader = true;
                 Boss.isAttacking = false;
-                BossPanel.SetActive(true);
+                if (BossPanel != null)
+                    BossPanel.SetActive(true);
                 player.FreeLook.m_Orbits[1].m_Radius = 15;
                 player.FreeLook.m_XAxis.m_MaxSpeed = 0;
                 player.FreeLook.m_YAxis.m_MaxSpeed = 0;
-                player.FreeLook.m_LookAt = Boss.transform;   
+                player.FreeLook.m_LookAt = Boss.transform;
             }
         }
+
         public void OnTriggerEnter(Collider OBJ)
         {
-            if (Boss.isAttacking==true)
-            {
-                if (OBJ.gameObject.CompareTag("ScorpionDamage"))
-                {
-                    player.TakeDamage(15);
-                    //bossSound.Sting();
-                }
-                if (OBJ.gameObject.CompareTag("ScorpionSting"))
-                {
-                    player.TakeDamage(30);
-                    //bossSound.Sting();
-                }
+            if (player == null)
+                return;
 
-            }
-
+            if (OBJ.gameObject.CompareTag("ScorpionDamage"))
+                player.TakeDamage(15);
+            else if (OBJ.gameObject.CompareTag("ScorpionSting"))
+                player.TakeDamage(30);
         }
 
 

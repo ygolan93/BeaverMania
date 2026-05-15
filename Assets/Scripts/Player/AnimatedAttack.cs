@@ -19,7 +19,8 @@ namespace Beavermania.Player.Combat
         private void Start()
         {
             Player = transform.parent.GetComponent<BeaverPlayer>();
-            GlowEffect.SetActive(false);
+            if (GlowEffect != null)
+                GlowEffect.SetActive(false);
         }
 
         public void CauseDamage(Vector3 origin, float range, int Damage)
@@ -126,12 +127,14 @@ namespace Beavermania.Player.Combat
 
         public void TurnOnGlow()
         {
-            GlowEffect.SetActive(true);
+            if (GlowEffect != null)
+                GlowEffect.SetActive(true);
         }
 
         public void TurnOffGlow()
         {
-            GlowEffect.SetActive(false);
+            if (GlowEffect != null)
+                GlowEffect.SetActive(false);
         }
     }
 }

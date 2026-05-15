@@ -16,30 +16,41 @@ namespace Beavermania.Display
         [SerializeField] Transform playerParent;
         [SerializeField] Transform aimPoint;
 
-        private CinemachineFreeLook freeLookCamera;
+        CinemachineFreeLook freeLookCamera;
+        static bool loggedMissingAimImage;
 
-        private void Start()
+        void Start()
         {
-            // Find the Cinemachine FreeLook camera in the scene
             freeLookCamera = GetComponent<CinemachineFreeLook>();
-            freeLookCamera.m_Lens.FieldOfView = 40;
+            if (freeLookCamera != null)
+                freeLookCamera.m_Lens.FieldOfView = 40;
         }
 
-        private void Update()
+        void Update()
         {
             float scroll = Input.GetAxis("Mouse ScrollWheel");
-            if (scroll != 0)
+            if (Mathf.Approximately(scroll, 0f))
+                return;
+
+            if (freeLookCamera != null)
             {
-                // Adjust the FOV of the Cinemachine FreeLook camera
-                freeLookCamera.m_Lens.FieldOfView = Mathf.Clamp(freeLookCamera.m_Lens.FieldOfView - (scroll * zoomSpeed), minFOV, maxFOV);
-                //aimPoint.position -= /*playerParent.InverseTransformPoint(*/new Vector3(0, scroll * zoomSpeed * 0.001f, 0);
+                freeLookCamera.m_Lens.FieldOfView = Mathf.Clamp(
+                    freeLookCamera.m_Lens.FieldOfView - (scroll * zoomSpeed),
+                    minFOV,
+                    maxFOV);
             }
 
-
-            //Aim Mark
+            if (aim == null)
             {
-                aim.transform.position -= new Vector3(0, scroll * zoomSpeed * 0.001f, 0);
+                if (!loggedMissingAimImage)
+                {
+                    loggedMissingAimImage = true;
+                    Debug.LogWarning($"{nameof(CameraZoom)}: aim Image is not assigned; scroll will adjust FOV only.", this);
+                }
+                return;
             }
+
+            aim.transform.position -= new Vector3(0, scroll * zoomSpeed * 0.001f, 0);
         }
     }
 }

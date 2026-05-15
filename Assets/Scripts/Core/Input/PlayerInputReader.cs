@@ -24,6 +24,12 @@ namespace Beavermania.Core.Input
             return UnityEngine.Input.GetKeyDown(KeyCode.Mouse1);
         }
 
+        /// <summary>Same physical binding as <see cref="WasInteractPressed"/> (RMB down); named for combat clarity.</summary>
+        public static bool WasSecondaryPressed()
+        {
+            return UnityEngine.Input.GetKeyDown(KeyCode.Mouse1);
+        }
+
         public static bool WasPausePressed()
         {
             return UnityEngine.Input.GetKeyDown(KeyCode.Escape);

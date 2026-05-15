@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Beavermania.Audio;
+using Beavermania.Debugging;
 using Beavermania.Core.GameFlow;
 using Beavermania.Display;
 using Beavermania.Core.Input;
@@ -95,10 +96,42 @@ namespace Beavermania.Player
         //public Transform Sphere;
         public float attackRange = 0.5f;
         public LayerMask enemyLayers;
+        [Header("Bow aim")]
+        [Tooltip("Optional override; when null, Camera.main / cached gameplay camera is used.")]
+        [SerializeField] Camera bowAimCamera;
+        [SerializeField] float bowAimRayMaxDistance = 400f;
+        [Tooltip("Viewport Y offset above screen center for projectile aim (0.03 = slight high).")]
+        [SerializeField] float bowAimViewportYOffset = 0.03f;
+        [Tooltip("Layers for center-screen aim raycast. Leave at Nothing to raycast all layers.")]
+        [SerializeField] LayerMask bowAimRaycastLayers;
+        [Tooltip("Offset spawn along fire direction so the arrow clears body/bow colliders (meters).")]
+        [SerializeField] float bowProjectileSpawnClearance = 0.5f;
+        [Tooltip("Logical arrow ammo cap (independent of quiver mesh slot count).")]
+        [SerializeField] int maxArrowMunition = 99;
+        [Tooltip("Minimum time between completed bow shots before a new draw can start.")]
+        [SerializeField] float bowShotCooldown = 0.25f;
         public float GroundBeat = 0.3f;
         public float AirBeat = 0.2f;
         bool scorpAttack;
         float FallClock;
+
+        /// <summary>Mouse1 edges buffered in Update so FixedUpdate never misses sub-timestep clicks.</summary>
+        bool _mouse1DownBuffered;
+        bool _mouse1UpBuffered;
+        /// <summary>RMB held state at end of previous FixedUpdate (for reliable press/release edges in FixedUpdate).</summary>
+        bool _secondaryHeldLastFixed;
+        /// <summary>Stoning: RMB aim session active (survives one frame without relying on Stone.active).</summary>
+        bool _stoneAimSessionActive;
+        bool _loggedMissingBowAimCamera;
+        bool _loggedMissingSpineForAim;
+        /// <summary>True while RMB draw session is open; cleared after release/cancel.</summary>
+        bool _bowAimSessionOpen;
+        /// <summary>Prevents a second fire/consume for the same draw before RMB is pressed again.</summary>
+        bool _bowFiredThisAimSession;
+        /// <summary>Blocks a new draw until RMB has been released after the previous shot/cancel.</summary>
+        bool _bowWaitingForRmbRelease;
+        float _bowNextDrawAllowedTime;
+        [SerializeField] bool debugBowCombat;
         [SerializeField] float InitialFall = 0.2f;
         public int GroundAttack = 50;
         public bool bowEquipped;
@@ -241,12 +274,8 @@ namespace Beavermania.Player
                 {
                     Otter.Play("Crouch");
                     Sound.PickUp2();
-                    arrowMunition++;
+                    ApplyArrowMunitionDelta(1);
                     SpawnPickUpEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
-                    if (bowEquipped == true)
-                    {
-                        CountArrows();
-                    }
                     Destroy(OBJ.gameObject);
                 }
                 if (OBJ.gameObject.CompareTag("ArrowBundle"))
@@ -256,7 +285,7 @@ namespace Beavermania.Player
                     SpawnPickUpEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
                     if (arrowMunition + 10 < Arrows.Length)
                     {
-                        arrowMunition += 10;
+                        ApplyArrowMunitionDelta(10);
                     }
                     else
                     {
@@ -264,11 +293,7 @@ namespace Beavermania.Player
                         {
                             Instantiate(ArrowPickup, OBJ.transform.position+new Vector3(0,i* 0.3f, 0), Quaternion.Euler(0,0,90));
                         }
-                        arrowMunition = Arrows.Length;
-                    }
-                    if (bowEquipped == true)
-                    {
-                        CountArrows();
+                        SetArrowMunition(Arrows.Length);
                     }
                     Destroy(OBJ.gameObject);
                 }
@@ -306,7 +331,7 @@ namespace Beavermania.Player
                 Arsenal.Add("Bow");
                 ArsenalCounter++;
                 Sound.PickItem();
-                arrowMunition = 5;
+                SetArrowMunition(5);
                 CountArrows();
                 SpawnPickUpEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
                 Destroy(OBJ.gameObject);
@@ -350,7 +375,7 @@ namespace Beavermania.Player
             }
             if (OBJ.gameObject.CompareTag("Strike"))
             {
-                if (Lives > 0)
+                if (Lives > 0 && GM != null)
                 {
                     transform.position = GM.lastCheckPointPos + new Vector3(1, 1, 1);
                     SpawnPopUpEffect(transform.position);
@@ -444,7 +469,8 @@ namespace Beavermania.Player
             }
             if (OBJ.gameObject.CompareTag("Life"))
             {
-                GM.lastCheckPointPos = OBJ.transform.position;
+                if (GM != null)
+                    GM.lastCheckPointPos = OBJ.transform.position;
                 Plattering = ("Shroom!");
                 ChangeSpeech = 1;
                 if (CurrentHealth < MaxHealth)
@@ -663,6 +689,16 @@ namespace Beavermania.Player
                 camForward = transform.forward;
             if (camForward.sqrMagnitude > LookRotationEpsilon)
             {
+                if (Spine == null)
+                {
+                    if (!_loggedMissingSpineForAim)
+                    {
+                        _loggedMissingSpineForAim = true;
+                        Debug.LogWarning($"{nameof(BeaverPlayerBehaviour)}: Spine transform is not assigned; aim body rotation skipped.", this);
+                    }
+                    return;
+                }
+
                 Quaternion direction = Quaternion.LookRotation(camForward);
                 if (bowEquipped==false)
                 {
@@ -677,10 +713,20 @@ namespace Beavermania.Player
         }
         public void CountArrows()
         {
+            ClampArrowMunition();
+            if (Arrows == null)
+                return;
+
             var i = 0;
             foreach (var arrow in Arrows)
             {
-                if (i < arrowMunition )
+                if (arrow == null)
+                {
+                    i++;
+                    continue;
+                }
+                int visibleArrows = Arrows != null ? Mathf.Min(arrowMunition, Arrows.Length) : arrowMunition;
+                if (i < visibleArrows)
                 {
                     arrow.SetActive(true);
                 }
@@ -690,6 +736,219 @@ namespace Beavermania.Player
                 }
                 i++;
             }
+        }
+
+        /// <summary>Whether the player has arrows to nock (does not check stamina).</summary>
+        public bool HasArrowAmmo()
+        {
+            return bowEquipped && arrowMunition > 0;
+        }
+
+        /// <summary>Whether a bow shot can be released right now (ammo + stamina).</summary>
+        public bool CanFireArrow()
+        {
+            return HasArrowAmmo() && CurrentStamina > 0;
+        }
+
+        int ResolveMaxArrowMunition()
+        {
+            int cap = maxArrowMunition > 0 ? maxArrowMunition : 99;
+            if (Arrows != null && Arrows.Length > 0)
+                cap = Mathf.Max(cap, Arrows.Length);
+            return cap;
+        }
+
+        void ClampArrowMunition()
+        {
+            arrowMunition = Mathf.Clamp(arrowMunition, 0, ResolveMaxArrowMunition());
+        }
+
+        void RefreshArrowHudText()
+        {
+            ArrowText = "ARROWS (RM): " + arrowMunition;
+            if (PlayerHudState != null)
+                PlayerHudState.ArrowText = ArrowText;
+        }
+
+        void SetArrowMunition(int value)
+        {
+            arrowMunition = value;
+            ClampArrowMunition();
+            CountArrows();
+            RefreshArrowHudText();
+        }
+
+        void ApplyArrowMunitionDelta(int delta)
+        {
+            arrowMunition += delta;
+            ClampArrowMunition();
+            CountArrows();
+            RefreshArrowHudText();
+        }
+
+        bool CanBeginBowDraw()
+        {
+            if (!bowEquipped || arrowReady || _bowAimSessionOpen)
+                return false;
+            if (_bowWaitingForRmbRelease)
+                return false;
+            if (Time.time < _bowNextDrawAllowedTime)
+                return false;
+            return true;
+        }
+
+        void MarkBowShotResolved()
+        {
+            _bowWaitingForRmbRelease = true;
+            _bowNextDrawAllowedTime = Time.time + bowShotCooldown;
+        }
+
+        /// <summary>Decrements stored arrow count after a valid shot (or other authoritative spend). Clamps and refreshes quiver visuals.</summary>
+        public void ConsumeArrow(int amount = 1)
+        {
+            if (amount <= 0)
+                return;
+            arrowMunition -= amount;
+            ClampArrowMunition();
+            CountArrows();
+            RefreshArrowHudText();
+        }
+
+        Camera ResolveBowAimCamera()
+        {
+            if (bowAimCamera != null)
+                return bowAimCamera;
+            if (cachedMainCamera == null)
+                CacheMainCamera();
+            if (cachedMainCamera != null)
+                return cachedMainCamera;
+            return Camera.main;
+        }
+
+        LayerMask ResolveBowAimRaycastLayers()
+        {
+            return bowAimRaycastLayers.value != 0 ? bowAimRaycastLayers : (LayerMask)~0;
+        }
+
+        bool IsBowAimHitSelf(Collider c)
+        {
+            return c != null && c.GetComponentInParent<BeaverPlayerBehaviour>() == this;
+        }
+
+        Vector3 ResolveBowAimTargetPoint(Ray ray, float maxDist, LayerMask mask)
+        {
+            if (!Physics.Raycast(ray, out RaycastHit hit, maxDist, mask, QueryTriggerInteraction.Ignore))
+                return ray.origin + ray.direction * maxDist;
+
+            if (!IsBowAimHitSelf(hit.collider))
+                return hit.point;
+
+            const float skin = 0.08f;
+            var origin = hit.point + ray.direction * skin;
+            float remain = maxDist - hit.distance - skin;
+            if (remain > 0.01f && Physics.Raycast(origin, ray.direction, out RaycastHit hit2, remain, mask, QueryTriggerInteraction.Ignore)
+                && !IsBowAimHitSelf(hit2.collider))
+                return hit2.point;
+
+            return ray.origin + ray.direction * maxDist;
+        }
+
+        bool TryGetBowViewportAimRay(out Ray aimRay, out Vector3 targetPoint)
+        {
+            aimRay = default;
+            targetPoint = default;
+
+            Camera cam = ResolveBowAimCamera();
+            if (cam == null)
+                return false;
+
+            aimRay = cam.ViewportPointToRay(new Vector3(0.5f, 0.5f + bowAimViewportYOffset, 0f));
+            float maxDist = Mathf.Max(1f, bowAimRayMaxDistance);
+            LayerMask mask = ResolveBowAimRaycastLayers();
+            targetPoint = ResolveBowAimTargetPoint(aimRay, maxDist, mask);
+            return true;
+        }
+
+        bool TryGetBowScreenAim(out Vector3 fireDirection, out Vector3 spawnPosition, out Quaternion projectileRotation)
+        {
+            fireDirection = transform.forward;
+            spawnPosition = Spine != null ? Spine.position : transform.position;
+            projectileRotation = Quaternion.LookRotation(fireDirection);
+
+            if (!TryGetBowViewportAimRay(out Ray aimRay, out Vector3 targetPoint))
+            {
+                if (!_loggedMissingBowAimCamera)
+                {
+                    _loggedMissingBowAimCamera = true;
+                    Debug.LogWarning($"{nameof(BeaverPlayerBehaviour)}: no Camera available for bow screen-center aim; using spine forward as fallback.", this);
+                }
+                fireDirection = Spine != null ? Spine.forward : transform.forward;
+                if (fireDirection.sqrMagnitude < 1e-8f)
+                    fireDirection = Vector3.forward;
+                projectileRotation = Quaternion.LookRotation(fireDirection.normalized);
+                spawnPosition += fireDirection * Mathf.Max(0f, bowProjectileSpawnClearance);
+                return true;
+            }
+
+            spawnPosition = Spine != null ? Spine.position : transform.position;
+            fireDirection = (targetPoint - spawnPosition).normalized;
+            if (fireDirection.sqrMagnitude < 1e-8f)
+                fireDirection = aimRay.direction.normalized;
+            projectileRotation = Quaternion.LookRotation(fireDirection);
+            spawnPosition += fireDirection * Mathf.Max(0f, bowProjectileSpawnClearance);
+            return true;
+        }
+
+        Projectile ResolveArrowProjectilePrefab()
+        {
+            if (Arrow == null)
+                return null;
+
+            if (Arrow.TryGetComponent(out Projectile single) && single.isArrow)
+                return single;
+
+            var all = Arrow.GetComponents<Projectile>();
+            for (var i = 0; i < all.Length; i++)
+            {
+                if (all[i] != null && all[i].isArrow)
+                    return all[i];
+            }
+
+            return all.Length > 0 ? all[0] : null;
+        }
+
+        bool TryFireBowFromScreenCenter()
+        {
+            Projectile projectilePrefab = ResolveArrowProjectilePrefab();
+            if (projectilePrefab == null)
+                return false;
+
+            if (!TryGetBowScreenAim(out Vector3 fireDirection, out Vector3 spawnPos, out _))
+                return false;
+
+            int ammoBefore = arrowMunition;
+            var spawned = Projectile.Spawn(projectilePrefab, spawnPos, Quaternion.identity, fireDirection, this);
+            if (spawned == null)
+            {
+                if (debugBowCombat)
+                    Debug.Log($"[Bow] Spawn failed; ammo stays {ammoBefore}", this);
+                return false;
+            }
+
+            ConsumeArrow(1);
+            MarkBowShotResolved();
+            // #region agent log
+            AgentDebugLog.Write("H1", "BeaverPlayerBehaviour.TryFireBowFromScreenCenter", "consume after spawn",
+                $"{{\"ammoBefore\":{ammoBefore},\"ammoAfter\":{arrowMunition},\"spawnPos\":{AgentDebugLog.Vec3(spawnPos)},\"dir\":{AgentDebugLog.Vec3(fireDirection)}}}");
+            // #endregion
+            if (debugBowCombat)
+                Debug.Log($"[Bow] Fired 1 arrow. Ammo {ammoBefore} -> {arrowMunition}", this);
+
+            Sound.ArrowShoot();
+            CurrentStamina -= 30;
+            if (HealthBar != null)
+                HealthBar.SetStamina(CurrentStamina);
+            return true;
         }
         public void SpawnCheckpointPopUpEffect(Vector3 position) => SpawnPopUpEffect(position);
 
@@ -852,16 +1111,17 @@ namespace Beavermania.Player
 
         public void ActivateLooseMenu()
         {
-            //MusicOP.StopMusic();
             GameTimeScaleGate.SetFreeze(GameTimeScaleGate.FreezeToken.LooseScreen, true);
             ShowCursor();
-            LooseScreen.SetActive(true);
+            if (LooseScreen != null)
+                LooseScreen.SetActive(true);
         }
+
         public void HideLooseMenu()
         {
-            //MusicOP.ResumeMusic();
             GameTimeScaleGate.SetFreeze(GameTimeScaleGate.FreezeToken.LooseScreen, false);
-            LooseScreen.SetActive(false);
+            if (LooseScreen != null)
+                LooseScreen.SetActive(false);
             if (!IsGameplayInputLocked())
                 HideCursor();
         }
@@ -976,16 +1236,21 @@ namespace Beavermania.Player
         {
             CacheMainCamera();
             BindHudState();
-            arrowModel.SetActive(false);
+            if (arrowModel != null)
+                arrowModel.SetActive(false);
             bowAim = new Vector3(-0.33f, 20f, -0.3f);
             if (CamForTraders != null)
                 CamForTraders.enabled = false;
-            SpawnPopUpEffect(Root.position);
+            if (Root != null)
+                SpawnPopUpEffect(Root.position);
             HideCursor();
-            AimIcon.SetActive(false);
-            MunitionDisplay.SetActive(false);
+            if (AimIcon != null)
+                AimIcon.SetActive(false);
+            if (MunitionDisplay != null)
+                MunitionDisplay.SetActive(false);
             Player = GetComponent<Rigidbody>();
-            GM = GameObject.FindGameObjectWithTag("GM").GetComponent<GameMaster>();
+            var gmObject = GameObject.FindGameObjectWithTag("GM");
+            GM = gmObject != null ? gmObject.GetComponent<GameMaster>() : null;
             //Enable/Disable Background music
             if (seekMusic == true)
             {
@@ -1009,14 +1274,24 @@ namespace Beavermania.Player
                 }
             }
             CurrentHealth = MaxHealth;
-            HealthBar.SetMaxHealth(CurrentHealth);
-            CurrentStamina = MaxStamina;
-            HealthBar.SetMaxStamina(CurrentStamina);
-            HealShape = HealEffect.shape;
+            if (HealthBar != null)
+            {
+                HealthBar.SetMaxHealth(CurrentHealth);
+                CurrentStamina = MaxStamina;
+                HealthBar.SetMaxStamina(CurrentStamina);
+            }
+            else
+            {
+                CurrentStamina = MaxStamina;
+            }
+
+            if (HealEffect != null)
+                HealShape = HealEffect.shape;
             ParryOFF();
             HoneyOFF();
             GoldOFF();
-            ElectricEffect.SetActive(false);
+            if (ElectricEffect != null)
+                ElectricEffect.SetActive(false);
             Lives = 3;
             StaminaClock = StaminaClockInitial;
             JumpLimit = JumpNum;
@@ -1024,21 +1299,38 @@ namespace Beavermania.Player
             FallClock = InitialFall;
             InsertWalk = Walk;
             InsertRun = Run;
-            LooseScreen.SetActive(false);
-            HologramedBridge.SetActive(false);
-            appleOBJ.SetActive(false);
-            gobletOBJ.SetActive(false);
-            for (int i = 0; i < ArmorSet.Length; i++)
+            if (LooseScreen != null)
+                LooseScreen.SetActive(false);
+            if (HologramedBridge != null)
+                HologramedBridge.SetActive(false);
+            if (appleOBJ != null)
+                appleOBJ.SetActive(false);
+            if (gobletOBJ != null)
+                gobletOBJ.SetActive(false);
+            if (ArmorSet != null)
             {
-                ArmorSet[i].SetActive(false);
+                for (int i = 0; i < ArmorSet.Length; i++)
+                {
+                    if (ArmorSet[i] != null)
+                        ArmorSet[i].SetActive(false);
+                }
             }
-            for (int i = 0; i < Bow.Length; i++)
+
+            if (Bow != null)
             {
-                Bow[i].SetActive(false);
+                for (int i = 0; i < Bow.Length; i++)
+                {
+                    if (Bow[i] != null)
+                        Bow[i].SetActive(false);
+                }
             }
-            FreeLook.m_Orbits[0].m_Radius = 4;
-            FreeLook.m_Orbits[1].m_Radius = 6;
-            FreeLook.m_Orbits[2].m_Radius = 5;
+
+            if (FreeLook != null)
+            {
+                FreeLook.m_Orbits[0].m_Radius = 4;
+                FreeLook.m_Orbits[1].m_Radius = 6;
+                FreeLook.m_Orbits[2].m_Radius = 5;
+            }
             pauseController = FindObjectOfType<PauseController>();
             if (CamForTraders != null)
             {
@@ -1047,6 +1339,7 @@ namespace Beavermania.Player
             }
             var flatFwd = new Vector3(transform.forward.x, 0, transform.forward.z);
             stableCameraForwardXZ = flatFwd.sqrMagnitude > 1e-6f ? flatFwd.normalized : Vector3.forward;
+            CountArrows();
             SyncHudState();
         }
         [System.Obsolete]
@@ -1054,6 +1347,7 @@ namespace Beavermania.Player
         {
             ApplyPauseLikeUiCameraState();
             bool inputLocked = IsGameplayInputLocked();
+            BufferSecondaryMouseInputEdges(inputLocked);
 
             //Parry animations
             if (!inputLocked && Defend == true)
@@ -1141,23 +1435,26 @@ namespace Beavermania.Player
                 AppleText = "APPLES (T): " + Apple;
                 GobletText = "GOBLETS (Y): " + GobletPickup;
                 ArrowText = "ARROWS (RM): " + arrowMunition;
-                if (Lives == 3)
+                if (ICON_1 != null || ICON_2 != null || ICON_3 != null)
                 {
-                    ICON_1.SetActive(true);
-                    ICON_2.SetActive(true);
-                    ICON_3.SetActive(true);
-                }
-                if (Lives == 2)
-                {
-                    ICON_1.SetActive(false);
-                    ICON_2.SetActive(true);
-                    ICON_3.SetActive(true);
-                }
-                if (Lives == 1)
-                {
-                    ICON_1.SetActive(false);
-                    ICON_2.SetActive(false);
-                    ICON_3.SetActive(true);
+                    if (Lives >= 3)
+                    {
+                        if (ICON_1 != null) ICON_1.SetActive(true);
+                        if (ICON_2 != null) ICON_2.SetActive(true);
+                        if (ICON_3 != null) ICON_3.SetActive(true);
+                    }
+                    else if (Lives == 2)
+                    {
+                        if (ICON_1 != null) ICON_1.SetActive(false);
+                        if (ICON_2 != null) ICON_2.SetActive(true);
+                        if (ICON_3 != null) ICON_3.SetActive(true);
+                    }
+                    else if (Lives == 1)
+                    {
+                        if (ICON_1 != null) ICON_1.SetActive(false);
+                        if (ICON_2 != null) ICON_2.SetActive(false);
+                        if (ICON_3 != null) ICON_3.SetActive(true);
+                    }
                 }
             }
             if (!inputLocked)
@@ -1279,18 +1576,13 @@ namespace Beavermania.Player
 
                                     //Turn off Bow Gear
                                     bowEquipped = false;
-                                    MunitionDisplay.SetActive(false);
-                                    for (int i = 0; i < Bow.Length; i++)
-                                    {
-                                        Bow[i].SetActive(false);
-                                    }
+                                    if (MunitionDisplay != null)
+                                        MunitionDisplay.SetActive(false);
+                                    SetBowActive(false);
 
                                     //Turn off Armor Set
                                     ArmorEquipped = false;
-                                    for (int item = 0; item < ArmorSet.Length; item++)
-                                    {
-                                        ArmorSet[item].SetActive(false);
-                                    }
+                                    SetArmorSetActive(false);
 
                                     break;
                                 }
@@ -1307,18 +1599,13 @@ namespace Beavermania.Player
 
                                     //Turn off Bow
                                     bowEquipped = false;
-                                    MunitionDisplay.SetActive(false);
-                                    for (int i = 0; i < Bow.Length; i++)
-                                    {
-                                        Bow[i].SetActive(false);
-                                    }
+                                    if (MunitionDisplay != null)
+                                        MunitionDisplay.SetActive(false);
+                                    SetBowActive(false);
 
                                     //Turn off Armor Set
                                     ArmorEquipped = false;
-                                    for (int item = 0; item < ArmorSet.Length; item++)
-                                    {
-                                        ArmorSet[item].SetActive(false);
-                                    }
+                                    SetArmorSetActive(false);
 
                                     break;
                                 }
@@ -1336,18 +1623,13 @@ namespace Beavermania.Player
 
                                     //Turn on Bow
                                     bowEquipped = true;
-                                    MunitionDisplay.SetActive(true);
-                                    for (int i = 0; i < Bow.Length; i++)
-                                    {
-                                        Bow[i].SetActive(true);
-                                    }
+                                    if (MunitionDisplay != null)
+                                        MunitionDisplay.SetActive(true);
+                                    SetBowActive(true);
 
                                     //Turn off Armor Set
                                     ArmorEquipped = false;
-                                    for (int item = 0; item < ArmorSet.Length; item++)
-                                    {
-                                        ArmorSet[item].SetActive(false);
-                                    }
+                                    SetArmorSetActive(false);
 
                                     break;
                                 }
@@ -1362,20 +1644,15 @@ namespace Beavermania.Player
 
                                     //Turn off Bow
                                     bowEquipped = false;
-                                    MunitionDisplay.SetActive(false);
-                                    for (int i = 0; i < Bow.Length; i++)
-                                    {
-                                        Bow[i].SetActive(false);
-                                    }
+                                    if (MunitionDisplay != null)
+                                        MunitionDisplay.SetActive(false);
+                                    SetBowActive(false);
 
                                     //Turn on Armor Set
                                     ArmorEquipped = true;
                                     GroundAttack = 150;
                                     Otter.SetBool("armor", true);
-                                    for (int item = 0; item < ArmorSet.Length; item++)
-                                    {
-                                        ArmorSet[item].SetActive(true);
-                                    }
+                                    SetArmorSetActive(true);
                                     break;
                                 }
 
@@ -1577,13 +1854,10 @@ namespace Beavermania.Player
             {
                 RotateForward();
             }
+
             if (PlayerInputReader.WasAnyKeyPressedDown() && !PlayerInputReader.IsSecondaryHeld())
             {
                 keepLooking = false;
-            }
-            if (bowEquipped==true && PlayerInputReader.WasInteractPressed()&&arrowMunition>0 && CurrentStamina>0)
-            {
-                arrowMunition--;
             }
         }
 
@@ -1654,12 +1928,18 @@ namespace Beavermania.Player
 
             bool inputLocked = IsGameplayInputLocked();
 
+            bool secondaryHeldRmb = PlayerInputReader.IsSecondaryHeld();
+
             if (inputLocked)
             {
                 if (Stone != null)
                     Stone.SetActive(false);
                 if (AimIcon != null)
                     AimIcon.SetActive(false);
+                _stoneAimSessionActive = false;
+                _bowAimSessionOpen = false;
+                _bowFiredThisAimSession = false;
+                ClearBowDrawState();
             }
 
             //Switch off additional animations if not invoked
@@ -1673,7 +1953,8 @@ namespace Beavermania.Player
                 Otter.SetBool("run", false);
                 Otter.SetBool("midair", false);
                 Otter.SetBool("roll", false);
-                Otter.SetBool("aim", false);
+                if (!arrowReady && !_stoneAimSessionActive)
+                    Otter.SetBool("aim", false);
                 //Otter.SetBool("draw", false);
                 Rolling = false;
                 movementInvoked = false;
@@ -1681,104 +1962,166 @@ namespace Beavermania.Player
             }
             if (!inputLocked)
             {
-            //Stoning action
-            if (bowEquipped == false)
-            {
-                if (PlayerInputReader.IsSecondaryHeld()
-                    && CurrentStamina > 0
-                    && !PlayerInputReader.IsRollHeld()
-                    && bowEquipped == false && grounded == true)
+                bool mouse1Down = _mouse1DownBuffered;
+                bool mouse1Up = _mouse1UpBuffered;
+                _mouse1DownBuffered = false;
+                _mouse1UpBuffered = false;
+
+                bool secondaryPressEdge = secondaryHeldRmb && !_secondaryHeldLastFixed;
+                bool secondaryReleaseEdge = !secondaryHeldRmb && _secondaryHeldLastFixed;
+
+                // Stoning (RMB hold to aim, release to throw / cancel)
+                if (bowEquipped == false)
                 {
-                    Stone.SetActive(true);
-                    AimIcon.SetActive(true);
-                    Otter.SetBool("aim", true);
-                    Otter.Play("Aim");
-                    if (PlayerInputReader.WasInteractPressed())
+                    if (secondaryHeldRmb
+                        && CurrentStamina > 0
+                        && !PlayerInputReader.IsRollHeld()
+                        && grounded == true)
+                    {
+                        _stoneAimSessionActive = true;
+                        if (Stone != null)
+                            Stone.SetActive(true);
+                        if (AimIcon != null)
+                            AimIcon.SetActive(true);
+                        Otter.SetBool("aim", true);
+                        Otter.Play("Aim");
+                        if (PlayerInputReader.WasInteractPressed())
+                        {
+                            if (XZForward.sqrMagnitude > LookRotationEpsilon)
+                            {
+                                rotGoal = Quaternion.LookRotation(XZForward);
+                                transform.rotation = rotGoal;
+                            }
+                            Otter.Play("Crouch");
+                        }
+                        keepLooking = true;
+                    }
+
+                    if (_stoneAimSessionActive && secondaryHeldRmb)
+                    {
+                        bool canMaintainStoneAim = CurrentStamina > 0
+                            && !PlayerInputReader.IsRollHeld()
+                            && grounded;
+                        if (!canMaintainStoneAim)
+                        {
+                            Otter.SetBool("aim", false);
+                            if (Stone != null)
+                                Stone.SetActive(false);
+                            if (AimIcon != null)
+                                AimIcon.SetActive(false);
+                            _stoneAimSessionActive = false;
+                            keepLooking = false;
+                        }
+                    }
+
+                    if (_stoneAimSessionActive && !secondaryHeldRmb)
+                    {
+                        if (CurrentStamina > 0)
+                        {
+                            Otter.SetBool("slash", false);
+                            Otter.Play("Throw");
+                            Projectile.Spawn(Ball, AttackPoint.position + new Vector3(0, 0.6f, 0), Spine.rotation);
+                            CurrentStamina -= 20;
+                            HealthBar.SetStamina(CurrentStamina);
+                        }
+
+                        Otter.SetBool("aim", false);
+                        if (Stone != null)
+                            Stone.SetActive(false);
+                        if (AimIcon != null)
+                            AimIcon.SetActive(false);
+                        _stoneAimSessionActive = false;
+                        keepLooking = false;
+                    }
+                }
+
+                // Bow (press to nock, release edge to fire once per draw session)
+                if (bowEquipped)
+                {
+                    if (!secondaryHeldRmb)
+                        _bowWaitingForRmbRelease = false;
+
+                    bool bowPressEdge = secondaryPressEdge || mouse1Down;
+                    if (CanBeginBowDraw() && bowPressEdge)
                     {
                         if (XZForward.sqrMagnitude > LookRotationEpsilon)
                         {
                             rotGoal = Quaternion.LookRotation(XZForward);
                             transform.rotation = rotGoal;
                         }
-                        Otter.Play("Crouch");
+                        if (HasArrowAmmo())
+                        {
+                            _bowAimSessionOpen = true;
+                            _bowFiredThisAimSession = false;
+                            CountArrows();
+                            Sound.ArrowDraw();
+                            arrowReady = true;
+                            if (AimIcon != null)
+                                AimIcon.SetActive(true);
+                            keepLooking = true;
+                            if (arrowModel != null)
+                                arrowModel.SetActive(true);
+                            if (bowString != null)
+                                bowString.SetActive(false);
+                            Otter.SetBool("draw", true);
+                            Otter.SetBool("aim", true);
+                            if (stringLine != null)
+                            {
+                                stringLine.enabled = true;
+                                stringLine.useWorldSpace = false;
+                            }
+                            if (debugBowCombat)
+                                Debug.Log($"[Bow] Nock started. Ammo={arrowMunition}", this);
+                        }
+                        else if (arrowMunition <= 0)
+                        {
+                            Sound.Error();
+                            Plattering = "Not enough arrows!";
+                            ChangeSpeech = 1f;
+                        }
                     }
-                    keepLooking = true;
-                }
-                if (PlayerInputReader.WasSecondaryReleased() && Stone.active && CurrentStamina > 0)
-                {
-                    Otter.SetBool("slash", false);
-                    Otter.Play("Throw");
-                    Projectile.Spawn(Ball, AttackPoint.position + new Vector3(0, 0.6f, 0), Spine.rotation);
-                    CurrentStamina -= 20;
-                    HealthBar.SetStamina(CurrentStamina);
-                }
-                if (!PlayerInputReader.IsSecondaryHeld())
-                {
-                    Stone.SetActive(false);
-                    AimIcon.SetActive(false);
-                }
-            }
-            //Bow action       
-            if (bowEquipped == true)
-            {
-                if (PlayerInputReader.WasInteractPressed() && !PlayerInputReader.WasSecondaryReleased())
-                {
-                    if (XZForward.sqrMagnitude > LookRotationEpsilon)
+
+                    bool bowReleaseEdge = secondaryReleaseEdge || mouse1Up;
+                    if (_bowAimSessionOpen && arrowReady && !_bowFiredThisAimSession && bowReleaseEdge)
                     {
-                        rotGoal = Quaternion.LookRotation(XZForward);
-                        transform.rotation = rotGoal;
-                    }
-                    if (arrowMunition > 0 &&
-                    CurrentStamina > 0)
-                    {
-                        CountArrows();
-                        Sound.ArrowDraw();
-                        arrowReady = true;
-                        AimIcon.SetActive(true);
-                        keepLooking = true;
-                        arrowModel.SetActive(true);
-                        bowString.SetActive(false);
-                        Otter.SetBool("draw", true);
-                        stringLine.enabled = true;
-                        stringLine.useWorldSpace = false;
-                    }
-                    else
-                    {
-                        arrowReady = false;
-                        Otter.SetBool("draw", false);
-                        Sound.Error();
-                        if (CurrentStamina <= 0)
+                        _bowFiredThisAimSession = true;
+                        _bowAimSessionOpen = false;
+                        // #region agent log
+                        AgentDebugLog.Write("H1", "BeaverPlayerBehaviour.FixedUpdate", "bow release edge",
+                            $"{{\"ammo\":{arrowMunition},\"secondaryRelease\":{secondaryReleaseEdge.ToString().ToLowerInvariant()},\"mouse1Up\":{mouse1Up.ToString().ToLowerInvariant()}}}");
+                        // #endregion
+
+                        if (!HasArrowAmmo())
+                        {
+                            Sound.Error();
+                            Plattering = "Not enough arrows!";
+                            ChangeSpeech = 1f;
+                            MarkBowShotResolved();
+                            ClearBowDrawState();
+                        }
+                        else if (CurrentStamina <= 0)
                         {
                             Plattering = "Jee, let me catch a breath!";
+                            ChangeSpeech = 1f;
+                            MarkBowShotResolved();
+                            ClearBowDrawState();
                         }
-                        if (arrowMunition == 0)
+                        else if (TryFireBowFromScreenCenter())
                         {
-                            Plattering = "Not enough arrows!";
+                            ClearBowDrawState();
                         }
-                        ChangeSpeech = 1f;
+                        else
+                        {
+                            MarkBowShotResolved();
+                            ClearBowDrawState();
+                        }
                     }
-                }
-                if (arrowReady == true && PlayerInputReader.WasSecondaryReleased() && CurrentStamina > 0)
-                {
-                    Sound.ArrowShoot();
-                    Vector3 shootDir = cameraRelativeForward.sqrMagnitude > LookRotationEpsilon
-                        ? cameraRelativeForward.normalized
-                        : (XZForward.sqrMagnitude > LookRotationEpsilon ? XZForward.normalized : Vector3.zero);
-                    if (shootDir.sqrMagnitude <= LookRotationEpsilon)
+                    else if (arrowReady)
                     {
-                        Vector3 flatF = new Vector3(transform.forward.x, 0, transform.forward.z);
-                        shootDir = flatF.sqrMagnitude > LookRotationEpsilon ? flatF.normalized : Vector3.forward;
+                        Otter.SetBool("draw", true);
+                        Otter.SetBool("aim", true);
                     }
-                    Projectile.Spawn(Arrow, Spine.position + new Vector3(0, 1.4f * shootDir.y, 1.4f * shootDir.z), Quaternion.LookRotation(shootDir) * Quaternion.Euler(90, 0, 0));
-                    CurrentStamina -= 30;
-                    HealthBar.SetStamina(CurrentStamina);
-                    arrowModel.SetActive(false);
-                    stringLine.enabled = false;
-                    bowString.SetActive(true);
-                    Otter.SetBool("draw", false);
-                    arrowReady = false;
                 }
-            }
 
             //Switch off hurt and heal effects automaticly
             {
@@ -1890,9 +2233,11 @@ namespace Beavermania.Player
                     }
                 }
             }
+
             }
-       
-        
+
+            _secondaryHeldLastFixed = secondaryHeldRmb;
+
             //Aurborne and landing sequence animations conditioning
             {
                 //+ Player's slide and full-break conditioning on ground
@@ -1999,6 +2344,63 @@ namespace Beavermania.Player
                 }
             }
 
+        }
+
+        void BufferSecondaryMouseInputEdges(bool inputLocked)
+        {
+            if (inputLocked)
+            {
+                _mouse1DownBuffered = false;
+                _mouse1UpBuffered = false;
+                return;
+            }
+
+            _mouse1DownBuffered |= UnityEngine.Input.GetKeyDown(KeyCode.Mouse1);
+            _mouse1UpBuffered |= UnityEngine.Input.GetKeyUp(KeyCode.Mouse1);
+        }
+
+        void SetBowActive(bool active)
+        {
+            if (Bow == null)
+                return;
+
+            for (int i = 0; i < Bow.Length; i++)
+            {
+                if (Bow[i] != null)
+                    Bow[i].SetActive(active);
+            }
+        }
+
+        void SetArmorSetActive(bool active)
+        {
+            if (ArmorSet == null)
+                return;
+
+            for (int i = 0; i < ArmorSet.Length; i++)
+            {
+                if (ArmorSet[i] != null)
+                    ArmorSet[i].SetActive(active);
+            }
+        }
+
+        void ClearBowDrawState()
+        {
+            _bowAimSessionOpen = false;
+            if (arrowModel != null)
+                arrowModel.SetActive(false);
+            if (stringLine != null)
+                stringLine.enabled = false;
+            if (bowString != null)
+                bowString.SetActive(true);
+            if (Otter != null)
+            {
+                Otter.SetBool("draw", false);
+                Otter.SetBool("aim", false);
+            }
+            if (AimIcon != null)
+                AimIcon.SetActive(false);
+            arrowReady = false;
+            keepLooking = false;
         }
 
         void BindHudState()

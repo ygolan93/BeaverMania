@@ -105,18 +105,18 @@ MonoBehaviour:
   isFireBall: 0
   Sound: {fileID: 9007213431267383372}
   clock: 10
-  forwardVel: 80
-  upwardVel: 200
+  forwardVel: 200
+  upwardVel: 30
   Explosion: {fileID: 725748389856807714, guid: 4bda94453d2ca7444a0fff05b2d425f5, type: 3}
   Damage: 2000
   arrowPickup: {fileID: 6361346071647052729, guid: 605ef2c2a1119ab4880c691c239e6acb, type: 3}
   minPickupSpawnDelay: 0.5
   minArrowForwardSpeed: 50
-  minArrowFlightSeconds: 3
+  minArrowFlightSeconds: 5
   collisionResponseGrace: 0.2
   debugBowProjectile: 0
   additionalArrowIgnoreRoots: []
-  arrowMeshTipLocalAxis: {x: 0, y: 1, z: 0}
+  arrowMeshTipLocalAxis: {x: 0, y: 5, z: 0}
   arrowVisualMeshRoot: {fileID: 0}
   arrowVisualLocalRotationOffsetEuler: {x: 90, y: 0, z: 0}
   arrowMeshRotationOffsetEuler: {x: 90, y: 0, z: 0}

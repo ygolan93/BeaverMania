@@ -44,7 +44,7 @@ Light:
   m_Type: 2
   m_Shape: 0
   m_Color: {r: 1, g: 0.32040966, b: 0, a: 1}
-  m_Intensity: 2.8962955
+  m_Intensity: 2.7400248
   m_Range: 7
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -126,8 +126,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8764043878647920493}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -3.149, z: 0.44351}
-  m_LocalScale: {x: 5, y: 5, z: 5}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 8769712368058676127}
@@ -4915,13 +4915,25 @@ MonoBehaviour:
   Ball: {fileID: 4052894699184453993}
   isArrow: 0
   isFireBall: 1
-  Sound: {fileID: 0}
+  Sound: {fileID: 1091704372948249461}
   clock: 10
-  forwardVel: 90
-  upwardVel: 1
+  forwardVel: 2000
+  upwardVel: 300
   Explosion: {fileID: 2433282508537954060, guid: 9cfe40900aead6b46be69d2c02675f7e, type: 3}
   Damage: 20000
   arrowPickup: {fileID: 6361346071647052729, guid: 605ef2c2a1119ab4880c691c239e6acb, type: 3}
+  minPickupSpawnDelay: 0.25
+  minArrowForwardSpeed: 100
+  minArrowFlightSeconds: 4
+  collisionResponseGrace: 0.16
+  debugBowProjectile: 0
+  additionalArrowIgnoreRoots:
+  - {fileID: 8767152486562788127}
+  arrowMeshTipLocalAxis: {x: 0, y: 1, z: 0}
+  arrowVisualMeshRoot: {fileID: 8767152486562788127}
+  arrowVisualLocalRotationOffsetEuler: {x: 90, y: 0, z: 0}
+  arrowMeshRotationOffsetEuler: {x: 90, y: 0, z: 0}
+  debugLaunchRayLength: 12
 --- !u!54 &4052894699184453993
 Rigidbody:
   m_ObjectHideFlags: 0

@@ -2426,5 +2426,63 @@ namespace Beavermania.Player
             if (PlayerHudState != null)
                 PlayerHudState.CopyFrom(this, PlayerObjective != null, PlayerObjective != null ? PlayerObjective.Instruction : null);
         }
+
+        public bool OwnsArsenalItem(string itemId)
+        {
+            return Arsenal != null && Arsenal.Contains(itemId);
+        }
+
+        public bool TryAcquireHammersFromShop()
+        {
+            if (OwnsArsenalItem("Hammers"))
+                return false;
+
+            if (Arsenal == null)
+                Arsenal = new List<string>();
+
+            Arsenal.Add("Hammers");
+            ArsenalCounter++;
+            return true;
+        }
+
+        public bool TryAcquireBowFromShop(int starterArrowCount = 5)
+        {
+            if (OwnsArsenalItem("Bow"))
+                return false;
+
+            if (Arsenal == null)
+                Arsenal = new List<string>();
+
+            Arsenal.Add("Bow");
+            ArsenalCounter++;
+
+            if (arrowMunition <= 0)
+                SetArrowMunition(starterArrowCount);
+            else
+                ApplyArrowMunitionDelta(starterArrowCount);
+
+            return true;
+        }
+
+        public bool TryAcquireArmorSetFromShop()
+        {
+            if (OwnsArsenalItem("ArmorSet"))
+                return false;
+
+            if (Arsenal == null)
+                Arsenal = new List<string>();
+
+            Arsenal.Add("ArmorSet");
+            ArsenalCounter++;
+            return true;
+        }
+
+        public void AddArrowMunition(int amount)
+        {
+            if (amount <= 0)
+                return;
+
+            ApplyArrowMunitionDelta(amount);
+        }
     }
 }

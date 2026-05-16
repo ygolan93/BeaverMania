@@ -20,6 +20,7 @@ namespace Beavermania.NPC
         public bool skipPressed = false;
         [SerializeField] bool Rotate;
         [SerializeField] float PanelPopUp;
+        bool shopOpen;
         bool traderOfferPresentationActive;
         Quaternion FormalLook;
         bool loggedMissingMerchant;
@@ -68,6 +69,9 @@ namespace Beavermania.NPC
                 Debug.LogError($"{nameof(Trader)} on '{name}' has no {nameof(Shop)} assigned (assign an inactive placeholder if no shop).", this);
             }
 
+            if (PanelPopUp <= 0f)
+                Debug.LogWarning($"{nameof(Trader)} on '{name}' has {nameof(PanelPopUp)} <= 0; proximity UI will never activate.", this);
+
             if (TradeText == null && !loggedMissingTradeText)
             {
                 loggedMissingTradeText = true;
@@ -81,6 +85,95 @@ namespace Beavermania.NPC
                 go.SetActive(active);
         }
 
+        static void SetActiveWithParents(Transform target, bool active)
+        {
+            if (target == null)
+                return;
+
+            if (active)
+            {
+                Transform node = target;
+                while (node != null)
+                {
+                    if (!node.gameObject.activeSelf)
+                        node.gameObject.SetActive(true);
+                    node = node.parent;
+                }
+            }
+
+            target.gameObject.SetActive(active);
+        }
+
+        bool IsShopNestedUnderDialoguePanel()
+        {
+            return DialoguePanel != null && Shop != null && Shop.transform.IsChildOf(DialoguePanel.transform);
+        }
+
+        void ShowOnlyShopUnderDialoguePanel()
+        {
+            SafeSetActive(DialoguePanel, true);
+            for (int i = 0; i < DialoguePanel.transform.childCount; i++)
+            {
+                Transform child = DialoguePanel.transform.GetChild(i);
+                bool showShop = child.gameObject == Shop;
+                Debug.Log($"Trader '{name}': ShowOnlyShop child '{child.name}' => {(showShop ? "show" : "hide")}", this);
+                child.gameObject.SetActive(showShop);
+            }
+
+            SetActiveWithParents(Shop.transform, true);
+        }
+
+        void ShowDialogueHideShop()
+        {
+            if (IsShopNestedUnderDialoguePanel())
+            {
+                SafeSetActive(DialoguePanel, true);
+                for (int i = 0; i < DialoguePanel.transform.childCount; i++)
+                {
+                    Transform child = DialoguePanel.transform.GetChild(i);
+                    bool showDialogueChild = child.gameObject != Shop;
+                    Debug.Log($"Trader '{name}': ShowDialogueHideShop child '{child.name}' => {(showDialogueChild ? "show" : "hide")}", this);
+                    child.gameObject.SetActive(showDialogueChild);
+                }
+            }
+            else
+            {
+                SafeSetActive(DialoguePanel, true);
+                SafeSetActive(Shop, false);
+            }
+        }
+
+        void RefreshShopUiState(bool inRange)
+        {
+            if (!inRange || skipPressed)
+            {
+                shopOpen = false;
+                SafeSetActive(TradeText, false);
+                SafeSetActive(DialoguePanel, false);
+                SafeSetActive(Shop, false);
+                return;
+            }
+
+            if (shopOpen)
+            {
+                SafeSetActive(TradeText, false);
+                if (IsShopNestedUnderDialoguePanel())
+                    ShowOnlyShopUnderDialoguePanel();
+                else
+                {
+                    SafeSetActive(DialoguePanel, false);
+                    SetActiveWithParents(Shop.transform, true);
+                }
+
+                if (Player != null)
+                    Player.ShowCursor();
+                return;
+            }
+
+            SafeSetActive(TradeText, true);
+            ShowDialogueHideShop();
+        }
+
         // Update is called once per frame
         public void Update()
         {
@@ -89,7 +182,8 @@ namespace Beavermania.NPC
 
             PlayerDistance = Player.transform.position - Merchant.transform.position;
             var Distance = Mathf.Abs(PlayerDistance.magnitude);
-            bool wantOfferPresentation = Player != null && Distance < PanelPopUp && skipPressed == false;
+            bool inRange = Distance < PanelPopUp;
+            bool wantOfferPresentation = inRange && skipPressed == false;
             if (wantOfferPresentation)
             {
                 traderOfferPresentationActive = true;
@@ -101,10 +195,10 @@ namespace Beavermania.NPC
                 Player.RestoreGameplayAfterTrader();
             }
 
-            if (Distance<PanelPopUp&&skipPressed==false)
+            RefreshShopUiState(inRange);
+
+            if (inRange && skipPressed == false && !shopOpen)
             {
-                SafeSetActive(TradeText, true);
-                SafeSetActive(DialoguePanel, true);
                 if (Rotate == true)
                 {
                     Vector3 toPlayer = Player.transform.position - Merchant.transform.position;
@@ -114,23 +208,32 @@ namespace Beavermania.NPC
                         transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(PlayerDistance), 0.1f);
                 }
             }
-
-            else
+            else if (!inRange)
             {
                 transform.rotation = Quaternion.Slerp(transform.rotation, FormalLook, 0.1f);
-                SafeSetActive(TradeText, false);
-                SafeSetActive(DialoguePanel, false);
-                SafeSetActive(Shop, false);
             }
 
             if (Distance > PanelPopUp)
-            {
                 skipPressed = false;
-            }
         }
+
+        public void OpenShop()
+        {
+            if (Shop == null)
+            {
+                Debug.LogWarning($"{nameof(Trader)} on '{name}' cannot open shop: {nameof(Shop)} reference is missing.", this);
+                return;
+            }
+
+            Debug.Log($"Trader '{name}': OpenShop. Shop={Shop.name}", this);
+            shopOpen = true;
+            RefreshShopUiState(inRange: true);
+        }
+
         public void activateSkip()
         {
             skipPressed = true;
+            shopOpen = false;
             traderOfferPresentationActive = false;
             SafeSetActive(TradeText, false);
             SafeSetActive(DialoguePanel, false);
@@ -141,7 +244,10 @@ namespace Beavermania.NPC
 
         public void CloseShop()
         {
+            Debug.Log($"Trader '{name}': CloseShop. Restoring dialogue UI.", this);
+            shopOpen = false;
             SafeSetActive(Shop, false);
+            RefreshShopUiState(inRange: true);
         }
 
         public void Honey()
@@ -156,6 +262,7 @@ namespace Beavermania.NPC
 
         void OnDisable()
         {
+            shopOpen = false;
             traderOfferPresentationActive = false;
             if (Player != null && Player.isAtTrader)
                 Player.RestoreGameplayAfterTrader();

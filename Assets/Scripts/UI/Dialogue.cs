@@ -148,6 +148,36 @@ namespace Beavermania.UI
             }
         }
 
+        public void OpenShop()
+        {
+            Debug.Log("Dialogue: OpenShop clicked.", this);
+
+            if (Merchant != null)
+            {
+                Merchant.OpenShop();
+                return;
+            }
+
+            Debug.LogWarning(
+                $"{nameof(Dialogue)} on '{name}' cannot open shop: {nameof(Merchant)} is not assigned on this dialogue.",
+                this);
+        }
+
+        public void CloseShop()
+        {
+            Debug.Log("Dialogue: CloseShop clicked.", this);
+
+            if (Merchant != null)
+            {
+                Merchant.CloseShop();
+                return;
+            }
+
+            Debug.LogWarning(
+                $"{nameof(Dialogue)} on '{name}' cannot close shop: {nameof(Merchant)} is not assigned.",
+                this);
+        }
+
         void LogMissingReference(string referenceName, ref bool logged)
         {
             if (logged)

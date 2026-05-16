@@ -105,7 +105,7 @@ MonoBehaviour:
   isFireBall: 0
   Sound: {fileID: 9007213431267383372}
   clock: 10
-  forwardVel: 200
+  forwardVel: 500
   upwardVel: 30
   Explosion: {fileID: 725748389856807714, guid: 4bda94453d2ca7444a0fff05b2d425f5, type: 3}
   Damage: 2000
@@ -116,7 +116,7 @@ MonoBehaviour:
   collisionResponseGrace: 0.2
   debugBowProjectile: 0
   additionalArrowIgnoreRoots: []
-  arrowMeshTipLocalAxis: {x: 0, y: 5, z: 0}
+  arrowMeshTipLocalAxis: {x: 0, y: 0, z: 0}
   arrowVisualMeshRoot: {fileID: 0}
   arrowVisualLocalRotationOffsetEuler: {x: 90, y: 0, z: 0}
   arrowMeshRotationOffsetEuler: {x: 90, y: 0, z: 0}
@@ -254,6 +254,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1772546780019118207}
     m_Modifications:
+    - target: {fileID: 114979979335704276, guid: e509867be4f82f246a95eca1ee5a2d61, type: 3}
+      propertyPath: fadeOutReference
+      value: 
+      objectReference: {fileID: 1279896741572237745}
     - target: {fileID: 8656522925563801548, guid: e509867be4f82f246a95eca1ee5a2d61, type: 3}
       propertyPath: m_RootOrder
       value: 0
@@ -320,18 +324,43 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8656522925583198860, guid: e509867be4f82f246a95eca1ee5a2d61, type: 3}
       propertyPath: looping
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8656522925583198860, guid: e509867be4f82f246a95eca1ee5a2d61, type: 3}
       propertyPath: lengthInSec
       value: 0.7
       objectReference: {fileID: 0}
     - target: {fileID: 8656522925583198860, guid: e509867be4f82f246a95eca1ee5a2d61, type: 3}
+      propertyPath: SizeModule.separateAxes
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8656522925583198860, guid: e509867be4f82f246a95eca1ee5a2d61, type: 3}
+      propertyPath: ShapeModule.radius.value
+      value: 0.01
+      objectReference: {fileID: 0}
+    - target: {fileID: 8656522925583198860, guid: e509867be4f82f246a95eca1ee5a2d61, type: 3}
       propertyPath: InitialModule.startSpeed.scalar
-      value: 17.26
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 8656522925583198860, guid: e509867be4f82f246a95eca1ee5a2d61, type: 3}
+      propertyPath: EmissionModule.rateOverTime.scalar
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 8656522925583198860, guid: e509867be4f82f246a95eca1ee5a2d61, type: 3}
+      propertyPath: InitialModule.startLifetime.scalar
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 8656522925583198860, guid: e509867be4f82f246a95eca1ee5a2d61, type: 3}
+      propertyPath: InitialModule.startRotation.minScalar
+      value: 0.34906584
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e509867be4f82f246a95eca1ee5a2d61, type: 3}
+--- !u!198 &1279896741572237745 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 8656522925583198860, guid: e509867be4f82f246a95eca1ee5a2d61, type: 3}
+  m_PrefabInstance: {fileID: 7629448455932261181}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1279896741591637233 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8656522925563801548, guid: e509867be4f82f246a95eca1ee5a2d61, type: 3}

@@ -71,28 +71,33 @@ namespace Beavermania.Player.Combat
             Collider[] hitEnemies = Physics.OverlapSphere(origin, range, enemyLayers);
             foreach (Collider enemy in hitEnemies)
             {
+                if (enemy == null)
+                    continue;
+
                 if (enemy.name != null)
-                {
                     Debug.Log("Hit " + enemy.name);
-                }
+
                 switch (enemy.tag)
                 {
                     case "NPC":
                         {
-                            var Wasp = enemy.gameObject.GetComponent<NPC_Basic>();
-                            Wasp.TakeDamage(Damage);
+                            var wasp = enemy.gameObject.GetComponent<NPC_Basic>();
+                            if (wasp != null)
+                                wasp.TakeDamage(Damage);
                             break;
                         }
                     case "Hive":
                         {
-                            var Hive = enemy.gameObject.GetComponent<Static_Hive>();
-                            Hive.TakeDamage(Damage);
+                            var hive = enemy.gameObject.GetComponent<Static_Hive>();
+                            if (hive != null)
+                                hive.TakeDamage(Damage);
                             break;
                         }
                     case "Scorpion":
                         {
-                            var Scorpion = enemy.gameObject.GetComponent<ScorpionScript>();
-                            Scorpion.TakeDamage(Damage);
+                            var scorpion = enemy.gameObject.GetComponent<ScorpionScript>();
+                            if (scorpion != null)
+                                scorpion.TakeDamage(Damage);
                             break;
                         }
                 }
@@ -135,27 +140,37 @@ namespace Beavermania.Player.Combat
             }
 
         }
+        /// <summary>
+        /// Hurricane Kick damage window (animation event). Weapon-independent skill; bow does not block air kick hits.
+        /// </summary>
         public void AirAttack()
         {
-            var arsenal = Player.GetComponent<BeaverPlayer>().Arsenal;
-            var weapon = Player.GetComponent<BeaverPlayer>().arsenalBrowser;
-            switch (arsenal[weapon])
+            ApplyHurricaneKickDamage();
+        }
+
+        void ApplyHurricaneKickDamage()
+        {
+            if (Player == null || Sphere == null)
+                return;
+
+            var arsenal = Player.Arsenal;
+            var weaponIndex = Player.arsenalBrowser;
+            if (arsenal == null || arsenal.Count == 0 || weaponIndex < 0 || weaponIndex >= arsenal.Count)
+            {
+                CauseDamage(Sphere.position, 2.5f, BareHandsAirDamage);
+                return;
+            }
+
+            switch (arsenal[weaponIndex])
             {
                 case "Bare Hands":
-                    {
-                        CauseDamage(Sphere.position, 2.5f, BareHandsAirDamage);
-                        break;
-                    }
+                case "Bow":
                 case "Hammers":
-                    {
-                        CauseDamage(Sphere.position, 2.5f, BareHandsAirDamage);
-                        break;
-                    }
+                    CauseDamage(Sphere.position, 2.5f, BareHandsAirDamage);
+                    break;
                 case "ArmorSet":
-                    {
-                        CauseDamage(Sphere.position+new Vector3(0,0.5f,0), 4f, ArmorSetAirDamage);
-                        break;
-                    }
+                    CauseDamage(Sphere.position + new Vector3(0, 0.5f, 0), 4f, ArmorSetAirDamage);
+                    break;
             }
         }
 

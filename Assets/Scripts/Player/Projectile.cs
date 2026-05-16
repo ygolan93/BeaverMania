@@ -242,21 +242,17 @@ namespace Beavermania.Player.Combat
             ResetRuntimeState();
 
             Vector3 launchDirection;
-            if (isArrow && worldLaunchDirection.HasValue && worldLaunchDirection.Value.sqrMagnitude > 1e-8f)
-            {
+            if (worldLaunchDirection.HasValue && worldLaunchDirection.Value.sqrMagnitude > 1e-8f)
                 launchDirection = worldLaunchDirection.Value.normalized;
-            }
             else
-            {
                 launchDirection = (rotation * Vector3.forward).normalized;
-            }
 
             if (launchDirection.sqrMagnitude < 1e-8f)
                 launchDirection = Vector3.forward;
 
             Quaternion flightRotation = isArrow
                 ? ResolveArrowFlightRotation(launchDirection)
-                : rotation;
+                : Quaternion.LookRotation(launchDirection, Vector3.up);
 
             transform.SetPositionAndRotation(position, flightRotation);
             if (isArrow)

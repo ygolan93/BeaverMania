@@ -883,33 +883,57 @@ namespace Beavermania.Player
             return true;
         }
 
-        bool TryGetBowScreenAim(out Vector3 fireDirection, out Vector3 spawnPosition, out Quaternion projectileRotation)
+        /// <summary>Authoritative projectile aim from viewport center. Does not depend on spine/bow transform jitter.</summary>
+        bool TryGetAimDirectionFromCameraCenter(out Vector3 aimDirection)
         {
-            fireDirection = transform.forward;
-            spawnPosition = Spine != null ? Spine.position : transform.position;
-            projectileRotation = Quaternion.LookRotation(fireDirection);
+            aimDirection = Vector3.forward;
 
-            if (!TryGetBowViewportAimRay(out Ray aimRay, out Vector3 targetPoint))
+            if (!TryGetBowViewportAimRay(out Ray aimRay, out _))
             {
-                if (!_loggedMissingBowAimCamera)
-                {
-                    _loggedMissingBowAimCamera = true;
-                    Debug.LogWarning($"{nameof(BeaverPlayerBehaviour)}: no Camera available for bow screen-center aim; using spine forward as fallback.", this);
-                }
-                fireDirection = Spine != null ? Spine.forward : transform.forward;
-                if (fireDirection.sqrMagnitude < 1e-8f)
-                    fireDirection = Vector3.forward;
-                projectileRotation = Quaternion.LookRotation(fireDirection.normalized);
-                spawnPosition += fireDirection * Mathf.Max(0f, bowProjectileSpawnClearance);
-                return true;
+                aimDirection = Spine != null ? Spine.forward : transform.forward;
+                if (aimDirection.sqrMagnitude < 1e-8f)
+                    aimDirection = Vector3.forward;
+                else
+                    aimDirection.Normalize();
+                return false;
             }
 
-            spawnPosition = Spine != null ? Spine.position : transform.position;
-            fireDirection = (targetPoint - spawnPosition).normalized;
-            if (fireDirection.sqrMagnitude < 1e-8f)
-                fireDirection = aimRay.direction.normalized;
+            aimDirection = aimRay.direction.normalized;
+            return true;
+        }
+
+        bool TryGetProjectileLaunchFromCameraCenter(
+            Transform spawnOrigin,
+            Vector3 spawnLocalOffset,
+            float clearanceAlongAim,
+            out Vector3 aimDirection,
+            out Vector3 spawnPosition)
+        {
+            Transform originTransform = spawnOrigin != null ? spawnOrigin : transform;
+            Vector3 origin = originTransform.position + spawnLocalOffset;
+
+            bool usedCamera = TryGetAimDirectionFromCameraCenter(out aimDirection);
+            if (!usedCamera && !_loggedMissingBowAimCamera)
+            {
+                _loggedMissingBowAimCamera = true;
+                Debug.LogWarning($"{nameof(BeaverPlayerBehaviour)}: no Camera available for screen-center aim; using spine forward as fallback.", this);
+            }
+
+            float clearance = Mathf.Max(0f, clearanceAlongAim);
+            spawnPosition = origin + aimDirection * clearance;
+            return true;
+        }
+
+        bool TryGetBowScreenAim(out Vector3 fireDirection, out Vector3 spawnPosition, out Quaternion projectileRotation)
+        {
+            Transform spawnOrigin = Spine != null ? Spine : transform;
+            TryGetProjectileLaunchFromCameraCenter(
+                spawnOrigin,
+                Vector3.zero,
+                bowProjectileSpawnClearance,
+                out fireDirection,
+                out spawnPosition);
             projectileRotation = Quaternion.LookRotation(fireDirection);
-            spawnPosition += fireDirection * Mathf.Max(0f, bowProjectileSpawnClearance);
             return true;
         }
 
@@ -2039,7 +2063,19 @@ namespace Beavermania.Player
                         {
                             Otter.SetBool("slash", false);
                             Otter.Play("Throw");
-                            Projectile.Spawn(Ball, AttackPoint.position + new Vector3(0, 0.6f, 0), Spine.rotation);
+                            Transform stoneSpawnOrigin = AttackPoint != null ? AttackPoint : (Spine != null ? Spine : transform);
+                            TryGetProjectileLaunchFromCameraCenter(
+                                stoneSpawnOrigin,
+                                new Vector3(0f, 0.6f, 0f),
+                                bowProjectileSpawnClearance,
+                                out Vector3 stoneAimDirection,
+                                out Vector3 stoneSpawnPosition);
+                            Projectile.Spawn(
+                                Ball,
+                                stoneSpawnPosition,
+                                Quaternion.LookRotation(stoneAimDirection),
+                                stoneAimDirection,
+                                this);
                             CurrentStamina -= EffectiveStoneThrowStaminaCost;
                             HealthBar.SetStamina(CurrentStamina);
                         }

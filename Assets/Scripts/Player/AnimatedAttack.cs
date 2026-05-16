@@ -153,25 +153,10 @@ namespace Beavermania.Player.Combat
             if (Player == null || Sphere == null)
                 return;
 
-            var arsenal = Player.Arsenal;
-            var weaponIndex = Player.arsenalBrowser;
-            if (arsenal == null || arsenal.Count == 0 || weaponIndex < 0 || weaponIndex >= arsenal.Count)
-            {
+            if (Player.ArmorEquipped)
+                CauseDamage(Sphere.position + new Vector3(0, 0.5f, 0), 4f, ArmorSetAirDamage);
+            else
                 CauseDamage(Sphere.position, 2.5f, BareHandsAirDamage);
-                return;
-            }
-
-            switch (arsenal[weaponIndex])
-            {
-                case "Bare Hands":
-                case "Bow":
-                case "Hammers":
-                    CauseDamage(Sphere.position, 2.5f, BareHandsAirDamage);
-                    break;
-                case "ArmorSet":
-                    CauseDamage(Sphere.position + new Vector3(0, 0.5f, 0), 4f, ArmorSetAirDamage);
-                    break;
-            }
         }
 
         public void ShieldParryON()

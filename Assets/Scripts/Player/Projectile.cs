@@ -54,6 +54,8 @@ namespace Beavermania.Player.Combat
         [Tooltip("Extra euler after LookRotation when mesh lives on the projectile root (Y-tip mesh => 90,0,0).")]
         [SerializeField] Vector3 arrowMeshRotationOffsetEuler = new Vector3(90f, 0f, 0f);
         [SerializeField] float debugLaunchRayLength = 12f;
+        [Tooltip("Push embedded pickup slightly off the hit surface (meters).")]
+        [SerializeField] float pickupSurfaceOffset = 0.06f;
         Quaternion arrowVisualBaseLocalRotation = Quaternion.identity;
 
         ObjectPool<Projectile> pool;
@@ -72,6 +74,7 @@ namespace Beavermania.Player.Combat
         bool cachedDefaults;
         bool released;
         bool overflowInstance;
+        bool impactResolved;
 
         public static Projectile Spawn(Projectile prefab, Vector3 position, Quaternion rotation)
         {
@@ -237,6 +240,7 @@ namespace Beavermania.Player.Combat
 
             overflowInstance = isOverflowInstance;
             released = false;
+            impactResolved = false;
             arrowRbDebugFixedStepsLogged = 0;
             arrowLoggedFirstContact = false;
             ResetRuntimeState();
@@ -272,6 +276,7 @@ namespace Beavermania.Player.Combat
                 {
                     Ball.isKinematic = false;
                     Ball.detectCollisions = true;
+                    Ball.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
                     Ball.constraints = RigidbodyConstraints.None;
                     Ball.WakeUp();
 
@@ -300,6 +305,7 @@ namespace Beavermania.Player.Combat
         {
             ClearOwnerCollisionIgnores();
             aliveTime = 0f;
+            impactResolved = false;
             arrowRbDebugFixedStepsLogged = 0;
             arrowLoggedFirstContact = false;
 
@@ -430,12 +436,132 @@ namespace Beavermania.Player.Combat
             return isArrow && aliveTime >= minPickupSpawnDelay;
         }
 
+        static T GetComponentInParentSafe<T>(Collider collider) where T : Component
+        {
+            return collider != null ? collider.GetComponentInParent<T>() : null;
+        }
+
+        static bool ColliderHasTag(Collider collider, string tag)
+        {
+            if (collider == null || string.IsNullOrEmpty(tag))
+                return false;
+
+            if (collider.CompareTag(tag))
+                return true;
+
+            Transform current = collider.transform.parent;
+            while (current != null)
+            {
+                if (current.CompareTag(tag))
+                    return true;
+                current = current.parent;
+            }
+
+            return false;
+        }
+
+        bool IsOwnerCollider(Collider collider)
+        {
+            return Player != null
+                && collider != null
+                && collider.GetComponentInParent<BeaverPlayer>() == Player;
+        }
+
+        bool ShouldIgnoreArrowCollision(Collision collision)
+        {
+            if (collision == null || collision.collider == null)
+                return true;
+
+            if (IsOwnerCollider(collision.collider))
+                return true;
+
+            if (aliveTime < collisionResponseGrace
+                && Player != null
+                && collision.collider.transform.IsChildOf(Player.transform)
+                && !ColliderHasTag(collision.collider, "NPC")
+                && !ColliderHasTag(collision.collider, "Scorpion")
+                && !ColliderHasTag(collision.collider, "Hive")
+                && !ColliderHasTag(collision.collider, "Isle"))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        void TryApplyArrowGameplayDamage(Collision collision)
+        {
+            if (collision == null || collision.collider == null)
+                return;
+
+            Collider hitCollider = collision.collider;
+
+            NPC_Basic npc = GetComponentInParentSafe<NPC_Basic>(hitCollider);
+            if (npc != null)
+            {
+                npc.TakeDamage(Damage);
+                npc.combo += npc.hit2stun;
+                RockHit();
+                if (Player != null)
+                {
+                    Player.Plattering = "Bam! Take that";
+                    Player.ChangeSpeech = 1f;
+                }
+                return;
+            }
+
+            ScorpionScript scorpion = GetComponentInParentSafe<ScorpionScript>(hitCollider);
+            if (scorpion != null)
+            {
+                scorpion.TakeDamage(Damage);
+                scorpion.combo += 3;
+                RockHit();
+                return;
+            }
+
+            Static_Hive hive = GetComponentInParentSafe<Static_Hive>(hitCollider);
+            if (hive != null)
+            {
+                hive.TakeDamage(Damage);
+                RockHit();
+                return;
+            }
+
+            if (ColliderHasTag(hitCollider, "Isle"))
+                RockHit();
+        }
+
+        void FinalizeArrowImpact(Collision collision, bool spawnPickup)
+        {
+            if (!isArrow || impactResolved || released)
+                return;
+
+            impactResolved = true;
+
+            if (Ball != null)
+            {
+                Ball.velocity = Vector3.zero;
+                Ball.angularVelocity = Vector3.zero;
+                Ball.isKinematic = true;
+            }
+
+            if (spawnPickup)
+                SpawnArrowPickup(collision);
+
+            CompleteProjectile(false);
+        }
+
         private void Update()
         {
             aliveTime += Time.deltaTime;
             clock -= Time.deltaTime;
             if (clock <= 0)
-                CompleteProjectile(ShouldSpawnEmbeddedArrowPickup());
+            {
+                if (isArrow && !impactResolved)
+                    FinalizeArrowImpact(null, ShouldSpawnEmbeddedArrowPickup());
+                else
+                    CompleteProjectile(ShouldSpawnEmbeddedArrowPickup());
+            }
         }
 
         void FixedUpdate()
@@ -474,7 +600,7 @@ namespace Beavermania.Player.Combat
                 Debug.Log($"[Projectile] CompleteProjectile spawnPickup={spawnArrowPickup} aliveTime={aliveTime:F3} clock={clock:F3} pos={transform.position}", this);
 
             if (spawnArrowPickup)
-                SpawnArrowPickup();
+                SpawnArrowPickup(null);
 
             if (pool != null && !overflowInstance)
             {
@@ -486,15 +612,42 @@ namespace Beavermania.Player.Combat
             Destroy(gameObject);
         }
 
-        void SpawnArrowPickup()
+        GameObject ResolveArrowPickupPrefab()
         {
             if (arrowPickup != null)
-                Instantiate(arrowPickup, transform.position, Quaternion.identity);
+                return arrowPickup;
+
+            if (Player != null && Player.ArrowPickup != null)
+                return Player.ArrowPickup;
+
+            return null;
+        }
+
+        void SpawnArrowPickup(Collision collision)
+        {
+            GameObject pickupPrefab = ResolveArrowPickupPrefab();
+            if (pickupPrefab == null)
+                return;
+
+            Vector3 spawnPosition = transform.position;
+            Quaternion spawnRotation = transform.rotation;
+
+            if (collision != null && collision.contactCount > 0)
+            {
+                ContactPoint contact = collision.GetContact(0);
+                Vector3 normal = contact.normal.sqrMagnitude > 1e-8f
+                    ? contact.normal
+                    : -transform.forward;
+                spawnPosition = contact.point + normal * Mathf.Max(0f, pickupSurfaceOffset);
+                spawnRotation = Quaternion.LookRotation(-normal, Vector3.up) * Quaternion.Euler(arrowMeshRotationOffsetEuler);
+            }
+
+            Instantiate(pickupPrefab, spawnPosition, spawnRotation);
         }
 
         private void OnCollisionEnter(Collision OBJ)
         {
-            if (released)
+            if (released || impactResolved)
                 return;
 
             if (debugBowProjectile && isArrow && !arrowLoggedFirstContact)
@@ -503,93 +656,80 @@ namespace Beavermania.Player.Combat
                 Debug.Log($"[Projectile] FirstCollision with='{OBJ.collider?.name}' root='{OBJ.collider?.transform.root?.name}' aliveTime={aliveTime:F3}", this);
             }
 
-            if (Player != null && OBJ.collider != null && OBJ.collider.GetComponentInParent<BeaverPlayer>() == Player)
-                return;
-
-            if (isArrow && aliveTime < collisionResponseGrace && Player != null && OBJ.collider != null
-                && OBJ.collider.transform.IsChildOf(Player.transform))
+            if (isArrow)
             {
-                var go = OBJ.gameObject;
-                if (!go.CompareTag("NPC") && !go.CompareTag("Scorpion") && !go.CompareTag("Hive") && !go.CompareTag("Isle"))
+                if (ShouldIgnoreArrowCollision(OBJ))
                 {
                     if (debugBowProjectile)
-                        Debug.Log($"[Projectile] Grace ignore contact='{OBJ.collider.name}' aliveTime={aliveTime:F3}", this);
+                        Debug.Log($"[Projectile] Ignored collision with='{OBJ.collider?.name}' aliveTime={aliveTime:F3}", this);
                     return;
                 }
+
+                TryApplyArrowGameplayDamage(OBJ);
+                FinalizeArrowImpact(OBJ, spawnPickup: true);
+                return;
             }
+
+            if (IsOwnerCollider(OBJ.collider))
+                return;
 
             var hit = false;
 
-            if (OBJ.gameObject.CompareTag("NPC"))
+            if (ColliderHasTag(OBJ.collider, "NPC"))
             {
                 hit = true;
-                if (OBJ.gameObject.TryGetComponent(out NPC_Basic npc))
+                NPC_Basic npc = GetComponentInParentSafe<NPC_Basic>(OBJ.collider);
+                if (npc != null)
                 {
                     npc.TakeDamage(Damage);
                     npc.combo += npc.hit2stun;
                 }
-                if (isFireBall == true)
-                {
+                if (isFireBall)
                     Explode();
-                }
-                if (isFireBall == false)
-                {
+                else
                     RockHit();
-                }
                 if (Player != null)
                 {
                     Player.Plattering = "Bam! Take that";
                     Player.ChangeSpeech = 1f;
                 }
             }
-            if (OBJ.gameObject.CompareTag("Scorpion"))
+            if (ColliderHasTag(OBJ.collider, "Scorpion"))
             {
                 hit = true;
-                if (OBJ.gameObject.TryGetComponent(out ScorpionScript scorpion))
+                ScorpionScript scorpion = GetComponentInParentSafe<ScorpionScript>(OBJ.collider);
+                if (scorpion != null)
                 {
                     scorpion.TakeDamage(Damage);
                     scorpion.combo += 3;
                 }
-                if (isFireBall == true)
-                {
+                if (isFireBall)
                     Explode();
-                }
-                if (isFireBall == false)
-                {
+                else
                     RockHit();
-                }
             }
-            if (OBJ.gameObject.CompareTag("Hive"))
+            if (ColliderHasTag(OBJ.collider, "Hive"))
             {
                 hit = true;
-                if (OBJ.gameObject.TryGetComponent(out Static_Hive hive))
-                {
+                Static_Hive hive = GetComponentInParentSafe<Static_Hive>(OBJ.collider);
+                if (hive != null)
                     hive.TakeDamage(Damage);
-                }
-                if (isFireBall == true)
-                {
+                if (isFireBall)
                     Explode();
-                }
-                if (isFireBall == false)
-                {
+                else
                     RockHit();
-                }
             }
-            if (OBJ.gameObject.CompareTag("Isle"))
+            if (ColliderHasTag(OBJ.collider, "Isle"))
             {
                 hit = true;
-                if (isFireBall == true)
-                {
+                if (isFireBall)
                     Explode();
-                }
-                if (isFireBall == false)
-                {
+                else
                     RockHit();
-                }
             }
 
-            if (hit && isFireBall == false)
-                CompleteProjectile(ShouldSpawnEmbeddedArrowPickup());
+            if (hit && !isFireBall)
+                CompleteProjectile(false);
         }
     }
 }

@@ -28,6 +28,7 @@ namespace Beavermania.Player
         public Carry Load;
         public bool movementInvoked = false;
         public Quaternion rotGoal;
+        /// <summary>Legacy strafe-lock flag (not set during bow/stoning aim; normal locomotion stays active).</summary>
         public bool keepLooking = false;
         bool step;
         public float speed = 5;
@@ -2037,7 +2038,6 @@ namespace Beavermania.Player
                             }
                             Otter.Play("Crouch");
                         }
-                        keepLooking = true;
                     }
 
                     if (_stoneAimSessionActive && secondaryHeldRmb)
@@ -2113,7 +2113,6 @@ namespace Beavermania.Player
                             arrowReady = true;
                             if (AimIcon != null)
                                 AimIcon.SetActive(true);
-                            keepLooking = true;
                             if (arrowModel != null)
                                 arrowModel.SetActive(true);
                             if (bowString != null)

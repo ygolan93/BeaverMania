@@ -6,6 +6,7 @@ using Beavermania.Core.GameFlow;
 using Beavermania.Display;
 using Beavermania.Core.Input;
 using Beavermania.NPC;
+using Beavermania.Data.Combat;
 using Beavermania.Player.Combat;
 using Beavermania.Player.Movement;
 using Beavermania.UI.Hud;
@@ -55,6 +56,7 @@ namespace Beavermania.Player
         [Header("Health")]
         float StopHurt = 0;
         [SerializeField] Rigidbody rb;
+        [SerializeField] PlayerCombatBalanceData combatBalance;
         public float MaxHealth = 1000;
         public float CurrentHealth;
         public float MaxStamina = 100;
@@ -215,6 +217,19 @@ namespace Beavermania.Player
         Camera cachedMainCamera;
         Transform cachedMainCameraTransform;
         const float LookRotationEpsilon = 0.0001f;
+
+        public PlayerCombatBalanceData CombatBalance => combatBalance;
+
+        float EffectiveScorpionLightDamage => combatBalance != null ? combatBalance.scorpionLightDamage : 15f;
+        float EffectiveScorpionHeavyDamage => combatBalance != null ? combatBalance.scorpionHeavyDamage : 30f;
+        float EffectiveShroomHealPerTick => combatBalance != null ? combatBalance.shroomHealPerTick : 2f;
+        float EffectiveAppleHealAmount => combatBalance != null ? combatBalance.appleHealAmount : 500f;
+        float EffectiveBowShotStaminaCost => combatBalance != null ? combatBalance.bowShotStaminaCost : 30f;
+        float EffectiveStoneThrowStaminaCost => combatBalance != null ? combatBalance.stoneThrowStaminaCost : 20f;
+        int EffectiveBareHandsDamage => combatBalance != null ? combatBalance.bareHandsMeleeDamage : 50;
+        int EffectiveHammerDamage => combatBalance != null ? combatBalance.hammerMeleeDamage : 700;
+        int EffectiveBowEquippedMeleeDamage => combatBalance != null ? combatBalance.bowEquippedMeleeDamage : 50;
+        int EffectiveArmorSetDamage => combatBalance != null ? combatBalance.armorSetMeleeDamage : 200;
 
         public void OnCollisionEnter(Collision OBJ)
         {
@@ -435,7 +450,7 @@ namespace Beavermania.Player
                 {
                     if (scorpAttack == true)
                     {
-                        TakeDamage(15);
+                        TakeDamage(EffectiveScorpionLightDamage);
                     }
                 }
                 else
@@ -447,7 +462,7 @@ namespace Beavermania.Player
             {
                 if (scorpAttack == true && isParried==false)
                 {
-                    TakeDamage(30);
+                    TakeDamage(EffectiveScorpionHeavyDamage);
                 }
             }
         }
@@ -474,7 +489,7 @@ namespace Beavermania.Player
                 ChangeSpeech = 1;
                 if (CurrentHealth < MaxHealth)
                 {
-                    TakeDamage(-2);
+                    TakeDamage(-EffectiveShroomHealPerTick);
                     TouchShroom = true;
                 }
                 if (CurrentHealth >= MaxHealth)
@@ -940,7 +955,7 @@ namespace Beavermania.Player
                 Debug.Log($"[Bow] Fired 1 arrow. Ammo {ammoBefore} -> {arrowMunition}", this);
 
             Sound.ArrowShoot();
-            CurrentStamina -= 30;
+            CurrentStamina -= EffectiveBowShotStaminaCost;
             if (HealthBar != null)
                 HealthBar.SetStamina(CurrentStamina);
             return true;
@@ -1268,6 +1283,15 @@ namespace Beavermania.Player
                     item.SetActive(false);
                 }
             }
+            if (combatBalance != null)
+            {
+                MaxHealth = combatBalance.maxHealth;
+                MaxStamina = combatBalance.maxStamina;
+                attackRange = combatBalance.attackRange;
+                GroundBeat = combatBalance.groundBeat;
+                AirBeat = combatBalance.airBeat;
+            }
+
             CurrentHealth = MaxHealth;
             if (HealthBar != null)
             {
@@ -1564,7 +1588,7 @@ namespace Beavermania.Player
                                     Otter.Play("Disarm");
                                     //Turn off Hammers
                                     HammerHeld = false;
-                                    GroundAttack = 50;
+                                    GroundAttack = EffectiveBareHandsDamage;
                                     Otter.SetBool("armor", false);
                                     RightHandWeapon.SetActive(false);
                                     LeftHandWeapon.SetActive(false);
@@ -1587,7 +1611,7 @@ namespace Beavermania.Player
                                     Otter.Play("Equip");
                                     //Turn on Hammers
                                     HammerHeld = true;
-                                    GroundAttack = 450;
+                                    GroundAttack = EffectiveHammerDamage;
                                     Otter.SetBool("armor", false);
                                     RightHandWeapon.SetActive(true);
                                     LeftHandWeapon.SetActive(true);
@@ -1611,7 +1635,7 @@ namespace Beavermania.Player
                                     CountArrows();
                                     //Turn off Hammers
                                     HammerHeld = false;
-                                    GroundAttack = 50;
+                                    GroundAttack = EffectiveBowEquippedMeleeDamage;
                                     Otter.SetBool("armor", false);
                                     RightHandWeapon.SetActive(false);
                                     LeftHandWeapon.SetActive(false);
@@ -1645,7 +1669,7 @@ namespace Beavermania.Player
 
                                     //Turn on Armor Set
                                     ArmorEquipped = true;
-                                    GroundAttack = 150;
+                                    GroundAttack = EffectiveArmorSetDamage;
                                     Otter.SetBool("armor", true);
                                     SetArmorSetActive(true);
                                     break;
@@ -1672,9 +1696,9 @@ namespace Beavermania.Player
                     appleOBJ.SetActive(true);
                     Otter.Play("Consume");
                     Sound.Eat();
-                    if (MaxHealth - CurrentHealth > 500)
+                    if (MaxHealth - CurrentHealth > EffectiveAppleHealAmount)
                     {
-                        TakeDamage(-500);
+                        TakeDamage(-EffectiveAppleHealAmount);
                         HealthBar.SetHealth(CurrentHealth);
                     }
                     else
@@ -1824,7 +1848,7 @@ namespace Beavermania.Player
                         Otter.SetBool("slash", false);
                         Otter.SetBool("fight", false);
                     
-                        GroundAttack = 50;
+                        GroundAttack = EffectiveBareHandsDamage;
                         Beat = 0;
                         Otter.speed = AnimSpeed;
                     }
@@ -2016,7 +2040,7 @@ namespace Beavermania.Player
                             Otter.SetBool("slash", false);
                             Otter.Play("Throw");
                             Projectile.Spawn(Ball, AttackPoint.position + new Vector3(0, 0.6f, 0), Spine.rotation);
-                            CurrentStamina -= 20;
+                            CurrentStamina -= EffectiveStoneThrowStaminaCost;
                             HealthBar.SetStamina(CurrentStamina);
                         }
 

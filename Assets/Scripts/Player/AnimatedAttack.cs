@@ -16,12 +16,55 @@ namespace Beavermania.Player.Combat
         [SerializeField] GameObject GlowEffect;
         [SerializeField] LayerMask enemyLayers;
 
+        const int FallbackBareHandsMeleeDamage = 50;
+        const int FallbackBowMeleeDamage = 50;
+        const int FallbackHammerMeleeDamage = 700;
+        const int FallbackArmorSetMeleeDamage = 200;
+        const int FallbackArmorSetAirDamage = 200;
+        const int FallbackBareHandsAirDamage = 20;
+        const int FallbackRollAttackDamage = 200;
+
         private void Start()
         {
             Player = transform.parent.GetComponent<BeaverPlayer>();
             if (GlowEffect != null)
                 GlowEffect.SetActive(false);
         }
+
+        int BareHandsMeleeDamage =>
+            Player != null && Player.CombatBalance != null
+                ? Player.CombatBalance.bareHandsMeleeDamage
+                : FallbackBareHandsMeleeDamage;
+
+        int BowMeleeDamage =>
+            Player != null && Player.CombatBalance != null
+                ? Player.CombatBalance.bowEquippedMeleeDamage
+                : FallbackBowMeleeDamage;
+
+        int HammerMeleeDamage =>
+            Player != null && Player.CombatBalance != null
+                ? Player.CombatBalance.hammerMeleeDamage
+                : FallbackHammerMeleeDamage;
+
+        int ArmorSetMeleeDamage =>
+            Player != null && Player.CombatBalance != null
+                ? Player.CombatBalance.armorSetMeleeDamage
+                : FallbackArmorSetMeleeDamage;
+
+        int ArmorSetAirDamage =>
+            Player != null && Player.CombatBalance != null
+                ? Player.CombatBalance.armorSetAirDamage
+                : FallbackArmorSetAirDamage;
+
+        int BareHandsAirDamage =>
+            Player != null && Player.CombatBalance != null
+                ? Player.CombatBalance.bareHandsAirDamage
+                : FallbackBareHandsAirDamage;
+
+        int RollAttackDamage =>
+            Player != null && Player.CombatBalance != null
+                ? Player.CombatBalance.rollAttackDamage
+                : FallbackRollAttackDamage;
 
         public void CauseDamage(Vector3 origin, float range, int Damage)
         {
@@ -59,7 +102,7 @@ namespace Beavermania.Player.Combat
 
         public void RollAttack()
         {
-            CauseDamage(AttackPoint.position, 1.5f, 200);
+            CauseDamage(AttackPoint.position, 1.5f, RollAttackDamage);
         }
 
         public void GroundAttack()
@@ -70,23 +113,23 @@ namespace Beavermania.Player.Combat
             {
                 case "Bare Hands":
                     {
-                        CauseDamage(AttackPoint.position, 0.7f, 50);
+                        CauseDamage(AttackPoint.position, 0.7f, BareHandsMeleeDamage);
                         break;
                     }
                 case "Bow":
                     {
-                        CauseDamage(AttackPoint.position, 1f, 50);
+                        CauseDamage(AttackPoint.position, 1f, BowMeleeDamage);
                         break;
                     }
                 case "Hammers":
                     {
-                        CauseDamage(AttackPoint.position, 2f, 700);
+                        CauseDamage(AttackPoint.position, 2f, HammerMeleeDamage);
                         break;
                     }
                 case "ArmorSet":
                     {
                         var feetPos = Sphere.position + new Vector3(0, 0.5f, 0);
-                        CauseDamage(feetPos, 4f, 200);
+                        CauseDamage(feetPos, 4f, ArmorSetMeleeDamage);
                         break;
                     }
             }
@@ -100,17 +143,17 @@ namespace Beavermania.Player.Combat
             {
                 case "Bare Hands":
                     {
-                        CauseDamage(Sphere.position, 2.5f, 20);
+                        CauseDamage(Sphere.position, 2.5f, BareHandsAirDamage);
                         break;
                     }
                 case "Hammers":
                     {
-                        CauseDamage(Sphere.position, 2.5f, 20);
+                        CauseDamage(Sphere.position, 2.5f, BareHandsAirDamage);
                         break;
                     }
                 case "ArmorSet":
                     {
-                        CauseDamage(Sphere.position+new Vector3(0,0.5f,0), 4f, 200);
+                        CauseDamage(Sphere.position+new Vector3(0,0.5f,0), 4f, ArmorSetAirDamage);
                         break;
                     }
             }

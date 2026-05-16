@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using Beavermania.Data.Dialogue;
 using Beavermania.NPC;
 using Beavermania.Player;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
@@ -17,6 +18,7 @@ namespace Beavermania.UI
         [SerializeField] public GameObject ContinueButton;
         [SerializeField] public GameObject SkipButton;
         [SerializeField] public Transform panel;
+        [SerializeField] TraderDialogueData dialogueData;
         public Trader Merchant;
         public string[] lines;
         public float textSpeed;
@@ -27,7 +29,17 @@ namespace Beavermania.UI
         bool loggedMissingPanel;
         bool loggedMissingMerchant;
         bool loggedMissingSkipButton;
-        // Start is called before the first frame update
+        bool loggedEmptyDialogue;
+
+        string[] EffectiveLines =>
+            dialogueData != null && dialogueData.dialogueLines != null && dialogueData.dialogueLines.Length > 0
+                ? dialogueData.dialogueLines
+                : lines;
+
+        float EffectiveTextSpeed => dialogueData != null ? dialogueData.textSpeed : textSpeed;
+
+        bool EffectiveIsBoss => dialogueData != null ? dialogueData.isBossDialogue : isBoss;
+
         void Start()
         {
             if (PlayerObjective == null && Player != null)
@@ -52,7 +64,6 @@ namespace Beavermania.UI
                     LogMissingReference(nameof(PlayerObjective), ref loggedMissingPlayerObjective);
             }
 
-            //Boss = GameObject.FindGameObjectWithTag("Boss").GetComponent<BossScript>();
             if (panel == null && transform.parent != null)
                 panel = transform.parent;
 
@@ -66,47 +77,67 @@ namespace Beavermania.UI
                 loggedMissingSkipButton = true;
                 Debug.LogError($"{nameof(Dialogue)} on '{name}' has no {nameof(SkipButton)} assigned.", this);
             }
+
+            if (EffectiveLines == null || EffectiveLines.Length == 0)
+            {
+                if (!loggedEmptyDialogue)
+                {
+                    loggedEmptyDialogue = true;
+                    Debug.LogError($"{nameof(Dialogue)} on '{name}' has no dialogue lines.", this);
+                }
+                return;
+            }
+
             textComponent.text = string.Empty;
-            StartDialogue();
             index = 0;
+            StartDialogue();
         }
 
-        // Update is called once per frame
         public void Continue()
         {
+            var effectiveLines = EffectiveLines;
+            if (effectiveLines == null || index < 0 || index >= effectiveLines.Length)
+                return;
 
-            if (textComponent.text == lines[index])
+            if (textComponent.text == effectiveLines[index])
             {
                 NextLine();
             }
             else
             {
                 StopAllCoroutines();
-                textComponent.text = lines[index];
+                textComponent.text = effectiveLines[index];
             }
         }
 
         void StartDialogue()
         {
-            //index = 0;
             StartCoroutine(TypeLine());
         }
+
         IEnumerator TypeLine()
         {
-            foreach (char c in lines[index].ToCharArray())
+            var effectiveLines = EffectiveLines;
+            if (effectiveLines == null || index < 0 || index >= effectiveLines.Length)
+                yield break;
+
+            foreach (char c in effectiveLines[index].ToCharArray())
             {
                 textComponent.text += c;
-                yield return new WaitForSeconds(textSpeed);
+                yield return new WaitForSeconds(EffectiveTextSpeed);
             }
         }
 
         void NextLine()
         {
-            if (index < lines.Length - 1)
+            var effectiveLines = EffectiveLines;
+            if (effectiveLines == null || effectiveLines.Length == 0)
+                return;
+
+            if (index < effectiveLines.Length - 1)
             {
                 index++;
-                textComponent.text =/* string.Empty*/ lines[index];
-                //StartCoroutine(TypeLine());
+                textComponent.text = effectiveLines[index];
             }
             else
             {
@@ -116,10 +147,11 @@ namespace Beavermania.UI
 
         public void EndConversation()
         {
-            if (PlayerObjective != null)
+            bool shouldAdvanceObjective = dialogueData == null || dialogueData.advanceObjectiveOnEnd;
+            if (shouldAdvanceObjective && PlayerObjective != null)
                 PlayerObjective.UpdateObjective();
 
-            if (isBoss==true)
+            if (EffectiveIsBoss)
             {
                 EndBossDialogue();
             }

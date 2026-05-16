@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7e8d9c0b1a2436587091e2d3f4a5b6c, type: 3}
+  m_Name: FirstTraderDialogueData
+  m_EditorClassIdentifier: 
+  traderId: 'first_trader'
+  displayName: 'FirstTrader'
+  dialogueLines:
+  - 'Trader : Well, well, if it isn''t Ottis, the oddball beaver. '
+  - 'Player:  Hey there, Benny! '
+  - 'Trader:  What brings you to our shores?'
+  - 'Player:  I''m looking for my friend.. '
+  - 'Trader:  Hm.. not sure I can help you with that'
+  - 'Trader:  But there''s a town nearby, on the other island'
+  - 'Trader:  Unfortunately, the bridge that used to be here has collapsed'
+  - 'Trader:  So you''ll have to rebuild it in order to get there.'
+  - 'Trader:  In the mean time, why don''t you have a look at my shop?'
+  - 'Player: Hmm ok, what do we have here, Benny?'
+  - 'Trader: Allow me to introduce ya to the goods, Ottis! First up, we got these succulent apples. A bite of these will put the spring back in your step and patch up any bumps and scrapes.'
+  - 'Player: (nodding) Ah, apples for health, got it. What else?'
+  - 'Trader: (grinning) Now, Ottis, these here are magic nuts. Plant one of ''em in the ground, and presto! You''ll have a full-grown tree in no time. Wood from these trees can be handy for building bridges between islands. Talk about convenient!'
+  - 'Player: (impressed) Building bridges, huh? That could be super helpful! What''s the last item?  '
+  - 'Trader: (with a mischievous grin) Last but not least, the pièce de résistance – Gold Goblets! Sip from one of these, Ottis, and you''ll be zippin'' and zoomin'' around for a short while. Makes traversing tricky terrain a breeze!'
+  - 'Ottis: (excited) Gold Goblets for a speed boost? Count me in! How much for one of each, Benny?'
+  - 'Trader: (rubbing his paws together) Well, Ottis, you''re in luck! The prices are right there on the shop poster behind me. You can choose any item you like and pay as you wish'
+  - 'Ottis: (grinning) That''s convenient! In that case, I''ll take one of each – an apple, a nut, and a gold goblet!'
+  - 'Ottis: Thanks a bunch, Benny! These items will surely help me on my quest. If I need more, I''ll know where to find you!'
+  - 'Trader: Anytime, Ottis! Good luck on your adventure, and remember, Benny''s shop is always open when you''re in need!'
+  isBossDialogue: 0
+  textSpeed: 0
+  advanceObjectiveOnEnd: 1
+  hasShop: 1

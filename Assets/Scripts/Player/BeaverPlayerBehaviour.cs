@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using Beavermania.Audio;
@@ -108,6 +108,12 @@ namespace Beavermania.Player
         [SerializeField] LayerMask bowAimRaycastLayers;
         [Tooltip("Offset spawn along fire direction so the arrow clears body/bow colliders (meters).")]
         [SerializeField] float bowProjectileSpawnClearance = 0.5f;
+        [Tooltip("Ignore screen-center hits closer than this to the camera when aiming FireBreath.")]
+        [SerializeField] float minFireBreathCameraHitDistance = 1.25f;
+        [Tooltip("Push FireBreath spawn along aim direction away from the fire point (meters).")]
+        [SerializeField] float fireBreathSpawnForwardOffset = 0.5f;
+        [Tooltip("Draw aim rays and log FireBreath launch vectors for one test session.")]
+        [SerializeField] bool debugFireBreathLaunch;
         [Tooltip("Logical arrow ammo cap (independent of quiver mesh slot count).")]
         [SerializeField] int maxArrowMunition = 99;
         [Tooltip("Minimum time between completed bow shots before a new draw can start.")]
@@ -124,6 +130,15 @@ namespace Beavermania.Player
         bool _secondaryHeldLastFixed;
         /// <summary>Stoning: RMB aim session active (survives one frame without relying on Stone.active).</summary>
         bool _stoneAimSessionActive;
+        /// <summary>Primary held last FixedUpdate — avoids Update/FixedUpdate input desync cancelling slash.</summary>
+        bool _primaryMeleeHeldLastFixed;
+        /// <summary>LMB held while Sword and Shield is equipped.</summary>
+        bool _swordShieldAttackHeld;
+        /// <summary>True while a sword/shield attack cycle should keep slash active and consume stamina.</summary>
+        bool _swordShieldCycleActive;
+        Coroutine _swordShieldChainRoutine;
+        const float SwordShieldGroundStaminaPerFixedStep = 0.2f;
+        const float SwordShieldAirStaminaPerFixedStep = 0.5f;
         bool _loggedMissingBowAimCamera;
         bool _loggedMissingSpineForAim;
         /// <summary>True while RMB draw session is open; cleared after release/cancel.</summary>
@@ -679,6 +694,8 @@ namespace Beavermania.Player
             {
                 if (PlayerInputReader.IsRollHeld() && CurrentStamina > 0 && grounded == true)
                 {
+                    if (ArmorEquipped)
+                        InterruptSwordAttackPresentation();
                     Rolling = true;
                     Otter.SetBool("roll", true);
                     CurrentStamina -= 0.1f;
@@ -847,7 +864,18 @@ namespace Beavermania.Player
 
         bool IsBowAimHitSelf(Collider c)
         {
-            return c != null && c.GetComponentInParent<BeaverPlayerBehaviour>() == this;
+            return IsCameraAimIgnoredCollider(c);
+        }
+
+        bool IsCameraAimIgnoredCollider(Collider c)
+        {
+            if (c == null)
+                return true;
+
+            if (c.GetComponentInParent<BeaverPlayerBehaviour>() == this)
+                return true;
+
+            return c.transform.IsChildOf(transform);
         }
 
         Vector3 ResolveBowAimTargetPoint(Ray ray, float maxDist, LayerMask mask)
@@ -907,22 +935,440 @@ namespace Beavermania.Player
             Transform spawnOrigin,
             Vector3 spawnLocalOffset,
             float clearanceAlongAim,
+            bool directionFromTargetPoint,
             out Vector3 aimDirection,
             out Vector3 spawnPosition)
         {
             Transform originTransform = spawnOrigin != null ? spawnOrigin : transform;
             Vector3 origin = originTransform.position + spawnLocalOffset;
+            aimDirection = Vector3.forward;
 
-            bool usedCamera = TryGetAimDirectionFromCameraCenter(out aimDirection);
-            if (!usedCamera && !_loggedMissingBowAimCamera)
+            if (TryGetBowViewportAimRay(out Ray aimRay, out Vector3 targetPoint))
             {
-                _loggedMissingBowAimCamera = true;
-                Debug.LogWarning($"{nameof(BeaverPlayerBehaviour)}: no Camera available for screen-center aim; using spine forward as fallback.", this);
+                if (directionFromTargetPoint)
+                {
+                    aimDirection = targetPoint - origin;
+                    if (aimDirection.sqrMagnitude > 1e-8f)
+                        aimDirection.Normalize();
+                    else
+                        aimDirection = aimRay.direction.normalized;
+                }
+                else
+                {
+                    aimDirection = aimRay.direction.normalized;
+                }
+            }
+            else
+            {
+                if (!_loggedMissingBowAimCamera)
+                {
+                    _loggedMissingBowAimCamera = true;
+                    Debug.LogWarning($"{nameof(BeaverPlayerBehaviour)}: no Camera available for screen-center aim; using spine forward as fallback.", this);
+                }
+
+                aimDirection = Spine != null ? Spine.forward : transform.forward;
+                if (aimDirection.sqrMagnitude < 1e-8f)
+                    aimDirection = Vector3.forward;
+                else
+                    aimDirection.Normalize();
             }
 
             float clearance = Mathf.Max(0f, clearanceAlongAim);
             spawnPosition = origin + aimDirection * clearance;
             return true;
+        }
+
+        bool TryGetScreenCenterViewportRay(out Ray aimRay, bool exactScreenCenter = false)
+        {
+            aimRay = default;
+            Camera cam = ResolveBowAimCamera();
+            if (cam == null)
+                return false;
+
+            float viewportY = exactScreenCenter ? 0.5f : 0.5f + bowAimViewportYOffset;
+            aimRay = cam.ViewportPointToRay(new Vector3(0.5f, viewportY, 0f));
+            return true;
+        }
+
+        bool TryGetValidScreenCenterHit(Ray ray, float maxDist, LayerMask mask, out RaycastHit validHit)
+        {
+            validHit = default;
+            RaycastHit[] hits = Physics.RaycastAll(ray, maxDist, mask, QueryTriggerInteraction.Ignore);
+            if (hits == null || hits.Length == 0)
+                return false;
+
+            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+            float minCameraHit = Mathf.Max(0.1f, minFireBreathCameraHitDistance);
+
+            for (var i = 0; i < hits.Length; i++)
+            {
+                Collider col = hits[i].collider;
+                if (col == null || IsBowAimHitSelf(col))
+                    continue;
+
+                if (hits[i].distance < minCameraHit)
+                    continue;
+
+                validHit = hits[i];
+                return true;
+            }
+
+            return false;
+        }
+
+        Camera ResolveFireBreathAimCamera()
+        {
+            if (Camera.main != null)
+                return Camera.main;
+
+            return ResolveBowAimCamera();
+        }
+
+        public bool TryResolveFireBreathLaunchPose(
+            Vector3 firePointWorld,
+            out Vector3 projectileOrigin,
+            out Vector3 aimDirection,
+            out Vector3 targetPoint)
+        {
+            projectileOrigin = firePointWorld;
+            aimDirection = Vector3.forward;
+            targetPoint = firePointWorld + Vector3.forward * 10f;
+
+            Camera cam = ResolveFireBreathAimCamera();
+            float maxDist = Mathf.Max(1f, bowAimRayMaxDistance);
+            Vector3 cameraForward = Vector3.forward;
+
+            if (cam == null)
+            {
+                if (!_loggedMissingBowAimCamera)
+                {
+                    _loggedMissingBowAimCamera = true;
+                    Debug.LogWarning($"{nameof(BeaverPlayerBehaviour)}: no Camera available for FireBreath screen-center aim; using forward fallback.", this);
+                }
+
+                cameraForward = Spine != null ? Spine.forward : transform.forward;
+                if (cameraForward.sqrMagnitude < 1e-8f)
+                    cameraForward = Vector3.forward;
+                else
+                    cameraForward.Normalize();
+
+                targetPoint = firePointWorld + cameraForward * maxDist;
+            }
+            else
+            {
+                Ray aimRay = cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+                cameraForward = aimRay.direction.sqrMagnitude > 1e-8f ? aimRay.direction.normalized : cam.transform.forward;
+
+                LayerMask mask = ResolveBowAimRaycastLayers();
+                if (TryGetValidScreenCenterHit(aimRay, maxDist, mask, out RaycastHit hit))
+                    targetPoint = hit.point;
+                else
+                    targetPoint = aimRay.origin + aimRay.direction * maxDist;
+
+                if (debugFireBreathLaunch)
+                    Debug.DrawRay(aimRay.origin, aimRay.direction * maxDist, Color.yellow, 3f);
+            }
+
+            Vector3 toTarget = targetPoint - firePointWorld;
+            if (toTarget.sqrMagnitude < 1e-8f || Vector3.Dot(toTarget.normalized, cameraForward) < 0.01f)
+                aimDirection = cameraForward;
+            else
+                aimDirection = toTarget.normalized;
+
+            float spawnOffset = Mathf.Max(0f, fireBreathSpawnForwardOffset);
+            projectileOrigin = firePointWorld + aimDirection * spawnOffset;
+
+            if (debugFireBreathLaunch)
+            {
+                Debug.Log(
+                    $"{nameof(BeaverPlayerBehaviour)} FireBreath aim camForward={cameraForward} firePoint={firePointWorld} origin={projectileOrigin} target={targetPoint} dir={aimDirection}",
+                    this);
+                Debug.DrawLine(projectileOrigin, targetPoint, Color.cyan, 3f);
+                Debug.DrawRay(projectileOrigin, aimDirection * 24f, Color.red, 3f);
+            }
+
+            return true;
+        }
+
+        public void CollectOwnerProjectileIgnoreColliders(HashSet<Collider> colliders)
+        {
+            if (colliders == null || ArmorSet == null)
+                return;
+
+            for (var i = 0; i < ArmorSet.Length; i++)
+            {
+                GameObject armorPiece = ArmorSet[i];
+                if (armorPiece == null || !armorPiece.activeInHierarchy)
+                    continue;
+
+                foreach (Collider c in armorPiece.GetComponentsInChildren<Collider>(true))
+                {
+                    if (c != null)
+                        colliders.Add(c);
+                }
+            }
+        }
+
+        public bool TryLaunchFireBreathFromAttackPoint(Projectile fireBreathPrefab, Transform firePoint, Vector3 spawnLocalOffset)
+        {
+            if (fireBreathPrefab == null || firePoint == null)
+                return false;
+
+            Vector3 worldFirePoint = firePoint.position;
+            if (spawnLocalOffset.sqrMagnitude > 1e-8f)
+                worldFirePoint += firePoint.TransformDirection(spawnLocalOffset);
+
+            if (!TryResolveFireBreathLaunchPose(worldFirePoint, out Vector3 spawnPosition, out Vector3 aimDirection, out _))
+                return false;
+
+            Quaternion spawnRotation = Quaternion.LookRotation(aimDirection, Vector3.up);
+            Projectile.Spawn(fireBreathPrefab, spawnPosition, spawnRotation, aimDirection, this);
+            return true;
+        }
+
+        public void ResetHeadAnimatorLayer()
+        {
+            if (Otter == null)
+                return;
+
+            int headLayer = Otter.GetLayerIndex("Head");
+            if (headLayer < 0)
+                return;
+
+            Otter.SetLayerWeight(headLayer, 1f);
+            Otter.CrossFadeInFixedTime("LookSideWays", 0.05f, headLayer, 0f);
+        }
+
+        public void SetShieldParryAnimator(bool active)
+        {
+            if (Otter == null)
+                return;
+
+            Otter.SetBool("shieldParry", active);
+        }
+
+        void SetSlashAnimator(bool active)
+        {
+            if (Otter == null)
+                return;
+
+            if (Otter.GetBool("slash") != active)
+                Otter.SetBool("slash", active);
+        }
+
+        public void ResetSwordAttackPresentation()
+        {
+            if (otterAction != null)
+                otterAction.SetGlowActive(false);
+
+            if (Otter != null)
+            {
+                SetSlashAnimator(false);
+                Otter.SetBool("fight", false);
+                SetShieldParryAnimator(false);
+            }
+
+            ResetHeadAnimatorLayer();
+        }
+
+        bool CanHoldSwordShieldAttack()
+        {
+            return ArmorEquipped
+                && PlayerInputReader.IsPrimaryHeld()
+                && CurrentStamina > 0f;
+        }
+
+        float GetSwordShieldStaminaCostPerFixedStep()
+        {
+            return grounded ? SwordShieldGroundStaminaPerFixedStep : SwordShieldAirStaminaPerFixedStep;
+        }
+
+        bool HasStaminaForSwordShieldFixedStep()
+        {
+            return CurrentStamina >= GetSwordShieldStaminaCostPerFixedStep();
+        }
+
+        void BeginSwordShieldAttackCycle()
+        {
+            _swordShieldCycleActive = true;
+            if (Otter == null)
+                return;
+
+            Otter.SetBool("fight", false);
+            SetSlashAnimator(true);
+        }
+
+        void EndSwordShieldCycleGlowOnly()
+        {
+            if (otterAction != null)
+                otterAction.SetGlowActive(false);
+        }
+
+        void StopSwordShieldChainRoutine()
+        {
+            if (_swordShieldChainRoutine == null)
+                return;
+
+            StopCoroutine(_swordShieldChainRoutine);
+            _swordShieldChainRoutine = null;
+        }
+
+        IEnumerator PulseSlashForNextCycle()
+        {
+            _swordShieldChainRoutine = null;
+            SetSlashAnimator(false);
+            yield return null;
+
+            if (!CanHoldSwordShieldAttack())
+                yield break;
+
+            BeginSwordShieldAttackCycle();
+        }
+
+        void RequestSwordShieldCycleRestart()
+        {
+            StopSwordShieldChainRoutine();
+            _swordShieldChainRoutine = StartCoroutine(PulseSlashForNextCycle());
+        }
+
+        void CompleteSwordShieldCycle(bool tryChainNext)
+        {
+            EndSwordShieldCycleGlowOnly();
+            _swordShieldCycleActive = false;
+
+            if (tryChainNext && CanHoldSwordShieldAttack() && HasStaminaForSwordShieldFixedStep())
+            {
+                RequestSwordShieldCycleRestart();
+                return;
+            }
+
+            if (!PlayerInputReader.IsPrimaryHeld())
+                ResetSwordAttackPresentation();
+            else
+            {
+                SetSlashAnimator(false);
+                if (Otter != null)
+                    Otter.SetBool("fight", false);
+                ResetHeadAnimatorLayer();
+            }
+        }
+
+        public void InterruptSwordAttackPresentation()
+        {
+            _swordShieldAttackHeld = false;
+            _swordShieldCycleActive = false;
+            StopSwordShieldChainRoutine();
+            ResetSwordAttackPresentation();
+        }
+
+        void CleanupInterruptedSwordFinisherPresentation()
+        {
+            if (Otter == null || otterAction == null || !ArmorEquipped)
+                return;
+
+            if (PlayerInputReader.IsPrimaryHeld() || _primaryMeleeHeldLastFixed)
+                return;
+
+            if (!otterAction.IsFinisherGlowActive())
+                return;
+
+            for (var layer = 0; layer < Otter.layerCount; layer++)
+            {
+                if (Otter.GetCurrentAnimatorStateInfo(layer).IsName("NewSwordJump"))
+                    return;
+            }
+
+            InterruptSwordAttackPresentation();
+        }
+
+        public void OnSwordFinisherAnimationStarted()
+        {
+            _swordShieldCycleActive = true;
+        }
+
+        public void OnSwordFinisherAnimationEnded()
+        {
+            CompleteSwordShieldCycle(tryChainNext: true);
+        }
+
+        void OnDisable()
+        {
+            _swordShieldAttackHeld = false;
+            _swordShieldCycleActive = false;
+            StopSwordShieldChainRoutine();
+            ResetSwordAttackPresentation();
+        }
+
+        void UpdateSwordShieldHeldMelee(bool primaryMeleeHeld)
+        {
+            _swordShieldAttackHeld = primaryMeleeHeld;
+
+            if (!primaryMeleeHeld)
+            {
+                _swordShieldCycleActive = false;
+                StopSwordShieldChainRoutine();
+                ResetSwordAttackPresentation();
+                return;
+            }
+
+            if (!HasStaminaForSwordShieldFixedStep())
+            {
+                _swordShieldCycleActive = false;
+                StopSwordShieldChainRoutine();
+                SetSlashAnimator(false);
+                if (Otter != null)
+                    Otter.SetBool("fight", false);
+                return;
+            }
+
+            if (!_swordShieldCycleActive && _swordShieldChainRoutine == null)
+                BeginSwordShieldAttackCycle();
+
+            if (!_swordShieldCycleActive)
+                return;
+
+            CurrentStamina -= GetSwordShieldStaminaCostPerFixedStep();
+            HealthBar.SetStamina(CurrentStamina);
+
+            if (Otter == null)
+                return;
+
+            Otter.SetBool("fight", false);
+            SetSlashAnimator(true);
+
+            if (grounded == false)
+            {
+                if (Otter.GetCurrentAnimatorStateInfo(0).IsName("Air Kick"))
+                {
+                    var WindTrail = Instantiate(KickWind, KickEffectPos.position, Quaternion.Euler(-90, UnityEngine.Random.Range(0f, 360f), 0));
+                    WindTrail.transform.parent = KickEffectPos;
+                }
+                if (Otter.GetCurrentAnimatorStateInfo(0).IsName("HuricaneSword"))
+                {
+                    var SwordTrail = Instantiate(SwordCopter, KickEffectPos.position + new Vector3(0, 0.5f, 0), Quaternion.Euler(-90, UnityEngine.Random.Range(0f, 360f), 0));
+                    SwordTrail.transform.parent = KickEffectPos;
+                }
+                if (Otter.speed > 0.4)
+                    Player.useGravity = false;
+                else
+                    Player.useGravity = true;
+            }
+            else if (Otter.GetCurrentAnimatorStateInfo(1).IsName("AttackA"))
+            {
+                if (Root.childCount == 0)
+                {
+                    var RightWind = Instantiate(BoxWind, Root.position - new Vector3(0, 0.3f, 0), rotGoal * Quaternion.Euler(-90, 90, 0));
+                    RightWind.transform.parent = Root;
+                }
+            }
+            else if (Otter.GetCurrentAnimatorStateInfo(1).IsName("AttackB"))
+            {
+                if (Root.childCount == 0)
+                {
+                    var LeftWind = Instantiate(BoxWind, Root.position - new Vector3(0, 0.3f, 0), rotGoal * Quaternion.Euler(90, 90, 0));
+                    LeftWind.transform.parent = Root;
+                }
+            }
         }
 
         bool TryGetBowScreenAim(out Vector3 fireDirection, out Vector3 spawnPosition, out Quaternion projectileRotation)
@@ -932,6 +1378,7 @@ namespace Beavermania.Player
                 spawnOrigin,
                 Vector3.zero,
                 bowProjectileSpawnClearance,
+                directionFromTargetPoint: false,
                 out fireDirection,
                 out spawnPosition);
             projectileRotation = Quaternion.LookRotation(fireDirection);
@@ -1231,7 +1678,7 @@ namespace Beavermania.Player
                 }
                 if (ArmorEquipped == true)
                 {
-                    Otter.SetBool("shieldParry", true);
+                    SetShieldParryAnimator(true);
                     Otter.SetBool("Parry", false);
                     Otter.SetBool("HammerParry", false);
                 }
@@ -1242,7 +1689,7 @@ namespace Beavermania.Player
         {
             Otter.SetBool("Parry", false);
             Otter.SetBool("HammerParry", false);
-            Otter.SetBool("shieldParry", false);
+            SetShieldParryAnimator(false);
             isParried = false;
         }
         public void HoneyON()
@@ -1392,6 +1839,7 @@ namespace Beavermania.Player
             ApplyPauseLikeUiCameraState();
             bool inputLocked = IsGameplayInputLocked();
             BufferSecondaryMouseInputEdges(inputLocked);
+            CleanupInterruptedSwordFinisherPresentation();
 
             //Parry animations
             if (!inputLocked && Defend == true)
@@ -1410,12 +1858,6 @@ namespace Beavermania.Player
                     Otter.StopPlayback();
                 }
 
-            }
-
-            //Turn off glow attack effect
-            if (!inputLocked && !PlayerInputReader.IsPrimaryHeld())
-            {
-                otterAction.TurnOffGlow();
             }
 
             //Update UI text
@@ -1606,6 +2048,8 @@ namespace Beavermania.Player
                             arsenalBrowser = 0;
                         }
 
+                        InterruptSwordAttackPresentation();
+
                         switch (Arsenal[arsenalBrowser])
                         {
                             case "Bare Hands":
@@ -1769,110 +2213,60 @@ namespace Beavermania.Player
 
             if (!inputLocked /*&& ParryShield.active == false*/)
             {
+                bool primaryMeleeHeld = PlayerInputReader.IsPrimaryHeld() && CurrentStamina > 0;
+                _primaryMeleeHeldLastFixed = primaryMeleeHeld;
+
                 //Melee action
                 {
-                    if (PlayerInputReader.IsPrimaryHeld() && CurrentStamina > 0)
+                    if (primaryMeleeHeld)
                     {
-                        if (ArmorEquipped==false && HammerHeld==false)
+                        if (ArmorEquipped)
                         {
-                            CurrentStamina -= 0.03f;
+                            UpdateSwordShieldHeldMelee(true);
                         }
-                        if (ArmorEquipped==true)
+                        else
                         {
-                            if (grounded==true)
-                            {
-                                CurrentStamina -= 0.2f;
-                            }
-                            if (grounded==false)
-                            {
-                                CurrentStamina -= 0.5f;
-                            }
-                        }
-                        if (HammerHeld==true)
-                        {
-                            CurrentStamina -= 0.1f;
-                        }
-                        HealthBar.SetStamina(CurrentStamina);
-                        if (ArmorEquipped==false)
-                        {
-                            Otter.SetBool("fight", true); //Airkick leveitation without sword
-                            Otter.SetBool("slash", false);
-                        }
-                        if (ArmorEquipped == true)
-                        {
-                            Otter.SetBool("fight", false); 
-                            Otter.SetBool("slash", true);//Airkick leveitation with sword
-                        }
+                            if (HammerHeld == false)
+                                CurrentStamina -= 0.03f;
+                            if (HammerHeld)
+                                CurrentStamina -= 0.1f;
 
-                        if (grounded == false)
-                        {
-                            if (Otter.GetCurrentAnimatorStateInfo(0).IsName("Air Kick"))
+                            HealthBar.SetStamina(CurrentStamina);
+                            Otter.SetBool("fight", true);
+                            Otter.SetBool("slash", false);
+
+                            if (grounded == false)
                             {
-                                var WindTrail = Instantiate(KickWind, KickEffectPos.position, Quaternion.Euler(-90, UnityEngine.Random.Range(0f, 360f), 0));
-                                WindTrail.transform.parent = KickEffectPos;
-                            }
-                            if (Otter.GetCurrentAnimatorStateInfo(0).IsName("HuricaneSword"))
-                            {
-                                var SwordTrail = Instantiate(SwordCopter, KickEffectPos.position +new Vector3(0,0.5f,0), Quaternion.Euler(-90, UnityEngine.Random.Range(0f, 360f), 0));
-                                SwordTrail.transform.parent = KickEffectPos;
-                            }                        
-                            if (Otter.speed > 0.4)
-                            {
-                                if (ArmorEquipped==false)
+                                if (Otter.GetCurrentAnimatorStateInfo(0).IsName("Air Kick"))
+                                {
+                                    var WindTrail = Instantiate(KickWind, KickEffectPos.position, Quaternion.Euler(-90, UnityEngine.Random.Range(0f, 360f), 0));
+                                    WindTrail.transform.parent = KickEffectPos;
+                                }
+                                if (Otter.speed > 0.4)
                                 {
                                     levitation -= 0.05f;
                                     Otter.speed -= 0.005f;
                                     Player.AddForce(0, levitation, 0);
                                 }
-                                if (ArmorEquipped==true)
-                                {
-                                    Player.useGravity = false;
-                                }
-
                             }
                             else
-                            {
-                                Player.useGravity = true;
-                                Otter.SetBool("fight", false);
-                            }      
-                        }
-                        if (grounded == true)
-                        {
-                            if (ArmorEquipped == false)
                             {
                                 Otter.SetBool("fight", true);
                                 Otter.SetBool("slash", false);
                             }
-                            if (ArmorEquipped == true)
-                            {
-                                Otter.SetBool("fight", false);
-                                Otter.SetBool("slash", true);
-                            }
-                            if (Otter.GetCurrentAnimatorStateInfo(1).IsName("AttackA"))
-                            {
-                                if (Root.childCount == 0)
-                                {
-                                    var RightWind = Instantiate(BoxWind, Root.position - new Vector3(0, 0.3f, 0), rotGoal * Quaternion.Euler(-90, 90, 0));
-                                    RightWind.transform.parent = Root;
-                                }
-                            }
-                            if (Otter.GetCurrentAnimatorStateInfo(1).IsName("AttackB"))
-                            {
-                                if (Root.childCount == 0)
-                                {
-                                    var LeftWind = Instantiate(BoxWind, Root.position - new Vector3(0, 0.3f, 0), rotGoal * Quaternion.Euler(90, 90, 0));
-                                    LeftWind.transform.parent = Root;
-                                }
-                            }
                         }
-
                     }
                     else
                     {
                         Player.useGravity = true;
-                        Otter.SetBool("slash", false);
-                        Otter.SetBool("fight", false);
-                    
+                        if (ArmorEquipped)
+                            UpdateSwordShieldHeldMelee(false);
+                        else
+                        {
+                            Otter.SetBool("slash", false);
+                            Otter.SetBool("fight", false);
+                        }
+
                         GroundAttack = EffectiveBareHandsDamage;
                         Beat = 0;
                         Otter.speed = AnimSpeed;
@@ -1882,7 +2276,7 @@ namespace Beavermania.Player
                 {
                     if (PlayerInputReader.IsDefendKeyHeld() && CurrentStamina > 0 && !PlayerInputReader.IsPrimaryHeld() && !PlayerInputReader.IsSecondaryHeld())
                         ParryON();
-                    else
+                    else if (!primaryMeleeHeld || !ArmorEquipped)
                         ParryOFF();
                 }
             }
@@ -1976,6 +2370,7 @@ namespace Beavermania.Player
 
             if (inputLocked)
             {
+                InterruptSwordAttackPresentation();
                 if (Stone != null)
                     Stone.SetActive(false);
                 if (AimIcon != null)
@@ -2068,6 +2463,7 @@ namespace Beavermania.Player
                                 stoneSpawnOrigin,
                                 new Vector3(0f, 0.6f, 0f),
                                 bowProjectileSpawnClearance,
+                                directionFromTargetPoint: false,
                                 out Vector3 stoneAimDirection,
                                 out Vector3 stoneSpawnPosition);
                             Projectile.Spawn(

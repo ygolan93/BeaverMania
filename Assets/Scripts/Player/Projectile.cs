@@ -9,6 +9,13 @@ using UnityEngine.Pool;
 namespace Beavermania.Player.Combat
 {
 
+    public enum ProjectileType
+    {
+        Generic = 0,
+        Arrow = 1,
+        FireBreath = 2,
+    }
+
     public class Projectile : MonoBehaviour
     {
         const int DefaultPoolCapacity = 8;
@@ -24,6 +31,7 @@ namespace Beavermania.Player.Combat
 
         public Rigidbody Ball;
         BeaverPlayer Player;
+        [SerializeField] ProjectileType projectileType = ProjectileType.Generic;
         public bool isArrow;
         public bool isFireBall;
         [SerializeField] AudioSource Sound;
@@ -56,7 +64,26 @@ namespace Beavermania.Player.Combat
         [SerializeField] float debugLaunchRayLength = 12f;
         [Tooltip("Push embedded pickup slightly off the hit surface (meters).")]
         [SerializeField] float pickupSurfaceOffset = 0.06f;
+        [Header("FireBreath AoE")]
+        [Tooltip("AoE radius at impact (meters).")]
+        [SerializeField] float aoeRadius = 6f;
+        [Tooltip("AoE damage per enemy. When 0, uses the projectile Damage value.")]
+        [SerializeField] int aoeDamage;
+        [Tooltip("Layers scanned for enemies in the explosion radius.")]
+        [SerializeField] LayerMask enemyLayerMask;
+        [Tooltip("Optional explosion VFX prefab spawned at impact.")]
+        [SerializeField] GameObject explosionPrefab;
+        [Tooltip("Fallback fireball speed when forwardVel is 0.")]
+        [SerializeField] int minFireballForwardSpeed = 30;
+        [Tooltip("Owner collision grace for FireBreath (seconds).")]
+        [SerializeField] float fireBreathOwnerCollisionGrace = 0.15f;
+        [Tooltip("Minimum travel from launch before FireBreath can explode on world geometry.")]
+        [SerializeField] float fireBreathMinTravelBeforeWorldImpact = 2f;
+        [Tooltip("Logs FireBreath launch velocity and first collision target.")]
+        [SerializeField] bool debugFireBreath;
         Quaternion arrowVisualBaseLocalRotation = Quaternion.identity;
+        Vector3 fireBreathLaunchPosition;
+        bool fireBreathLoggedFirstCollision;
 
         ObjectPool<Projectile> pool;
         Collider[] colliders;
@@ -75,6 +102,31 @@ namespace Beavermania.Player.Combat
         bool released;
         bool overflowInstance;
         bool impactResolved;
+        bool HasExploded => impactResolved;
+
+        bool UsesFireBreathLogic =>
+            projectileType == ProjectileType.FireBreath || (isFireBall && !isArrow);
+
+        bool UsesArrowLogic =>
+            projectileType == ProjectileType.Arrow || (isArrow && !UsesFireBreathLogic);
+
+        void EnforceProjectileTypeFlags()
+        {
+            if (UsesFireBreathLogic)
+            {
+                projectileType = ProjectileType.FireBreath;
+                isFireBall = true;
+                isArrow = false;
+                return;
+            }
+
+            if (UsesArrowLogic)
+            {
+                projectileType = ProjectileType.Arrow;
+                isArrow = true;
+                isFireBall = false;
+            }
+        }
 
         public static Projectile Spawn(Projectile prefab, Vector3 position, Quaternion rotation)
         {
@@ -237,12 +289,14 @@ namespace Beavermania.Player.Combat
         void Launch(Vector3 position, Quaternion rotation, bool isOverflowInstance, Vector3? worldLaunchDirection, BeaverPlayer owner)
         {
             CacheDefaults();
+            EnforceProjectileTypeFlags();
 
             overflowInstance = isOverflowInstance;
             released = false;
             impactResolved = false;
             arrowRbDebugFixedStepsLogged = 0;
             arrowLoggedFirstContact = false;
+            fireBreathLoggedFirstCollision = false;
             ResetRuntimeState();
 
             Vector3 launchDirection;
@@ -254,25 +308,28 @@ namespace Beavermania.Player.Combat
             if (launchDirection.sqrMagnitude < 1e-8f)
                 launchDirection = Vector3.forward;
 
-            Quaternion flightRotation = isArrow
+            Quaternion flightRotation = UsesArrowLogic
                 ? ResolveArrowFlightRotation(launchDirection)
                 : Quaternion.LookRotation(launchDirection, Vector3.up);
 
             transform.SetPositionAndRotation(position, flightRotation);
-            if (isArrow)
+            if (UsesArrowLogic)
                 ApplyArrowVisualMeshOffset();
+
+            if (UsesFireBreathLogic)
+                fireBreathLaunchPosition = position;
 
             if (owner != null)
                 Player = owner;
             else
                 ResetOwnerReference();
 
-            if (isArrow)
-                ApplyArrowOwnerCollisionIgnores();
+            if (UsesArrowLogic || UsesFireBreathLogic)
+                ApplyOwnerCollisionIgnores();
 
             if (Ball != null)
             {
-                if (isArrow)
+                if (UsesArrowLogic)
                 {
                     Ball.isKinematic = false;
                     Ball.detectCollisions = true;
@@ -283,16 +340,38 @@ namespace Beavermania.Player.Combat
                     float arrowSpeed = Mathf.Abs(initialForwardVel) > 0f ? Mathf.Abs(initialForwardVel) : minArrowForwardSpeed;
                     Ball.velocity = launchDirection.normalized * arrowSpeed;
                 }
+                else if (UsesFireBreathLogic)
+                {
+                    Ball.isKinematic = false;
+                    Ball.detectCollisions = true;
+                    Ball.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+                    Ball.constraints = RigidbodyConstraints.None;
+                    Ball.useGravity = false;
+                    Ball.velocity = Vector3.zero;
+                    Ball.angularVelocity = Vector3.zero;
+                    Ball.WakeUp();
+
+                    float fireSpeed = Mathf.Abs(initialForwardVel) > 0f ? Mathf.Abs(initialForwardVel) : minFireballForwardSpeed;
+                    Ball.velocity = launchDirection * fireSpeed;
+
+                    if (debugFireBreath)
+                    {
+                        Debug.Log(
+                            $"[Projectile] FireBreath launch pos={position} dir={launchDirection} speed={fireSpeed} vel={Ball.velocity}",
+                            this);
+                        Debug.DrawRay(position, launchDirection * 24f, Color.magenta, 3f);
+                    }
+                }
                 else
                 {
                     Ball.velocity = launchDirection * forwardVel + Vector3.up * upwardVel;
                 }
             }
 
-            if (isArrow && debugLaunchRayLength > 0f)
+            if (UsesArrowLogic && debugLaunchRayLength > 0f)
                 Debug.DrawRay(position, launchDirection * debugLaunchRayLength, Color.cyan, 2f);
 
-            if (debugBowProjectile && isArrow)
+            if (debugBowProjectile && UsesArrowLogic)
             {
                 var vel = Ball != null ? Ball.velocity : Vector3.zero;
                 int spdDbg = Mathf.Abs(initialForwardVel) > 0 ? Mathf.Abs(initialForwardVel) : minArrowForwardSpeed;
@@ -334,7 +413,12 @@ namespace Beavermania.Player.Combat
             if (trails != null)
             {
                 for (var i = 0; i < trails.Length; i++)
+                {
+                    if (trails[i] == null)
+                        continue;
+
                     trails[i].Clear();
+                }
             }
 
             if (arrowVisualMeshRoot != null)
@@ -372,11 +456,11 @@ namespace Beavermania.Player.Combat
             ownerIgnorePairs.Clear();
         }
 
-        void ApplyArrowOwnerCollisionIgnores()
+        void ApplyOwnerCollisionIgnores()
         {
             ClearOwnerCollisionIgnores();
 
-            if (!isArrow || colliders == null || Player == null)
+            if ((!UsesArrowLogic && !UsesFireBreathLogic) || colliders == null || Player == null)
                 return;
 
             var ignoreAgainst = new HashSet<Collider>();
@@ -393,6 +477,7 @@ namespace Beavermania.Player.Combat
             }
 
             AddCollidersUnder(Player.transform);
+            Player.CollectOwnerProjectileIgnoreColliders(ignoreAgainst);
 
             if (Player.Bow != null)
             {
@@ -433,7 +518,43 @@ namespace Beavermania.Player.Combat
 
         bool ShouldSpawnEmbeddedArrowPickup()
         {
-            return isArrow && aliveTime >= minPickupSpawnDelay;
+            return UsesArrowLogic && aliveTime >= minPickupSpawnDelay;
+        }
+
+        bool IsPriorityFireBreathTarget(Collider collider)
+        {
+            if (collider == null)
+                return false;
+
+            if (ColliderHasTag(collider, "NPC")
+                || ColliderHasTag(collider, "Scorpion")
+                || ColliderHasTag(collider, "Hive"))
+            {
+                return true;
+            }
+
+            return GetComponentInParentSafe<NPC_Basic>(collider) != null
+                || GetComponentInParentSafe<ScorpionScript>(collider) != null
+                || GetComponentInParentSafe<Static_Hive>(collider) != null;
+        }
+
+        bool CanFireBreathExplodeFromCollision(Collision collision)
+        {
+            if (!UsesFireBreathLogic)
+                return true;
+
+            if (collision == null || collision.collider == null)
+                return true;
+
+            if (ShouldIgnoreOwnerCollision(collision))
+                return false;
+
+            if (IsPriorityFireBreathTarget(collision.collider))
+                return true;
+
+            float minTravel = Mathf.Max(0.5f, fireBreathMinTravelBeforeWorldImpact);
+            float traveled = Vector3.Distance(transform.position, fireBreathLaunchPosition);
+            return traveled >= minTravel;
         }
 
         static T GetComponentInParentSafe<T>(Collider collider) where T : Component
@@ -467,7 +588,7 @@ namespace Beavermania.Player.Combat
                 && collider.GetComponentInParent<BeaverPlayer>() == Player;
         }
 
-        bool ShouldIgnoreArrowCollision(Collision collision)
+        bool ShouldIgnoreOwnerCollision(Collision collision)
         {
             if (collision == null || collision.collider == null)
                 return true;
@@ -475,7 +596,11 @@ namespace Beavermania.Player.Combat
             if (IsOwnerCollider(collision.collider))
                 return true;
 
-            if (aliveTime < collisionResponseGrace
+            float ownerGrace = UsesFireBreathLogic
+                ? Mathf.Max(0.05f, fireBreathOwnerCollisionGrace)
+                : collisionResponseGrace;
+
+            if (aliveTime < ownerGrace
                 && Player != null
                 && collision.collider.transform.IsChildOf(Player.transform)
                 && !ColliderHasTag(collision.collider, "NPC")
@@ -533,7 +658,7 @@ namespace Beavermania.Player.Combat
 
         void FinalizeArrowImpact(Collision collision, bool spawnPickup)
         {
-            if (!isArrow || impactResolved || released)
+            if (!UsesArrowLogic || impactResolved || released)
                 return;
 
             impactResolved = true;
@@ -553,20 +678,25 @@ namespace Beavermania.Player.Combat
 
         private void Update()
         {
+            if (released)
+                return;
+
             aliveTime += Time.deltaTime;
             clock -= Time.deltaTime;
             if (clock <= 0)
             {
-                if (isArrow && !impactResolved)
+                if (UsesArrowLogic && !impactResolved)
                     FinalizeArrowImpact(null, ShouldSpawnEmbeddedArrowPickup());
+                else if (UsesFireBreathLogic && !HasExploded)
+                    Explode(null);
                 else
-                    CompleteProjectile(ShouldSpawnEmbeddedArrowPickup());
+                    CompleteProjectile(false);
             }
         }
 
         void FixedUpdate()
         {
-            if (!debugBowProjectile || !isArrow || released || Ball == null)
+            if (!debugBowProjectile || !UsesArrowLogic || released || Ball == null)
                 return;
 
             if (arrowRbDebugFixedStepsLogged < 2)
@@ -575,11 +705,114 @@ namespace Beavermania.Player.Combat
                 arrowRbDebugFixedStepsLogged++;
             }
         }
-        public void Explode()
+        int ResolveAoeDamage()
         {
-            PooledOneShotVfx.Spawn(Explosion, transform.position, transform.rotation);
-            CompleteProjectile();
+            return aoeDamage > 0 ? aoeDamage : Damage;
         }
+
+        Vector3 ResolveImpactPoint(Collision collision)
+        {
+            if (collision != null && collision.contactCount > 0)
+                return collision.GetContact(0).point;
+
+            return transform.position;
+        }
+
+        GameObject ResolveExplosionPrefab()
+        {
+            if (explosionPrefab != null)
+                return explosionPrefab;
+
+            return Explosion;
+        }
+
+        void Explode(Collision collision)
+        {
+            if (!UsesFireBreathLogic || HasExploded || released)
+                return;
+
+            impactResolved = true;
+
+            if (Ball != null)
+            {
+                Ball.velocity = Vector3.zero;
+                Ball.angularVelocity = Vector3.zero;
+                Ball.isKinematic = true;
+            }
+
+            Vector3 impactPoint = ResolveImpactPoint(collision);
+            Quaternion impactRotation = transform.rotation;
+            if (collision != null && collision.contactCount > 0)
+            {
+                Vector3 normal = collision.GetContact(0).normal;
+                if (normal.sqrMagnitude > 1e-8f)
+                    impactRotation = Quaternion.LookRotation(-normal, Vector3.up);
+            }
+
+            GameObject vfx = ResolveExplosionPrefab();
+            if (vfx != null)
+                PooledOneShotVfx.Spawn(vfx, impactPoint, impactRotation);
+
+            ApplyAoEDamage(impactPoint);
+            RockHit();
+            CompleteProjectile(false);
+        }
+
+        void ApplyAoEDamage(Vector3 impactPoint)
+        {
+            if (!UsesFireBreathLogic)
+                return;
+
+            float radius = Mathf.Max(0.1f, aoeRadius);
+            LayerMask mask = enemyLayerMask.value != 0
+                ? enemyLayerMask
+                : (Player != null && Player.enemyLayers.value != 0 ? Player.enemyLayers : (LayerMask)~0);
+
+            Collider[] hits = Physics.OverlapSphere(impactPoint, radius, mask, QueryTriggerInteraction.Ignore);
+            if (hits == null || hits.Length == 0)
+                return;
+
+            int damageAmount = ResolveAoeDamage();
+            var damagedTargets = new HashSet<int>();
+
+            for (var i = 0; i < hits.Length; i++)
+            {
+                Collider hitCollider = hits[i];
+                if (hitCollider == null || IsOwnerCollider(hitCollider))
+                    continue;
+
+                NPC_Basic npc = GetComponentInParentSafe<NPC_Basic>(hitCollider);
+                if (npc != null && damagedTargets.Add(npc.GetInstanceID()))
+                {
+                    npc.TakeDamage(damageAmount);
+                    npc.combo += npc.hit2stun;
+                    continue;
+                }
+
+                ScorpionScript scorpion = GetComponentInParentSafe<ScorpionScript>(hitCollider);
+                if (scorpion != null && damagedTargets.Add(scorpion.GetInstanceID()))
+                {
+                    scorpion.TakeDamage(damageAmount);
+                    scorpion.combo += 3;
+                    continue;
+                }
+
+                Static_Hive hive = GetComponentInParentSafe<Static_Hive>(hitCollider);
+                if (hive != null && damagedTargets.Add(hive.GetInstanceID()))
+                    hive.TakeDamage(damageAmount);
+            }
+        }
+
+#if UNITY_EDITOR
+        void OnDrawGizmosSelected()
+        {
+            if (!UsesFireBreathLogic || aoeRadius <= 0f)
+                return;
+
+            Gizmos.color = new Color(1f, 0.45f, 0.1f, 0.35f);
+            Gizmos.DrawWireSphere(transform.position, aoeRadius);
+        }
+#endif
 
         public void RockHit()
         {
@@ -596,7 +829,9 @@ namespace Beavermania.Player.Combat
             if (released)
                 return;
 
-            if (debugBowProjectile && isArrow)
+            released = true;
+
+            if (debugBowProjectile && UsesArrowLogic)
                 Debug.Log($"[Projectile] CompleteProjectile spawnPickup={spawnArrowPickup} aliveTime={aliveTime:F3} clock={clock:F3} pos={transform.position}", this);
 
             if (spawnArrowPickup)
@@ -608,12 +843,14 @@ namespace Beavermania.Player.Combat
                 return;
             }
 
-            released = true;
             Destroy(gameObject);
         }
 
         GameObject ResolveArrowPickupPrefab()
         {
+            if (!UsesArrowLogic || UsesFireBreathLogic)
+                return null;
+
             if (arrowPickup != null)
                 return arrowPickup;
 
@@ -650,15 +887,42 @@ namespace Beavermania.Player.Combat
             if (released || impactResolved)
                 return;
 
-            if (debugBowProjectile && isArrow && !arrowLoggedFirstContact)
+            if (debugBowProjectile && UsesArrowLogic && !arrowLoggedFirstContact)
             {
                 arrowLoggedFirstContact = true;
                 Debug.Log($"[Projectile] FirstCollision with='{OBJ.collider?.name}' root='{OBJ.collider?.transform.root?.name}' aliveTime={aliveTime:F3}", this);
             }
 
-            if (isArrow)
+            if (UsesFireBreathLogic)
             {
-                if (ShouldIgnoreArrowCollision(OBJ))
+                if (!CanFireBreathExplodeFromCollision(OBJ))
+                {
+                    if (debugFireBreath)
+                    {
+                        Debug.Log(
+                            $"[Projectile] FireBreath ignored collision with='{OBJ.collider?.name}' layer={OBJ.collider?.gameObject.layer} traveled={Vector3.Distance(transform.position, fireBreathLaunchPosition):F2} alive={aliveTime:F3}",
+                            this);
+                    }
+
+                    return;
+                }
+
+                if (debugFireBreath && !fireBreathLoggedFirstCollision)
+                {
+                    fireBreathLoggedFirstCollision = true;
+                    var vel = Ball != null ? Ball.velocity : Vector3.zero;
+                    Debug.Log(
+                        $"[Projectile] FireBreath firstCollision with='{OBJ.collider?.name}' layer={OBJ.collider?.gameObject.layer} vel={vel} traveled={Vector3.Distance(transform.position, fireBreathLaunchPosition):F2}",
+                        this);
+                }
+
+                Explode(OBJ);
+                return;
+            }
+
+            if (UsesArrowLogic)
+            {
+                if (ShouldIgnoreOwnerCollision(OBJ))
                 {
                     if (debugBowProjectile)
                         Debug.Log($"[Projectile] Ignored collision with='{OBJ.collider?.name}' aliveTime={aliveTime:F3}", this);
@@ -684,8 +948,8 @@ namespace Beavermania.Player.Combat
                     npc.TakeDamage(Damage);
                     npc.combo += npc.hit2stun;
                 }
-                if (isFireBall)
-                    Explode();
+                if (UsesFireBreathLogic)
+                    Explode(OBJ);
                 else
                     RockHit();
                 if (Player != null)
@@ -703,8 +967,8 @@ namespace Beavermania.Player.Combat
                     scorpion.TakeDamage(Damage);
                     scorpion.combo += 3;
                 }
-                if (isFireBall)
-                    Explode();
+                if (UsesFireBreathLogic)
+                    Explode(OBJ);
                 else
                     RockHit();
             }
@@ -714,21 +978,21 @@ namespace Beavermania.Player.Combat
                 Static_Hive hive = GetComponentInParentSafe<Static_Hive>(OBJ.collider);
                 if (hive != null)
                     hive.TakeDamage(Damage);
-                if (isFireBall)
-                    Explode();
+                if (UsesFireBreathLogic)
+                    Explode(OBJ);
                 else
                     RockHit();
             }
             if (ColliderHasTag(OBJ.collider, "Isle"))
             {
                 hit = true;
-                if (isFireBall)
-                    Explode();
+                if (UsesFireBreathLogic)
+                    Explode(OBJ);
                 else
                     RockHit();
             }
 
-            if (hit && !isFireBall)
+            if (hit && !UsesFireBreathLogic)
                 CompleteProjectile(false);
         }
     }

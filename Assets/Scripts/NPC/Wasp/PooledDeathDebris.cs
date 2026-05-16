@@ -131,15 +131,26 @@ namespace Beavermania.NPC
 
             for (var i = 0; i < rigidbodies.Length; i++)
             {
+                if (rigidbodies[i] == null)
+                    continue;
+
                 rigidbodies[i].velocity = Vector3.zero;
                 rigidbodies[i].angularVelocity = Vector3.zero;
             }
 
             for (var i = 0; i < colliders.Length; i++)
+            {
+                if (colliders[i] == null)
+                    continue;
+
                 colliders[i].enabled = true;
+            }
 
             for (var i = 0; i < lifetimeScripts.Length; i++)
             {
+                if (lifetimeScripts[i] == null)
+                    continue;
+
                 lifetimeScripts[i].time = lifetimeDurations[i];
                 lifetimeScripts[i].enabled = false;
             }
@@ -150,7 +161,12 @@ namespace Beavermania.NPC
         void DisableSelfDestroyScripts()
         {
             for (var i = 0; i < selfDestroyScripts.Length; i++)
+            {
+                if (selfDestroyScripts[i] == null)
+                    continue;
+
                 selfDestroyScripts[i].enabled = false;
+            }
         }
 
         IEnumerator ReturnAfterLifetime(float lifetime)
@@ -166,6 +182,7 @@ namespace Beavermania.NPC
                 return;
 
             released = true;
+            StopReturnRoutine();
 
             if (pool != null && !overflowInstance)
             {

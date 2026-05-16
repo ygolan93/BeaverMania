@@ -44,7 +44,7 @@ Light:
   m_Type: 2
   m_Shape: 0
   m_Color: {r: 1, g: 0.32040966, b: 0, a: 1}
-  m_Intensity: 2.7400248
+  m_Intensity: 2.8106277
   m_Range: 7
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -4913,27 +4913,38 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Ball: {fileID: 4052894699184453993}
+  projectileType: 2
   isArrow: 0
   isFireBall: 1
   Sound: {fileID: 1091704372948249461}
   clock: 10
-  forwardVel: 2000
-  upwardVel: 300
-  Explosion: {fileID: 2433282508537954060, guid: 9cfe40900aead6b46be69d2c02675f7e, type: 3}
+  forwardVel: 1000
+  upwardVel: 10
+  Explosion: {fileID: 725748389856807714, guid: 4bda94453d2ca7444a0fff05b2d425f5, type: 3}
   Damage: 20000
-  arrowPickup: {fileID: 6361346071647052729, guid: 605ef2c2a1119ab4880c691c239e6acb, type: 3}
-  minPickupSpawnDelay: 0.25
-  minArrowForwardSpeed: 100
-  minArrowFlightSeconds: 4
-  collisionResponseGrace: 0.16
+  arrowPickup: {fileID: 0}
+  minPickupSpawnDelay: 0.5
+  minArrowForwardSpeed: 50
+  minArrowFlightSeconds: 10
+  collisionResponseGrace: 0.15
   debugBowProjectile: 0
-  additionalArrowIgnoreRoots:
-  - {fileID: 8767152486562788127}
-  arrowMeshTipLocalAxis: {x: 0, y: 1, z: 0}
-  arrowVisualMeshRoot: {fileID: 8767152486562788127}
-  arrowVisualLocalRotationOffsetEuler: {x: 90, y: 0, z: 0}
-  arrowMeshRotationOffsetEuler: {x: 90, y: 0, z: 0}
+  additionalArrowIgnoreRoots: []
+  arrowMeshTipLocalAxis: {x: 0, y: 10, z: 0}
+  arrowVisualMeshRoot: {fileID: 0}
+  arrowVisualLocalRotationOffsetEuler: {x: 0, y: 0, z: 0}
+  arrowMeshRotationOffsetEuler: {x: 0, y: 0, z: 0}
   debugLaunchRayLength: 12
+  pickupSurfaceOffset: 0.06
+  aoeRadius: 40
+  aoeDamage: 5000
+  enemyLayerMask:
+    serializedVersion: 2
+    m_Bits: 1024
+  explosionPrefab: {fileID: 725748389856807714, guid: 4bda94453d2ca7444a0fff05b2d425f5, type: 3}
+  minFireballForwardSpeed: 50
+  fireBreathOwnerCollisionGrace: 0.3
+  fireBreathMinTravelBeforeWorldImpact: 20
+  debugFireBreath: 1
 --- !u!54 &4052894699184453993
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -4949,7 +4960,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 2
 --- !u!135 &5803398692390125575
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -4961,7 +4972,7 @@ SphereCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.4
+  m_Radius: 0.07
   m_Center: {x: 0, y: -0.036245022, z: 0.23}
 --- !u!82 &1091704372948249461
 AudioSource:

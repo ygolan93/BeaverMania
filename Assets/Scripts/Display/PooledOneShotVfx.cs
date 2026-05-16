@@ -69,14 +69,22 @@ namespace Beavermania.Display
                 () => CreateInstance(prefab, pool),
                 vfx =>
                 {
+                    if (vfx == null || vfx.gameObject == null)
+                        return;
+
                     vfx.released = false;
+                    vfx.suppressStopCallback = false;
                     vfx.StopReturnRoutine();
                     vfx.StopAndClear();
                     vfx.gameObject.SetActive(true);
                 },
                 vfx =>
                 {
+                    if (vfx == null || vfx.gameObject == null)
+                        return;
+
                     vfx.released = true;
+                    vfx.suppressStopCallback = true;
                     vfx.StopReturnRoutine();
                     vfx.StopAndClear();
                     vfx.gameObject.SetActive(false);
@@ -159,6 +167,9 @@ namespace Beavermania.Display
 
         void Spawn(Vector3 position, Quaternion rotation, Vector3 scale)
         {
+            if (!IsAlive())
+                return;
+
             transform.SetPositionAndRotation(position, rotation);
             transform.localScale = scale;
 
@@ -169,24 +180,52 @@ namespace Beavermania.Display
             returnRoutine = StartCoroutine(ReturnAfterLifetime(cachedLifetime));
         }
 
+        void OnDisable()
+        {
+            suppressStopCallback = true;
+            StopReturnRoutine();
+        }
+
+        void OnDestroy()
+        {
+            released = true;
+            suppressStopCallback = true;
+            StopReturnRoutine();
+            pool = null;
+        }
+
         void OnParticleSystemStopped()
         {
-            if (!suppressStopCallback && returnRoutine == null)
-                Release();
+            if (!IsAlive() || released || suppressStopCallback || returnRoutine != null)
+                return;
+
+            Release();
         }
 
         IEnumerator ReturnAfterLifetime(float lifetime)
         {
             yield return new WaitForSeconds(lifetime);
             returnRoutine = null;
+
+            if (!IsAlive())
+                yield break;
+
             Release();
+        }
+
+        bool IsAlive()
+        {
+            return this != null && gameObject != null;
         }
 
         void Release()
         {
-            if (released || pool == null)
+            if (!IsAlive() || released || pool == null)
                 return;
 
+            released = true;
+            suppressStopCallback = true;
+            StopReturnRoutine();
             pool.Release(this);
         }
 
@@ -201,9 +240,17 @@ namespace Beavermania.Display
 
         void StopAndClear()
         {
+            if (!IsAlive())
+                return;
+
             suppressStopCallback = true;
             for (var i = 0; i < particleSystems.Length; i++)
+            {
+                if (particleSystems[i] == null)
+                    continue;
+
                 particleSystems[i].Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            }
 
             ResetAudioSources();
             suppressStopCallback = false;
@@ -216,6 +263,9 @@ namespace Beavermania.Display
 
             for (var i = 0; i < audioSources.Length; i++)
             {
+                if (audioSources[i] == null)
+                    continue;
+
                 audioSources[i].Stop();
                 audioSources[i].volume = defaultVolumes[i];
                 audioSources[i].pitch = defaultPitches[i];
@@ -227,6 +277,9 @@ namespace Beavermania.Display
         {
             for (var i = 0; i < systems.Length; i++)
             {
+                if (systems[i] == null)
+                    continue;
+
                 systems[i].Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
                 systems[i].Play(true);
             }
@@ -236,6 +289,9 @@ namespace Beavermania.Display
         {
             for (var i = 0; i < sources.Length; i++)
             {
+                if (sources[i] == null)
+                    continue;
+
                 sources[i].Stop();
                 if (sources[i].playOnAwake && sources[i].isActiveAndEnabled && sources[i].clip != null)
                     sources[i].Play();
@@ -246,6 +302,9 @@ namespace Beavermania.Display
         {
             for (var i = 0; i < sources.Length; i++)
             {
+                if (sources[i] == null)
+                    continue;
+
                 sources[i].Stop();
                 if (playOnAwake[i] && sources[i].isActiveAndEnabled && sources[i].clip != null)
                     sources[i].Play();
@@ -257,6 +316,9 @@ namespace Beavermania.Display
             var lifetime = 0f;
             for (var i = 0; i < systems.Length; i++)
             {
+                if (systems[i] == null)
+                    continue;
+
                 var main = systems[i].main;
                 if (main.loop)
                     continue;
@@ -272,7 +334,7 @@ namespace Beavermania.Display
             var lifetime = 0f;
             for (var i = 0; i < sources.Length; i++)
             {
-                if (!sources[i].playOnAwake || sources[i].loop || sources[i].clip == null)
+                if (sources[i] == null || !sources[i].playOnAwake || sources[i].loop || sources[i].clip == null)
                     continue;
 
                 lifetime = Mathf.Max(lifetime, sources[i].clip.length / Mathf.Max(Mathf.Abs(sources[i].pitch), 0.01f));
@@ -286,7 +348,7 @@ namespace Beavermania.Display
             var lifetime = 0f;
             for (var i = 0; i < sources.Length; i++)
             {
-                if (!playOnAwake[i] || sources[i].loop || sources[i].clip == null)
+                if (sources[i] == null || !playOnAwake[i] || sources[i].loop || sources[i].clip == null)
                     continue;
 
                 lifetime = Mathf.Max(lifetime, sources[i].clip.length / Mathf.Max(Mathf.Abs(sources[i].pitch), 0.01f));

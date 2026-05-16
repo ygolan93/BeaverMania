@@ -40,6 +40,7 @@ namespace Beavermania.NPC
         float c;
         //public WaspCourse course;
         Vector3 SpawnPos;
+        bool deathHandled;
 
         [Header("Floating")]
         public Vector3 currentPos;
@@ -217,6 +218,10 @@ namespace Beavermania.NPC
 
         private void Death()
         {
+            if (deathHandled)
+                return;
+
+            deathHandled = true;
             PlayerHealth.Plattering = ("HA! gotcha");
             PlayerHealth.ChangeSpeech = 1;
             PooledOneShotVfx.Spawn(Explosion, transform.position + new Vector3(0, 1, 0), transform.rotation);

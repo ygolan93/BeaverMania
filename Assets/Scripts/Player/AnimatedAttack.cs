@@ -161,23 +161,41 @@ namespace Beavermania.Player.Combat
 
         public void ShieldParryON()
         {
-            Player.ParryON();
+            if (Player != null)
+                Player.SetShieldParryAnimator(true);
         }
+
         public void ShieldParryOFF()
         {
-            Player.ParryOFF();
+            if (Player != null)
+                Player.SetShieldParryAnimator(false);
+        }
+
+        public void SetGlowActive(bool active)
+        {
+            if (GlowEffect != null)
+                GlowEffect.SetActive(active);
+        }
+
+        public bool IsFinisherGlowActive()
+        {
+            return GlowEffect != null && GlowEffect.activeSelf;
         }
 
         public void TurnOnGlow()
         {
-            if (GlowEffect != null)
-                GlowEffect.SetActive(true);
+            if (Player != null)
+                Player.OnSwordFinisherAnimationStarted();
+
+            SetGlowActive(true);
         }
 
         public void TurnOffGlow()
         {
-            if (GlowEffect != null)
-                GlowEffect.SetActive(false);
+            if (Player != null)
+                Player.OnSwordFinisherAnimationEnded();
+            else
+                SetGlowActive(false);
         }
     }
 }

@@ -22,6 +22,8 @@ namespace Beavermania.Core.GameFlow
 
         public void LoadScene(string sceneName)
         {
+            GameTimeScaleGate.ClearAll();
+
             // Activate the loading screen canvas
             if (loadingScreen != null)
             {

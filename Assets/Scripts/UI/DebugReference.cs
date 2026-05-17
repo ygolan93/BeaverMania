@@ -76,11 +76,19 @@ namespace Beavermania.UI
 
             if (Player != null)
             {
-                var objective = ResolvePlayerObjective();
-                PlayerHudState.CopyFrom(Player, objective != null, objective != null ? objective.Instruction : null);
+                if (PlayerHudState.ObjectiveTextOverrideActive)
+                    PlayerHudState.CopyFrom(Player, false, null);
+                else
+                {
+                    var objective = ResolvePlayerObjective();
+                    PlayerHudState.CopyFrom(Player, objective != null, objective != null ? objective.Instruction : null);
+                }
             }
 
-            SetText(ObjectiveText, PlayerHudState.ObjectiveText);
+            if (PlayerHudState.ObjectiveTextOverrideActive)
+                SetText(ObjectiveText, PlayerHudState.ObjectiveTextOverride);
+            else
+                SetText(ObjectiveText, PlayerHudState.ObjectiveText);
             SetText(DisplayText, PlayerHudState.DebugText);
             SetText(StaminaText, PlayerHudState.StaminaText);
             SetText(LogCountText, PlayerHudState.LogCount);

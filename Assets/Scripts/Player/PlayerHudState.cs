@@ -9,6 +9,8 @@ namespace Beavermania.Player
     {
         [Header("Objective")]
         public string ObjectiveText;
+        [HideInInspector] public bool ObjectiveTextOverrideActive;
+        [HideInInspector] public string ObjectiveTextOverride;
 
         [Header("Player HUD")]
         public string DebugText;

@@ -1,15 +1,16 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using TMPro;
+using UnityEngine;
+using Beavermania.Core.Input;
+using Beavermania.Player;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 
 namespace Beavermania.NPC
 {
-
     public class Trader : MonoBehaviour
     {
         const float LookRotationEpsilon = 0.0001f;
+        const string DefaultInteractionPromptMessage = "Press E to interact";
+
         public GameObject Merchant;
         public Transform PlayerRoot;
         public BeaverPlayer Player;
@@ -20,19 +21,34 @@ namespace Beavermania.NPC
         public bool skipPressed = false;
         [SerializeField] bool Rotate;
         [SerializeField] float PanelPopUp;
-        bool shopOpen;
+        [SerializeField] KeyCode interactKey = KeyCode.E;
+        [SerializeField] GameObject playerCanvas;
+        [SerializeField] TextMeshProUGUI objectiveText;
+        [SerializeField] string interactionPromptMessage = DefaultInteractionPromptMessage;
+
+        bool isPlayerInRange;
+        bool wasPlayerInRange;
+        bool isInteracting;
+        bool isShopOpen;
+        bool hasStoredPreviousObjectiveText;
+        bool isShowingInteractionPrompt;
         bool traderOfferPresentationActive;
+        string previousObjectiveText;
+        PlayerHudState playerHudState;
         Quaternion FormalLook;
         bool loggedMissingMerchant;
         bool loggedMissingDialoguePanel;
         bool loggedMissingShop;
-        bool loggedMissingTradeText;
+        bool loggedMissingObjectiveText;
+        bool loggedMissingPlayerCanvas;
+        bool loggedMissingPlayerCamera;
 
-        public float GetOfferPanelDistance()
-        {
-            return PanelPopUp;
-        }
-        // Start is called before the first frame update
+        public float GetOfferPanelDistance() => PanelPopUp;
+
+        public bool IsInteractionEngaged() => isInteracting;
+
+        public bool IsTraderSessionActive() => isInteracting || isShopOpen;
+
         void Start()
         {
             FormalLook = transform.rotation;
@@ -42,7 +58,14 @@ namespace Beavermania.NPC
             var rootObject = GameObject.FindGameObjectWithTag("PlayerRoot");
             if (rootObject != null)
                 PlayerRoot = rootObject.transform;
+            DeactivateLegacyPromptObjects();
             ValidateSerializedReferences();
+        }
+
+        void DeactivateLegacyPromptObjects()
+        {
+            if (TradeText != null)
+                TradeText.SetActive(false);
         }
 
         void ValidateSerializedReferences()
@@ -60,22 +83,67 @@ namespace Beavermania.NPC
             if (DialoguePanel == null && !loggedMissingDialoguePanel)
             {
                 loggedMissingDialoguePanel = true;
-                Debug.LogError($"{nameof(Trader)} on '{name}' has no {nameof(DialoguePanel)} assigned.", this);
+                Debug.LogWarning($"{nameof(Trader)} on '{name}' has no {nameof(DialoguePanel)} assigned.", this);
             }
 
             if (Shop == null && !loggedMissingShop)
             {
                 loggedMissingShop = true;
-                Debug.LogError($"{nameof(Trader)} on '{name}' has no {nameof(Shop)} assigned (assign an inactive placeholder if no shop).", this);
+                Debug.LogWarning($"{nameof(Trader)} on '{name}' has no {nameof(Shop)} assigned (assign an inactive placeholder if no shop).", this);
             }
 
             if (PanelPopUp <= 0f)
                 Debug.LogWarning($"{nameof(Trader)} on '{name}' has {nameof(PanelPopUp)} <= 0; proximity UI will never activate.", this);
 
-            if (TradeText == null && !loggedMissingTradeText)
+            if (playerCanvas == null && DialoguePanel != null)
             {
-                loggedMissingTradeText = true;
-                Debug.LogWarning($"{nameof(Trader)} on '{name}' has no {nameof(TradeText)}; proximity prompt will be skipped.", this);
+                var canvas = DialoguePanel.GetComponentInParent<Canvas>();
+                if (canvas != null)
+                    playerCanvas = canvas.gameObject;
+            }
+
+            if (playerCanvas == null)
+            {
+                var canvasObject = GameObject.Find("PlayerCanvas");
+                if (canvasObject != null)
+                    playerCanvas = canvasObject;
+            }
+
+            if (objectiveText == null && playerCanvas != null)
+            {
+                var texts = playerCanvas.GetComponentsInChildren<TextMeshProUGUI>(true);
+                for (int i = 0; i < texts.Length; i++)
+                {
+                    if (texts[i].gameObject.name == "ObjectiveText")
+                    {
+                        objectiveText = texts[i];
+                        break;
+                    }
+                }
+            }
+
+            if (objectiveText == null && !loggedMissingObjectiveText)
+            {
+                loggedMissingObjectiveText = true;
+                Debug.LogWarning("Trader interaction is missing ObjectiveText reference.", this);
+            }
+
+            if (playerCanvas == null && !loggedMissingPlayerCanvas)
+            {
+                loggedMissingPlayerCanvas = true;
+                Debug.LogWarning($"{nameof(Trader)} on '{name}' could not resolve {nameof(playerCanvas)}.", this);
+            }
+
+            if (Player != null)
+            {
+                playerHudState = Player.GetComponent<PlayerHudState>();
+                if (Player.CamForTraders == null && !loggedMissingPlayerCamera)
+                {
+                    loggedMissingPlayerCamera = true;
+                    Debug.LogWarning(
+                        $"{nameof(Trader)} on '{name}': player {nameof(BeaverPlayer.CamForTraders)} is not assigned; trader camera transition will not run.",
+                        this);
+                }
             }
         }
 
@@ -109,15 +177,101 @@ namespace Beavermania.NPC
             return DialoguePanel != null && Shop != null && Shop.transform.IsChildOf(DialoguePanel.transform);
         }
 
+        bool IsDialogueCurrentlyOpen()
+        {
+            if (!isInteracting || isShopOpen || DialoguePanel == null)
+                return false;
+            return DialoguePanel.activeInHierarchy;
+        }
+
+        bool IsShopCurrentlyOpen()
+        {
+            return isShopOpen && Shop != null && Shop.activeInHierarchy;
+        }
+
+        bool CanShowProximityPrompt()
+        {
+            return isPlayerInRange && !isInteracting && !isShopOpen && !skipPressed;
+        }
+
+        string ReadDisplayedObjectiveText()
+        {
+            if (playerHudState != null && !playerHudState.ObjectiveTextOverrideActive && !string.IsNullOrEmpty(playerHudState.ObjectiveText))
+                return playerHudState.ObjectiveText;
+
+            if (objectiveText != null)
+                return objectiveText.text;
+
+            if (Player != null && Player.PlayerObjective != null && !string.IsNullOrEmpty(Player.PlayerObjective.Instruction))
+                return Player.PlayerObjective.Instruction;
+
+            return string.Empty;
+        }
+
+        void StorePreviousObjectiveTextOnce()
+        {
+            if (hasStoredPreviousObjectiveText)
+                return;
+
+            previousObjectiveText = ReadDisplayedObjectiveText();
+            hasStoredPreviousObjectiveText = true;
+        }
+
+        void ShowInteractionPromptOnObjective()
+        {
+            if (objectiveText == null && playerHudState == null)
+                return;
+
+            StorePreviousObjectiveTextOnce();
+
+            string message = string.IsNullOrEmpty(interactionPromptMessage)
+                ? DefaultInteractionPromptMessage
+                : interactionPromptMessage;
+
+            if (playerHudState != null)
+            {
+                playerHudState.ObjectiveTextOverride = message;
+                playerHudState.ObjectiveTextOverrideActive = true;
+            }
+
+            if (objectiveText != null)
+                objectiveText.text = message;
+
+            isShowingInteractionPrompt = true;
+        }
+
+        void RestorePreviousObjectiveText()
+        {
+            if (playerHudState != null)
+            {
+                playerHudState.ObjectiveTextOverrideActive = false;
+                playerHudState.ObjectiveTextOverride = null;
+                if (hasStoredPreviousObjectiveText)
+                    playerHudState.ObjectiveText = previousObjectiveText;
+            }
+
+            if (objectiveText != null && hasStoredPreviousObjectiveText)
+                objectiveText.text = previousObjectiveText ?? string.Empty;
+
+            hasStoredPreviousObjectiveText = false;
+            isShowingInteractionPrompt = false;
+        }
+
+        void BeginProximityPrompt()
+        {
+            if (!CanShowProximityPrompt() || isShowingInteractionPrompt)
+                return;
+
+            ShowInteractionPromptOnObjective();
+        }
+
         void ShowOnlyShopUnderDialoguePanel()
         {
             SafeSetActive(DialoguePanel, true);
             for (int i = 0; i < DialoguePanel.transform.childCount; i++)
             {
                 Transform child = DialoguePanel.transform.GetChild(i);
-                bool showShop = child.gameObject == Shop;
-                Debug.Log($"Trader '{name}': ShowOnlyShop child '{child.name}' => {(showShop ? "show" : "hide")}", this);
-                child.gameObject.SetActive(showShop);
+                child.gameObject.SetActive(child.gameObject == Shop);
             }
 
             SetActiveWithParents(Shop.transform, true);
@@ -131,9 +285,7 @@ namespace Beavermania.NPC
                 for (int i = 0; i < DialoguePanel.transform.childCount; i++)
                 {
                     Transform child = DialoguePanel.transform.GetChild(i);
-                    bool showDialogueChild = child.gameObject != Shop;
-                    Debug.Log($"Trader '{name}': ShowDialogueHideShop child '{child.name}' => {(showDialogueChild ? "show" : "hide")}", this);
-                    child.gameObject.SetActive(showDialogueChild);
+                    child.gameObject.SetActive(child.gameObject != Shop);
                 }
             }
             else
@@ -143,20 +295,18 @@ namespace Beavermania.NPC
             }
         }
 
-        void RefreshShopUiState(bool inRange)
+        void RefreshShopUiState()
         {
-            if (!inRange || skipPressed)
+            if (!isPlayerInRange || skipPressed)
             {
-                shopOpen = false;
-                SafeSetActive(TradeText, false);
+                isShopOpen = false;
                 SafeSetActive(DialoguePanel, false);
                 SafeSetActive(Shop, false);
                 return;
             }
 
-            if (shopOpen)
+            if (isShopOpen)
             {
-                SafeSetActive(TradeText, false);
                 if (IsShopNestedUnderDialoguePanel())
                     ShowOnlyShopUnderDialoguePanel();
                 else
@@ -170,51 +320,156 @@ namespace Beavermania.NPC
                 return;
             }
 
-            SafeSetActive(TradeText, true);
+            if (!isInteracting)
+            {
+                SafeSetActive(DialoguePanel, false);
+                SafeSetActive(Shop, false);
+                return;
+            }
+
             ShowDialogueHideShop();
         }
 
-        // Update is called once per frame
+        bool WasInteractKeyPressed()
+        {
+            if (interactKey == KeyCode.E)
+                return PlayerInputReader.WasWorldInteractPressed();
+            return PlayerInputReader.WasKeyPressed(interactKey);
+        }
+
+        void OpenInteraction()
+        {
+            if (isInteracting || isShopOpen || skipPressed || Player == null || !isPlayerInRange)
+                return;
+
+            RestorePreviousObjectiveText();
+            isInteracting = true;
+            traderOfferPresentationActive = true;
+            Player.ApplyTraderOfferPresentation(transform);
+            RefreshShopUiState();
+        }
+
+        void CloseInteraction()
+        {
+            if (!IsTraderSessionActive() && !IsDialogueCurrentlyOpen() && !IsShopCurrentlyOpen())
+                return;
+
+            isInteracting = false;
+            isShopOpen = false;
+            traderOfferPresentationActive = false;
+            SafeSetActive(DialoguePanel, false);
+            SafeSetActive(Shop, false);
+
+            if (Player != null)
+                Player.RestoreGameplayAfterTrader();
+
+            RestorePreviousObjectiveText();
+
+            if (CanShowProximityPrompt())
+                BeginProximityPrompt();
+        }
+
+        void LeaveTraderRange()
+        {
+            isInteracting = false;
+            isShopOpen = false;
+            RestorePreviousObjectiveText();
+            SafeSetActive(DialoguePanel, false);
+            SafeSetActive(Shop, false);
+
+            if (traderOfferPresentationActive && Player != null)
+            {
+                traderOfferPresentationActive = false;
+                Player.RestoreGameplayAfterTrader();
+            }
+        }
+
+        void MaintainTraderPresentation()
+        {
+            if (!isInteracting && !isShopOpen)
+                return;
+
+            if (skipPressed)
+                return;
+
+            traderOfferPresentationActive = true;
+            if (Player != null)
+                Player.ApplyTraderOfferPresentation(transform);
+        }
+
+        void UpdateNpcRotation()
+        {
+            if (Player == null || Merchant == null || !Rotate)
+                return;
+
+            if (isPlayerInRange && !skipPressed && (isInteracting || CanShowProximityPrompt()))
+            {
+                Vector3 toPlayer = Player.transform.position - Merchant.transform.position;
+                if (toPlayer.sqrMagnitude > LookRotationEpsilon)
+                    Player.rotGoal = Quaternion.LookRotation(toPlayer);
+                if (PlayerDistance.sqrMagnitude > LookRotationEpsilon)
+                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(PlayerDistance), 0.1f);
+                return;
+            }
+
+            transform.rotation = Quaternion.Slerp(transform.rotation, FormalLook, 0.1f);
+        }
+
         public void Update()
         {
             if (Player == null || Merchant == null)
                 return;
 
             PlayerDistance = Player.transform.position - Merchant.transform.position;
-            var Distance = Mathf.Abs(PlayerDistance.magnitude);
-            bool inRange = Distance < PanelPopUp;
-            bool wantOfferPresentation = inRange && skipPressed == false;
-            if (wantOfferPresentation)
+            float distance = PlayerDistance.magnitude;
+            wasPlayerInRange = isPlayerInRange;
+            isPlayerInRange = distance < PanelPopUp;
+
+            if (!isPlayerInRange)
             {
-                traderOfferPresentationActive = true;
-                Player.ApplyTraderOfferPresentation(transform);
-            }
-            else if (traderOfferPresentationActive && Player != null)
-            {
-                traderOfferPresentationActive = false;
-                Player.RestoreGameplayAfterTrader();
+                if (wasPlayerInRange)
+                    LeaveTraderRange();
+
+                if (distance > PanelPopUp)
+                    skipPressed = false;
+
+                UpdateNpcRotation();
+                return;
             }
 
-            RefreshShopUiState(inRange);
+            if (isPlayerInRange && !wasPlayerInRange && CanShowProximityPrompt())
+                BeginProximityPrompt();
 
-            if (inRange && skipPressed == false && !shopOpen)
+            if (WasInteractKeyPressed())
             {
-                if (Rotate == true)
+                if (IsTraderSessionActive() || IsDialogueCurrentlyOpen() || IsShopCurrentlyOpen())
+                    CloseInteraction();
+                else if (!skipPressed)
+                    OpenInteraction();
+            }
+
+            if (!isInteracting && !isShopOpen && !skipPressed)
+            {
+                if (traderOfferPresentationActive && Player != null)
                 {
-                    Vector3 toPlayer = Player.transform.position - Merchant.transform.position;
-                    if (toPlayer.sqrMagnitude > LookRotationEpsilon)
-                        Player.rotGoal = Quaternion.LookRotation(toPlayer);
-                    if (PlayerDistance.sqrMagnitude > LookRotationEpsilon)
-                        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(PlayerDistance), 0.1f);
+                    traderOfferPresentationActive = false;
+                    Player.RestoreGameplayAfterTrader();
                 }
-            }
-            else if (!inRange)
-            {
-                transform.rotation = Quaternion.Slerp(transform.rotation, FormalLook, 0.1f);
+
+                if (!isShowingInteractionPrompt && CanShowProximityPrompt())
+                    BeginProximityPrompt();
+
+                RefreshShopUiState();
+                UpdateNpcRotation();
+                return;
             }
 
-            if (Distance > PanelPopUp)
-                skipPressed = false;
+            if (isShowingInteractionPrompt)
+                RestorePreviousObjectiveText();
+
+            MaintainTraderPresentation();
+            RefreshShopUiState();
+            UpdateNpcRotation();
         }
 
         public void OpenShop()
@@ -225,17 +480,19 @@ namespace Beavermania.NPC
                 return;
             }
 
-            Debug.Log($"Trader '{name}': OpenShop. Shop={Shop.name}", this);
-            shopOpen = true;
-            RefreshShopUiState(inRange: true);
+            RestorePreviousObjectiveText();
+            isInteracting = true;
+            isShopOpen = true;
+            RefreshShopUiState();
         }
 
         public void activateSkip()
         {
             skipPressed = true;
-            shopOpen = false;
+            isInteracting = false;
+            isShopOpen = false;
             traderOfferPresentationActive = false;
-            SafeSetActive(TradeText, false);
+            RestorePreviousObjectiveText();
             SafeSetActive(DialoguePanel, false);
             SafeSetActive(Shop, false);
             if (Player != null)
@@ -244,10 +501,9 @@ namespace Beavermania.NPC
 
         public void CloseShop()
         {
-            Debug.Log($"Trader '{name}': CloseShop. Restoring dialogue UI.", this);
-            shopOpen = false;
+            isShopOpen = false;
             SafeSetActive(Shop, false);
-            RefreshShopUiState(inRange: true);
+            RefreshShopUiState();
         }
 
         public void Honey()
@@ -262,8 +518,13 @@ namespace Beavermania.NPC
 
         void OnDisable()
         {
-            shopOpen = false;
-            traderOfferPresentationActive = false;
+            isPlayerInRange = false;
+            wasPlayerInRange = false;
+            isInteracting = false;
+            isShopOpen = false;
+            RestorePreviousObjectiveText();
+            SafeSetActive(DialoguePanel, false);
+            SafeSetActive(Shop, false);
             if (Player != null && Player.isAtTrader)
                 Player.RestoreGameplayAfterTrader();
         }

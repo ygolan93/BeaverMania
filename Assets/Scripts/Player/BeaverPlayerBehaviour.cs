@@ -528,14 +528,10 @@ namespace Beavermania.Player
                     trader = OBJ.GetComponent<Trader>();
                 if (trader != null)
                 {
-                    var skip = trader.skipPressed;
-                    bool inOfferRadius = trader.Merchant != null
-                        && Vector3.Distance(transform.position, trader.Merchant.transform.position) < trader.GetOfferPanelDistance();
-
-                    if (skip == false && inOfferRadius)
-                        ApplyTraderOfferPresentation(OBJ.transform);
-                    if (skip == true)
+                    if (trader.skipPressed)
                         RestoreGameplayAfterTrader();
+                    else if (trader.IsTraderSessionActive())
+                        ApplyTraderOfferPresentation(OBJ.transform);
                 }
             }
             if (OBJ.gameObject.CompareTag("House"))
@@ -568,7 +564,11 @@ namespace Beavermania.Player
             }
             if (OBJ.gameObject.CompareTag("Trader"))
             {
-                RestoreGameplayAfterTrader();
+                var trader = OBJ.GetComponentInParent<Trader>();
+                if (trader == null)
+                    trader = OBJ.GetComponent<Trader>();
+                if (trader == null || !trader.IsTraderSessionActive())
+                    RestoreGameplayAfterTrader();
             }
             if (OBJ.gameObject.CompareTag("House"))
             {

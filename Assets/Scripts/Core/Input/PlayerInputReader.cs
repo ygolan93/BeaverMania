@@ -24,6 +24,17 @@ namespace Beavermania.Core.Input
             return UnityEngine.Input.GetKeyDown(KeyCode.Mouse1);
         }
 
+        /// <summary>World interact (traders, doors, etc.) — keyboard E by default.</summary>
+        public static bool WasWorldInteractPressed()
+        {
+            return UnityEngine.Input.GetKeyDown(KeyCode.E);
+        }
+
+        public static bool WasKeyPressed(KeyCode key)
+        {
+            return UnityEngine.Input.GetKeyDown(key);
+        }
+
         /// <summary>Same physical binding as <see cref="WasInteractPressed"/> (RMB down); named for combat clarity.</summary>
         public static bool WasSecondaryPressed()
         {

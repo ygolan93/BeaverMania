@@ -29804,6 +29804,7 @@ GameObject:
   - component: {fileID: 5724927208157140646}
   - component: {fileID: 8156679125422380708}
   - component: {fileID: 1190784083324918909}
+  - component: {fileID: 7080942755712817626}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -29984,6 +29985,7 @@ MonoBehaviour:
   otterAction: {fileID: 1219310321942632730}
   OnPlatform: 0
   rb: {fileID: 4580562239172740854}
+  combatBalance: {fileID: 0}
   MaxHealth: 5000
   CurrentHealth: 0
   MaxStamina: 100
@@ -30041,8 +30043,21 @@ MonoBehaviour:
   enemyLayers:
     serializedVersion: 2
     m_Bits: 1024
+  bowAimCamera: {fileID: 0}
+  bowAimRayMaxDistance: 400
+  bowAimViewportYOffset: 0.03
+  bowAimRaycastLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  bowProjectileSpawnClearance: 0.5
+  minFireBreathCameraHitDistance: 1.25
+  fireBreathSpawnForwardOffset: 0.5
+  debugFireBreathLaunch: 0
+  maxArrowMunition: 99
+  bowShotCooldown: 0.25
   GroundBeat: 0.4
   AirBeat: 0.2
+  debugBowCombat: 0
   InitialFall: 0.2
   GroundAttack: 30
   bowEquipped: 0
@@ -30241,6 +30256,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8ed0b11850145c4995dd76170bb2500, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &7080942755712817626
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4580562239172740874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8540781a6866e8b408c33f3196702092, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  magnetRadius: 8
+  pullSpeed: 900
+  maxPullSpeed: 1000
+  acceleration: 100
+  collectDistance: 0.35
+  verticalOffset: 1
+  coinCollectPoint: {fileID: 962758058577426549}
+  collectionTarget: {fileID: 0}
+  coinLayerMask:
+    serializedVersion: 2
+    m_Bits: 1
+  drawDebugGizmo: 0
 --- !u!1 &4622290205047029495
 GameObject:
   m_ObjectHideFlags: 0

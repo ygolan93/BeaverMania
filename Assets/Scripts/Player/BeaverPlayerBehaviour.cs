@@ -304,11 +304,6 @@ namespace Beavermania.Player
                     }
                 }
             }
-            if (OBJ.gameObject.CompareTag("Coin"))
-            {
-                SpawnPickUpEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
-                Sound.Coin();
-            }
             if (arrowMunition<Arrows.Length && bowEquipped==true)
             {
                 if (OBJ.gameObject.CompareTag("Arrow"))
@@ -1521,6 +1516,13 @@ namespace Beavermania.Player
         public void SpawnCheckpointPopUpEffect(Vector3 position) => SpawnPopUpEffect(position);
 
         void SpawnPickUpEffect(Vector3 position) => PooledOneShotVfx.Spawn(PickUpEffect, position, Quaternion.identity);
+
+        public void PlayCoinPickupFeedback(Vector3 worldPosition)
+        {
+            SpawnPickUpEffect(worldPosition + new Vector3(0f, 0.3f, 0f));
+            if (Sound != null)
+                Sound.Coin();
+        }
 
         void SpawnPopUpEffect(Vector3 position) => PooledOneShotVfx.Spawn(PopUpEffect, position, Quaternion.identity);
 

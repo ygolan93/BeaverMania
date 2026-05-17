@@ -347,7 +347,8 @@ namespace Beavermania.NPC
             Explosion.transform.parent = null;
             foreach (var item in drops)
             {
-                Instantiate(item, gameObject.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity);
+                CurrencySpin.ConfigureEnemyDrop(
+                    Instantiate(item, gameObject.transform.position + new Vector3(0, 0.3f, 0), Quaternion.identity));
             }
             gameObject.SetActive(false);
         }

@@ -521,6 +521,11 @@ namespace Beavermania.Player.Combat
             return UsesArrowLogic && aliveTime >= minPickupSpawnDelay;
         }
 
+        static bool IsGivingTreeCollider(Collider collider)
+        {
+            return collider != null && collider.GetComponentInParent<LogSpawner>() != null;
+        }
+
         bool IsPriorityFireBreathTarget(Collider collider)
         {
             if (collider == null)
@@ -754,8 +759,48 @@ namespace Beavermania.Player.Combat
                 PooledOneShotVfx.Spawn(vfx, impactPoint, impactRotation);
 
             ApplyAoEDamage(impactPoint);
+            ApplyFireBreathGivingTreeDestruction(collision, impactPoint);
             RockHit();
             CompleteProjectile(false);
+        }
+
+        void ApplyFireBreathGivingTreeDestruction(Collision collision, Vector3 impactPoint)
+        {
+            if (!UsesFireBreathLogic)
+                return;
+
+            Transform destroyReference = Player != null ? Player.transform : transform;
+            var destroyedTrees = new HashSet<int>();
+
+            void TryDestroyTree(LogSpawner spawner)
+            {
+                if (spawner == null || !destroyedTrees.Add(spawner.GetInstanceID()))
+                    return;
+
+                spawner.DestroyTree(destroyReference);
+            }
+
+            if (collision != null && collision.collider != null)
+                TryDestroyTree(collision.collider.GetComponentInParent<LogSpawner>());
+
+            float radius = Mathf.Max(0.1f, aoeRadius);
+            Collider[] hits = Physics.OverlapSphere(
+                impactPoint,
+                radius,
+                ~0,
+                QueryTriggerInteraction.Collide);
+
+            if (hits == null)
+                return;
+
+            for (var i = 0; i < hits.Length; i++)
+            {
+                Collider hitCollider = hits[i];
+                if (hitCollider == null)
+                    continue;
+
+                TryDestroyTree(hitCollider.GetComponentInParent<LogSpawner>());
+            }
         }
 
         void ApplyAoEDamage(Vector3 impactPoint)
@@ -778,7 +823,10 @@ namespace Beavermania.Player.Combat
             for (var i = 0; i < hits.Length; i++)
             {
                 Collider hitCollider = hits[i];
-                if (hitCollider == null || IsOwnerCollider(hitCollider))
+                if (hitCollider == null || IsOwnerCollider(hitCollider) || IsGivingTreeCollider(hitCollider))
+                    continue;
+
+                if (!IsPriorityFireBreathTarget(hitCollider))
                     continue;
 
                 NPC_Basic npc = GetComponentInParentSafe<NPC_Basic>(hitCollider);

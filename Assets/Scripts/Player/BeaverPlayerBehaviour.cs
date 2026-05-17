@@ -139,6 +139,17 @@ namespace Beavermania.Player
         Coroutine _swordShieldChainRoutine;
         const float SwordShieldGroundStaminaPerFixedStep = 0.2f;
         const float SwordShieldAirStaminaPerFixedStep = 0.5f;
+
+        [System.Flags]
+        enum AimMarkSource
+        {
+            None = 0,
+            Bow = 1 << 0,
+            Stoning = 1 << 1,
+            SwordShieldSlash = 1 << 2,
+        }
+
+        AimMarkSource _aimMarkSources = AimMarkSource.None;
         bool _loggedMissingBowAimCamera;
         bool _loggedMissingSpineForAim;
         /// <summary>True while RMB draw session is open; cleared after release/cancel.</summary>
@@ -1156,8 +1167,76 @@ namespace Beavermania.Player
                 Otter.SetBool("slash", active);
         }
 
+        void SetAimMarkVisible(AimMarkSource source, bool visible)
+        {
+            if (source == AimMarkSource.None)
+                return;
+
+            if (visible)
+                _aimMarkSources |= source;
+            else
+                _aimMarkSources &= ~source;
+
+            RefreshAimMarkVisibility();
+        }
+
+        void RefreshAimMarkVisibility()
+        {
+            if (AimIcon != null)
+                AimIcon.SetActive(_aimMarkSources != AimMarkSource.None);
+        }
+
+        void ClearAllAimMarkSources()
+        {
+            _aimMarkSources = AimMarkSource.None;
+            RefreshAimMarkVisibility();
+        }
+
+        public void ShowAimMarkForBow() => SetAimMarkVisible(AimMarkSource.Bow, true);
+
+        public void HideAimMarkForBow() => SetAimMarkVisible(AimMarkSource.Bow, false);
+
+        public void ShowAimMarkForStoning() => SetAimMarkVisible(AimMarkSource.Stoning, true);
+
+        public void HideAimMarkForStoning() => SetAimMarkVisible(AimMarkSource.Stoning, false);
+
+        public void ShowAimMarkForSwordShieldSlash() => SetAimMarkVisible(AimMarkSource.SwordShieldSlash, true);
+
+        public void HideAimMarkForSwordShieldSlash() => SetAimMarkVisible(AimMarkSource.SwordShieldSlash, false);
+
+        bool IsSwordShieldAimMarkRequested()
+        {
+            if (!ArmorEquipped)
+                return false;
+
+            if (_swordShieldCycleActive || _swordShieldChainRoutine != null)
+                return true;
+
+            if (otterAction != null && otterAction.IsFinisherGlowActive())
+                return true;
+
+            if (Otter != null)
+            {
+                AnimatorStateInfo baseState = Otter.GetCurrentAnimatorStateInfo(0);
+                if (baseState.IsName("HuricaneSword") || baseState.IsName("NewSwordJump"))
+                    return true;
+
+                if (Otter.GetBool("slash"))
+                    return true;
+            }
+
+            return _swordShieldAttackHeld && PlayerInputReader.IsPrimaryHeld();
+        }
+
+        void SyncSwordShieldAimMark()
+        {
+            SetAimMarkVisible(AimMarkSource.SwordShieldSlash, IsSwordShieldAimMarkRequested());
+        }
+
         public void ResetSwordAttackPresentation()
         {
+            HideAimMarkForSwordShieldSlash();
+
             if (otterAction != null)
                 otterAction.SetGlowActive(false);
 
@@ -1191,6 +1270,8 @@ namespace Beavermania.Player
         void BeginSwordShieldAttackCycle()
         {
             _swordShieldCycleActive = true;
+            SyncSwordShieldAimMark();
+
             if (Otter == null)
                 return;
 
@@ -1250,6 +1331,7 @@ namespace Beavermania.Player
                 if (Otter != null)
                     Otter.SetBool("fight", false);
                 ResetHeadAnimatorLayer();
+                SyncSwordShieldAimMark();
             }
         }
 
@@ -1284,6 +1366,7 @@ namespace Beavermania.Player
         public void OnSwordFinisherAnimationStarted()
         {
             _swordShieldCycleActive = true;
+            SyncSwordShieldAimMark();
         }
 
         public void OnSwordFinisherAnimationEnded()
@@ -1318,11 +1401,14 @@ namespace Beavermania.Player
                 SetSlashAnimator(false);
                 if (Otter != null)
                     Otter.SetBool("fight", false);
+                SyncSwordShieldAimMark();
                 return;
             }
 
             if (!_swordShieldCycleActive && _swordShieldChainRoutine == null)
                 BeginSwordShieldAttackCycle();
+
+            SyncSwordShieldAimMark();
 
             if (!_swordShieldCycleActive)
                 return;
@@ -1726,8 +1812,7 @@ namespace Beavermania.Player
             if (Root != null)
                 SpawnPopUpEffect(Root.position);
             HideCursor();
-            if (AimIcon != null)
-                AimIcon.SetActive(false);
+            ClearAllAimMarkSources();
             if (MunitionDisplay != null)
                 MunitionDisplay.SetActive(false);
             Player = GetComponent<Rigidbody>();
@@ -2373,8 +2458,7 @@ namespace Beavermania.Player
                 InterruptSwordAttackPresentation();
                 if (Stone != null)
                     Stone.SetActive(false);
-                if (AimIcon != null)
-                    AimIcon.SetActive(false);
+                ClearAllAimMarkSources();
                 _stoneAimSessionActive = false;
                 _bowAimSessionOpen = false;
                 _bowFiredThisAimSession = false;
@@ -2420,8 +2504,7 @@ namespace Beavermania.Player
                         _stoneAimSessionActive = true;
                         if (Stone != null)
                             Stone.SetActive(true);
-                        if (AimIcon != null)
-                            AimIcon.SetActive(true);
+                        ShowAimMarkForStoning();
                         Otter.SetBool("aim", true);
                         Otter.Play("Aim");
                         if (PlayerInputReader.WasInteractPressed())
@@ -2445,8 +2528,7 @@ namespace Beavermania.Player
                             Otter.SetBool("aim", false);
                             if (Stone != null)
                                 Stone.SetActive(false);
-                            if (AimIcon != null)
-                                AimIcon.SetActive(false);
+                            HideAimMarkForStoning();
                             _stoneAimSessionActive = false;
                             keepLooking = false;
                         }
@@ -2479,8 +2561,7 @@ namespace Beavermania.Player
                         Otter.SetBool("aim", false);
                         if (Stone != null)
                             Stone.SetActive(false);
-                        if (AimIcon != null)
-                            AimIcon.SetActive(false);
+                        HideAimMarkForStoning();
                         _stoneAimSessionActive = false;
                         keepLooking = false;
                     }
@@ -2507,8 +2588,7 @@ namespace Beavermania.Player
                             CountArrows();
                             Sound.ArrowDraw();
                             arrowReady = true;
-                            if (AimIcon != null)
-                                AimIcon.SetActive(true);
+                            ShowAimMarkForBow();
                             if (arrowModel != null)
                                 arrowModel.SetActive(true);
                             if (bowString != null)
@@ -2843,8 +2923,7 @@ namespace Beavermania.Player
                 Otter.SetBool("draw", false);
                 Otter.SetBool("aim", false);
             }
-            if (AimIcon != null)
-                AimIcon.SetActive(false);
+            HideAimMarkForBow();
             arrowReady = false;
             keepLooking = false;
         }

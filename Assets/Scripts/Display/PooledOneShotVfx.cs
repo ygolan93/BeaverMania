@@ -89,7 +89,11 @@ namespace Beavermania.Display
                     vfx.StopAndClear();
                     vfx.gameObject.SetActive(false);
                 },
-                vfx => Destroy(vfx.gameObject),
+                vfx =>
+                {
+                    if (vfx != null && vfx.gameObject != null)
+                        Destroy(vfx.gameObject);
+                },
                 true,
                 DefaultPoolCapacity,
                 MaxActiveInstances);

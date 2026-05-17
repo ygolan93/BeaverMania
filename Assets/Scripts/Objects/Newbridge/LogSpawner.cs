@@ -44,6 +44,10 @@ namespace Beavermania.Objects
             if (!OBJ.gameObject.CompareTag("Player"))
                 return;
 
+            var player = OBJ.gameObject.GetComponent<BeaverPlayer>();
+            if (player == null)
+                return;
+
             if (PlayerInputReader.IsPrimaryHeld())
                 DestroyTree(OBJ.transform);
         }

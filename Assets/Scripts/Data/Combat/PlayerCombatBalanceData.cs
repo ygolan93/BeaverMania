@@ -20,6 +20,8 @@ namespace Beavermania.Data.Combat
         public float appleHealAmount = 500f;
         public float bowShotStaminaCost = 30f;
         public float stoneThrowStaminaCost = 20f;
+        [Range(0f, 100f)]
+        public float fireBreathHealthCostPercent = 20f;
         public float attackRange = 0.5f;
         public float groundBeat = 0.3f;
         public float airBeat = 0.2f;
@@ -31,6 +33,9 @@ namespace Beavermania.Data.Combat
 
             if (maxStamina <= 0f)
                 Debug.LogWarning($"{name}: maxStamina must be > 0.", this);
+
+            if (fireBreathHealthCostPercent < 0f || fireBreathHealthCostPercent > 100f)
+                Debug.LogWarning($"{name}: fireBreathHealthCostPercent must be between 0 and 100.", this);
         }
     }
 }

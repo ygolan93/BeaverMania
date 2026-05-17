@@ -52,6 +52,7 @@ namespace Beavermania.Player
         public Transform Hips;
         public Animator Otter;
         [SerializeField] AnimatedAttack otterAction;
+        [SerializeField] Combat.SwordEffects swordEffects;
         public bool OnPlatform = false;
 
         [Header("Health")]
@@ -137,6 +138,8 @@ namespace Beavermania.Player
         /// <summary>True while a sword/shield attack cycle should keep slash active and consume stamina.</summary>
         bool _swordShieldCycleActive;
         Coroutine _swordShieldChainRoutine;
+        bool _swordGlareAvailabilityCached;
+        bool _swordGlareAvailabilityCacheValid;
         const float SwordShieldGroundStaminaPerFixedStep = 0.2f;
         const float SwordShieldAirStaminaPerFixedStep = 0.5f;
 
@@ -253,6 +256,7 @@ namespace Beavermania.Player
         float EffectiveAppleHealAmount => combatBalance != null ? combatBalance.appleHealAmount : 500f;
         float EffectiveBowShotStaminaCost => combatBalance != null ? combatBalance.bowShotStaminaCost : 30f;
         float EffectiveStoneThrowStaminaCost => combatBalance != null ? combatBalance.stoneThrowStaminaCost : 20f;
+        float EffectiveFireBreathHealthCostPercent => combatBalance != null ? combatBalance.fireBreathHealthCostPercent : 20f;
         int EffectiveBareHandsDamage => combatBalance != null ? combatBalance.bareHandsMeleeDamage : 50;
         int EffectiveHammerDamage => combatBalance != null ? combatBalance.hammerMeleeDamage : 700;
         int EffectiveBowEquippedMeleeDamage => combatBalance != null ? combatBalance.bowEquippedMeleeDamage : 50;
@@ -578,21 +582,61 @@ namespace Beavermania.Player
                 scorpAttack = false;
             }
         }
+        void ApplyHealthLoss(float amount)
+        {
+            if (amount <= 0f)
+                return;
+
+            CurrentHealth -= amount;
+            if (HealthBar != null)
+                HealthBar.SetHealth(CurrentHealth);
+
+            NotifyPlayerHealthChanged();
+        }
+
+        static void SetParticleEmissionEnabled(ParticleSystem particleSystem, bool enabled)
+        {
+            if (particleSystem == null)
+                return;
+
+            ParticleSystem.EmissionModule emissionModule = particleSystem.emission;
+            emissionModule.enabled = enabled;
+        }
+
+        public void TriggerHurtFeedbackOnly()
+        {
+            hurt = true;
+            heal = false;
+            StopHurt = 0f;
+
+            SetParticleEmissionEnabled(HurtEffect, true);
+            SetParticleEmissionEnabled(HealEffect, false);
+
+            if (HurtLight != null)
+            {
+                HurtLight.enabled = true;
+                if (HealLight != null)
+                    HealLight.enabled = false;
+            }
+        }
+
         public void TakeDamage(float Damage)
         {
             if (isParried == false)
             {
-                CurrentHealth -= Damage;
-                HealthBar.SetHealth(CurrentHealth);
                 if (Damage > 0)
                 {
-                    hurt = true;
-                    heal = false;
+                    ApplyHealthLoss(Damage);
+                    TriggerHurtFeedbackOnly();
                 }
                 if (Damage < 0)
                 {
+                    CurrentHealth -= Damage;
+                    if (HealthBar != null)
+                        HealthBar.SetHealth(CurrentHealth);
                     hurt = false;
                     heal = true;
+                    NotifyPlayerHealthChanged();
                 }
             }
             if (isParried == true)
@@ -1115,6 +1159,160 @@ namespace Beavermania.Player
             }
         }
 
+        public bool IsSwordAndShieldEquipped() => ArmorEquipped;
+
+        public bool HasEnoughHpForFireBreath()
+        {
+            if (MaxHealth <= 0f)
+                return false;
+
+            float cost = GetFireBreathHealthCost();
+            if (cost <= 0f)
+                return true;
+
+            return CurrentHealth > cost;
+        }
+
+        public bool CanActivateFireBreath()
+        {
+            if (!IsSwordAndShieldEquipped())
+                return true;
+
+            return HasEnoughHpForFireBreath();
+        }
+
+        public void UpdateSwordGlareAvailability()
+        {
+            bool shouldEnableSwordGlare = IsSwordAndShieldEquipped() && HasEnoughHpForFireBreath();
+            _swordGlareAvailabilityCacheValid = true;
+            _swordGlareAvailabilityCached = shouldEnableSwordGlare;
+            ResolveSwordEffects()?.SetSwordGlareActive(shouldEnableSwordGlare);
+        }
+
+        void SyncSwordGlareAvailabilityPassive()
+        {
+            bool shouldEnableSwordGlare = ArmorEquipped && HasEnoughHpForFireBreath();
+            if (_swordGlareAvailabilityCacheValid && shouldEnableSwordGlare == _swordGlareAvailabilityCached)
+                return;
+
+            _swordGlareAvailabilityCacheValid = true;
+            _swordGlareAvailabilityCached = shouldEnableSwordGlare;
+            ResolveSwordEffects()?.SetSwordGlareActive(shouldEnableSwordGlare);
+        }
+
+        void NotifyPlayerHealthChanged()
+        {
+            UpdateSwordGlareAvailability();
+        }
+
+        public void StopFireBreathAttackPresentation()
+        {
+            if (otterAction != null)
+                otterAction.StopFireBreathPresentation();
+
+            ResolveSwordEffects()?.StopFireBreathTrailPresentation();
+        }
+
+        public void StopFireBreathEffects()
+        {
+            StopFireBreathAttackPresentation();
+            UpdateSwordGlareAvailability();
+        }
+
+        public bool TryActivateFireBreath(Projectile fireBreathPrefab, Transform firePoint)
+        {
+            if (!IsSwordAndShieldEquipped())
+                return false;
+
+            if (!HasEnoughHpForFireBreath())
+            {
+                StopFireBreathAttackPresentation();
+                UpdateSwordGlareAvailability();
+                return false;
+            }
+
+            if (fireBreathPrefab == null || firePoint == null)
+            {
+                StopFireBreathAttackPresentation();
+                UpdateSwordGlareAvailability();
+                return false;
+            }
+
+            if (!TryLaunchFireBreathFromAttackPoint(fireBreathPrefab, firePoint, Vector3.zero))
+            {
+                StopFireBreathAttackPresentation();
+                UpdateSwordGlareAvailability();
+                return false;
+            }
+
+            ResolveSwordEffects()?.OnFireBreathActivated();
+            UpdateSwordGlareAvailability();
+            return true;
+        }
+
+        SwordEffects ResolveSwordEffects()
+        {
+            if (swordEffects != null)
+                return swordEffects;
+
+            swordEffects = GetComponentInChildren<SwordEffects>(true);
+            return swordEffects;
+        }
+
+        public float GetFireBreathHealthCost()
+        {
+            if (MaxHealth <= 0f || EffectiveFireBreathHealthCostPercent <= 0f)
+                return 0f;
+
+            return MaxHealth * (EffectiveFireBreathHealthCostPercent / 100f);
+        }
+
+        public bool CanPayFireBreathCost()
+        {
+            if (!IsSwordAndShieldEquipped())
+                return true;
+
+            return HasEnoughHpForFireBreath();
+        }
+
+        public bool TryPayFireBreathHealthCost()
+        {
+            if (!IsSwordAndShieldEquipped())
+                return true;
+
+            if (MaxHealth <= 0f)
+            {
+                if (debugFireBreathLaunch)
+                    Debug.Log("FireBreath blocked: invalid max health.", this);
+                return false;
+            }
+
+            if (isParried)
+            {
+                if (debugFireBreathLaunch)
+                    Debug.Log("FireBreath blocked: cannot pay HP cost while parried.", this);
+                return false;
+            }
+
+            if (!CanPayFireBreathCost())
+            {
+                if (debugFireBreathLaunch)
+                    Debug.Log("FireBreath blocked: insufficient HP.", this);
+                return false;
+            }
+
+            float cost = GetFireBreathHealthCost();
+            if (cost <= 0f)
+                return true;
+
+            ApplyHealthLoss(cost);
+            TriggerHurtFeedbackOnly();
+
+            if (debugFireBreathLaunch)
+                Debug.Log("FireBreath activated: HP cost paid.", this);
+            return true;
+        }
+
         public bool TryLaunchFireBreathFromAttackPoint(Projectile fireBreathPrefab, Transform firePoint, Vector3 spawnLocalOffset)
         {
             if (fireBreathPrefab == null || firePoint == null)
@@ -1125,6 +1323,9 @@ namespace Beavermania.Player
                 worldFirePoint += firePoint.TransformDirection(spawnLocalOffset);
 
             if (!TryResolveFireBreathLaunchPose(worldFirePoint, out Vector3 spawnPosition, out Vector3 aimDirection, out _))
+                return false;
+
+            if (IsSwordAndShieldEquipped() && !TryPayFireBreathHealthCost())
                 return false;
 
             Quaternion spawnRotation = Quaternion.LookRotation(aimDirection, Vector3.up);
@@ -1231,9 +1432,8 @@ namespace Beavermania.Player
         public void ResetSwordAttackPresentation()
         {
             HideAimMarkForSwordShieldSlash();
-
-            if (otterAction != null)
-                otterAction.SetGlowActive(false);
+            StopFireBreathAttackPresentation();
+            UpdateSwordGlareAvailability();
 
             if (Otter != null)
             {
@@ -1276,8 +1476,8 @@ namespace Beavermania.Player
 
         void EndSwordShieldCycleGlowOnly()
         {
-            if (otterAction != null)
-                otterAction.SetGlowActive(false);
+            StopFireBreathAttackPresentation();
+            UpdateSwordGlareAvailability();
         }
 
         void StopSwordShieldChainRoutine()
@@ -1367,6 +1567,11 @@ namespace Beavermania.Player
         public void OnSwordFinisherAnimationEnded()
         {
             CompleteSwordShieldCycle(tryChainNext: true);
+        }
+
+        void OnEnable()
+        {
+            UpdateSwordGlareAvailability();
         }
 
         void OnDisable()
@@ -1919,6 +2124,7 @@ namespace Beavermania.Player
             stableCameraForwardXZ = flatFwd.sqrMagnitude > 1e-6f ? flatFwd.normalized : Vector3.forward;
             CountArrows();
             SyncHudState();
+            UpdateSwordGlareAvailability();
         }
         [System.Obsolete]
         public void Update()
@@ -1927,6 +2133,7 @@ namespace Beavermania.Player
             bool inputLocked = IsGameplayInputLocked();
             BufferSecondaryMouseInputEdges(inputLocked);
             CleanupInterruptedSwordFinisherPresentation();
+            SyncSwordGlareAvailabilityPassive();
 
             //Parry animations
             if (!inputLocked && Defend == true)
@@ -2233,6 +2440,7 @@ namespace Beavermania.Player
 
                         }
 
+                        UpdateSwordGlareAvailability();
                     }
                 }
             }
@@ -2261,6 +2469,7 @@ namespace Beavermania.Player
                     {
                         CurrentHealth = MaxHealth;
                         HealthBar.SetMaxHealth(MaxHealth);
+                        NotifyPlayerHealthChanged();
                     }
                     Apple--;
                 }
@@ -2822,12 +3031,12 @@ namespace Beavermania.Player
                         }
                     }
                     Otter.SetBool("moving", true);
-                    SlideEffect.enableEmission = true;
+                    SetParticleEmissionEnabled(SlideEffect, true);
                 }
                 if (neutralAndMoving == false)
                 {
                     Otter.SetBool("moving", false);
-                    SlideEffect.enableEmission = false;
+                    SetParticleEmissionEnabled(SlideEffect, false);
                 }
             }
             //Heal and hurt effects conditioning
@@ -2839,22 +3048,22 @@ namespace Beavermania.Player
                     HealShape.radiusSpeed = 1;
                     HealEffect.emissionRate = 30f;
                     HealLight.intensity = (1f);
-                    HurtEffect.enableEmission = false;
-                    HealEffect.enableEmission = true;
+                    SetParticleEmissionEnabled(HurtEffect, false);
+                    SetParticleEmissionEnabled(HealEffect, true);
                     HurtLight.enabled = false;
                     HealLight.enabled = true;
                 }
                 if (hurt == true)
                 {
-                    HurtEffect.enableEmission = true;
-                    HealEffect.enableEmission = false;
+                    SetParticleEmissionEnabled(HurtEffect, true);
+                    SetParticleEmissionEnabled(HealEffect, false);
                     HurtLight.enabled = true;
                     HealLight.enabled = false;
                 }
                 if (heal == false && hurt == false && TouchShroom == false)
                 {
-                    HurtEffect.enableEmission = false;
-                    HealEffect.enableEmission = false;
+                    SetParticleEmissionEnabled(HurtEffect, false);
+                    SetParticleEmissionEnabled(HealEffect, false);
                     HurtLight.enabled = false;
                     HealLight.enabled = false;
                 }
@@ -2865,8 +3074,8 @@ namespace Beavermania.Player
                     HealShape.radiusSpeed = 3;
                     HealEffect.emissionRate = 70f;
                     HealLight.intensity = (10f);
-                    HurtEffect.enableEmission = false;
-                    HealEffect.enableEmission = true;
+                    SetParticleEmissionEnabled(HurtEffect, false);
+                    SetParticleEmissionEnabled(HealEffect, true);
                     HurtLight.enabled = false;
                     HealLight.enabled = true;
                 }
@@ -2909,6 +3118,8 @@ namespace Beavermania.Player
                 if (ArmorSet[i] != null)
                     ArmorSet[i].SetActive(active);
             }
+
+            UpdateSwordGlareAvailability();
         }
 
         void ClearBowDrawState()

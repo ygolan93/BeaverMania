@@ -173,8 +173,45 @@ namespace Beavermania.Player.Combat
 
         public void SetGlowActive(bool active)
         {
+            if (GlowEffect == null)
+                return;
+
+            if (!active)
+            {
+                StopFireBreathPresentation();
+                return;
+            }
+
+            GlowEffect.SetActive(true);
+        }
+
+        public void StopFireBreathPresentation()
+        {
             if (GlowEffect != null)
-                GlowEffect.SetActive(active);
+            {
+                ParticleSystem[] particleSystems = GlowEffect.GetComponentsInChildren<ParticleSystem>(true);
+                for (var i = 0; i < particleSystems.Length; i++)
+                {
+                    if (particleSystems[i] != null)
+                        particleSystems[i].Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                }
+
+                TrailRenderer[] trails = GlowEffect.GetComponentsInChildren<TrailRenderer>(true);
+                for (var i = 0; i < trails.Length; i++)
+                {
+                    if (trails[i] != null)
+                        trails[i].Clear();
+                }
+
+                Light[] lights = GlowEffect.GetComponentsInChildren<Light>(true);
+                for (var i = 0; i < lights.Length; i++)
+                {
+                    if (lights[i] != null)
+                        lights[i].enabled = false;
+                }
+
+                GlowEffect.SetActive(false);
+            }
         }
 
         public bool IsFinisherGlowActive()
@@ -184,6 +221,12 @@ namespace Beavermania.Player.Combat
 
         public void TurnOnGlow()
         {
+            if (Player != null && Player.IsSwordAndShieldEquipped() && !Player.CanActivateFireBreath())
+            {
+                Player.StopFireBreathEffects();
+                return;
+            }
+
             if (Player != null)
                 Player.OnSwordFinisherAnimationStarted();
 

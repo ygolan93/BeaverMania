@@ -33,21 +33,21 @@ namespace Beavermania.Audio
         public void Error()
         {
             audioEffects.clip = audioClip[15];
-            audioEffects.volume = 6f;
+            audioEffects.volume = 1f;
             audioEffects.pitch = 1f;
             audioEffects.PlayOneShot(audioClip[15]);
         }
         public void PickItem()
         {
             audioEffects.clip = audioClip[14];
-            audioEffects.volume = 6f;
+            audioEffects.volume = 1f;
             audioEffects.pitch = 1f;
             audioEffects.PlayOneShot(audioClip[14]);
         }
         public void SwitchItem()
         {
             audioSource.clip = audioClip[13];
-            audioSource.volume = 6f;
+            audioSource.volume = 1f;
             audioSource.pitch = 1f;
             audioSource.PlayOneShot(audioClip[13]);
         }
@@ -56,56 +56,56 @@ namespace Beavermania.Audio
         public void ArrowShoot()
         {
             audioEffects.clip = audioClip[12];
-            audioEffects.volume = 6f;
+            audioEffects.volume = 1f;
             audioEffects.pitch = 1f;
             audioEffects.PlayOneShot(audioClip[12]);
         }
         public void ArrowDraw()
         {
             audioSource.clip = audioClip[11];
-            audioSource.volume = 6f;
+            audioSource.volume = 1f;
             audioSource.pitch = 1f;
             audioSource.PlayOneShot(audioClip[11]);
         }
         public void Drink()
         {
             audioSource.clip = audioClip[10];
-            audioSource.volume = 6f;
+            audioSource.volume = 1f;
             audioSource.pitch = 1f;
             audioSource.PlayOneShot(audioClip[10]);
         }
         public void Eat()
         {
             audioEffects.clip = audioClip[9];
-            audioEffects.volume = 5f;
+            audioEffects.volume = 1f;
             audioEffects.pitch = 1f;
             audioEffects.PlayOneShot(audioClip[9]);
         }
         public void Roll()
         {
             audioSource.clip = audioClip[8];
-            audioSource.volume = 5f;
+            audioSource.volume = 1f;
             audioSource.pitch = 0.8f;
             audioSource.PlayOneShot(audioClip[8]);
         }
         public void PickUp2()
         {
             audioSource.clip = audioClip[7];
-            audioSource.volume = 7f;
+            audioSource.volume = 1f;
             audioSource.pitch = 1f;
             audioSource.PlayOneShot(audioClip[7]);
         }
         public void PickUp1()
         {
             audioSource.clip = audioClip[6];
-            audioSource.volume = 7f;
+            audioSource.volume = 1f;
             audioSource.pitch = 1f;
             audioSource.PlayOneShot(audioClip[6]);
         }
         public void Coin()
         {
             audioEffects.clip = audioClip[5];
-            audioEffects.volume = 7f;
+            audioEffects.volume = 1f;
             audioEffects.pitch = 1f;
             audioEffects.PlayOneShot(audioClip[5]);
         }
@@ -119,7 +119,7 @@ namespace Beavermania.Audio
         public void Slide()
         {
             audioEffects.clip = audioClip[3];
-            audioEffects.volume = 2f;
+            audioEffects.volume = 1f;
             audioEffects.pitch = 0.7f;
             audioEffects.PlayOneShot(audioClip[3]);
         }

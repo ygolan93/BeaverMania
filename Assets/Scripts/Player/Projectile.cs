@@ -631,7 +631,7 @@ namespace Beavermania.Player.Combat
             {
                 npc.TakeDamage(Damage);
                 npc.combo += npc.hit2stun;
-                RockHit();
+                ArrowHit();
                 if (Player != null)
                 {
                     Player.Plattering = "Bam! Take that";
@@ -645,7 +645,7 @@ namespace Beavermania.Player.Combat
             {
                 scorpion.TakeDamage(Damage);
                 scorpion.combo += 3;
-                RockHit();
+                ArrowHit();
                 return;
             }
 
@@ -653,12 +653,12 @@ namespace Beavermania.Player.Combat
             if (hive != null)
             {
                 hive.TakeDamage(Damage);
-                RockHit();
+                ArrowHit();
                 return;
             }
 
             if (ColliderHasTag(hitCollider, "Isle"))
-                RockHit();
+                ArrowHit();
         }
 
         void FinalizeArrowImpact(Collision collision, bool spawnPickup)
@@ -760,7 +760,7 @@ namespace Beavermania.Player.Combat
 
             ApplyAoEDamage(impactPoint);
             ApplyFireBreathGivingTreeDestruction(collision, impactPoint);
-            RockHit();
+            FireExplosionHit();
             CompleteProjectile(false);
         }
 
@@ -862,14 +862,29 @@ namespace Beavermania.Player.Combat
         }
 #endif
 
-        public void RockHit()
+        void PlayImpactSound(float volume, float pitch)
         {
-            if (Sound == null)
+            if (Sound == null || Sound.clip == null)
                 return;
 
-            Sound.volume = 0.2f;
-            Sound.pitch = 0.8f;
+            Sound.volume = volume;
+            Sound.pitch = pitch;
             Sound.PlayOneShot(Sound.clip);
+        }
+
+        public void RockHit()
+        {
+            PlayImpactSound(0.2f, 0.8f);
+        }
+
+        public void ArrowHit()
+        {
+            PlayImpactSound(0.25f, 1f);
+        }
+
+        public void FireExplosionHit()
+        {
+            PlayImpactSound(0.35f, 0.9f);
         }
 
         void CompleteProjectile(bool spawnArrowPickup = false)

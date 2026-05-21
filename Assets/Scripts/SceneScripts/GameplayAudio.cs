@@ -1,0 +1,42 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace Beavermania.Audio
+{
+    /// <summary>
+    /// Lightweight one-shot helper with per-channel cooldowns. Does not replace <see cref="AudioScript"/> yet.
+    /// </summary>
+    public static class GameplayAudio
+    {
+        static readonly Dictionary<string, float> LastPlayTimeByChannel = new Dictionary<string, float>();
+
+        public static bool TryPlayOneShot(
+            AudioSource source,
+            AudioClip clip,
+            string channel,
+            float minInterval = 0.08f,
+            float volumeScale = 1f,
+            float pitch = 1f)
+        {
+            if (source == null || clip == null || string.IsNullOrEmpty(channel))
+                return false;
+
+            float now = Time.unscaledTime;
+            if (LastPlayTimeByChannel.TryGetValue(channel, out float lastPlay) && now - lastPlay < minInterval)
+                return false;
+
+            LastPlayTimeByChannel[channel] = now;
+            source.pitch = pitch;
+            source.PlayOneShot(clip, Mathf.Clamp01(volumeScale));
+            return true;
+        }
+
+        public static void ClearChannel(string channel)
+        {
+            if (string.IsNullOrEmpty(channel))
+                return;
+
+            LastPlayTimeByChannel.Remove(channel);
+        }
+    }
+}

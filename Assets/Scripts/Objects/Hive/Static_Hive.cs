@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Beavermania.Audio;
 using UnityEngine;
 using Beavermania.NPC;
 
@@ -60,7 +61,8 @@ namespace Beavermania.Objects
         {
             HitEffect.SetActive(true);
             CurrentHealth -= Damage;
-            Sound.Play();
+            if (Sound != null && Sound.clip != null)
+                GameplayAudio.TryPlayOneShot(Sound, Sound.clip, "HiveHit", 0.1f, 1f, 1f);
             HiveBar.SetNPCHealth(CurrentHealth);
         }
     }

@@ -447,15 +447,13 @@ namespace Beavermania.Player
             if (OBJ.gameObject.CompareTag("SwitchMusic"))
             {
                 OBJ.gameObject.SetActive(false);
-                if (int.TryParse(OBJ.gameObject.name, out int songIndex))
-                {
-                    Music.ChangeSong(songIndex);
-                }
-                else
-                {
-                    Debug.LogWarning("The game object's name is not a valid integer: " + OBJ.gameObject.name);
-                }
+                if (Music == null)
+                    return;
 
+                if (int.TryParse(OBJ.gameObject.name, out int songIndex))
+                    Music.ChangeSong(songIndex);
+                else
+                    Debug.LogWarning("The game object's name is not a valid integer: " + OBJ.gameObject.name);
             }
             if (OBJ.gameObject.CompareTag("Life"))
             {
@@ -1887,6 +1885,8 @@ namespace Beavermania.Player
         public void ActivateLooseMenu()
         {
             GameTimeScaleGate.SetFreeze(GameTimeScaleGate.FreezeToken.LooseScreen, true);
+            if (Music != null)
+                Music.StopMusic();
             ShowCursor();
             if (LooseScreen != null)
                 LooseScreen.SetActive(true);
@@ -1895,6 +1895,8 @@ namespace Beavermania.Player
         public void HideLooseMenu()
         {
             GameTimeScaleGate.SetFreeze(GameTimeScaleGate.FreezeToken.LooseScreen, false);
+            if (Music != null)
+                Music.ResumeMusic();
             if (LooseScreen != null)
                 LooseScreen.SetActive(false);
             if (!IsGameplayInputLocked())
@@ -2028,15 +2030,19 @@ namespace Beavermania.Player
             //Enable/Disable Background music
             if (seekMusic == true)
             {
-                Music = GameObject.Find("GameMusic").GetComponent<MusicPlaylist>();
-                Music.transform.parent = Player.transform;
-                Music.transform.position = new Vector3(0, 0, 0);
-                var MusicSwitches = GameObject.FindGameObjectsWithTag("SwitchMusic");
-                foreach (var item in MusicSwitches)
+                var gameMusicObject = GameObject.Find("GameMusic");
+                if (gameMusicObject != null)
+                    Music = gameMusicObject.GetComponent<MusicPlaylist>();
+
+                if (Music != null)
                 {
-                    item.SetActive(true);
+                    Music.transform.parent = Player.transform;
+                    Music.transform.position = new Vector3(0, 0, 0);
                 }
 
+                var MusicSwitches = GameObject.FindGameObjectsWithTag("SwitchMusic");
+                foreach (var item in MusicSwitches)
+                    item.SetActive(true);
             }
             else
             {

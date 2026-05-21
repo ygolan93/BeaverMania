@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Beavermania.Audio
@@ -9,9 +8,13 @@ namespace Beavermania.Audio
     {
         public AudioSource MusicSource;
         [SerializeField] AudioClip[] MusicClip;
-        private int currentSong = 0;
-        private int previousSong = -1;
-        private Coroutine playlistCoroutine;
+        [SerializeField] float crossfadeDuration = 0.5f;
+        int currentSong = 0;
+        int previousSong = -1;
+        Coroutine playlistCoroutine;
+        Coroutine crossfadeCoroutine;
+        float baseVolume = 1f;
+        bool musicPausedByGameplay;
 
         private void Start()
         {
@@ -26,6 +29,8 @@ namespace Beavermania.Audio
                 Debug.LogError("No music clips assigned in the MusicClip array.");
                 return;
             }
+
+            baseVolume = MusicSource.volume;
             StartPlaylist();
         }
 
@@ -67,25 +72,73 @@ namespace Beavermania.Audio
 
         public void StopMusic()
         {
+            if (MusicSource == null || musicPausedByGameplay)
+                return;
+
+            musicPausedByGameplay = true;
             MusicSource.Pause();
         }
 
         public void ResumeMusic()
         {
-            MusicSource.Play();
+            if (MusicSource == null || !musicPausedByGameplay)
+                return;
+
+            musicPausedByGameplay = false;
+            if (!MusicSource.isPlaying)
+                MusicSource.Play();
         }
 
         public void ChangeSong(int newSongIndex)
         {
+            if (MusicSource == null)
+                return;
+
             if (newSongIndex >= 0 && newSongIndex < MusicClip.Length)
             {
+                if (newSongIndex == currentSong)
+                    return;
+
                 currentSong = newSongIndex;
-                StartPlaylist();
+                if (crossfadeCoroutine != null)
+                    StopCoroutine(crossfadeCoroutine);
+
+                crossfadeCoroutine = StartCoroutine(CrossfadeToCurrentSong());
             }
             else
             {
                 Debug.LogWarning("Invalid song index: " + newSongIndex);
             }
+        }
+
+        IEnumerator CrossfadeToCurrentSong()
+        {
+            float duration = Mathf.Max(0.01f, crossfadeDuration);
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = elapsed / duration;
+                MusicSource.volume = Mathf.Lerp(baseVolume, 0f, t);
+                yield return null;
+            }
+
+            PlayCurrentSong();
+            previousSong = currentSong;
+            elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = elapsed / duration;
+                MusicSource.volume = Mathf.Lerp(0f, baseVolume, t);
+                yield return null;
+            }
+
+            MusicSource.volume = baseVolume;
+            crossfadeCoroutine = null;
+            StartPlaylist();
         }
     }
 }

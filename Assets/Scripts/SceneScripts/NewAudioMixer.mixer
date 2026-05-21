@@ -231,7 +231,13 @@ AudioMixerController:
   m_SuspendThreshold: -80
   m_EnableSuspend: 1
   m_UpdateMode: 0
-  m_ExposedParameters: []
+  m_ExposedParameters:
+  - guid: cafd2551e9981364eab83b1f724a49f1
+    name: MasterVolume
+  - guid: 760efa1938822f8489aa6178f9b934ae
+    name: MusicVolume
+  - guid: 43d42ad516684e843b8e060f54825d9c
+    name: SfxVolume
   m_AudioMixerGroupViews:
   - guids:
     - 6de7093185f367e4ab67d148ffd2a402

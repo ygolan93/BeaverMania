@@ -9,6 +9,9 @@ namespace Beavermania.UI.Menus
 
     public class UIMenu : MonoBehaviour
     {
+        const string MasterVolumeKey = "Beavermania.MasterVolume";
+        const float DefaultMasterVolume = 0.8f;
+
         [SerializeField] public GameObject PauseMenu;
         [SerializeField] public GameObject Question;
         [SerializeField] public BeaverPlayer Player;
@@ -61,6 +64,18 @@ namespace Beavermania.UI.Menus
             PauseController.Bind(PauseMenu, Question, Player);
             EnsurePauseMenuOpenListener();
             RefreshRestartCheckpointButtonState();
+            InitializeVolumeSlider();
+        }
+
+        void InitializeVolumeSlider()
+        {
+            if (volumeSlider == null)
+                return;
+
+            float savedMaster = PlayerPrefs.GetFloat(MasterVolumeKey, DefaultMasterVolume);
+            volumeSlider.SetValueWithoutNotify(savedMaster);
+            AudioListener.volume = savedMaster;
+            NotifyMusicVolumeSettings(savedMaster);
         }
 
         public void Pause()
@@ -161,11 +176,26 @@ namespace Beavermania.UI.Menus
         }
         public void Volume()
         {
-            //AudioListener.volume = volumeSlider.value;
-            if (Player != null && Player.seekMusic == true && Music != null)
-            {
-                Music.volume = volumeSlider.value;
-            }
+            if (volumeSlider == null)
+                return;
+
+            float value = Mathf.Clamp01(volumeSlider.value);
+            PlayerPrefs.SetFloat(MasterVolumeKey, value);
+            PlayerPrefs.Save();
+            AudioListener.volume = value;
+            NotifyMusicVolumeSettings(value);
+
+            if (Player != null && Player.seekMusic && Music != null)
+                Music.volume = value;
+        }
+
+        static void NotifyMusicVolumeSettings(float linearVolume)
+        {
+            GameObject musicObject = GameObject.FindGameObjectWithTag("Music");
+            if (musicObject == null)
+                return;
+
+            musicObject.SendMessage("ApplyMasterVolumeFromMenu", linearVolume, SendMessageOptions.DontRequireReceiver);
         }
 
         void LogMissingReference(string referenceName, ref bool logged)

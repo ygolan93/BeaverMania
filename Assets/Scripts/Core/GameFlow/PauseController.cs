@@ -1,3 +1,4 @@
+using Beavermania.Audio;
 using Beavermania.Core.Input;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using UnityEngine;
@@ -61,6 +62,7 @@ namespace Beavermania.Core.GameFlow
             {
                 SetMenuVisible(true);
                 GameTimeScaleGate.SetFreeze(GameTimeScaleGate.FreezeToken.PauseMenu, true);
+                PauseBackgroundMusic();
 
                 if (player != null)
                     player.ShowCursor();
@@ -71,9 +73,22 @@ namespace Beavermania.Core.GameFlow
             SetMenuVisible(false);
             GameTimeScaleGate.SetFreeze(GameTimeScaleGate.FreezeToken.PauseMenu, false);
             SetQuestionVisible(false);
+            ResumeBackgroundMusic();
 
             if (player != null && !player.IsGameplayInputLocked())
                 player.HideCursor();
+        }
+
+        void PauseBackgroundMusic()
+        {
+            if (player != null && player.Music != null)
+                player.Music.StopMusic();
+        }
+
+        void ResumeBackgroundMusic()
+        {
+            if (player != null && player.Music != null)
+                player.Music.ResumeMusic();
         }
 
         void SetMenuVisible(bool visible)

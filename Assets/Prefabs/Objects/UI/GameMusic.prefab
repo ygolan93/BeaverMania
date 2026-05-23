@@ -72,7 +72,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 8626823355104539361, guid: 80330d5770d5ae2488c7e64aa33e4761, type: 2}
   m_audioClip: {fileID: 0}
   m_PlayOnAwake: 0
-  m_Volume: 1
+  m_Volume: 0.65
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -168,8 +168,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7724bd1507218364691562fd02f6ed08, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MusicSource: {fileID: 0}
+  MusicSource: {fileID: 4968688398559378340}
   MusicClip:
   - {fileID: 8300000, guid: 7c8d4d947ba8f9d469c91537db6ba07d, type: 3}
-  - {fileID: 8300000, guid: 2da5c51ac6d91b74bb99eb339e2097dc, type: 3}
-  - {fileID: 8300000, guid: cfaa856fae8a20f4d9e88c4fbf5f8e59, type: 3}
+  - {fileID: 8300000, guid: 08493206160153e43a8ba70d068ad85c, type: 3}
+  - {fileID: 8300000, guid: c444a693d1d8d16408cc400f92d3e7c6, type: 3}
+  - {fileID: 8300000, guid: 1bc446d00238e30488349a6cb4dc369b, type: 3}
+  crossfadeDuration: 0.5

@@ -15,8 +15,8 @@ namespace Beavermania.Audio
                 return;
 
             audioSource.clip = audioClip[18];
-            audioSource.volume = 0.4f;
-            GameplayAudio.TryPlayOneShot(audioSource, audioClip[18], "player.swordswing", 0.12f, 0.4f, 1f);
+            audioSource.volume = 0.95f;
+            GameplayAudio.TryPlayOneShot(audioSource, audioClip[18], "player.swordswing", 0.12f, 0.95f, 1f);
         }
         public void SwordSwing2()
         {
@@ -24,8 +24,8 @@ namespace Beavermania.Audio
                 return;
 
             audioSource.clip = audioClip[17];
-            audioSource.volume = 0.4f;
-            GameplayAudio.TryPlayOneShot(audioSource, audioClip[17], "player.swordswing", 0.12f, 0.4f, 1f);
+            audioSource.volume = 0.95f;
+            GameplayAudio.TryPlayOneShot(audioSource, audioClip[17], "player.swordswing", 0.12f, 0.95f, 1f);
         }
         public void SwordSwing1()
         {
@@ -33,8 +33,8 @@ namespace Beavermania.Audio
                 return;
 
             audioSource.clip = audioClip[16];
-            audioSource.volume = 0.4f;
-            GameplayAudio.TryPlayOneShot(audioSource, audioClip[16], "player.swordswing", 0.12f, 0.4f, 1f);
+            audioSource.volume = 0.95f;
+            GameplayAudio.TryPlayOneShot(audioSource, audioClip[16], "player.swordswing", 0.12f, 0.95f, 1f);
         }
         public void Error()
         {
@@ -137,8 +137,8 @@ namespace Beavermania.Audio
                 return;
 
             audioSource.clip = audioClip[2];
-            audioSource.volume = 0.3f;
-            GameplayAudio.TryPlayOneShot(audioSource, audioClip[2], "player.wind", 0.15f, 0.3f, 1f);
+            audioSource.volume = 0.9f;
+            GameplayAudio.TryPlayOneShot(audioSource, audioClip[2], "player.wind", 0.15f, 0.9f, 1f);
         }
         public void Step()
         {
@@ -157,8 +157,8 @@ namespace Beavermania.Audio
                 return;
 
             audioEffects.clip = audioClip[0];
-            audioEffects.volume = 0.2f;
-            GameplayAudio.TryPlayOneShot(audioEffects, audioClip[0], "player.jump", 0.2f, 0.2f, 0.8f);
+            audioEffects.volume = 0.95f;
+            GameplayAudio.TryPlayOneShot(audioEffects, audioClip[0], "player.jump", 0.2f, 0.95f, 0.8f);
         }
 
 

@@ -11,24 +11,30 @@ namespace Beavermania.Audio
 
         public void SwordSwing3()
         {
+            if (audioSource == null || audioClip == null || audioClip.Length <= 18)
+                return;
+
             audioSource.clip = audioClip[18];
-            audioSource.volume = 0.4f;
-            audioSource.pitch = 1f;
-            audioSource.PlayOneShot(audioClip[18]);
+            audioSource.volume = 0.95f;
+            GameplayAudio.TryPlayOneShot(audioSource, audioClip[18], "player.swordswing", 0.12f, 0.95f, 1f);
         }
         public void SwordSwing2()
         {
+            if (audioSource == null || audioClip == null || audioClip.Length <= 17)
+                return;
+
             audioSource.clip = audioClip[17];
-            audioSource.volume = 0.4f;
-            audioSource.pitch = 1f;
-            audioSource.PlayOneShot(audioClip[17]);
+            audioSource.volume = 0.95f;
+            GameplayAudio.TryPlayOneShot(audioSource, audioClip[17], "player.swordswing", 0.12f, 0.95f, 1f);
         }
         public void SwordSwing1()
         {
+            if (audioSource == null || audioClip == null || audioClip.Length <= 16)
+                return;
+
             audioSource.clip = audioClip[16];
-            audioSource.volume = 0.4f;
-            audioSource.pitch = 1f;
-            audioSource.PlayOneShot(audioClip[16]);
+            audioSource.volume = 0.95f;
+            GameplayAudio.TryPlayOneShot(audioSource, audioClip[16], "player.swordswing", 0.12f, 0.95f, 1f);
         }
         public void Error()
         {
@@ -104,10 +110,12 @@ namespace Beavermania.Audio
         }
         public void Coin()
         {
+            if (audioEffects == null || audioClip == null || audioClip.Length <= 5)
+                return;
+
             audioEffects.clip = audioClip[5];
             audioEffects.volume = 1f;
-            audioEffects.pitch = 1f;
-            audioEffects.PlayOneShot(audioClip[5]);
+            GameplayAudio.TryPlayOneShot(audioEffects, audioClip[5], "player.coin", 0.08f, 1f, 1f);
         }
         public void Heal()
         {
@@ -125,24 +133,32 @@ namespace Beavermania.Audio
         }
         public void Wind()
         {
+            if (audioSource == null || audioClip == null || audioClip.Length <= 2)
+                return;
+
             audioSource.clip = audioClip[2];
-            audioSource.volume = 0.3f;
-            audioSource.pitch = 1f;
-            audioSource.PlayOneShot(audioClip[2]);
+            audioSource.volume = 0.9f;
+            GameplayAudio.TryPlayOneShot(audioSource, audioClip[2], "player.wind", 0.15f, 0.9f, 1f);
         }
         public void Step()
         {
+            if (audioSource == null || audioClip == null || audioClip.Length <= 1)
+                return;
+
             audioSource.clip = audioClip[1];
             audioSource.volume = 0.6f;
             audioSource.pitch = 0.8f;
             audioSource.PlayOneShot(audioClip[1]);
         }
+
         public void Jump()
         {
+            if (audioEffects == null || audioClip == null || audioClip.Length == 0)
+                return;
+
             audioEffects.clip = audioClip[0];
-            audioEffects.volume =0.2f;
-            audioEffects.pitch = 0.8f;
-            audioEffects.PlayOneShot(audioClip[0]);
+            audioEffects.volume = 0.65f;
+            GameplayAudio.TryPlayOneShot(audioEffects, audioClip[0], "player.jump", 0.2f, 0.55f, 0.8f);
         }
 
 

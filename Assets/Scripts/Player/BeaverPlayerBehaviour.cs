@@ -1940,6 +1940,7 @@ namespace Beavermania.Player
             JumpLimit = GobletJumpLimit;
             AirBeat /= 5;
             ElectricEffect.SetActive(true);
+            PlayElectricEffectSoundOnce();
             GobletClock = 10f;
             GobletPickup--;
         }
@@ -1953,9 +1954,34 @@ namespace Beavermania.Player
             //BeatGrounded = 5 * BeatGrounded;
             AirBeat = 5 * AirBeat;
             ElectricEffect.SetActive(false);
+            StopElectricEffectSound();
             GobletClock = 10F;
 
         }
+        void PlayElectricEffectSoundOnce()
+        {
+            if (ElectricEffect == null)
+                return;
+
+            var electricSource = ElectricEffect.GetComponent<AudioSource>();
+            if (electricSource == null || electricSource.clip == null || electricSource.isPlaying)
+                return;
+
+            electricSource.Play();
+        }
+
+        void StopElectricEffectSound()
+        {
+            if (ElectricEffect == null)
+                return;
+
+            var electricSource = ElectricEffect.GetComponent<AudioSource>();
+            if (electricSource == null)
+                return;
+
+            electricSource.Stop();
+        }
+
         public void ParryON()
         {
             if (Defend == false)
@@ -2034,7 +2060,7 @@ namespace Beavermania.Player
                 if (gameMusicObject != null)
                     Music = gameMusicObject.GetComponent<MusicPlaylist>();
 
-                if (Music != null)
+                if (Music != null && Music.gameObject.scene.name != "DontDestroyOnLoad")
                 {
                     Music.transform.parent = Player.transform;
                     Music.transform.position = new Vector3(0, 0, 0);

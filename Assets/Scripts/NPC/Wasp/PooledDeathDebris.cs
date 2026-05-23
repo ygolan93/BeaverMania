@@ -131,26 +131,15 @@ namespace Beavermania.NPC
 
             for (var i = 0; i < rigidbodies.Length; i++)
             {
-                if (rigidbodies[i] == null)
-                    continue;
-
                 rigidbodies[i].velocity = Vector3.zero;
                 rigidbodies[i].angularVelocity = Vector3.zero;
             }
 
             for (var i = 0; i < colliders.Length; i++)
-            {
-                if (colliders[i] == null)
-                    continue;
-
                 colliders[i].enabled = true;
-            }
 
             for (var i = 0; i < lifetimeScripts.Length; i++)
             {
-                if (lifetimeScripts[i] == null)
-                    continue;
-
                 lifetimeScripts[i].time = lifetimeDurations[i];
                 lifetimeScripts[i].enabled = false;
             }
@@ -165,8 +154,83 @@ namespace Beavermania.NPC
                 if (selfDestroyScripts[i] == null)
                     continue;
 
+                selfDestroyScripts[i].SetDestroySelfSuppressed(true);
                 selfDestroyScripts[i].enabled = false;
             }
+        }
+
+        void OnCollisionEnter(Collision collision)
+        {
+            if (released)
+                return;
+
+            if (!collision.gameObject.CompareTag("Player"))
+                return;
+
+            var destroy = ResolveDestroyForCollision(collision);
+            if (destroy == null)
+                return;
+
+            ApplyDestroySelfForPool(destroy);
+        }
+
+        global::Destroy ResolveDestroyForCollision(Collision collision)
+        {
+            if (collision.contactCount > 0)
+            {
+                var hitCollider = collision.GetContact(0).thisCollider;
+                var onCollider = hitCollider.GetComponent<global::Destroy>();
+                if (onCollider != null)
+                    return onCollider;
+
+                var inParent = hitCollider.GetComponentInParent<global::Destroy>();
+                if (inParent != null)
+                    return inParent;
+            }
+
+            return selfDestroyScripts.Length > 0 ? selfDestroyScripts[0] : null;
+        }
+
+        public bool HandleLegacyDestroy(global::Destroy destroy)
+        {
+            if (destroy == null)
+                return false;
+
+            if (released)
+                return true;
+
+            ApplyDestroySelfForPool(destroy);
+            return true;
+        }
+
+        void ApplyDestroySelfForPool(global::Destroy destroy)
+        {
+            if (destroy.effect != null)
+                Object.Instantiate(destroy.effect, destroy.transform.position, Quaternion.identity);
+
+            if (destroy.saveAfterKill)
+            {
+                destroy.gameObject.SetActive(false);
+                if (destroy.gameObject == gameObject)
+                {
+                    StopReturnRoutine();
+                    Release();
+                }
+
+                return;
+            }
+
+            StopReturnRoutine();
+            if (destroy.gameObject == gameObject)
+            {
+                Release();
+                return;
+            }
+
+            destroy.gameObject.SetActive(false);
+            var fragmentColliders = destroy.GetComponentsInChildren<Collider>(true);
+            for (var i = 0; i < fragmentColliders.Length; i++)
+                fragmentColliders[i].enabled = false;
         }
 
         IEnumerator ReturnAfterLifetime(float lifetime)
@@ -182,7 +246,6 @@ namespace Beavermania.NPC
                 return;
 
             released = true;
-            StopReturnRoutine();
 
             if (pool != null && !overflowInstance)
             {

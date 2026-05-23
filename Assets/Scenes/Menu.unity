@@ -401,13 +401,9 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4968688398559378343, guid: 141ffa0ef1509874f97475a17f55a1ef, type: 3}
-      propertyPath: MusicSource
+      propertyPath: MusicClip.Array.data[0]
       value: 
-      objectReference: {fileID: 1119298332}
-    - target: {fileID: 4968688398559378343, guid: 141ffa0ef1509874f97475a17f55a1ef, type: 3}
-      propertyPath: MusicClip.Array.size
-      value: 4
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 8300000, guid: c444a693d1d8d16408cc400f92d3e7c6, type: 3}
     - target: {fileID: 4968688398559378343, guid: 141ffa0ef1509874f97475a17f55a1ef, type: 3}
       propertyPath: MusicClip.Array.data[1]
       value: 
@@ -415,11 +411,7 @@ PrefabInstance:
     - target: {fileID: 4968688398559378343, guid: 141ffa0ef1509874f97475a17f55a1ef, type: 3}
       propertyPath: MusicClip.Array.data[2]
       value: 
-      objectReference: {fileID: 8300000, guid: c444a693d1d8d16408cc400f92d3e7c6, type: 3}
-    - target: {fileID: 4968688398559378343, guid: 141ffa0ef1509874f97475a17f55a1ef, type: 3}
-      propertyPath: MusicClip.Array.data[3]
-      value: 
-      objectReference: {fileID: 8300000, guid: 1bc446d00238e30488349a6cb4dc369b, type: 3}
+      objectReference: {fileID: 8300000, guid: 7c8d4d947ba8f9d469c91537db6ba07d, type: 3}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 141ffa0ef1509874f97475a17f55a1ef, type: 3}
 --- !u!1 &113872811
@@ -4906,11 +4898,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1107840597}
   m_CullTransparentMesh: 1
---- !u!82 &1119298332 stripped
-AudioSource:
-  m_CorrespondingSourceObject: {fileID: 4968688398559378340, guid: 141ffa0ef1509874f97475a17f55a1ef, type: 3}
-  m_PrefabInstance: {fileID: 55071318}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1148795363
 GameObject:
   m_ObjectHideFlags: 0

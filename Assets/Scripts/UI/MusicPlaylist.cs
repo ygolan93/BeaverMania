@@ -3,7 +3,6 @@ using UnityEngine;
 
 namespace Beavermania.Audio
 {
-
     public class MusicPlaylist : MonoBehaviour
     {
         public AudioSource MusicSource;
@@ -18,6 +17,9 @@ namespace Beavermania.Audio
 
         private void Start()
         {
+            if (ShouldAbortAsDuplicateInstance())
+                return;
+
             MusicSource = GetComponent<AudioSource>();
             if (MusicSource == null)
             {
@@ -31,15 +33,55 @@ namespace Beavermania.Audio
             }
 
             baseVolume = MusicSource.volume;
+            if (MusicSource.isPlaying && MusicSource.clip != null)
+            {
+                SyncCurrentSongIndexFromPlayingClip();
+                previousSong = currentSong;
+                StartPlaylist();
+                return;
+            }
+
             StartPlaylist();
+        }
+
+        bool ShouldAbortAsDuplicateInstance()
+        {
+            GameObject[] musicObjects = GameObject.FindGameObjectsWithTag("Music");
+            for (int i = 0; i < musicObjects.Length; i++)
+            {
+                GameObject other = musicObjects[i];
+                if (other == gameObject)
+                    continue;
+
+                if (other.scene.name == "DontDestroyOnLoad")
+                    return true;
+
+                AudioSource otherSource = other.GetComponent<AudioSource>();
+                if (otherSource != null && otherSource.isPlaying)
+                    return true;
+            }
+
+            return false;
+        }
+
+        void SyncCurrentSongIndexFromPlayingClip()
+        {
+            AudioClip playingClip = MusicSource.clip;
+            for (int i = 0; i < MusicClip.Length; i++)
+            {
+                if (MusicClip[i] == playingClip)
+                {
+                    currentSong = i;
+                    return;
+                }
+            }
         }
 
         private void StartPlaylist()
         {
             if (playlistCoroutine != null)
-            {
                 StopCoroutine(playlistCoroutine);
-            }
+
             playlistCoroutine = StartCoroutine(Playlist());
         }
 
@@ -47,20 +89,26 @@ namespace Beavermania.Audio
         {
             while (true)
             {
+                if (musicPausedByGameplay)
+                {
+                    yield return null;
+                    continue;
+                }
+
                 if (currentSong != previousSong)
                 {
                     PlayCurrentSong();
                     previousSong = currentSong;
                 }
 
-                // Check if the current clip has finished playing
-                if (!MusicSource.isPlaying)
+                if (!musicPausedByGameplay && !MusicSource.isPlaying && MusicSource.clip != null)
                 {
-                    // Replay the current song
-                    MusicSource.Play();
+                    float clipLength = MusicSource.clip.length;
+                    if (clipLength > 0f && MusicSource.time >= clipLength - 0.1f)
+                        MusicSource.Play();
                 }
 
-                yield return null; // Wait until the next frame to recheck
+                yield return null;
             }
         }
 
@@ -138,7 +186,9 @@ namespace Beavermania.Audio
 
             MusicSource.volume = baseVolume;
             crossfadeCoroutine = null;
-            StartPlaylist();
+
+            if (playlistCoroutine == null)
+                StartPlaylist();
         }
     }
 }

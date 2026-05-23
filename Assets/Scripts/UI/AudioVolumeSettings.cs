@@ -110,7 +110,7 @@ namespace Beavermania.Audio
                 PlayerPrefs.Save();
             }
 
-            AudioListener.volume = 1f;
+            AudioListener.volume = linearVolume;
         }
 
         public void ApplyMusicVolume(float linearVolume, bool save = true)

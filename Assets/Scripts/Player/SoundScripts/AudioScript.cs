@@ -11,24 +11,30 @@ namespace Beavermania.Audio
 
         public void SwordSwing3()
         {
+            if (audioSource == null || audioClip == null || audioClip.Length <= 18)
+                return;
+
             audioSource.clip = audioClip[18];
             audioSource.volume = 0.4f;
-            audioSource.pitch = 1f;
-            audioSource.PlayOneShot(audioClip[18]);
+            GameplayAudio.TryPlayOneShot(audioSource, audioClip[18], "player.swordswing", 0.12f, 0.4f, 1f);
         }
         public void SwordSwing2()
         {
+            if (audioSource == null || audioClip == null || audioClip.Length <= 17)
+                return;
+
             audioSource.clip = audioClip[17];
             audioSource.volume = 0.4f;
-            audioSource.pitch = 1f;
-            audioSource.PlayOneShot(audioClip[17]);
+            GameplayAudio.TryPlayOneShot(audioSource, audioClip[17], "player.swordswing", 0.12f, 0.4f, 1f);
         }
         public void SwordSwing1()
         {
+            if (audioSource == null || audioClip == null || audioClip.Length <= 16)
+                return;
+
             audioSource.clip = audioClip[16];
             audioSource.volume = 0.4f;
-            audioSource.pitch = 1f;
-            audioSource.PlayOneShot(audioClip[16]);
+            GameplayAudio.TryPlayOneShot(audioSource, audioClip[16], "player.swordswing", 0.12f, 0.4f, 1f);
         }
         public void Error()
         {
@@ -127,10 +133,12 @@ namespace Beavermania.Audio
         }
         public void Wind()
         {
+            if (audioSource == null || audioClip == null || audioClip.Length <= 2)
+                return;
+
             audioSource.clip = audioClip[2];
             audioSource.volume = 0.3f;
-            audioSource.pitch = 1f;
-            audioSource.PlayOneShot(audioClip[2]);
+            GameplayAudio.TryPlayOneShot(audioSource, audioClip[2], "player.wind", 0.15f, 0.3f, 1f);
         }
         public void Step()
         {
@@ -139,7 +147,8 @@ namespace Beavermania.Audio
 
             audioSource.clip = audioClip[1];
             audioSource.volume = 0.6f;
-            GameplayAudio.TryPlayOneShot(audioSource, audioClip[1], "player.footstep", 0.12f, 0.6f, 0.8f);
+            audioSource.pitch = 0.8f;
+            audioSource.PlayOneShot(audioClip[1]);
         }
 
         public void Jump()

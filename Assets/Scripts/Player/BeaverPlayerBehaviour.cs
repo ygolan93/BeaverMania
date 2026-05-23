@@ -2060,7 +2060,7 @@ namespace Beavermania.Player
                 if (gameMusicObject != null)
                     Music = gameMusicObject.GetComponent<MusicPlaylist>();
 
-                if (Music != null)
+                if (Music != null && Music.gameObject.scene.name != "DontDestroyOnLoad")
                 {
                     Music.transform.parent = Player.transform;
                     Music.transform.position = new Vector3(0, 0, 0);

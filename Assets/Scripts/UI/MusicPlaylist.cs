@@ -16,9 +16,15 @@ namespace Beavermania.Audio
         bool musicPausedByGameplay;
         bool manualTransitionInProgress;
 
-        void Start()
+        void Awake()
         {
             if (ShouldAbortAsDuplicateInstance())
+                enabled = false;
+        }
+
+        void Start()
+        {
+            if (!enabled || ShouldAbortAsDuplicateInstance())
                 return;
 
             if (MusicSource == null)

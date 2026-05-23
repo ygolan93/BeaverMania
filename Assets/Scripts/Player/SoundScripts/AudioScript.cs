@@ -104,10 +104,12 @@ namespace Beavermania.Audio
         }
         public void Coin()
         {
+            if (audioEffects == null || audioClip == null || audioClip.Length <= 5)
+                return;
+
             audioEffects.clip = audioClip[5];
             audioEffects.volume = 1f;
-            audioEffects.pitch = 1f;
-            audioEffects.PlayOneShot(audioClip[5]);
+            GameplayAudio.TryPlayOneShot(audioEffects, audioClip[5], "player.coin", 0.08f, 1f, 1f);
         }
         public void Heal()
         {
@@ -132,17 +134,22 @@ namespace Beavermania.Audio
         }
         public void Step()
         {
+            if (audioSource == null || audioClip == null || audioClip.Length <= 1)
+                return;
+
             audioSource.clip = audioClip[1];
             audioSource.volume = 0.6f;
-            audioSource.pitch = 0.8f;
-            audioSource.PlayOneShot(audioClip[1]);
+            GameplayAudio.TryPlayOneShot(audioSource, audioClip[1], "player.footstep", 0.12f, 0.6f, 0.8f);
         }
+
         public void Jump()
         {
+            if (audioEffects == null || audioClip == null || audioClip.Length == 0)
+                return;
+
             audioEffects.clip = audioClip[0];
-            audioEffects.volume =0.2f;
-            audioEffects.pitch = 0.8f;
-            audioEffects.PlayOneShot(audioClip[0]);
+            audioEffects.volume = 0.2f;
+            GameplayAudio.TryPlayOneShot(audioEffects, audioClip[0], "player.jump", 0.2f, 0.2f, 0.8f);
         }
 
 

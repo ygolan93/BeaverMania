@@ -81,14 +81,28 @@ namespace Beavermania.Core.GameFlow
 
         void PauseBackgroundMusic()
         {
-            if (player != null && player.Music != null)
-                player.Music.StopMusic();
+            MusicPlaylist playlist = ResolveMusicPlaylist();
+            if (playlist != null)
+                playlist.StopMusic();
         }
 
         void ResumeBackgroundMusic()
         {
+            MusicPlaylist playlist = ResolveMusicPlaylist();
+            if (playlist != null)
+                playlist.ResumeMusic();
+        }
+
+        MusicPlaylist ResolveMusicPlaylist()
+        {
             if (player != null && player.Music != null)
-                player.Music.ResumeMusic();
+                return player.Music;
+
+            GameObject musicObject = GameObject.FindGameObjectWithTag("Music");
+            if (musicObject == null)
+                return null;
+
+            return musicObject.GetComponent<MusicPlaylist>();
         }
 
         void SetMenuVisible(bool visible)

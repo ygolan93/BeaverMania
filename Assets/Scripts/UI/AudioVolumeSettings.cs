@@ -9,6 +9,7 @@ namespace Beavermania.Audio
         public const string MasterVolumePrefKey = "Beavermania.MasterVolume";
         public const string MusicVolumePrefKey = "Beavermania.MusicVolume";
         public const string SfxVolumePrefKey = "Beavermania.SfxVolume";
+        public const string MusicSfxBalancePrefKey = "Beavermania.MusicSfxBalance";
 
         const string MasterVolumeParam = "MasterVolume";
         const string MusicVolumeParam = "MusicVolume";
@@ -17,6 +18,8 @@ namespace Beavermania.Audio
         public const float DefaultMasterLinear = 1f;
         public const float DefaultMusicLinear = 0.8f;
         public const float DefaultSfxLinear = 1f;
+        public const float DefaultMusicSfxBalance = 0.5f;
+        public const float MusicSfxBalanceSwing = 0.25f;
 
         [SerializeField] AudioMixer audioMixer;
 
@@ -85,6 +88,44 @@ namespace Beavermania.Audio
             return GetSavedLinearVolume(SfxVolumePrefKey, DefaultSfxLinear);
         }
 
+        public static float GetSavedMusicSfxBalance()
+        {
+            return GetSavedLinearVolume(MusicSfxBalancePrefKey, DefaultMusicSfxBalance);
+        }
+
+        public static void GetLinearVolumesForBalance(float balance, out float musicLinear, out float sfxLinear)
+        {
+            balance = Mathf.Clamp01(balance);
+            float bias = (balance - DefaultMusicSfxBalance) * 2f;
+            musicLinear = Mathf.Clamp01(DefaultMusicLinear + bias * MusicSfxBalanceSwing);
+            sfxLinear = Mathf.Clamp01(DefaultSfxLinear - bias * MusicSfxBalanceSwing);
+        }
+
+        public void ApplyMusicSfxBalance(float balance, bool save = true)
+        {
+            balance = Mathf.Clamp01(balance);
+            GetLinearVolumesForBalance(balance, out float musicLinear, out float sfxLinear);
+            ApplyMusicVolume(musicLinear, false);
+            ApplySfxVolume(sfxLinear, false);
+
+            if (save)
+            {
+                PlayerPrefs.SetFloat(MusicSfxBalancePrefKey, balance);
+                PlayerPrefs.Save();
+            }
+        }
+
+        public void ApplyMusicSfxBalanceFromPrefs(bool save = false)
+        {
+            ApplyMusicSfxBalance(GetSavedMusicSfxBalance(), save);
+        }
+
+        public void ApplyMusicSfxBalanceFromMenu(float balance)
+        {
+            ApplyMusicSfxBalance(balance, true);
+            LogAppliedMixerVolumes();
+        }
+
         static float GetSavedLinearVolume(string prefKey, float defaultLinear)
         {
             if (!PlayerPrefs.HasKey(prefKey))
@@ -135,6 +176,12 @@ namespace Beavermania.Audio
                 PlayerPrefs.SetFloat(SfxVolumePrefKey, linearVolume);
                 PlayerPrefs.Save();
             }
+        }
+
+        public void ApplySfxVolumeFromMenu(float linearVolume)
+        {
+            ApplySfxVolume(linearVolume, true);
+            LogAppliedMixerVolumes();
         }
 
         void SetMixerParameter(string parameterName, float linearVolume)

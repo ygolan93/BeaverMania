@@ -15,6 +15,7 @@ namespace Beavermania.UI.Menus
         [SerializeField] public GameObject Question;
         [SerializeField] public BeaverPlayer Player;
         [SerializeField] Slider volumeSlider;
+        [SerializeField] Slider sfxVolumeSlider;
         [SerializeField] AudioSource Music;
         [SerializeField] Button restartLastCheckpointButton;
         [SerializeField] GameObject restartCheckpointConfirmationPanel;
@@ -63,6 +64,7 @@ namespace Beavermania.UI.Menus
             EnsurePauseMenuOpenListener();
             RefreshRestartCheckpointButtonState();
             InitializeVolumeSlider();
+            InitializeSfxVolumeSlider();
         }
 
         void InitializeVolumeSlider()
@@ -73,6 +75,65 @@ namespace Beavermania.UI.Menus
             float savedMaster = AudioVolumeSettings.GetSavedMaster();
             volumeSlider.SetValueWithoutNotify(savedMaster);
             ApplyMasterVolume(savedMaster);
+        }
+
+        void InitializeSfxVolumeSlider()
+        {
+            EnsureSfxVolumeSliderReference();
+            if (sfxVolumeSlider == null)
+                return;
+
+            float savedSfx = AudioVolumeSettings.GetSavedSfx();
+            sfxVolumeSlider.SetValueWithoutNotify(savedSfx);
+            ApplySfxVolume(savedSfx, false);
+        }
+
+        void EnsureSfxVolumeSliderReference()
+        {
+            if (sfxVolumeSlider != null)
+                return;
+
+            Transform searchRoot = PauseMenu != null ? PauseMenu.transform : transform;
+            Transform existing = searchRoot.Find("Sfx Volume SLIDER");
+            if (existing == null)
+                existing = searchRoot.Find("MusicSfx Balance SLIDER");
+
+            if (existing != null)
+            {
+                sfxVolumeSlider = existing.GetComponent<Slider>();
+                if (sfxVolumeSlider != null)
+                {
+                    WireSfxVolumeSliderEvents();
+                    return;
+                }
+            }
+
+            if (volumeSlider == null)
+                return;
+
+            GameObject clone = Instantiate(volumeSlider.gameObject, volumeSlider.transform.parent);
+            clone.name = "Sfx Volume SLIDER";
+            RectTransform cloneRect = clone.GetComponent<RectTransform>();
+            RectTransform sourceRect = volumeSlider.GetComponent<RectTransform>();
+            if (cloneRect != null && sourceRect != null)
+                cloneRect.anchoredPosition = sourceRect.anchoredPosition + new Vector2(0f, -45f);
+
+            sfxVolumeSlider = clone.GetComponent<Slider>();
+            if (sfxVolumeSlider == null)
+                return;
+
+            WireSfxVolumeSliderEvents();
+        }
+
+        void WireSfxVolumeSliderEvents()
+        {
+            if (sfxVolumeSlider == null)
+                return;
+
+            sfxVolumeSlider.minValue = 0f;
+            sfxVolumeSlider.maxValue = 1f;
+            sfxVolumeSlider.onValueChanged.RemoveAllListeners();
+            sfxVolumeSlider.onValueChanged.AddListener(_ => SfxVolume());
         }
 
         public void Pause()
@@ -172,6 +233,36 @@ namespace Beavermania.UI.Menus
 
             float value = Mathf.Clamp01(volumeSlider.value);
             ApplyMasterVolume(value);
+        }
+
+        public void SfxVolume()
+        {
+            if (sfxVolumeSlider == null)
+                return;
+
+            float value = Mathf.Clamp01(sfxVolumeSlider.value);
+            ApplySfxVolume(value, true);
+        }
+
+        static void ApplySfxVolume(float linearVolume, bool save)
+        {
+            if (AudioVolumeSettings.Instance != null)
+            {
+                if (save)
+                    AudioVolumeSettings.Instance.ApplySfxVolumeFromMenu(linearVolume);
+                else
+                    AudioVolumeSettings.Instance.ApplySfxVolume(linearVolume, false);
+                return;
+            }
+
+            GameObject musicObject = GameObject.FindGameObjectWithTag("Music");
+            if (musicObject == null)
+                return;
+
+            if (save)
+                musicObject.SendMessage("ApplySfxVolumeFromMenu", linearVolume, SendMessageOptions.DontRequireReceiver);
+            else
+                musicObject.SendMessage("ApplySfxVolume", linearVolume, SendMessageOptions.DontRequireReceiver);
         }
 
         static void ApplyMasterVolume(float linearVolume)

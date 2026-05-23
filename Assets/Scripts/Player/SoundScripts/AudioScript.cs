@@ -157,8 +157,8 @@ namespace Beavermania.Audio
                 return;
 
             audioEffects.clip = audioClip[0];
-            audioEffects.volume = 0.95f;
-            GameplayAudio.TryPlayOneShot(audioEffects, audioClip[0], "player.jump", 0.2f, 0.95f, 0.8f);
+            audioEffects.volume = 0.65f;
+            GameplayAudio.TryPlayOneShot(audioEffects, audioClip[0], "player.jump", 0.2f, 0.55f, 0.8f);
         }
 
 

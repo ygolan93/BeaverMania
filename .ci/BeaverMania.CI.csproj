@@ -10,6 +10,7 @@
     <RootNamespace>BeaverMania</RootNamespace>
     <AssemblyName>BeaverMania</AssemblyName>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DefineConstants>UNITY_2021_3_OR_NEWER;DEVELOPMENT_BUILD</DefineConstants>
   </PropertyGroup>
 
   <!-- Unity managed DLLs -->
@@ -64,9 +65,6 @@
     </Reference>
     <Reference Include="UnityEngine.SubsystemsModule">
       <HintPath>/opt/unity/Editor/Data/Managed/UnityEngine/UnityEngine.SubsystemsModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEditor">
-      <HintPath>/opt/unity/Editor/Data/Managed/UnityEditor.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Physics2DModule">
       <HintPath>/opt/unity/Editor/Data/Managed/UnityEngine/UnityEngine.Physics2DModule.dll</HintPath>

@@ -1,0 +1,124 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <NoWarn>CS0649;CS0414;CS0169;CS0108;CS0114;CS0162</NoWarn>
+    <DefineConstants>TRACE;DEBUG;DEVELOPMENT_BUILD;UNITY_2021;UNITY_2021_3;UNITY_2021_3_OR_NEWER</DefineConstants>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <OutputType>Library</OutputType>
+    <RootNamespace>BeaverMania</RootNamespace>
+    <AssemblyName>BeaverMania</AssemblyName>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DefineConstants>UNITY_2021_3_OR_NEWER;DEVELOPMENT_BUILD</DefineConstants>
+  </PropertyGroup>
+
+  <!-- Unity managed DLLs -->
+  <ItemGroup>
+    <Reference Include="UnityEngine">
+      <HintPath>/opt/unity/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>/opt/unity/Editor/Data/Managed/UnityEngine/UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>/opt/unity/Editor/Data/Managed/UnityEngine/UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AnimationModule">
+      <HintPath>/opt/unity/Editor/Data/Managed/UnityEngine/UnityEngine.AnimationModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>/opt/unity/Editor/Data/Managed/UnityEngine/UnityEngine.UIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>/opt/unity/Editor/Data/Managed/UnityEngine/UnityEngine.IMGUIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AIModule">
+      <HintPath>/opt/unity/Editor/Data/Managed/UnityEngine/UnityEngine.AIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>/opt/unity/Editor/Data/Managed/UnityEngine/UnityEngine.AudioModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ParticleSystemModule">
+      <HintPath>/opt/unity/Editor/Data/Managed/UnityEngine/UnityEngine.ParticleSystemModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>/opt/unity/Editor/Data/Managed/UnityEngine/UnityEngine.InputLegacyModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>/opt/unity/Editor/Data/Managed/UnityEngine/UnityEngine.TextRenderingModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>/opt/unity/Editor/Data/Managed/UnityEngine/UnityEngine.ImageConversionModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.DirectorModule">
+      <HintPath>/opt/unity/Editor/Data/Managed/UnityEngine/UnityEngine.DirectorModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TerrainModule">
+      <HintPath>/opt/unity/Editor/Data/Managed/UnityEngine/UnityEngine.TerrainModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.VFXModule">
+      <HintPath>/opt/unity/Editor/Data/Managed/UnityEngine/UnityEngine.VFXModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestModule">
+      <HintPath>/opt/unity/Editor/Data/Managed/UnityEngine/UnityEngine.UnityWebRequestModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.SubsystemsModule">
+      <HintPath>/opt/unity/Editor/Data/Managed/UnityEngine/UnityEngine.SubsystemsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.Physics2DModule">
+      <HintPath>/opt/unity/Editor/Data/Managed/UnityEngine/UnityEngine.Physics2DModule.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Unity UI package -->
+  <ItemGroup>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>/opt/unity/Editor/Data/Resources/PackageManager/ProjectTemplates/libcache/com.unity.template.universal-2d-1.1.2/Bee/artifacts/2400b0aE.dag/post-processed/UnityEngine.UI.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <!-- TextMeshPro -->
+  <ItemGroup>
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>/opt/unity/Editor/Data/Resources/PackageManager/ProjectTemplates/libcache/com.unity.template.universal-2d-1.1.2/Bee/artifacts/2400b0aE.dag/post-processed/Unity.TextMeshPro.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <!-- URP / Render Pipelines -->
+  <ItemGroup>
+    <Reference Include="Unity.RenderPipelines.Core.Runtime">
+      <HintPath>/opt/unity/Editor/Data/Resources/PackageManager/ProjectTemplates/libcache/com.unity.template.universal-2d-1.1.2/Bee/artifacts/2400b0aE.dag/post-processed/Unity.RenderPipelines.Core.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.RenderPipelines.Universal.Runtime">
+      <HintPath>/opt/unity/Editor/Data/Resources/PackageManager/ProjectTemplates/libcache/com.unity.template.universal-2d-1.1.2/Bee/artifacts/2400b0aE.dag/post-processed/Unity.RenderPipelines.Universal.Runtime.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Timeline -->
+  <ItemGroup>
+    <Reference Include="Unity.Timeline">
+      <HintPath>/opt/unity/Editor/Data/Resources/PackageManager/ProjectTemplates/libcache/com.unity.template.universal-2d-1.1.2/Bee/artifacts/2400b0aE.dag/post-processed/Unity.Timeline.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Game Scripts -->
+  <ItemGroup>
+    <Compile Include="../Assets/Scripts/**/*.cs" />
+    <Compile Include="../Assets/Prefabs/**/*.cs" />
+  </ItemGroup>
+
+  <!-- Cinemachine source (downloaded package) -->
+  <ItemGroup>
+    <Compile Include="/opt/unity-packages/cinemachine/Runtime/**/*.cs" />
+  </ItemGroup>
+
+  <!-- Cinemachine clipper library DLL -->
+  <ItemGroup>
+    <Reference Include="clipper_library">
+      <HintPath>/opt/unity-packages/cinemachine/clipper_library.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

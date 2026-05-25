@@ -30,6 +30,7 @@ namespace Beavermania.Objects
         float collectDistance;
         float currentPullSpeed;
         float pulledTravelAccum;
+        Vector3 magnetPullStartPosition;
         bool magnetActiveThisFrame;
 
         public bool PullFromAnyDistance => pullFromAnyDistance;
@@ -106,6 +107,7 @@ namespace Beavermania.Objects
             {
                 currentPullSpeed = basePullSpeed;
                 pulledTravelAccum = 0f;
+                magnetPullStartPosition = transform.position;
                 state = CoinState.MagnetPulled;
             }
         }
@@ -143,14 +145,19 @@ namespace Beavermania.Objects
             pullTarget = null;
             currentPullSpeed = 0f;
             pulledTravelAccum = 0f;
+            magnetPullStartPosition = Vector3.zero;
         }
 
         void TryCollectWhenReached(Vector3 targetPosition)
         {
-            if (pulledTravelAccum < MinTravelBeforeDistanceCollect)
+            if (Vector3.Distance(transform.position, targetPosition) > collectDistance)
                 return;
 
-            if (Vector3.Distance(transform.position, targetPosition) > collectDistance)
+            bool traveledEnough = pulledTravelAccum >= MinTravelBeforeDistanceCollect;
+            bool startedWithinCollectRadius =
+                Vector3.Distance(magnetPullStartPosition, targetPosition) <= collectDistance;
+
+            if (!traveledEnough && !startedWithinCollectRadius)
                 return;
 
             TryCollect();

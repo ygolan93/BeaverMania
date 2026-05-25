@@ -17,7 +17,7 @@ This is a Unity 2021.3.3f1 C# game project (3D action-platformer). It has **no b
 ### Compilation / Lint Check
 
 ```bash
-cd /workspace/.ci && dotnet build BeaverMania.CI.csproj
+cd /workspace/BeaverMania/.ci && dotnet build BeaverMania.CI.csproj
 ```
 
 This compiles all 88 game scripts (`Assets/Scripts/`) plus prefab scripts (`Assets/Prefabs/`) against Unity's managed DLLs and Cinemachine source. Zero warnings/errors means the code is valid C# that will compile in Unity.
@@ -187,7 +187,7 @@ Agents must:
 Run:
 
 ```bash
-cd /workspace/.ci && dotnet build BeaverMania.CI.csproj
+cd /workspace/BeaverMania/.ci && dotnet build BeaverMania.CI.csproj
 ```
 
 Then report:

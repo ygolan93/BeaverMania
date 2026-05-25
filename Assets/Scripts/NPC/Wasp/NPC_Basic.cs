@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Beavermania.Core.Input;
 using Beavermania.Display;
+using Beavermania.Objects;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using UnityEngine;
 
@@ -40,6 +41,7 @@ namespace Beavermania.NPC
         float c;
         //public WaspCourse course;
         Vector3 SpawnPos;
+        bool deathHandled;
 
         [Header("Floating")]
         public Vector3 currentPos;
@@ -217,6 +219,10 @@ namespace Beavermania.NPC
 
         private void Death()
         {
+            if (deathHandled)
+                return;
+
+            deathHandled = true;
             PlayerHealth.Plattering = ("HA! gotcha");
             PlayerHealth.ChangeSpeech = 1;
             PooledOneShotVfx.Spawn(Explosion, transform.position + new Vector3(0, 1, 0), transform.rotation);
@@ -230,8 +236,8 @@ namespace Beavermania.NPC
             PooledDeathDebris.Spawn(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
             PooledDeathDebris.Spawn(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
             PooledDeathDebris.Spawn(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-            Instantiate(Reward, transform.position + new Vector3(0, 7, 0), transform.rotation);
-            Instantiate(Reward, transform.position + new Vector3(0, 7, 0), transform.rotation);
+            CurrencySpin.ConfigureEnemyDrop(Instantiate(Reward, transform.position + new Vector3(0, 7, 0), transform.rotation));
+            CurrencySpin.ConfigureEnemyDrop(Instantiate(Reward, transform.position + new Vector3(0, 7, 0), transform.rotation));
             GameObject.Destroy(gameObject);
         }
 

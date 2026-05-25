@@ -1,20 +1,32 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Beavermania.Audio
 {
-
     public class DoNotDestroy : MonoBehaviour
     {
-        private void Awake()
+        void Awake()
         {
-            GameObject[] musicObj = GameObject.FindGameObjectsWithTag("Music");
-            if (musicObj.Length>1)
+            GameObject[] musicObjects = GameObject.FindGameObjectsWithTag("Music");
+            for (int i = 0; i < musicObjects.Length; i++)
             {
-                Destroy(this.gameObject);
+                GameObject other = musicObjects[i];
+                if (other == gameObject)
+                    continue;
+
+                if (other.scene.name == "DontDestroyOnLoad")
+                {
+                    Destroy(gameObject);
+                    return;
+                }
             }
-            DontDestroyOnLoad(this.gameObject);
+
+            for (int i = 0; i < musicObjects.Length; i++)
+            {
+                if (musicObjects[i] != gameObject)
+                    Destroy(musicObjects[i]);
+            }
+
+            DontDestroyOnLoad(gameObject);
         }
     }
 }

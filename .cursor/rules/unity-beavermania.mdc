@@ -1,0 +1,45 @@
+---
+description: Unity C# conventions for BeaverProject (Beavermania)
+alwaysApply: true
+---
+
+# Beavermania Unity C#
+
+## Scope
+
+- Edit only `Assets/Scripts/**` unless the user explicitly asks to change scenes, prefabs, or third-party assets.
+- Do not modify `Assets/External Packages/**`, `Assets/Eden/**` sample/demo scripts, or other vendor code.
+
+## Namespaces and layout
+
+- Use `Beavermania.<Area>` namespaces matching folder purpose: `Core`, `Data`, `Player`, `NPC`, `Objects`, `UI`, `Audio`, `Display`.
+- Place new gameplay code under `Assets/Scripts/` in the matching subfolder; keep one primary type per file.
+
+## Architecture
+
+- Prefer small `MonoBehaviour` components over god objects. Extract reusable logic into static helpers or dedicated types.
+- Tunable numbers and content definitions belong in `ScriptableObject` assets under `Assets/Scripts/Data/`, with:
+
+```csharp
+[CreateAssetMenu(fileName = "MyData", menuName = "Beavermania/<Category>/<Name>")]
+```
+
+- Use `OnValidate()` on ScriptableObjects for range checks; log with `Debug.LogWarning(..., this)`.
+
+## Project systems (reuse, don't duplicate)
+
+- **Input**: Read player input through `Beavermania.Core.Input.PlayerInputReader`, not scattered `Input.GetKey` calls in feature code.
+- **Pause / time scale**: Freeze gameplay via `GameTimeScaleGate.SetFreeze(token, true/false)`; never set `Time.timeScale` directly for pause menus or lose screens.
+- **Player**: Prefer `Beavermania.Player.BeaverPlayerBehaviour` APIs and existing combat/HUD types over new parallel player state.
+
+## Code style
+
+- Match surrounding files: explicit `using` statements, `SerializeField` for inspector wiring, minimal comments (only non-obvious logic).
+- Use meaningful null checks before dereferencing scene references; avoid silent empty `catch` blocks.
+- Remove dead code and unused usings in files you touch.
+- Keep diffs minimal: change only what the task requires.
+
+## When unsure
+
+- Read nearby scripts in the same folder before adding types or patterns.
+- Ask before large refactors (e.g. splitting `BeaverPlayerBehaviour`) or cross-cutting input/time-scale changes.

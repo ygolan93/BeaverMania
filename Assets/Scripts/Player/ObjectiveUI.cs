@@ -1,24 +1,38 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 
 namespace Beavermania.UI.Objectives
 {
 
-    public class ObjectiveUI: MonoBehaviour
+    public class ObjectiveUI : MonoBehaviour
     {
         public BeaverPlayer Player;
         public string[] Objective;
         public int i;
         public WayPoint currentPoint;
-       public string Instruction;
+        public string Instruction;
+
+        void Awake()
+        {
+            if (currentPoint == null)
+                currentPoint = GetComponent<WayPoint>();
+        }
+
         public void Update()
         {
+            WayPoint wp = currentPoint != null ? currentPoint : GetComponent<WayPoint>();
+            if (wp == null)
+                return;
+            i = wp.i;
+            if (Objective == null || i < 0 || i >= Objective.Length)
+                return;
             Player = transform.GetComponent<BeaverPlayer>();
-            i = currentPoint.GetComponent<WayPoint>().i;
             Instruction = Objective[i];
+        }
 
+        public void UpdateObjective()
+        {
+            i++;
         }
 
         //public void OnTriggerStay(Collider GameObjective) 
@@ -35,10 +49,5 @@ namespace Beavermania.UI.Objectives
         //        i = 0;
         //    }
         //}
-        public void UpdateObjective()
-        {
-            i++;
-        }
-
     }
 }

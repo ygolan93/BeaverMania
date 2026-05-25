@@ -17,27 +17,39 @@ namespace Beavermania.Objects
         float initialCounter;
         [SerializeField] AudioSource sound;
         [SerializeField] AudioClip clip;
+        bool fanSoundPlaying;
+
         private void Start()
         {
             initialCounter = counter;
         }
+
         private void FixedUpdate()
         {
-            if (turnON==true)
+            if (turnON)
             {
                 rotor.SetBool("turnOn", true);
-                sound.clip = clip;
-                sound.PlayOneShot(clip);
-                counter -= Time.deltaTime;
-                if (counter<=0)
+                if (!fanSoundPlaying && sound != null && clip != null)
                 {
-                    turnON = false;
+                    sound.clip = clip;
+                    sound.loop = true;
+                    sound.Play();
+                    fanSoundPlaying = true;
                 }
+
+                counter -= Time.deltaTime;
+                if (counter <= 0)
+                    turnON = false;
             }
-            if (turnON==false)
+            else
             {
-                sound.Stop();
                 rotor.SetBool("turnOn", false);
+                if (fanSoundPlaying && sound != null)
+                {
+                    sound.Stop();
+                    fanSoundPlaying = false;
+                }
+
                 counter = initialCounter;
             }
         }

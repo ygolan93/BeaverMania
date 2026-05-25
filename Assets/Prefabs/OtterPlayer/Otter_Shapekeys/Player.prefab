@@ -5926,7 +5926,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 36, y: 24}
+    m_SensorSize: {x: 1.7777778, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -6152,7 +6152,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 36, y: 24}
+    m_SensorSize: {x: 1.7777778, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -17175,7 +17175,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 36, y: 24}
+    m_SensorSize: {x: 1.7777778, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -17318,14 +17318,14 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: -1238203413905274933, guid: 80330d5770d5ae2488c7e64aa33e4761, type: 2}
   m_audioClip: {fileID: 0}
-  m_PlayOnAwake: 1
+  m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
   Loop: 0
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
-  Priority: 0
+  Priority: 80
   DopplerLevel: 0
   MinDistance: 0
   MaxDistance: 20
@@ -17455,6 +17455,7 @@ MonoBehaviour:
   AttackPoint: {fileID: 4580562237567520680}
   SwordCopter: {fileID: 6710139492206580332, guid: 8f5e502551c2d7c478576120c90208c9, type: 3}
   SwordPlainTrail: {fileID: 6703250321131892297, guid: 8b93e5f9f10941740bc5830154fd0be8, type: 3}
+  swordGlare: {fileID: 973766373839050909}
 --- !u!114 &3571174044539018483
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -23193,14 +23194,14 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 3102597708893234507, guid: 80330d5770d5ae2488c7e64aa33e4761, type: 2}
   m_audioClip: {fileID: 8300000, guid: 8ade06102b0a86740a8de0339952565e, type: 3}
-  m_PlayOnAwake: 1
+  m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
   Loop: 0
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
-  Priority: 1
+  Priority: 112
   DopplerLevel: 0
   MinDistance: 1
   MaxDistance: 500
@@ -29567,7 +29568,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 36, y: 24}
+    m_SensorSize: {x: 1.7777778, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -29798,10 +29799,13 @@ GameObject:
   - component: {fileID: 4580562239172740872}
   - component: {fileID: 4580562239172740873}
   - component: {fileID: 4580562239172740878}
-  - component: {fileID: 3318556070447194430}
   - component: {fileID: 4580562239172740852}
   - component: {fileID: 8605846543303424432}
   - component: {fileID: 6562972538239049110}
+  - component: {fileID: 5724927208157140646}
+  - component: {fileID: 8156679125422380708}
+  - component: {fileID: 1190784083324918909}
+  - component: {fileID: 7080942755712817626}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -29882,7 +29886,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ce57594dbfd0414f8e2985186cde84e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Mark: {fileID: 0}
+  Mark: {fileID: 9123456789012345004, guid: e33166206a9c19842a1fdd668271b2f5, type: 3}
   Locations:
   - {fileID: 0}
   - {fileID: 0}
@@ -29980,8 +29984,10 @@ MonoBehaviour:
   Hips: {fileID: 2059648558347900779}
   Otter: {fileID: 8986530077644096813}
   otterAction: {fileID: 1219310321942632730}
+  swordEffects: {fileID: 911545900803886803}
   OnPlatform: 0
   rb: {fileID: 4580562239172740854}
+  combatBalance: {fileID: 11400000, guid: 4bb4a81501974e79857a438e1623725b, type: 2}
   MaxHealth: 5000
   CurrentHealth: 0
   MaxStamina: 100
@@ -30039,8 +30045,21 @@ MonoBehaviour:
   enemyLayers:
     serializedVersion: 2
     m_Bits: 1024
+  bowAimCamera: {fileID: 0}
+  bowAimRayMaxDistance: 400
+  bowAimViewportYOffset: 0.03
+  bowAimRaycastLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  bowProjectileSpawnClearance: 0.5
+  minFireBreathCameraHitDistance: 1.25
+  fireBreathSpawnForwardOffset: 0.5
+  debugFireBreathLaunch: 0
+  maxArrowMunition: 99
+  bowShotCooldown: 0.25
   GroundBeat: 0.4
   AirBeat: 0.2
+  debugBowCombat: 0
   InitialFall: 0.2
   GroundAttack: 30
   bowEquipped: 0
@@ -30068,7 +30087,7 @@ MonoBehaviour:
   GobletText: 
   ArrowText: 
   Plattering: 
-  seekMusic: 0
+  seekMusic: 1
   Music: {fileID: 0}
   Sound: {fileID: 465923861175782815}
   HealQue: 3
@@ -30102,8 +30121,11 @@ MonoBehaviour:
   Wallet: 
   GM: {fileID: 0}
   AimIcon: {fileID: 0}
+  PlayerHudState: {fileID: 0}
+  PlayerObjective: {fileID: 0}
   FreeLook: {fileID: 5012679269152501947}
   CamForTraders: {fileID: 9047202634484327852}
+  checkpointRespawn: {fileID: 0}
   ChangeSpeech: 1
 --- !u!114 &4580562239172740873
 MonoBehaviour:
@@ -30154,23 +30176,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   HealthSlider: {fileID: 0}
   StaminaSlider: {fileID: 0}
---- !u!114 &3318556070447194430
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4580562239172740874}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7a565b4e62b079c428781a90fe631c25, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  player: {fileID: 0}
-  Boss: {fileID: 0}
-  ChatCollider: {fileID: 0}
-  BossBar: {fileID: 0}
-  BossPanel: {fileID: 0}
 --- !u!136 &4580562239172740852
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -30206,6 +30211,77 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.5, y: 1.227511, z: 0.5}
   m_Center: {x: 0, y: -0.62334055, z: 0}
+--- !u!114 &5724927208157140646
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4580562239172740874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f356bc3e4f94e4ba9c5e178afeb4ff3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObjectiveText: 
+  DebugText: 
+  StaminaText: 
+  LogCount: 
+  HealingText: 
+  Wallet: 
+  SeedText: 
+  GobletText: 
+  AppleText: 
+  ArrowText: 
+--- !u!114 &8156679125422380708
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4580562239172740874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c1e08ca17c34c7d8b8bc69b1e997a72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  player: {fileID: 4580562239172740872}
+--- !u!114 &1190784083324918909
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4580562239172740874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8ed0b11850145c4995dd76170bb2500, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &7080942755712817626
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4580562239172740874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8540781a6866e8b408c33f3196702092, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  magnetRadius: 8
+  pullSpeed: 900
+  maxPullSpeed: 1000
+  acceleration: 100
+  collectDistance: 0.35
+  verticalOffset: 1
+  coinCollectPoint: {fileID: 962758058577426549}
+  collectionTarget: {fileID: 0}
+  coinLayerMask:
+    serializedVersion: 2
+    m_Bits: 1
+  drawDebugGizmo: 0
 --- !u!1 &4622290205047029495
 GameObject:
   m_ObjectHideFlags: 0
@@ -30987,7 +31063,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5012679268623139212}
-  m_LocalRotation: {x: 0.039304588, y: 0.0020948881, z: -0.00008240256, w: 0.9992251}
+  m_LocalRotation: {x: 0.039304588, y: 0.0020948537, z: -0.0000824012, w: 0.9992251}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -31032,7 +31108,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 36, y: 24}
+    m_SensorSize: {x: 1.7777778, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -31082,16 +31158,16 @@ AudioSource:
   m_GameObject: {fileID: 5012679268726885333}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: -1238203413905274933, guid: 80330d5770d5ae2488c7e64aa33e4761, type: 2}
+  OutputAudioMixerGroup: {fileID: 3102597708893234507, guid: 80330d5770d5ae2488c7e64aa33e4761, type: 2}
   m_audioClip: {fileID: 0}
-  m_PlayOnAwake: 1
+  m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
   Loop: 0
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
-  Priority: 1
+  Priority: 96
   DopplerLevel: 0.1
   MinDistance: 1
   MaxDistance: 10
@@ -31321,7 +31397,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 36, y: 24}
+    m_SensorSize: {x: 1.7777778, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -31415,7 +31491,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 36, y: 24}
+    m_SensorSize: {x: 1.7777778, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -31834,11 +31910,11 @@ AudioSource:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5012679269839134537}
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 8300000, guid: cfaa856fae8a20f4d9e88c4fbf5f8e59, type: 3}
-  m_PlayOnAwake: 1
+  m_audioClip: {fileID: 0}
+  m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
   Loop: 0
@@ -31947,7 +32023,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5012679270299045692}
-  m_LocalRotation: {x: 0.057425518, y: 0.0020930138, z: -0.000120391334, w: 0.9983476}
+  m_LocalRotation: {x: 0.057425518, y: 0.0020930485, z: -0.00012039333, w: 0.9983476}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -31992,7 +32068,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 36, y: 24}
+    m_SensorSize: {x: 1.7777778, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0

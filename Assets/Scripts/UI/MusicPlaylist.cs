@@ -1,91 +1,280 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Beavermania.Audio
 {
-
     public class MusicPlaylist : MonoBehaviour
     {
         public AudioSource MusicSource;
         [SerializeField] AudioClip[] MusicClip;
-        private int currentSong = 0;
-        private int previousSong = -1;
-        private Coroutine playlistCoroutine;
+        [SerializeField] float crossfadeDuration = 0.5f;
 
-        private void Start()
+        int currentClipIndex;
+        Coroutine playlistLoopCoroutine;
+        Coroutine crossfadeCoroutine;
+        float baseVolume = 1f;
+        bool musicPausedByGameplay;
+        bool manualTransitionInProgress;
+
+        void Awake()
         {
-            MusicSource = GetComponent<AudioSource>();
+            if (ShouldAbortAsDuplicateInstance())
+                enabled = false;
+        }
+
+        void Start()
+        {
+            if (!enabled || ShouldAbortAsDuplicateInstance())
+                return;
+
+            if (MusicSource == null)
+                MusicSource = GetComponent<AudioSource>();
+
             if (MusicSource == null)
             {
-                Debug.LogError("No AudioSource component found on the GameObject.");
+                LogPlaylistWarning("No AudioSource found on GameMusic.");
                 return;
             }
-            if (MusicClip.Length == 0)
+
+            if (!HasAnyValidClip())
             {
-                Debug.LogError("No music clips assigned in the MusicClip array.");
+                LogPlaylistWarning("No music clips assigned to MusicPlaylist.");
                 return;
             }
-            StartPlaylist();
+
+            baseVolume = MusicSource.volume;
+
+            if (MusicSource.isPlaying && MusicSource.clip != null)
+            {
+                SyncCurrentClipIndexFromPlayingClip();
+                EnsurePlaylistLoopRunning();
+                return;
+            }
+
+            currentClipIndex = FindFirstValidClipIndex(0);
+            PlayClipAtIndex(currentClipIndex);
+            EnsurePlaylistLoopRunning();
         }
 
-        private void StartPlaylist()
+        bool ShouldAbortAsDuplicateInstance()
         {
-            if (playlistCoroutine != null)
+            GameObject[] musicObjects = GameObject.FindGameObjectsWithTag("Music");
+            for (int i = 0; i < musicObjects.Length; i++)
             {
-                StopCoroutine(playlistCoroutine);
+                GameObject other = musicObjects[i];
+                if (other == gameObject)
+                    continue;
+
+                if (other.scene.name == "DontDestroyOnLoad")
+                    return true;
+
+                AudioSource otherSource = other.GetComponent<AudioSource>();
+                if (otherSource != null && otherSource.isPlaying)
+                    return true;
             }
-            playlistCoroutine = StartCoroutine(Playlist());
+
+            return false;
         }
 
-        IEnumerator Playlist()
+        void SyncCurrentClipIndexFromPlayingClip()
+        {
+            AudioClip playingClip = MusicSource.clip;
+            for (int i = 0; i < MusicClip.Length; i++)
+            {
+                if (MusicClip[i] == playingClip)
+                {
+                    currentClipIndex = i;
+                    return;
+                }
+            }
+        }
+
+        bool HasAnyValidClip()
+        {
+            if (MusicClip == null || MusicClip.Length == 0)
+                return false;
+
+            for (int i = 0; i < MusicClip.Length; i++)
+            {
+                if (MusicClip[i] != null)
+                    return true;
+            }
+
+            return false;
+        }
+
+        int FindFirstValidClipIndex(int startIndex)
+        {
+            if (MusicClip == null || MusicClip.Length == 0)
+                return -1;
+
+            for (int offset = 0; offset < MusicClip.Length; offset++)
+            {
+                int index = (startIndex + offset) % MusicClip.Length;
+                if (MusicClip[index] != null)
+                    return index;
+            }
+
+            return -1;
+        }
+
+        int GetNextValidClipIndex(int fromIndex)
+        {
+            if (MusicClip == null || MusicClip.Length == 0)
+                return -1;
+
+            for (int offset = 1; offset <= MusicClip.Length; offset++)
+            {
+                int index = (fromIndex + offset) % MusicClip.Length;
+                if (MusicClip[index] != null)
+                    return index;
+            }
+
+            return -1;
+        }
+
+        void EnsurePlaylistLoopRunning()
+        {
+            if (playlistLoopCoroutine != null)
+                return;
+
+            playlistLoopCoroutine = StartCoroutine(PlaylistLoop());
+        }
+
+        IEnumerator PlaylistLoop()
         {
             while (true)
             {
-                if (currentSong != previousSong)
+                if (MusicSource == null)
+                    yield break;
+
+                if (musicPausedByGameplay || manualTransitionInProgress || crossfadeCoroutine != null)
                 {
-                    PlayCurrentSong();
-                    previousSong = currentSong;
+                    yield return null;
+                    continue;
                 }
 
-                // Check if the current clip has finished playing
-                if (!MusicSource.isPlaying)
+                while (MusicSource.isPlaying)
+                    yield return null;
+
+                if (musicPausedByGameplay || manualTransitionInProgress || crossfadeCoroutine != null)
                 {
-                    // Replay the current song
-                    MusicSource.Play();
+                    yield return null;
+                    continue;
                 }
 
-                yield return null; // Wait until the next frame to recheck
+                int nextIndex = GetNextValidClipIndex(currentClipIndex);
+                if (nextIndex < 0)
+                {
+                    yield return null;
+                    continue;
+                }
+
+                currentClipIndex = nextIndex;
+                PlayClipAtIndex(currentClipIndex);
             }
         }
 
-        private void PlayCurrentSong()
+        void PlayClipAtIndex(int clipIndex)
         {
-            MusicSource.clip = MusicClip[currentSong];
+            if (MusicSource == null || MusicClip == null || clipIndex < 0 || clipIndex >= MusicClip.Length)
+                return;
+
+            AudioClip clip = MusicClip[clipIndex];
+            if (clip == null)
+                return;
+
+            currentClipIndex = clipIndex;
+            MusicSource.clip = clip;
+            MusicSource.volume = baseVolume;
             MusicSource.Play();
         }
 
         public void StopMusic()
         {
+            if (MusicSource == null || musicPausedByGameplay)
+                return;
+
+            musicPausedByGameplay = true;
             MusicSource.Pause();
         }
 
         public void ResumeMusic()
         {
-            MusicSource.Play();
+            if (MusicSource == null || !musicPausedByGameplay)
+                return;
+
+            musicPausedByGameplay = false;
+            if (MusicSource.clip == null)
+            {
+                int resumeIndex = FindFirstValidClipIndex(currentClipIndex);
+                if (resumeIndex >= 0)
+                    PlayClipAtIndex(resumeIndex);
+                return;
+            }
+
+            if (!MusicSource.isPlaying)
+                MusicSource.Play();
         }
 
         public void ChangeSong(int newSongIndex)
         {
-            if (newSongIndex >= 0 && newSongIndex < MusicClip.Length)
-            {
-                currentSong = newSongIndex;
-                StartPlaylist();
-            }
-            else
+            if (MusicSource == null)
+                return;
+
+            if (newSongIndex < 0 || newSongIndex >= MusicClip.Length || MusicClip[newSongIndex] == null)
             {
                 Debug.LogWarning("Invalid song index: " + newSongIndex);
+                return;
             }
+
+            if (newSongIndex == currentClipIndex && MusicSource.isPlaying)
+                return;
+
+            currentClipIndex = newSongIndex;
+            if (crossfadeCoroutine != null)
+                StopCoroutine(crossfadeCoroutine);
+
+            crossfadeCoroutine = StartCoroutine(CrossfadeToCurrentSong());
+        }
+
+        IEnumerator CrossfadeToCurrentSong()
+        {
+            manualTransitionInProgress = true;
+            float duration = Mathf.Max(0.01f, crossfadeDuration);
+            float elapsed = 0f;
+            float startVolume = MusicSource.volume;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = elapsed / duration;
+                MusicSource.volume = Mathf.Lerp(startVolume, 0f, t);
+                yield return null;
+            }
+
+            PlayClipAtIndex(currentClipIndex);
+            elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = elapsed / duration;
+                MusicSource.volume = Mathf.Lerp(0f, baseVolume, t);
+                yield return null;
+            }
+
+            MusicSource.volume = baseVolume;
+            manualTransitionInProgress = false;
+            crossfadeCoroutine = null;
+            EnsurePlaylistLoopRunning();
+        }
+
+        static void LogPlaylistWarning(string message)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            Debug.LogWarning("[MusicPlaylist] " + message);
+#endif
         }
     }
 }

@@ -18071,6 +18071,7 @@ GameObject:
   - component: {fileID: 7080714720866271184}
   - component: {fileID: 7080714720866271185}
   - component: {fileID: 7080714720866271190}
+  - component: {fileID: 7080714720866271191}
   - component: {fileID: 7080714720866270766}
   - component: {fileID: 7080714720866270764}
   m_Layer: 0
@@ -18172,6 +18173,30 @@ MonoBehaviour:
   Wallet: 
   GM: {fileID: 0}
   AimIcon: {fileID: 0}
+  PlayerHudState: {fileID: 7080714720866271191}
+  combatBalance: {fileID: 11400000, guid: 4bb4a81501974e79857a438e1623725b, type: 2}
+--- !u!114 &7080714720866271191
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7080714720866271186}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f356bc3e4f94e4ba9c5e178afeb4ff3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObjectiveText: 
+  DebugText: 
+  StaminaText: 
+  LogCount: 
+  HealingText: 
+  Wallet: 
+  SeedText: 
+  GobletText: 
+  AppleText: 
+  ArrowText: 
 --- !u!114 &7080714720866271185
 MonoBehaviour:
   m_ObjectHideFlags: 0

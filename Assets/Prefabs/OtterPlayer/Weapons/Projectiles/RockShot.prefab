@@ -104,11 +104,22 @@ MonoBehaviour:
   isFireBall: 0
   Sound: {fileID: 8440659277245134393}
   clock: 3
-  forwardVel: 50
+  forwardVel: 28
   upwardVel: 5
   Explosion: {fileID: 8441742525532789622, guid: 40e313c95bc0b6b44bfc43db170973fc, type: 3}
   Damage: 5
   arrowPickup: {fileID: 6361346071647052729, guid: 605ef2c2a1119ab4880c691c239e6acb, type: 3}
+  minPickupSpawnDelay: 0.25
+  minArrowForwardSpeed: 20
+  minArrowFlightSeconds: 2.5
+  collisionResponseGrace: 0.16
+  debugBowProjectile: 0
+  additionalArrowIgnoreRoots: []
+  arrowMeshTipLocalAxis: {x: 0, y: 1, z: 0}
+  arrowVisualMeshRoot: {fileID: 0}
+  arrowVisualLocalRotationOffsetEuler: {x: 90, y: 0, z: 0}
+  arrowMeshRotationOffsetEuler: {x: 90, y: 0, z: 0}
+  debugLaunchRayLength: 12
 --- !u!54 &-4409854831365679520
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -134,7 +145,7 @@ AudioSource:
   m_GameObject: {fileID: 6553853189663251025}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 3102597708893234507, guid: 80330d5770d5ae2488c7e64aa33e4761, type: 2}
   m_audioClip: {fileID: 8300000, guid: 2e95282c0721b084ba12bc8a48a60d02, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 0.041

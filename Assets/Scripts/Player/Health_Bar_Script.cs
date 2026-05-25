@@ -10,23 +10,33 @@ namespace Beavermania.UI.Hud
     {
         public Slider HealthSlider;
         public Slider StaminaSlider;
-        public void SetMaxHealth (float health)
+        public void SetMaxHealth(float health)
         {
+            if (HealthSlider == null)
+                return;
             HealthSlider.maxValue = health;
             HealthSlider.value = health;
         }
-        public void SetHealth (float health)
+
+        public void SetHealth(float health)
         {
+            if (HealthSlider == null)
+                return;
             HealthSlider.value = health;
         }
 
         public void SetMaxStamina(float stamina)
         {
+            if (StaminaSlider == null)
+                return;
             StaminaSlider.maxValue = stamina;
             StaminaSlider.value = stamina;
         }
+
         public void SetStamina(float stamina)
         {
+            if (StaminaSlider == null)
+                return;
             StaminaSlider.value = stamina;
         }
     }

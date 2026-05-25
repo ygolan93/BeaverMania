@@ -64972,7 +64972,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &5824273520307008123
 Transform:
   m_ObjectHideFlags: 0
@@ -66621,7 +66621,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ce57594dbfd0414f8e2985186cde84e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Mark: {fileID: 0}
+  Mark: {fileID: 9123456789012345004, guid: e33166206a9c19842a1fdd668271b2f5, type: 3}
   Locations:
   - {fileID: 0}
   - {fileID: 0}
@@ -66702,7 +66702,9 @@ MonoBehaviour:
   Player: {fileID: 7624992565179513018}
   grounded: 0
   Load: {fileID: 7624992565179513157}
+  movementInvoked: 0
   rotGoal: {x: 0, y: 0, z: 0, w: 0}
+  keepLooking: 0
   speed: 9
   steer: 0.9
   JumpForce: 5
@@ -66713,9 +66715,13 @@ MonoBehaviour:
   JumpNum: 2
   Root: {fileID: 9064840667715565130}
   Face: {fileID: 2275690320202679099}
+  Spine: {fileID: 0}
+  Hips: {fileID: 0}
   Otter: {fileID: 3095826989289208673}
   otterAction: {fileID: 5092404629697390422}
   OnPlatform: 0
+  rb: {fileID: 0}
+  combatBalance: {fileID: 11400000, guid: 4bb4a81501974e79857a438e1623725b, type: 2}
   MaxHealth: 5000
   CurrentHealth: 0
   MaxStamina: 100
@@ -66731,6 +66737,7 @@ MonoBehaviour:
   ICON_3: {fileID: 0}
   appleOBJ: {fileID: 3550243017492034000}
   gobletOBJ: {fileID: 2330984876321542317}
+  bowAim: {x: 0, y: 0, z: 0}
   Arsenal: []
   arsenalBrowser: 0
   ArsenalCounter: 0
@@ -66837,9 +66844,10 @@ MonoBehaviour:
   GM: {fileID: 0}
   AimIcon: {fileID: 0}
   PlayerHudState: {fileID: 7624992565179513160}
-  PlayerObjective: {fileID: 7370122799389070937}
+  PlayerObjective: {fileID: 0}
   FreeLook: {fileID: 1427810939599441655}
   CamForTraders: {fileID: 3156488547051756512}
+  checkpointRespawn: {fileID: 0}
   ChangeSpeech: 1
 --- !u!114 &7624992565179513160
 MonoBehaviour:
@@ -66851,18 +66859,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1f356bc3e4f94e4ba9c5e178afeb4ff3, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
-  ObjectiveText:
-  DebugText:
-  StaminaText:
-  LogCount:
-  HealingText:
-  Wallet:
-  SeedText:
-  GobletText:
-  AppleText:
-  ArrowText:
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObjectiveText: 
+  DebugText: 
+  StaminaText: 
+  LogCount: 
+  HealingText: 
+  Wallet: 
+  SeedText: 
+  GobletText: 
+  AppleText: 
+  ArrowText: 
 --- !u!114 &7624992565179513157
 MonoBehaviour:
   m_ObjectHideFlags: 0

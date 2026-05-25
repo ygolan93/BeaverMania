@@ -1,3 +1,4 @@
+using Beavermania.Audio;
 using Beavermania.Core.Input;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using UnityEngine;
@@ -61,6 +62,7 @@ namespace Beavermania.Core.GameFlow
             {
                 SetMenuVisible(true);
                 GameTimeScaleGate.SetFreeze(GameTimeScaleGate.FreezeToken.PauseMenu, true);
+                PauseBackgroundMusic();
 
                 if (player != null)
                     player.ShowCursor();
@@ -71,9 +73,36 @@ namespace Beavermania.Core.GameFlow
             SetMenuVisible(false);
             GameTimeScaleGate.SetFreeze(GameTimeScaleGate.FreezeToken.PauseMenu, false);
             SetQuestionVisible(false);
+            ResumeBackgroundMusic();
 
             if (player != null && !player.IsGameplayInputLocked())
                 player.HideCursor();
+        }
+
+        void PauseBackgroundMusic()
+        {
+            MusicPlaylist playlist = ResolveMusicPlaylist();
+            if (playlist != null)
+                playlist.StopMusic();
+        }
+
+        void ResumeBackgroundMusic()
+        {
+            MusicPlaylist playlist = ResolveMusicPlaylist();
+            if (playlist != null)
+                playlist.ResumeMusic();
+        }
+
+        MusicPlaylist ResolveMusicPlaylist()
+        {
+            if (player != null && player.Music != null)
+                return player.Music;
+
+            GameObject musicObject = GameObject.FindGameObjectWithTag("Music");
+            if (musicObject == null)
+                return null;
+
+            return musicObject.GetComponent<MusicPlaylist>();
         }
 
         void SetMenuVisible(bool visible)

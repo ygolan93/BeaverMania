@@ -9,7 +9,7 @@ namespace Beavermania.Core.GameFlow
     /// </summary>
     public sealed class SceneRestartController : MonoBehaviour
     {
-        public const string DefaultLevelSceneName = "Level 1";
+        public const string DefaultLevelSceneName = "Level 1 - Remastered - Steam";
 
         public static void LoadLevel1Single()
         {

@@ -151,6 +151,9 @@ namespace Beavermania.NPC
         {
             for (var i = 0; i < selfDestroyScripts.Length; i++)
             {
+                if (selfDestroyScripts[i] == null)
+                    continue;
+
                 selfDestroyScripts[i].SetDestroySelfSuppressed(true);
                 selfDestroyScripts[i].enabled = false;
             }

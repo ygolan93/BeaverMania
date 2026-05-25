@@ -1,3 +1,4 @@
+using Beavermania.Audio;
 using Beavermania.Core.GameFlow;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using System.Collections;
@@ -6,13 +7,15 @@ using UnityEngine.UI;
 
 namespace Beavermania.UI.Menus
 {
-
     public class UIMenu : MonoBehaviour
     {
+        const string MasterVolumeKey = AudioVolumeSettings.MasterVolumePrefKey;
+
         [SerializeField] public GameObject PauseMenu;
         [SerializeField] public GameObject Question;
         [SerializeField] public BeaverPlayer Player;
         [SerializeField] Slider volumeSlider;
+        [SerializeField] Slider sfxVolumeSlider;
         [SerializeField] AudioSource Music;
         [SerializeField] Button restartLastCheckpointButton;
         [SerializeField] GameObject restartCheckpointConfirmationPanel;
@@ -35,7 +38,6 @@ namespace Beavermania.UI.Menus
             }
         }
 
-        // Start is called before the first frame update
         private void Start()
         {
             if (Player == null)
@@ -61,6 +63,77 @@ namespace Beavermania.UI.Menus
             PauseController.Bind(PauseMenu, Question, Player);
             EnsurePauseMenuOpenListener();
             RefreshRestartCheckpointButtonState();
+            InitializeVolumeSlider();
+            InitializeSfxVolumeSlider();
+        }
+
+        void InitializeVolumeSlider()
+        {
+            if (volumeSlider == null)
+                return;
+
+            float savedMaster = AudioVolumeSettings.GetSavedMaster();
+            volumeSlider.SetValueWithoutNotify(savedMaster);
+            ApplyMasterVolume(savedMaster);
+        }
+
+        void InitializeSfxVolumeSlider()
+        {
+            EnsureSfxVolumeSliderReference();
+            if (sfxVolumeSlider == null)
+                return;
+
+            float savedSfx = AudioVolumeSettings.GetSavedSfx();
+            sfxVolumeSlider.SetValueWithoutNotify(savedSfx);
+            ApplySfxVolume(savedSfx, false);
+        }
+
+        void EnsureSfxVolumeSliderReference()
+        {
+            if (sfxVolumeSlider != null)
+                return;
+
+            Transform searchRoot = PauseMenu != null ? PauseMenu.transform : transform;
+            Transform existing = searchRoot.Find("Sfx Volume SLIDER");
+            if (existing == null)
+                existing = searchRoot.Find("MusicSfx Balance SLIDER");
+
+            if (existing != null)
+            {
+                sfxVolumeSlider = existing.GetComponent<Slider>();
+                if (sfxVolumeSlider != null)
+                {
+                    WireSfxVolumeSliderEvents();
+                    return;
+                }
+            }
+
+            if (volumeSlider == null)
+                return;
+
+            GameObject clone = Instantiate(volumeSlider.gameObject, volumeSlider.transform.parent);
+            clone.name = "Sfx Volume SLIDER";
+            RectTransform cloneRect = clone.GetComponent<RectTransform>();
+            RectTransform sourceRect = volumeSlider.GetComponent<RectTransform>();
+            if (cloneRect != null && sourceRect != null)
+                cloneRect.anchoredPosition = sourceRect.anchoredPosition + new Vector2(0f, -45f);
+
+            sfxVolumeSlider = clone.GetComponent<Slider>();
+            if (sfxVolumeSlider == null)
+                return;
+
+            WireSfxVolumeSliderEvents();
+        }
+
+        void WireSfxVolumeSliderEvents()
+        {
+            if (sfxVolumeSlider == null)
+                return;
+
+            sfxVolumeSlider.minValue = 0f;
+            sfxVolumeSlider.maxValue = 1f;
+            sfxVolumeSlider.onValueChanged.RemoveAllListeners();
+            sfxVolumeSlider.onValueChanged.AddListener(_ => SfxVolume());
         }
 
         public void Pause()
@@ -87,10 +160,6 @@ namespace Beavermania.UI.Menus
             Player.StartCoroutine(RunRestartCheckpointAfterPauseUiChain(PauseController, Player));
         }
 
-        /// <summary>
-        /// Opens the checkpoint restart confirmation UI only when the player may lose a life to restart (more than one life remaining).
-        /// Use this instead of raw <c>GameObject.SetActive</c> on the button so later UnityEvent listeners cannot bypass the rule.
-        /// </summary>
         public void TryShowRestartCheckpointConfirmation()
         {
             if (Player == null || Player.Lives <= 1)
@@ -102,10 +171,6 @@ namespace Beavermania.UI.Menus
                 Question.SetActive(true);
         }
 
-        /// <summary>
-        /// Runs the same steps as the confirmation "Yes" button chain: restart coroutine, toggle pause UI, hide confirmation.
-        /// Guarded so invocations when at most one life remains do nothing (no pause toggle, no panel changes).
-        /// </summary>
         public void ExecuteConfirmedRestartCheckpointFlow()
         {
             if (Player == null || Player.Lives <= 1)
@@ -150,6 +215,7 @@ namespace Beavermania.UI.Menus
             pauseController.ResumeIfPaused();
             player.RestartCheckpoint();
         }
+
         public void QuitGame()
         {
             Application.Quit();
@@ -159,13 +225,59 @@ namespace Beavermania.UI.Menus
         {
             SceneRestartController.LoadSceneSingle("Menu");
         }
+
         public void Volume()
         {
-            //AudioListener.volume = volumeSlider.value;
-            if (Player != null && Player.seekMusic == true && Music != null)
+            if (volumeSlider == null)
+                return;
+
+            float value = Mathf.Clamp01(volumeSlider.value);
+            ApplyMasterVolume(value);
+        }
+
+        public void SfxVolume()
+        {
+            if (sfxVolumeSlider == null)
+                return;
+
+            float value = Mathf.Clamp01(sfxVolumeSlider.value);
+            ApplySfxVolume(value, true);
+        }
+
+        static void ApplySfxVolume(float linearVolume, bool save)
+        {
+            if (AudioVolumeSettings.Instance != null)
             {
-                Music.volume = volumeSlider.value;
+                if (save)
+                    AudioVolumeSettings.Instance.ApplySfxVolumeFromMenu(linearVolume);
+                else
+                    AudioVolumeSettings.Instance.ApplySfxVolume(linearVolume, false);
+                return;
             }
+
+            GameObject musicObject = GameObject.FindGameObjectWithTag("Music");
+            if (musicObject == null)
+                return;
+
+            if (save)
+                musicObject.SendMessage("ApplySfxVolumeFromMenu", linearVolume, SendMessageOptions.DontRequireReceiver);
+            else
+                musicObject.SendMessage("ApplySfxVolume", linearVolume, SendMessageOptions.DontRequireReceiver);
+        }
+
+        static void ApplyMasterVolume(float linearVolume)
+        {
+            if (AudioVolumeSettings.Instance != null)
+            {
+                AudioVolumeSettings.Instance.ApplyMasterVolumeFromMenu(linearVolume);
+                return;
+            }
+
+            GameObject musicObject = GameObject.FindGameObjectWithTag("Music");
+            if (musicObject == null)
+                return;
+
+            musicObject.SendMessage("ApplyMasterVolumeFromMenu", linearVolume, SendMessageOptions.DontRequireReceiver);
         }
 
         void LogMissingReference(string referenceName, ref bool logged)
@@ -174,15 +286,12 @@ namespace Beavermania.UI.Menus
                 return;
 
             logged = true;
-    #if DEVELOPMENT_BUILD
+#if DEVELOPMENT_BUILD
             Debug.LogWarning($"{nameof(UIMenu)} could not resolve {referenceName} fallback.", this);
-    #endif
+#endif
         }
     }
 
-    /// <summary>
-    /// Attached at runtime to <see cref="UIMenu.PauseMenu"/> so <see cref="MonoBehaviour.OnEnable"/> runs whenever the pause panel is shown (including Escape via <c>PauseController</c>).
-    /// </summary>
     sealed class UIMenuPauseMenuOpenHook : MonoBehaviour
     {
         UIMenu owner;

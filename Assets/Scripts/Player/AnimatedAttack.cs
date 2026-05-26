@@ -77,6 +77,9 @@ namespace Beavermania.Player.Combat
                 if (enemy.name != null)
                     Debug.Log("Hit " + enemy.name);
 
+                if (TryApplyInterfaceDamage(enemy, Damage))
+                    continue;
+
                 switch (enemy.tag)
                 {
                     case "NPC":
@@ -102,6 +105,15 @@ namespace Beavermania.Player.Combat
                         }
                 }
             }
+        }
+
+        bool TryApplyInterfaceDamage(Collider enemy, int damage)
+        {
+            if (enemy == null)
+                return false;
+
+            IEnemyDamageReceiver damageReceiver = enemy.GetComponentInParent<IEnemyDamageReceiver>();
+            return damageReceiver != null && damageReceiver.ReceiveDamage(damage, EnemyDamageType.Normal, transform);
         }
 
 

@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using Beavermania.Display;
 using Beavermania.NPC;
@@ -86,6 +87,7 @@ namespace Beavermania.Player.Combat
         bool fireBreathLoggedFirstCollision;
 
         ObjectPool<Projectile> pool;
+        Projectile poolSourcePrefab;
         Collider[] colliders;
         readonly List<StoredIgnoreCollision> ownerIgnorePairs = new List<StoredIgnoreCollision>(128);
         float aliveTime;
@@ -133,19 +135,28 @@ namespace Beavermania.Player.Combat
             return Spawn(prefab, position, rotation, null, null);
         }
 
+        static Projectile ResolvePoolTemplate(Projectile prefab)
+        {
+            if (prefab == null)
+                return null;
+
+            return prefab.poolSourcePrefab != null ? prefab.poolSourcePrefab : prefab;
+        }
+
         public static Projectile Spawn(Projectile prefab, Vector3 position, Quaternion rotation, Vector3? worldLaunchDirection, BeaverPlayer owner)
         {
             if (prefab == null)
                 return null;
 
-            if (!Pools.TryGetValue(prefab, out var pool))
+            var template = ResolvePoolTemplate(prefab);
+            if (!Pools.TryGetValue(template, out var pool))
             {
-                pool = CreatePool(prefab);
-                Pools.Add(prefab, pool);
+                pool = CreatePool(template);
+                Pools.Add(template, pool);
             }
 
             if (pool.CountActive >= MaxActiveInstances)
-                return SpawnOverflow(prefab, position, rotation, worldLaunchDirection, owner);
+                return SpawnOverflow(template, position, rotation, worldLaunchDirection, owner);
 
             var projectile = pool.Get();
             projectile.Launch(position, rotation, false, worldLaunchDirection, owner);
@@ -192,6 +203,7 @@ namespace Beavermania.Player.Combat
         static Projectile CreateInstance(Projectile prefab, ObjectPool<Projectile> pool)
         {
             var projectile = Instantiate(prefab);
+            projectile.poolSourcePrefab = prefab;
             projectile.Bind(pool);
             projectile.gameObject.SetActive(false);
             return projectile;
@@ -200,6 +212,7 @@ namespace Beavermania.Player.Combat
         static Projectile SpawnOverflow(Projectile prefab, Vector3 position, Quaternion rotation, Vector3? worldLaunchDirection, BeaverPlayer owner)
         {
             var projectile = Instantiate(prefab);
+            projectile.poolSourcePrefab = prefab;
             projectile.Bind(null);
             projectile.Launch(position, rotation, true, worldLaunchDirection, owner);
             return projectile;
@@ -293,6 +306,7 @@ namespace Beavermania.Player.Combat
 
             overflowInstance = isOverflowInstance;
             released = false;
+            StopAllCoroutines();
             impactResolved = false;
             arrowRbDebugFixedStepsLogged = 0;
             arrowLoggedFirstContact = false;
@@ -681,9 +695,15 @@ namespace Beavermania.Player.Combat
             CompleteProjectile(false);
         }
 
+        void OnDisable()
+        {
+            if (!released)
+                released = true;
+        }
+
         private void Update()
         {
-            if (released)
+            if (released || !isActiveAndEnabled)
                 return;
 
             aliveTime += Time.deltaTime;
@@ -701,7 +721,10 @@ namespace Beavermania.Player.Combat
 
         void FixedUpdate()
         {
-            if (!debugBowProjectile || !UsesArrowLogic || released || Ball == null)
+            if (released || !isActiveAndEnabled)
+                return;
+
+            if (!debugBowProjectile || !UsesArrowLogic || Ball == null)
                 return;
 
             if (arrowRbDebugFixedStepsLogged < 2)
@@ -887,12 +910,45 @@ namespace Beavermania.Player.Combat
             PlayImpactSound(0.35f, 0.9f);
         }
 
+        void FreezePhysicsForRelease()
+        {
+            if (Ball != null)
+            {
+                Ball.velocity = Vector3.zero;
+                Ball.angularVelocity = Vector3.zero;
+                Ball.isKinematic = true;
+            }
+
+            if (colliders != null)
+            {
+                for (var i = 0; i < colliders.Length; i++)
+                {
+                    if (colliders[i] != null)
+                        colliders[i].enabled = false;
+                }
+            }
+        }
+
+        IEnumerator DeferredReleaseCoroutine()
+        {
+            yield return null;
+
+            if (overflowInstance || pool == null)
+            {
+                Destroy(gameObject);
+                yield break;
+            }
+
+            pool.Release(this);
+        }
+
         void CompleteProjectile(bool spawnArrowPickup = false)
         {
             if (released)
                 return;
 
             released = true;
+            FreezePhysicsForRelease();
 
             if (debugBowProjectile && UsesArrowLogic)
                 Debug.Log($"[Projectile] CompleteProjectile spawnPickup={spawnArrowPickup} aliveTime={aliveTime:F3} clock={clock:F3} pos={transform.position}", this);
@@ -900,13 +956,7 @@ namespace Beavermania.Player.Combat
             if (spawnArrowPickup)
                 SpawnArrowPickup(null);
 
-            if (pool != null && !overflowInstance)
-            {
-                pool.Release(this);
-                return;
-            }
-
-            Destroy(gameObject);
+            StartCoroutine(DeferredReleaseCoroutine());
         }
 
         GameObject ResolveArrowPickupPrefab()
@@ -947,7 +997,7 @@ namespace Beavermania.Player.Combat
 
         private void OnCollisionEnter(Collision OBJ)
         {
-            if (released || impactResolved)
+            if (released || !isActiveAndEnabled || impactResolved)
                 return;
 
             if (debugBowProjectile && UsesArrowLogic && !arrowLoggedFirstContact)

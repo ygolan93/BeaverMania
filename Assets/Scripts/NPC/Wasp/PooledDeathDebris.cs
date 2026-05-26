@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Beavermania.Display;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -206,7 +207,7 @@ namespace Beavermania.NPC
         void ApplyDestroySelfForPool(global::Destroy destroy)
         {
             if (destroy.effect != null)
-                Object.Instantiate(destroy.effect, destroy.transform.position, Quaternion.identity);
+                PooledOneShotVfx.Spawn(destroy.effect, destroy.transform.position, Quaternion.identity);
 
             if (destroy.saveAfterKill)
             {

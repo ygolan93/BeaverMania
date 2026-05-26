@@ -15,14 +15,32 @@ namespace Beavermania.Objects
         int logsPerTree = DefaultLogsPerTree;
         public Transform[] Prefab;
         public GameObject TreeDeath;
+        [SerializeField] Material givingTreeBark;
+        [SerializeField] Material givingTreeLeaves;
 
         bool _logsDropped;
+
+        void Awake()
+        {
+            ApplyNatureTreeMaterials();
+        }
+
+        void ApplyNatureTreeMaterials()
+        {
+            var renderer = GetComponent<MeshRenderer>();
+            if (renderer == null || givingTreeBark == null || givingTreeLeaves == null)
+                return;
+
+            renderer.sharedMaterials = new[] { givingTreeBark, givingTreeLeaves };
+        }
 
 #if UNITY_EDITOR
         void OnValidate()
         {
             if (logsPerTree < 1)
                 logsPerTree = 1;
+
+            ApplyNatureTreeMaterials();
         }
 #endif
 

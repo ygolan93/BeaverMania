@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Beavermania.Objects;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -18,12 +19,6 @@ namespace Beavermania.EditorTools
         const string TargetScenePath = "Assets/Scenes/Level 1 - Remastered - Steam.unity";
         const string GivingTreePrefabPath = "Assets/Prefabs/Objects/Interactable/TheGivingTree.prefab";
         const int DefaultHeightmapResolution = 513;
-
-        static readonly string[] NatureTreeShaders =
-        {
-            "Nature/Soft Occlusion Bark",
-            "Nature/Soft Occlusion Leaves",
-        };
 
         public static void ExecuteBatch()
         {
@@ -77,62 +72,91 @@ namespace Beavermania.EditorTools
 
         static void FixGivingTreeMaterials(StringBuilder log)
         {
+            FixGivingTreeMaterialsPublic(log);
+        }
+
+        internal static void FixGivingTreeMaterialsPublic(StringBuilder log)
+        {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(GivingTreePrefabPath);
             if (prefab == null)
             {
-                log.AppendLine("WARNING: Missing prefab at " + GivingTreePrefabPath);
+                log?.AppendLine("WARNING: Missing prefab at " + GivingTreePrefabPath);
                 return;
             }
 
             var tree = prefab.GetComponent<Tree>();
             if (tree != null)
             {
-                log.AppendLine("Removing legacy Tree component from TheGivingTree prefab (mesh uses MeshRenderer).");
+                log?.AppendLine("Removing legacy Tree component from TheGivingTree prefab (mesh uses MeshRenderer).");
                 UnityEngine.Object.DestroyImmediate(tree, true);
             }
 
-            var renderers = prefab.GetComponentsInChildren<MeshRenderer>(true);
-            var changedMaterials = 0;
-            foreach (var renderer in renderers)
+            var bark = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/TheGivingTree/TheGivingTree_Bark.mat");
+            var leaves = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/TheGivingTree/TheGivingTree_Leaves.mat");
+            if (bark == null || leaves == null)
             {
-                var materials = renderer.sharedMaterials;
-                for (var i = 0; i < materials.Length; i++)
-                {
-                    var material = materials[i];
-                    if (material == null || UsesNatureTreeShader(material.shader))
-                        continue;
-
-                    var replacement = CreateNatureTreeMaterial(material, i, log);
-                    if (replacement == null)
-                        continue;
-
-                    materials[i] = replacement;
-                    changedMaterials++;
-                }
-
-                renderer.sharedMaterials = materials;
+                log?.AppendLine("WARNING: Missing TheGivingTree bark/leaves materials under Assets/Materials/TheGivingTree/.");
+                return;
             }
 
-            if (changedMaterials > 0)
+            if (!UsesNatureTreeShader(bark.shader) || !UsesNatureTreeShader(leaves.shader))
             {
-                PrefabUtility.SavePrefabAsset(prefab);
-                log.AppendLine("Updated " + changedMaterials + " material slot(s) on TheGivingTree prefab.");
+                log?.AppendLine("WARNING: TheGivingTree bark/leaves materials are not Nature/Soft Occlusion shaders.");
+            }
+
+            var rootRenderer = prefab.GetComponent<MeshRenderer>();
+            var changedMaterials = 0;
+            if (rootRenderer != null)
+            {
+                var current = rootRenderer.sharedMaterials;
+                if (current == null
+                    || current.Length != 2
+                    || current[0] != bark
+                    || current[1] != leaves)
+                {
+                    rootRenderer.sharedMaterials = new[] { bark, leaves };
+                    changedMaterials = 2;
+                }
             }
             else
             {
-                log.AppendLine("TheGivingTree prefab materials already use Nature/Soft Occlusion shaders.");
+                log?.AppendLine("WARNING: TheGivingTree prefab has no root MeshRenderer.");
+            }
+
+            var logSpawner = prefab.GetComponent<LogSpawner>();
+            if (logSpawner != null)
+            {
+                var so = new SerializedObject(logSpawner);
+                so.FindProperty("givingTreeBark").objectReferenceValue = bark;
+                so.FindProperty("givingTreeLeaves").objectReferenceValue = leaves;
+                so.ApplyModifiedPropertiesWithoutUndo();
+                log?.AppendLine("Wired LogSpawner nature material references on TheGivingTree.");
+            }
+
+            if (changedMaterials > 0 || tree != null)
+            {
+                PrefabUtility.SavePrefabAsset(prefab);
+                log?.AppendLine("Saved TheGivingTree prefab with Nature/Soft Occlusion bark + leaves on root MeshRenderer.");
+            }
+            else
+            {
+                log?.AppendLine("TheGivingTree root MeshRenderer already uses Nature/Soft Occlusion materials.");
             }
         }
 
         static void FixGivingTreeTerrainPrototypes(StringBuilder log)
         {
+            FixGivingTreeTerrainPrototypesPublic(log);
+        }
+
+        internal static int FixGivingTreeTerrainPrototypesPublic(StringBuilder log)
+        {
             var givingTreePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(GivingTreePrefabPath);
             if (givingTreePrefab == null)
-                return;
+                return 0;
 
             var terrainDataPaths = AssetDatabase.FindAssets("t:TerrainData", new[] { "Assets" });
             var removedPrototypes = 0;
-            var clearedInstances = 0;
 
             foreach (var guid in terrainDataPaths)
             {
@@ -147,16 +171,17 @@ namespace Beavermania.EditorTools
                 {
                     var prototype = prototypes[i];
                     if (prototype.prefab == null)
+                    {
+                        indicesToRemove.Add(i);
                         continue;
+                    }
 
                     var isGivingTree = prototype.prefab == givingTreePrefab
                         || string.Equals(prototype.prefab.name, "TheGivingTree", StringComparison.OrdinalIgnoreCase)
                         || prototype.prefab.name.StartsWith("TheGivingTree", StringComparison.OrdinalIgnoreCase);
 
-                    if (!isGivingTree)
-                        continue;
-
-                    indicesToRemove.Add(i);
+                    if (isGivingTree)
+                        indicesToRemove.Add(i);
                 }
 
                 if (indicesToRemove.Count == 0)
@@ -173,16 +198,43 @@ namespace Beavermania.EditorTools
                 }
 
                 terrainData.treePrototypes = keptPrototypes.ToArray();
-                terrainData.treeInstances = Array.Empty<TreeInstance>();
+                terrainData.treeInstances = RemapTreeInstances(terrainData.treeInstances, removeSet);
                 terrainData.RefreshPrototypes();
                 removedPrototypes += indicesToRemove.Count;
-                clearedInstances++;
                 EditorUtility.SetDirty(terrainData);
-                log.AppendLine("Removed TheGivingTree terrain prototype(s) from " + path + " (use scene prefab instances instead).");
+                log?.AppendLine("Removed invalid terrain tree prototype(s) from " + path + " (removed=" + indicesToRemove.Count + ").");
             }
 
             if (removedPrototypes == 0)
-                log.AppendLine("No terrain tree prototypes named TheGivingTree found in TerrainData assets.");
+                log?.AppendLine("No terrain tree prototypes named TheGivingTree found in TerrainData assets.");
+
+            return removedPrototypes;
+        }
+
+        static TreeInstance[] RemapTreeInstances(TreeInstance[] instances, HashSet<int> removedPrototypeIndices)
+        {
+            if (instances == null || instances.Length == 0 || removedPrototypeIndices == null || removedPrototypeIndices.Count == 0)
+                return instances ?? Array.Empty<TreeInstance>();
+
+            var kept = new List<TreeInstance>(instances.Length);
+            for (var i = 0; i < instances.Length; i++)
+            {
+                var instance = instances[i];
+                if (removedPrototypeIndices.Contains(instance.prototypeIndex))
+                    continue;
+
+                var newIndex = instance.prototypeIndex;
+                foreach (var removedIndex in removedPrototypeIndices.OrderBy(i => i))
+                {
+                    if (removedIndex < newIndex)
+                        newIndex--;
+                }
+
+                instance.prototypeIndex = newIndex;
+                kept.Add(instance);
+            }
+
+            return kept.ToArray();
         }
 
         static void FixSceneTerrains(Scene scene, StringBuilder log)
@@ -193,7 +245,7 @@ namespace Beavermania.EditorTools
 
             if (terrains.Count == 0)
             {
-                log.AppendLine("WARNING: No terrains found in " + TargetScenePath);
+                log?.AppendLine("WARNING: No terrains found in " + TargetScenePath);
                 return;
             }
 
@@ -252,7 +304,7 @@ namespace Beavermania.EditorTools
 
                 for (var i = 1; i < list.Count; i++)
                 {
-                    log.AppendLine("Removing duplicate terrain '" + list[i].name + "' at " + list[i].transform.position
+                    log?.AppendLine("Removing duplicate terrain '" + list[i].name + "' at " + list[i].transform.position
                         + " (kept '" + list[0].name + "').");
                     UnityEngine.Object.DestroyImmediate(list[i].gameObject);
                 }
@@ -281,58 +333,6 @@ namespace Beavermania.EditorTools
             var name = shader.name;
             return name.StartsWith("Nature/Soft Occlusion", StringComparison.Ordinal)
                 || name.StartsWith("Nature/SpeedTree", StringComparison.Ordinal);
-        }
-
-        static Material CreateNatureTreeMaterial(Material source, int materialIndex, StringBuilder log)
-        {
-            var shaderName = materialIndex == 0
-                ? NatureTreeShaders[0]
-                : NatureTreeShaders[Mathf.Min(1, NatureTreeShaders.Length - 1)];
-
-            var shader = Shader.Find(shaderName);
-            if (shader == null)
-            {
-                log.AppendLine("WARNING: Shader not found: " + shaderName);
-                return null;
-            }
-
-            var targetPath = "Assets/Materials/TheGivingTree/"
-                + source.name.Replace("/", "_") + "_" + shaderName.Replace("/", "_").Replace(" ", "_") + ".mat";
-
-            var existing = AssetDatabase.LoadAssetAtPath<Material>(targetPath);
-            if (existing != null && existing.shader == shader)
-                return existing;
-
-            var material = existing != null ? existing : new Material(shader);
-            if (source.HasProperty("_MainTex") && material.HasProperty("_MainTex"))
-                material.SetTexture("_MainTex", source.GetTexture("_MainTex"));
-            if (source.HasProperty("_Color") && material.HasProperty("_Color"))
-                material.SetColor("_Color", source.GetColor("_Color"));
-
-            if (existing == null)
-            {
-                EnsureFolder("Assets/Materials/TheGivingTree");
-                AssetDatabase.CreateAsset(material, targetPath);
-                log.AppendLine("Created material: " + targetPath);
-            }
-            else
-            {
-                EditorUtility.SetDirty(material);
-            }
-
-            return material;
-        }
-
-        static void EnsureFolder(string path)
-        {
-            if (AssetDatabase.IsValidFolder(path))
-                return;
-
-            var parent = System.IO.Path.GetDirectoryName(path)?.Replace('\\', '/');
-            var name = System.IO.Path.GetFileName(path);
-            if (!string.IsNullOrEmpty(parent) && !AssetDatabase.IsValidFolder(parent))
-                EnsureFolder(parent);
-            AssetDatabase.CreateFolder(parent, name);
         }
     }
 }

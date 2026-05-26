@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using Beavermania.Audio;
 using Beavermania.NPC;
 using UnityEngine;
 using UnityEngine.Pool;
@@ -10,6 +12,9 @@ namespace Beavermania.Display
     {
         const int DefaultPoolCapacity = 8;
         const int MaxActiveInstances = 64;
+        const string BalloonVfxChannel = "vfx.balloon";
+        const float BalloonVfxMinInterval = 0.18f;
+        const float DefaultVfxMinInterval = 0.08f;
 
         static readonly Dictionary<GameObject, ObjectPool<PooledOneShotVfx>> Pools = new Dictionary<GameObject, ObjectPool<PooledOneShotVfx>>();
 
@@ -111,7 +116,10 @@ namespace Beavermania.Display
             var lifetime = Mathf.Max(GetLifetime(particleSystems), GetLifetime(audioSources));
 
             Replay(particleSystems);
-            Replay(audioSources);
+            var playOnAwake = new bool[audioSources.Length];
+            for (var i = 0; i < audioSources.Length; i++)
+                playOnAwake[i] = audioSources[i] != null && audioSources[i].playOnAwake;
+            ReplayAudioOneShot(audioSources, playOnAwake);
             Destroy(instance, lifetime);
             return instance;
 #else
@@ -179,7 +187,7 @@ namespace Beavermania.Display
 
             Replay(particleSystems);
             ResetAudioSources();
-            Replay(audioSources, defaultPlayOnAwake);
+            ReplayAudioOneShot(audioSources, defaultPlayOnAwake);
 
             returnRoutine = StartCoroutine(ReturnAfterLifetime(cachedLifetime));
         }
@@ -289,30 +297,52 @@ namespace Beavermania.Display
             }
         }
 
-        static void Replay(AudioSource[] sources)
+        static void ReplayAudioOneShot(AudioSource[] sources, bool[] playOnAwake)
         {
+            AudioSource primary = null;
             for (var i = 0; i < sources.Length; i++)
             {
                 if (sources[i] == null)
                     continue;
 
                 sources[i].Stop();
-                if (sources[i].playOnAwake && sources[i].isActiveAndEnabled && sources[i].clip != null)
-                    sources[i].Play();
+                if (!playOnAwake[i] || !sources[i].isActiveAndEnabled || sources[i].clip == null)
+                    continue;
+
+                if (primary == null)
+                    primary = sources[i];
+                else
+                    sources[i].playOnAwake = false;
             }
+
+            if (primary == null)
+                return;
+
+            var clip = primary.clip;
+            GameplayAudio.TryPlayOneShot(
+                primary,
+                clip,
+                ResolveVfxAudioChannel(clip),
+                ResolveVfxMinInterval(clip),
+                primary.volume,
+                primary.pitch);
         }
 
-        static void Replay(AudioSource[] sources, bool[] playOnAwake)
+        static string ResolveVfxAudioChannel(AudioClip clip)
         {
-            for (var i = 0; i < sources.Length; i++)
-            {
-                if (sources[i] == null)
-                    continue;
+            if (clip == null)
+                return string.Empty;
 
-                sources[i].Stop();
-                if (playOnAwake[i] && sources[i].isActiveAndEnabled && sources[i].clip != null)
-                    sources[i].Play();
-            }
+            return string.Equals(clip.name, "Balloon", StringComparison.Ordinal)
+                ? BalloonVfxChannel
+                : "vfx." + clip.name;
+        }
+
+        static float ResolveVfxMinInterval(AudioClip clip)
+        {
+            return clip != null && string.Equals(clip.name, "Balloon", StringComparison.Ordinal)
+                ? BalloonVfxMinInterval
+                : DefaultVfxMinInterval;
         }
 
         static float GetLifetime(ParticleSystem[] systems)

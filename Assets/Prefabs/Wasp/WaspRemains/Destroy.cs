@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+using Beavermania.Display;
 using UnityEngine;
 
 public class Destroy : MonoBehaviour
@@ -25,10 +24,8 @@ public class Destroy : MonoBehaviour
         if (destroySelfSuppressed)
             return;
 
-        if (effect!=null)
-        {
-            Instantiate(effect, gameObject.transform.position, Quaternion.identity);
-        }
+        if (effect != null)
+            PooledOneShotVfx.Spawn(effect, transform.position, Quaternion.identity);
 
         if (saveAfterKill == false)
         {

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Beavermania.Audio
 {
@@ -9,6 +10,17 @@ namespace Beavermania.Audio
     public static class GameplayAudio
     {
         static readonly Dictionary<string, float> LastPlayTimeByChannel = new Dictionary<string, float>();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void SubscribeSceneClear()
+        {
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            ClearAllThrottles();
+        }
 
         public static bool TryPlayOneShot(
             AudioSource source,
@@ -37,6 +49,11 @@ namespace Beavermania.Audio
                 return;
 
             LastPlayTimeByChannel.Remove(channel);
+        }
+
+        public static void ClearAllThrottles()
+        {
+            LastPlayTimeByChannel.Clear();
         }
     }
 }

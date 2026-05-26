@@ -15,6 +15,12 @@ public class Destroy : MonoBehaviour
         destroySelfSuppressed = suppressed;
     }
 
+    public void PrepareForPool()
+    {
+        destroySelfSuppressed = true;
+        enabled = false;
+    }
+
     // Start is called before the first frame update
     void Start()
     {

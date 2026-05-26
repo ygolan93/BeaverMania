@@ -154,8 +154,7 @@ namespace Beavermania.NPC
                 if (selfDestroyScripts[i] == null)
                     continue;
 
-                selfDestroyScripts[i].SetDestroySelfSuppressed(true);
-                selfDestroyScripts[i].enabled = false;
+                selfDestroyScripts[i].PrepareForPool();
             }
         }
 

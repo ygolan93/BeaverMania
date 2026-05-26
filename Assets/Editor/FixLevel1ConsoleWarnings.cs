@@ -62,7 +62,7 @@ namespace Beavermania.EditorTools
             log.AppendLine("[FixLevel1ConsoleWarnings] Starting…");
 
             FixGivingTreeMaterials(log);
-            FixGivingTreeTerrainPrototypes(log);
+            GivingTreeTerrainAutoFix.RemoveGivingTreeTerrainPrototypes(log);
 
             var scene = EditorSceneManager.OpenScene(TargetScenePath, OpenSceneMode.Single);
             FixSceneTerrains(scene, log);
@@ -122,67 +122,6 @@ namespace Beavermania.EditorTools
             {
                 log.AppendLine("TheGivingTree prefab materials already use Nature/Soft Occlusion shaders.");
             }
-        }
-
-        static void FixGivingTreeTerrainPrototypes(StringBuilder log)
-        {
-            var givingTreePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(GivingTreePrefabPath);
-            if (givingTreePrefab == null)
-                return;
-
-            var terrainDataPaths = AssetDatabase.FindAssets("t:TerrainData", new[] { "Assets" });
-            var removedPrototypes = 0;
-            var clearedInstances = 0;
-
-            foreach (var guid in terrainDataPaths)
-            {
-                var path = AssetDatabase.GUIDToAssetPath(guid);
-                var terrainData = AssetDatabase.LoadAssetAtPath<TerrainData>(path);
-                if (terrainData == null || terrainData.treePrototypes == null || terrainData.treePrototypes.Length == 0)
-                    continue;
-
-                var prototypes = terrainData.treePrototypes.ToList();
-                var indicesToRemove = new List<int>();
-                for (var i = 0; i < prototypes.Count; i++)
-                {
-                    var prototype = prototypes[i];
-                    if (prototype.prefab == null)
-                        continue;
-
-                    var isGivingTree = prototype.prefab == givingTreePrefab
-                        || string.Equals(prototype.prefab.name, "TheGivingTree", StringComparison.OrdinalIgnoreCase)
-                        || prototype.prefab.name.StartsWith("TheGivingTree", StringComparison.OrdinalIgnoreCase);
-
-                    if (!isGivingTree)
-                        continue;
-
-                    indicesToRemove.Add(i);
-                }
-
-                if (indicesToRemove.Count == 0)
-                    continue;
-
-                var removeSet = new HashSet<int>(indicesToRemove);
-                var keptPrototypes = new List<TreePrototype>(prototypes.Count - indicesToRemove.Count);
-                for (var i = 0; i < prototypes.Count; i++)
-                {
-                    if (removeSet.Contains(i))
-                        continue;
-
-                    keptPrototypes.Add(prototypes[i]);
-                }
-
-                terrainData.treePrototypes = keptPrototypes.ToArray();
-                terrainData.treeInstances = Array.Empty<TreeInstance>();
-                terrainData.RefreshPrototypes();
-                removedPrototypes += indicesToRemove.Count;
-                clearedInstances++;
-                EditorUtility.SetDirty(terrainData);
-                log.AppendLine("Removed TheGivingTree terrain prototype(s) from " + path + " (use scene prefab instances instead).");
-            }
-
-            if (removedPrototypes == 0)
-                log.AppendLine("No terrain tree prototypes named TheGivingTree found in TerrainData assets.");
         }
 
         static void FixSceneTerrains(Scene scene, StringBuilder log)

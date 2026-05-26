@@ -141,6 +141,26 @@ namespace Beavermania.Display
                 effectObjects[i].enabled = false;
                 Destroy(effectObjects[i]);
             }
+
+            var monoBehaviours = instance.GetComponentsInChildren<MonoBehaviour>(true);
+            for (var i = 0; i < monoBehaviours.Length; i++)
+            {
+                var behaviour = monoBehaviours[i];
+                if (behaviour == null || behaviour is EffectObject || behaviour is PooledOneShotVfx)
+                    continue;
+
+                if (behaviour.GetType().Name != "CFX_AutoDestructShuriken")
+                    continue;
+
+                behaviour.enabled = false;
+                Destroy(behaviour);
+            }
+
+            var destroyScripts = instance.GetComponentsInChildren<global::Destroy>(true);
+            for (var i = 0; i < destroyScripts.Length; i++)
+            {
+                destroyScripts[i].PrepareForPool();
+            }
         }
 
         void Bind(ObjectPool<PooledOneShotVfx> sourcePool)

@@ -1447,7 +1447,7 @@ namespace Beavermania.Player
         {
             return ArmorEquipped
                 && PlayerInputReader.IsPrimaryHeld()
-                && CurrentStamina > 0f;
+                && HasStaminaForSwordShieldFixedStep();
         }
 
         float GetSwordShieldStaminaCostPerFixedStep()
@@ -1458,6 +1458,23 @@ namespace Beavermania.Player
         bool HasStaminaForSwordShieldFixedStep()
         {
             return CurrentStamina >= GetSwordShieldStaminaCostPerFixedStep();
+        }
+
+        void EndSwordShieldAttackDueToStamina()
+        {
+            _swordShieldCycleActive = false;
+            StopSwordShieldChainRoutine();
+
+            if (CurrentStamina < GetSwordShieldStaminaCostPerFixedStep())
+                CurrentStamina = 0f;
+
+            if (HealthBar != null)
+                HealthBar.SetStamina(CurrentStamina);
+
+            if (Player != null)
+                Player.useGravity = true;
+
+            ResetSwordAttackPresentation();
         }
 
         void BeginSwordShieldAttackCycle()
@@ -1533,6 +1550,8 @@ namespace Beavermania.Player
             _swordShieldAttackHeld = false;
             _swordShieldCycleActive = false;
             StopSwordShieldChainRoutine();
+            if (Player != null)
+                Player.useGravity = true;
             ResetSwordAttackPresentation();
         }
 
@@ -1577,6 +1596,8 @@ namespace Beavermania.Player
             _swordShieldAttackHeld = false;
             _swordShieldCycleActive = false;
             StopSwordShieldChainRoutine();
+            if (Player != null)
+                Player.useGravity = true;
             ResetSwordAttackPresentation();
         }
 
@@ -1594,12 +1615,7 @@ namespace Beavermania.Player
 
             if (!HasStaminaForSwordShieldFixedStep())
             {
-                _swordShieldCycleActive = false;
-                StopSwordShieldChainRoutine();
-                SetSlashAnimator(false);
-                if (Otter != null)
-                    Otter.SetBool("fight", false);
-                SyncSwordShieldAimMark();
+                EndSwordShieldAttackDueToStamina();
                 return;
             }
 
@@ -1612,7 +1628,16 @@ namespace Beavermania.Player
                 return;
 
             CurrentStamina -= GetSwordShieldStaminaCostPerFixedStep();
-            HealthBar.SetStamina(CurrentStamina);
+            if (CurrentStamina < 0f)
+                CurrentStamina = 0f;
+            if (HealthBar != null)
+                HealthBar.SetStamina(CurrentStamina);
+
+            if (!HasStaminaForSwordShieldFixedStep())
+            {
+                EndSwordShieldAttackDueToStamina();
+                return;
+            }
 
             if (Otter == null)
                 return;
@@ -2541,7 +2566,9 @@ namespace Beavermania.Player
 
             if (!inputLocked /*&& ParryShield.active == false*/)
             {
-                bool primaryMeleeHeld = PlayerInputReader.IsPrimaryHeld() && CurrentStamina > 0;
+                bool primaryMeleeHeld = ArmorEquipped
+                    ? CanHoldSwordShieldAttack()
+                    : PlayerInputReader.IsPrimaryHeld() && CurrentStamina > 0f;
                 _primaryMeleeHeldLastFixed = primaryMeleeHeld;
 
                 //Melee action

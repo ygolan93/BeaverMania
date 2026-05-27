@@ -46,6 +46,7 @@ namespace Beavermania.Player
         int JumpLimit;
         int GobletJumpLimit;
         int JumpNumPreserve;
+        bool _restoreJumpLimitAfterGobletWhenGrounded;
         public Transform Root;
         public Transform Face;
         public Transform Spine;
@@ -1595,6 +1596,7 @@ namespace Beavermania.Player
         {
             _swordShieldAttackHeld = false;
             _swordShieldCycleActive = false;
+            _restoreJumpLimitAfterGobletWhenGrounded = false;
             StopSwordShieldChainRoutine();
             if (Player != null)
                 Player.useGravity = true;
@@ -1959,6 +1961,7 @@ namespace Beavermania.Player
         {
             gobletOBJ.SetActive(true);
             GobletPicked = true;
+            _restoreJumpLimitAfterGobletWhenGrounded = false;
             AnimSpeed = 3;
             Walk = 7;
             Run = 18;
@@ -1975,13 +1978,30 @@ namespace Beavermania.Player
             AnimSpeed = 1;
             Walk = InsertWalk;
             Run = InsertRun;
-            JumpLimit = GobletJumpLimit-2;
+            if (grounded)
+            {
+                JumpLimit = GobletJumpLimit - 2;
+                _restoreJumpLimitAfterGobletWhenGrounded = false;
+            }
+            else
+                _restoreJumpLimitAfterGobletWhenGrounded = true;
             //BeatGrounded = 5 * BeatGrounded;
             AirBeat = 5 * AirBeat;
             ElectricEffect.SetActive(false);
             StopElectricEffectSound();
             GobletClock = 10F;
 
+            if (!grounded && Otter != null)
+                Otter.SetBool("midair", true);
+        }
+
+        void ApplyDeferredGobletJumpLimitIfGrounded()
+        {
+            if (!_restoreJumpLimitAfterGobletWhenGrounded || !grounded)
+                return;
+
+            JumpLimit = GobletJumpLimit - 2;
+            _restoreJumpLimitAfterGobletWhenGrounded = false;
         }
         void PlayElectricEffectSoundOnce()
         {
@@ -3039,22 +3059,21 @@ namespace Beavermania.Player
                 //+ Player's slide and full-break conditioning on ground
                 if (grounded == false)
                 {
-                    if (JumpNum < JumpLimit)
+                    if (_restoreJumpLimitAfterGobletWhenGrounded || JumpNum < JumpLimit)
                     {
                         Otter.SetBool("midair", true);
                     }
-                    if (JumpNum == JumpLimit)
+                    else if (JumpNum == JumpLimit)
                     {
                         Otter.SetBool("midair", false);
                         FallClock -= Time.deltaTime;
                         if (FallClock <= 0)
-                        {
                             Otter.SetBool("midair", true);
-                        }
                     }
                 }
                 if (grounded == true)
                 {
+                    ApplyDeferredGobletJumpLimitIfGrounded();
                     JumpNum = JumpLimit;
                     Otter.SetBool("midair", false);
                     levitation = 10;

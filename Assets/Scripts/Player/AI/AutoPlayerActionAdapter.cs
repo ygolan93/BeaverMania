@@ -17,7 +17,6 @@ namespace Beavermania.Player.AI
         bool _primaryAttackRequested;
         bool _defendRequested;
         bool _chopRequested;
-        bool _pickUpMode;
         bool _drawLogMode;
         bool _secondaryCombatHeld;
         bool _sprintEnabled;
@@ -58,7 +57,6 @@ namespace Beavermania.Player.AI
             _primaryAttackRequested = false;
             _defendRequested = false;
             _chopRequested = false;
-            _pickUpMode = false;
             _drawLogMode = false;
             _secondaryCombatHeld = false;
             _sprintEnabled = false;
@@ -101,13 +99,14 @@ namespace Beavermania.Player.AI
 
         public void RequestDefend() => _defendRequested = true;
 
+        public void RequestBowAimFire() => _secondaryCombatHeld = true;
+
         public void RequestInteract() => PlayerInputOverride.PulseWorldInteract();
 
         public void RequestChop() => _chopRequested = true;
 
         public void RequestPickUp()
         {
-            _pickUpMode = true;
             _primaryAttackRequested = false;
             _chopRequested = false;
             _drawLogMode = false;

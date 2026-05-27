@@ -181,7 +181,6 @@ namespace Beavermania.Data.Player
             float engageSum = 0f;
             int engageCount = 0;
             float sprintSum = 0f;
-            int sprintDenom = 0;
             float obstacleDistSum = 0f;
             int obstacleCount = 0;
             int jumpAttempts = 0;

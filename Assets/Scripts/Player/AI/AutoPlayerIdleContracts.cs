@@ -29,3 +29,4 @@ namespace Beavermania.Player.AI
         public Vector3 SuggestedAvoidDirection;
         public Vector3 NearestWalkablePoint;
     }
+}

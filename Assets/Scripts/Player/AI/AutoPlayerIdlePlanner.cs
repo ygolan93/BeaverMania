@@ -15,7 +15,6 @@ namespace Beavermania.Player.AI
         [SerializeField] float buildBridgeWeight = 4f;
         [SerializeField] float visitTraderWeight = 2.5f;
         [SerializeField] float switchArsenalWeight = 1.8f;
-        [SerializeField] float shopVisitCooldown = 25f;
 
         IdlePlannerResult _lastResult;
 

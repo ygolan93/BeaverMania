@@ -456,12 +456,12 @@ namespace Beavermania.Player.AI
                 case AutoPlayerState.Combat:
                 case AutoPlayerState.AvoidDanger:
                     combatRanged?.ResetRangedState();
+                    if (_currentTarget != null)
+                        SetNavigationDestination(_currentTarget.position);
                     break;
                 case AutoPlayerState.BuildBridge:
                 case AutoPlayerState.CollectLog:
                 case AutoPlayerState.ChopTree:
-                case AutoPlayerState.Combat:
-                case AutoPlayerState.AvoidDanger:
                 case AutoPlayerState.InteractWithNPC:
                 case AutoPlayerState.ShopAtTrader:
                     if (_currentTarget != null)
@@ -591,13 +591,17 @@ namespace Beavermania.Player.AI
                 if (!perception.TryGetGroundPoint(candidate, exploreRadius * 0.25f, out Vector3 ground))
                     continue;
 
-                if (navigation != null && !navigation.TryValidateExplorePoint(ground, memory, out Vector3 validated))
+                Vector3 destination = ground;
+                if (navigation != null)
                 {
-                    memory?.BlacklistWaypoint(ground, 8f);
-                    continue;
-                }
+                    if (!navigation.TryValidateExplorePoint(ground, memory, out Vector3 validated))
+                    {
+                        memory?.BlacklistWaypoint(ground, 8f);
+                        continue;
+                    }
 
-                Vector3 destination = navigation != null ? validated : ground;
+                    destination = validated;
+                }
                 memory?.RememberExplorePoint(destination);
                 _exploreDestination = destination;
                 SetNavigationDestination(destination);

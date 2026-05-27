@@ -3338,6 +3338,18 @@ Transform:
   m_Father: {fileID: 834004125}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!134 &340999194
+PhysicMaterial:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  dynamicFriction: 0.6
+  staticFriction: 0.6
+  bounciness: 0
+  frictionCombine: 0
+  bounceCombine: 0
 --- !u!1001 &341632737
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6294,7 +6306,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 731324779}
-  m_LocalRotation: {x: 0.031455103, y: 0.36471164, z: -0.0123288045, w: 0.93050736}
+  m_LocalRotation: {x: 0.031455103, y: 0.36471164, z: -0.012328803, w: 0.93050736}
   m_LocalPosition: {x: 113.831436, y: 79.630005, z: 215.38095}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -6517,6 +6529,10 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4580562239172740852, guid: 5d8d44b62c5985c459198b5da41071a1, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 856327806}
     - target: {fileID: 4580562239172740855, guid: 5d8d44b62c5985c459198b5da41071a1, type: 3}
       propertyPath: m_RootOrder
       value: 72
@@ -6683,11 +6699,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5012679268527766832, guid: 5d8d44b62c5985c459198b5da41071a1, type: 3}
       propertyPath: m_FollowOffset.y
-      value: 3.035271
+      value: 1.429477
       objectReference: {fileID: 0}
     - target: {fileID: 5012679268527766832, guid: 5d8d44b62c5985c459198b5da41071a1, type: 3}
       propertyPath: m_FollowOffset.z
-      value: -5.697327
+      value: -5.990055
       objectReference: {fileID: 0}
     - target: {fileID: 5012679268623139202, guid: 5d8d44b62c5985c459198b5da41071a1, type: 3}
       propertyPath: m_Lens.FieldOfView
@@ -6719,15 +6735,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5012679268623139213, guid: 5d8d44b62c5985c459198b5da41071a1, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0.007486917
+      value: -0.007486919
       objectReference: {fileID: 0}
     - target: {fileID: 5012679268623139213, guid: 5d8d44b62c5985c459198b5da41071a1, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.0020961761
+      value: 0.002096206
       objectReference: {fileID: 0}
     - target: {fileID: 5012679268623139213, guid: 5d8d44b62c5985c459198b5da41071a1, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.000015694415
+      value: 0.00001569488
       objectReference: {fileID: 0}
     - target: {fileID: 5012679268832731778, guid: 5d8d44b62c5985c459198b5da41071a1, type: 3}
       propertyPath: m_Lens.FieldOfView
@@ -6799,19 +6815,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5012679269713821992, guid: 5d8d44b62c5985c459198b5da41071a1, type: 3}
       propertyPath: m_FollowOffset.y
-      value: 3.035271
+      value: 1.429477
       objectReference: {fileID: 0}
     - target: {fileID: 5012679269713821992, guid: 5d8d44b62c5985c459198b5da41071a1, type: 3}
       propertyPath: m_FollowOffset.z
-      value: -5.697327
+      value: -5.990055
       objectReference: {fileID: 0}
     - target: {fileID: 5012679269788669586, guid: 5d8d44b62c5985c459198b5da41071a1, type: 3}
       propertyPath: m_FollowOffset.y
-      value: 3.035271
+      value: 1.429477
       objectReference: {fileID: 0}
     - target: {fileID: 5012679269788669586, guid: 5d8d44b62c5985c459198b5da41071a1, type: 3}
       propertyPath: m_FollowOffset.z
-      value: -5.697327
+      value: -5.990055
       objectReference: {fileID: 0}
     - target: {fileID: 5012679270299045682, guid: 5d8d44b62c5985c459198b5da41071a1, type: 3}
       propertyPath: m_Lens.FieldOfView
@@ -6869,6 +6885,10 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: -1.5471169
       objectReference: {fileID: 0}
+    - target: {fileID: 6562972538239049110, guid: 5d8d44b62c5985c459198b5da41071a1, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 340999194}
     - target: {fileID: 6644894321090993483, guid: 5d8d44b62c5985c459198b5da41071a1, type: 3}
       propertyPath: m_FollowOffset.y
       value: 3.21
@@ -7704,6 +7724,18 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8440594398049331139, guid: 6566e9a37c11d844ba0dd05e39e15e3c, type: 3}
   m_PrefabInstance: {fileID: 853646129}
   m_PrefabAsset: {fileID: 0}
+--- !u!134 &856327806
+PhysicMaterial:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  dynamicFriction: 0.6
+  staticFriction: 0.6
+  bounciness: 0
+  frictionCombine: 0
+  bounceCombine: 0
 --- !u!1001 &862538282
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -11604,6 +11636,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 973023a5853556b44b49f7bb95d38cd3, type: 3}
+--- !u!1 &1427112122 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6569126030801917456, guid: e33166206a9c19842a1fdd668271b2f5, type: 3}
+  m_PrefabInstance: {fileID: 110706351}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1429071591
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -15345,6 +15382,18 @@ AudioSource:
   m_CorrespondingSourceObject: {fileID: 3664632416280873462, guid: e33166206a9c19842a1fdd668271b2f5, type: 3}
   m_PrefabInstance: {fileID: 110706351}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1857927385
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1427112122}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99bd4973b27a4ed18af19e86fc68c6ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1859735596
 PrefabInstance:
   m_ObjectHideFlags: 0

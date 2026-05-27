@@ -186,7 +186,7 @@ For repo-local workflow detail, read:
 ### Compilation check (primary verification)
 
 ```bash
-cd /workspace/.ci && dotnet build BeaverMania.CI.csproj
+cd /workspace/BeaverMania/.ci && dotnet build BeaverMania.CI.csproj
 ```
 
 This validates C# syntax, type references, and namespaces across all scripts in `Assets/Scripts/` and `Assets/Prefabs/`. It does **not** verify Inspector assignments, runtime gameplay, or serialized references.

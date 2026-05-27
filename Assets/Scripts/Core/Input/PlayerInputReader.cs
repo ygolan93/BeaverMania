@@ -41,9 +41,10 @@ namespace Beavermania.Core.Input
             return UnityEngine.Input.GetKeyDown(KeyCode.Mouse1);
         }
 
+        /// <summary>Gameplay pause binding (backquote / tilde).</summary>
         public static bool WasPausePressed()
         {
-            return UnityEngine.Input.GetKeyDown(KeyCode.Escape);
+            return UnityEngine.Input.GetKeyDown(KeyCode.BackQuote);
         }
 
         public static bool IsSprintHeld()

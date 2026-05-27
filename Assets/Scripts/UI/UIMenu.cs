@@ -23,23 +23,22 @@ namespace Beavermania.UI.Menus
         PauseController pauseController;
         bool loggedMissingPlayer;
         bool loggedMissingMusic;
+        bool loggedMissingPauseMenu;
 
-        PauseController PauseController
+        void Awake()
         {
-            get
-            {
-                if (pauseController == null)
-                    pauseController = GetComponent<PauseController>();
-
-                if (pauseController == null)
-                    pauseController = gameObject.AddComponent<PauseController>();
-
-                return pauseController;
-            }
+            pauseController = GetComponent<PauseController>();
+            if (pauseController == null)
+                pauseController = gameObject.AddComponent<PauseController>();
         }
 
-        private void Start()
+        PauseController PauseController => pauseController;
+
+        void Start()
         {
+            if (PauseMenu == null)
+                LogMissingReferenceError(nameof(PauseMenu), ref loggedMissingPauseMenu);
+
             if (Player == null)
             {
                 GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
@@ -47,7 +46,7 @@ namespace Beavermania.UI.Menus
                     Player = playerObject.GetComponent<BeaverPlayer>();
 
                 if (Player == null)
-                    LogMissingReference(nameof(Player), ref loggedMissingPlayer);
+                    LogMissingReferenceError(nameof(Player), ref loggedMissingPlayer);
             }
 
             if (Player != null && Player.seekMusic == true && Music == null)
@@ -280,6 +279,14 @@ namespace Beavermania.UI.Menus
             musicObject.SendMessage("ApplyMasterVolumeFromMenu", linearVolume, SendMessageOptions.DontRequireReceiver);
         }
 
+        void OnDisable()
+        {
+            if (pauseController == null)
+                return;
+
+            pauseController.ResumeIfPaused();
+        }
+
         void LogMissingReference(string referenceName, ref bool logged)
         {
             if (logged)
@@ -289,6 +296,15 @@ namespace Beavermania.UI.Menus
 #if DEVELOPMENT_BUILD
             Debug.LogWarning($"{nameof(UIMenu)} could not resolve {referenceName} fallback.", this);
 #endif
+        }
+
+        void LogMissingReferenceError(string referenceName, ref bool logged)
+        {
+            if (logged)
+                return;
+
+            logged = true;
+            Debug.LogError($"{nameof(UIMenu)} is missing required reference '{referenceName}'. Wire it on PlayerCanvas in the Inspector.", this);
         }
     }
 

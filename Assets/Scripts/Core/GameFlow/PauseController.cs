@@ -7,17 +7,26 @@ namespace Beavermania.Core.GameFlow
 {
     public class PauseController : MonoBehaviour
     {
-        public bool ActivePause = false;
+        public bool ActivePause { get; private set; }
 
         GameObject pauseMenu;
         GameObject question;
         BeaverPlayer player;
+        bool isBound;
+        bool loggedMissingPauseMenu;
+        bool loggedMissingPlayer;
 
         public void Bind(GameObject pauseMenu, GameObject question, BeaverPlayer player)
         {
             this.pauseMenu = pauseMenu;
             this.question = question;
             this.player = player;
+            isBound = pauseMenu != null && player != null;
+
+            if (pauseMenu == null)
+                LogMissingReference(nameof(pauseMenu), ref loggedMissingPauseMenu);
+            if (player == null)
+                LogMissingReference(nameof(player), ref loggedMissingPlayer);
 
             ActivePause = false;
             ApplyPauseState();
@@ -25,13 +34,18 @@ namespace Beavermania.Core.GameFlow
 
         public void Pause()
         {
+            if (!isBound)
+                return;
+
             SetPaused(true);
         }
 
         public void ResumeIfPaused()
         {
-            if (ActivePause)
-                SetPaused(false);
+            if (!ActivePause)
+                return;
+
+            SetPaused(false);
         }
 
         public void HideQuestion()
@@ -41,11 +55,17 @@ namespace Beavermania.Core.GameFlow
 
         public void ChangeBolean()
         {
+            if (!isBound)
+                return;
+
             SetPaused(!ActivePause);
         }
 
         void Update()
         {
+            if (!isBound)
+                return;
+
             if (PlayerInputReader.WasPausePressed())
                 ChangeBolean();
         }
@@ -58,15 +78,15 @@ namespace Beavermania.Core.GameFlow
 
         void ApplyPauseState()
         {
+            if (!isBound)
+                return;
+
             if (ActivePause)
             {
                 SetMenuVisible(true);
                 GameTimeScaleGate.SetFreeze(GameTimeScaleGate.FreezeToken.PauseMenu, true);
                 PauseBackgroundMusic();
-
-                if (player != null)
-                    player.ShowCursor();
-
+                player.ShowCursor();
                 return;
             }
 
@@ -75,7 +95,7 @@ namespace Beavermania.Core.GameFlow
             SetQuestionVisible(false);
             ResumeBackgroundMusic();
 
-            if (player != null && !player.IsGameplayInputLocked())
+            if (!player.IsGameplayInputLocked())
                 player.HideCursor();
         }
 
@@ -123,7 +143,22 @@ namespace Beavermania.Core.GameFlow
                 return;
 
             ActivePause = false;
+            SetMenuVisible(false);
+            SetQuestionVisible(false);
             GameTimeScaleGate.SetFreeze(GameTimeScaleGate.FreezeToken.PauseMenu, false);
+            ResumeBackgroundMusic();
+
+            if (player != null && !player.IsGameplayInputLocked())
+                player.HideCursor();
+        }
+
+        void LogMissingReference(string referenceName, ref bool logged)
+        {
+            if (logged)
+                return;
+
+            logged = true;
+            Debug.LogError($"{nameof(PauseController)} requires a valid {referenceName} reference. Assign it on UIMenu (PlayerCanvas).", this);
         }
     }
 }

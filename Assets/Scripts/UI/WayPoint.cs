@@ -152,6 +152,12 @@ namespace Beavermania.UI.Objectives
         {
             if (Mark != null)
                 return;
+
+            Mark = FindWaypointMarkImage();
+        }
+
+        static Image FindWaypointMarkImage()
+        {
             foreach (var graphic in FindObjectsOfType<Image>(true))
             {
                 if (graphic == null)
@@ -161,10 +167,11 @@ namespace Beavermania.UI.Objectives
                     || string.Equals(n, "WaypointMark", StringComparison.OrdinalIgnoreCase)
                     || string.Equals(n, "Mark", StringComparison.OrdinalIgnoreCase))
                 {
-                    Mark = graphic;
-                    return;
+                    return graphic;
                 }
             }
+
+            return null;
         }
     }
 }

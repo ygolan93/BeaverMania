@@ -24,6 +24,11 @@ namespace Beavermania.Player.AI
         float _lastDistanceToTarget = float.MaxValue;
         Vector3 _lastPosition;
 
+        float _baseSprintDistance;
+        float _baseStuckTimeThreshold;
+        float _baseObstacleAvoidDistance;
+        AutoPlayerPlaystyleApplier _playstyleApplier;
+
         public bool IsStuck { get; private set; }
 
         public void ResetStuck()
@@ -43,7 +48,26 @@ namespace Beavermania.Player.AI
                 adapter = GetComponent<AutoPlayerActionAdapter>();
             if (body == null)
                 body = transform;
+            _playstyleApplier = GetComponent<AutoPlayerPlaystyleApplier>();
+            _baseSprintDistance = sprintDistance;
+            _baseStuckTimeThreshold = stuckTimeThreshold;
+            _baseObstacleAvoidDistance = obstacleAvoidDistance;
             _lastPosition = body != null ? body.position : Vector3.zero;
+        }
+
+        public void ApplyPlaystyleTuning(PlaystyleRuntimeTuning tuning)
+        {
+            if (!tuning.HasProfile || tuning.BlendFactor <= 0f)
+            {
+                sprintDistance = _baseSprintDistance;
+                stuckTimeThreshold = _baseStuckTimeThreshold;
+                obstacleAvoidDistance = _baseObstacleAvoidDistance;
+                return;
+            }
+
+            sprintDistance = tuning.SprintDistance;
+            stuckTimeThreshold = tuning.StuckTimeThreshold;
+            obstacleAvoidDistance = tuning.ObstacleAvoidDistance;
         }
 
         public void SetDestination(Vector3 worldPoint)
@@ -99,7 +123,11 @@ namespace Beavermania.Player.AI
             adapter.SetSprint(DistanceToDestination > sprintDistance);
 
             if (allowJump && adapter.IsGrounded && NeedsJump(direction))
-                adapter.RequestJump();
+            {
+                bool useJump = _playstyleApplier == null || _playstyleApplier.ShouldJumpThisStep();
+                if (useJump)
+                    adapter.RequestJump();
+            }
 
             UpdateStuckDetection(false);
         }

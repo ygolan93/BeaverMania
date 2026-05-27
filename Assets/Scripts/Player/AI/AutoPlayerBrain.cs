@@ -17,6 +17,8 @@ namespace Beavermania.Player.AI
         CollectLog,
         CarryLog,
         BuildBridge,
+        ShopAtTrader,
+        SwitchArsenal,
         RecoverFromStuck
     }
 
@@ -50,7 +52,21 @@ namespace Beavermania.Player.AI
         [SerializeField] AutoPlayerMovementAgent movement;
         [SerializeField] AutoPlayerActionAdapter adapter;
         [SerializeField] AutoPlayerTaskMemory memory;
+        [SerializeField] AutoPlayerCombatSelector combatSelector;
+        [SerializeField] AutoPlayerPlaystyleApplier playstyleApplier;
+        [SerializeField] AutoPlayerManualPlayRecorder playstyleRecorder;
         [SerializeField] AutoPlayerDebugHUD debugHud;
+        [SerializeField] AutoPlayerTerrainSense terrainSense;
+        [SerializeField] AutoPlayerNavigationPlanner navigation;
+        [SerializeField] AutoPlayerIdlePlanner idlePlanner;
+        [SerializeField] AutoPlayerShopAdapter shopAdapter;
+        [SerializeField] AutoPlayerCameraLock cameraLock;
+        [SerializeField] AutoPlayerCombatRanged combatRanged;
+        [SerializeField] AutoPlayerCombatStaminaGate staminaGate;
+        [SerializeField] float shopVisitCooldown = 25f;
+        [SerializeField] float staminaRecoveryRetreatDistance = 6f;
+        [SerializeField] float retaliateDuration = 4f;
+        [SerializeField] float retaliateSearchRadius = 16f;
 
         AutoPlayerState _state = AutoPlayerState.Idle;
         AutoPlayerState _previousState;
@@ -62,11 +78,21 @@ namespace Beavermania.Player.AI
         int _recoveryPhase;
         int _currentPriority;
         bool _loggedMissingAdapter;
+        Trader _activeTrader;
+        float _shopPhaseTimer;
+        int _shopPurchaseAttempts;
+        float _previousHealth = -1f;
+        float _retaliateUntil;
+        bool _isRetaliating;
 
         public bool AutoPlayerEnabled => autoPlayerEnabled;
         public AutoPlayerState State => _state;
         public Transform CurrentTarget => _currentTarget;
         public int CurrentPriority => _currentPriority;
+        public CombatRangeMode CombatMode => combatRanged != null ? combatRanged.ActiveMode : CombatRangeMode.None;
+        public bool IsRetaliating => _isRetaliating;
+        public bool CameraOrbitLocked => cameraLock != null && cameraLock.OrbitLocked;
+        public bool RecoveringStamina => staminaGate != null && staminaGate.MustRecoverStamina;
 
         void Awake()
         {
@@ -78,8 +104,28 @@ namespace Beavermania.Player.AI
                 adapter = GetComponent<AutoPlayerActionAdapter>();
             if (memory == null)
                 memory = GetComponent<AutoPlayerTaskMemory>();
+            if (combatSelector == null)
+                combatSelector = GetComponent<AutoPlayerCombatSelector>();
+            if (playstyleApplier == null)
+                playstyleApplier = GetComponent<AutoPlayerPlaystyleApplier>();
+            if (playstyleRecorder == null)
+                playstyleRecorder = GetComponent<AutoPlayerManualPlayRecorder>();
             if (debugHud == null)
                 debugHud = GetComponent<AutoPlayerDebugHUD>();
+            if (terrainSense == null)
+                terrainSense = GetComponent<AutoPlayerTerrainSense>();
+            if (navigation == null)
+                navigation = GetComponent<AutoPlayerNavigationPlanner>();
+            if (idlePlanner == null)
+                idlePlanner = GetComponent<AutoPlayerIdlePlanner>();
+            if (shopAdapter == null)
+                shopAdapter = GetComponent<AutoPlayerShopAdapter>();
+            if (cameraLock == null)
+                cameraLock = GetComponent<AutoPlayerCameraLock>();
+            if (combatRanged == null)
+                combatRanged = GetComponent<AutoPlayerCombatRanged>();
+            if (staminaGate == null)
+                staminaGate = GetComponent<AutoPlayerCombatStaminaGate>();
         }
 
         void Update()
@@ -116,6 +162,8 @@ namespace Beavermania.Player.AI
                 return;
             }
 
+            PollDamageReaction();
+
             _decisionTimer -= Time.deltaTime;
             if (_decisionTimer <= 0f)
             {
@@ -140,6 +188,7 @@ namespace Beavermania.Player.AI
         void EnableAutoPlayerDrive()
         {
             PlayerInputOverride.SetActive(true);
+            cameraLock?.SetOrbitLocked(true);
         }
 
         void DisableAutoPlayer()
@@ -147,12 +196,80 @@ namespace Beavermania.Player.AI
             PlayerInputOverride.SetActive(false);
             PlayerInputOverride.ClearAll();
             movement?.ClearDestination();
+            combatRanged?.ResetRangedState();
+            staminaGate?.ResetRecoveryState();
+            cameraLock?.SetOrbitLocked(false);
             _state = AutoPlayerState.Idle;
             _currentTarget = null;
+            _isRetaliating = false;
+            _retaliateUntil = 0f;
+            _previousHealth = -1f;
+        }
+
+        void PollDamageReaction()
+        {
+            if (adapter == null || adapter.Player == null)
+                return;
+
+            float healthNow = adapter.CurrentHealth();
+            if (_previousHealth < 0f)
+            {
+                _previousHealth = healthNow;
+                return;
+            }
+
+            bool tookDamage = adapter.WasHurtRecently()
+                || healthNow < _previousHealth - 0.01f;
+            _previousHealth = healthNow;
+
+            if (!tookDamage || healthNow <= 0f)
+                return;
+
+            _retaliateUntil = Time.time + retaliateDuration;
+            _isRetaliating = true;
+
+            perception?.Scan(memory);
+            Transform target = perception != null
+                ? perception.NearestThreat ?? perception.FindNearestThreatWithinRadius(retaliateSearchRadius, memory)
+                : null;
+
+            if (target == null)
+                return;
+
+            if (staminaGate != null && staminaGate.MustRecoverStamina)
+                return;
+
+            if (_state == AutoPlayerState.Combat && _currentTarget == target)
+                return;
+
+            TransitionTo(AutoPlayerState.Combat, 0, target);
+        }
+
+        bool TryHandleHurtRetaliation()
+        {
+            if (Time.time > _retaliateUntil)
+                return false;
+
+            if (perception == null)
+                return false;
+
+            Transform target = perception.NearestThreat
+                ?? perception.FindNearestThreatWithinRadius(retaliateSearchRadius, memory);
+            if (target == null)
+                return false;
+
+            if (staminaGate != null && staminaGate.MustRecoverStamina)
+                return false;
+
+            _isRetaliating = true;
+            TransitionTo(AutoPlayerState.Combat, 0, target);
+            return true;
         }
 
         void RunDecision()
         {
+            ApplyPlaystyleTuning();
+            terrainSense?.TickSense();
             perception?.Scan(memory);
             if (adapter != null && adapter.Carry != null)
                 memory?.SetCarriedLogCount(adapter.CarriedLogCount);
@@ -163,14 +280,41 @@ namespace Beavermania.Player.AI
                 return;
             }
 
-            if (perception != null && perception.NearestThreat != null && perception.NearestThreatDistance < perception.CombatDetectionRadius * 0.85f)
+            if (TryHandleHurtRetaliation())
+                return;
+
+            if (_retaliateUntil > Time.time && perception != null)
             {
+                Transform retaliateTarget = perception.NearestThreat
+                    ?? perception.FindNearestThreatWithinRadius(retaliateSearchRadius, memory);
+                if (retaliateTarget != null)
+                {
+                    _isRetaliating = true;
+                    TransitionTo(AutoPlayerState.Combat, 0, retaliateTarget);
+                    return;
+                }
+            }
+
+            _isRetaliating = false;
+
+            float engageRadius = perception != null ? perception.CombatEngageRadius : 10f;
+            if (perception != null && perception.NearestThreat != null && perception.NearestThreatDistance <= engageRadius)
+            {
+                if (staminaGate != null && staminaGate.MustRecoverStamina)
+                {
+                    TransitionTo(AutoPlayerState.Combat, 2, perception.NearestThreat);
+                    return;
+                }
+
                 if (perception.NearestThreatDistance < CombatSafeDistance * 0.75f)
                     TransitionTo(AutoPlayerState.AvoidDanger, 1, perception.NearestThreat);
                 else
                     TransitionTo(AutoPlayerState.Combat, 2, perception.NearestThreat);
                 return;
             }
+
+            if (TrySchedulePrimaryBridgeObjective())
+                return;
 
             if (adapter != null && adapter.IsCarryingLogs && perception != null && perception.NearestBridge != null)
             {
@@ -190,6 +334,32 @@ namespace Beavermania.Player.AI
                 return;
             }
 
+            IdlePlannerResult idlePlan = idlePlanner != null
+                ? idlePlanner.Evaluate(bridgePipelineActive: false)
+                : default;
+
+            if (idlePlan.Action == IdleActionKind.SwitchArsenal && !string.IsNullOrEmpty(idlePlan.ArsenalEntryName))
+            {
+                TransitionTo(AutoPlayerState.SwitchArsenal, 7, null);
+                return;
+            }
+
+            if (idlePlan.Action == IdleActionKind.VisitTrader
+                && perception != null
+                && perception.NearestInteractable != null
+                && _interactionTimer <= 0f
+                && shopAdapter != null
+                && shopAdapter.PlayerNeedsShopVisit()
+                && shopAdapter.CanAffordAnyUsefulPurchase())
+            {
+                IAutoInteractable interactable = perception.NearestInteractable.GetComponent<IAutoInteractable>();
+                if (interactable == null || !interactable.IsAutoInteractionBusy())
+                {
+                    TransitionTo(AutoPlayerState.InteractWithNPC, 6, perception.NearestInteractable);
+                    return;
+                }
+            }
+
             if (perception != null && perception.NearestInteractable != null && _interactionTimer <= 0f)
             {
                 IAutoInteractable interactable = perception.NearestInteractable.GetComponent<IAutoInteractable>();
@@ -202,6 +372,52 @@ namespace Beavermania.Player.AI
 
             if (_state == AutoPlayerState.Idle || _state == AutoPlayerState.MoveToTarget || !movement.HasDestination)
                 TransitionTo(AutoPlayerState.Explore, 10, null);
+        }
+
+        void ApplyPlaystyleTuning()
+        {
+            if (playstyleApplier == null)
+                return;
+
+            playstyleApplier.RefreshTuning();
+            PlaystyleRuntimeTuning tuning = playstyleApplier.Tuning;
+            perception?.ApplyPlaystyleTuning(tuning);
+            movement?.ApplyPlaystyleTuning(tuning);
+        }
+
+        bool TrySchedulePrimaryBridgeObjective()
+        {
+            AutoPlayerPrimaryBridgeObjective objective = AutoPlayerPrimaryBridgeObjective.Active;
+            if (objective == null)
+                objective = AutoPlayerPrimaryBridgeObjective.ResolveInScene();
+
+            if (objective == null || !objective.IsAssigned || objective.IsComplete)
+                return false;
+
+            Transform bridgeTarget = objective.BuildTarget;
+            if (bridgeTarget == null)
+                return false;
+
+            if (adapter != null && adapter.IsCarryingLogs)
+            {
+                TransitionTo(AutoPlayerState.BuildBridge, 1, bridgeTarget);
+                return true;
+            }
+
+            if (adapter != null && adapter.CanCarryMore && perception != null && perception.NearestLog != null)
+            {
+                TransitionTo(AutoPlayerState.CollectLog, 1, perception.NearestLog);
+                return true;
+            }
+
+            if (perception != null && perception.NearestTree != null && (adapter == null || adapter.CanCarryMore))
+            {
+                TransitionTo(AutoPlayerState.ChopTree, 1, perception.NearestTree);
+                return true;
+            }
+
+            TransitionTo(AutoPlayerState.MoveToTarget, 1, bridgeTarget);
+            return true;
         }
 
         void TransitionTo(AutoPlayerState newState, int priority, Transform target = null)
@@ -235,6 +451,11 @@ namespace Beavermania.Player.AI
                     if (_currentTarget != null)
                         memory?.Blacklist(_currentTarget.gameObject);
                     movement?.ClearDestination();
+                    combatRanged?.ResetRangedState();
+                    break;
+                case AutoPlayerState.Combat:
+                case AutoPlayerState.AvoidDanger:
+                    combatRanged?.ResetRangedState();
                     break;
                 case AutoPlayerState.BuildBridge:
                 case AutoPlayerState.CollectLog:
@@ -242,8 +463,16 @@ namespace Beavermania.Player.AI
                 case AutoPlayerState.Combat:
                 case AutoPlayerState.AvoidDanger:
                 case AutoPlayerState.InteractWithNPC:
+                case AutoPlayerState.ShopAtTrader:
                     if (_currentTarget != null)
-                        movement?.SetDestination(_currentTarget.position);
+                        SetNavigationDestination(_currentTarget.position);
+                    break;
+                case AutoPlayerState.MoveToTarget:
+                    if (_currentTarget != null)
+                        SetNavigationDestination(_currentTarget.position);
+                    break;
+                case AutoPlayerState.SwitchArsenal:
+                    movement?.ClearDestination();
                     break;
             }
         }
@@ -268,6 +497,12 @@ namespace Beavermania.Player.AI
                 case AutoPlayerState.InteractWithNPC:
                     TickInteractNpc();
                     break;
+                case AutoPlayerState.ShopAtTrader:
+                    TickShopAtTrader();
+                    break;
+                case AutoPlayerState.SwitchArsenal:
+                    TickSwitchArsenal();
+                    break;
                 case AutoPlayerState.ChopTree:
                     TickChopTree();
                     break;
@@ -285,12 +520,38 @@ namespace Beavermania.Player.AI
                     break;
             }
 
-            if (perception != null && perception.HazardAhead && movement != null && movement.HasDestination)
+            ApplyTerrainAvoidance();
+        }
+
+        void ApplyTerrainAvoidance()
+        {
+            if (movement == null || !movement.HasDestination)
+                return;
+
+            Vector3 avoid = Vector3.zero;
+            if (terrainSense != null)
             {
-                Vector3 avoid = perception.HazardAvoidDirection;
-                if (avoid.sqrMagnitude > LookRotationEpsilon)
-                    movement.SetDestination(transform.position + avoid * 3f);
+                TerrainProbeSnapshot snap = terrainSense.Snapshot;
+                if (snap.CliffAhead || snap.HazardAhead)
+                    avoid = snap.SuggestedAvoidDirection;
             }
+
+            if (avoid.sqrMagnitude < LookRotationEpsilon && perception != null && perception.HazardAhead)
+                avoid = perception.HazardAvoidDirection;
+
+            if (avoid.sqrMagnitude > LookRotationEpsilon)
+                SetNavigationDestination(transform.position + avoid * 3f);
+        }
+
+        void SetNavigationDestination(Vector3 worldPoint)
+        {
+            if (movement == null)
+                return;
+
+            if (navigation != null && navigation.TryGetReachablePoint(worldPoint, out Vector3 waypoint))
+                movement.SetDestination(waypoint);
+            else
+                movement.SetDestination(worldPoint);
         }
 
         void TickExplore()
@@ -309,26 +570,52 @@ namespace Beavermania.Player.AI
             if (perception == null || movement == null)
                 return;
 
-            for (int attempt = 0; attempt < 8; attempt++)
+            Vector3 biasDirection = transform.forward;
+            if (terrainSense != null)
+            {
+                TerrainProbeSnapshot snap = terrainSense.Snapshot;
+                if (snap.HasGroundAhead)
+                    biasDirection = transform.forward;
+                else if (snap.SuggestedAvoidDirection.sqrMagnitude > LookRotationEpsilon)
+                    biasDirection = snap.SuggestedAvoidDirection;
+            }
+
+            for (int attempt = 0; attempt < 10; attempt++)
             {
                 Vector2 rnd = Random.insideUnitCircle * exploreRadius;
-                Vector3 candidate = transform.position + new Vector3(rnd.x, 0f, rnd.y);
+                Vector3 offset = new Vector3(rnd.x, 0f, rnd.y);
+                if (attempt < 4)
+                    offset += biasDirection * (exploreRadius * 0.35f);
+
+                Vector3 candidate = transform.position + offset;
                 if (!perception.TryGetGroundPoint(candidate, exploreRadius * 0.25f, out Vector3 ground))
                     continue;
 
-                memory?.RememberExplorePoint(ground);
-                _exploreDestination = ground;
-                movement.SetDestination(ground);
+                if (navigation != null && !navigation.TryValidateExplorePoint(ground, memory, out Vector3 validated))
+                {
+                    memory?.BlacklistWaypoint(ground, 8f);
+                    continue;
+                }
+
+                Vector3 destination = navigation != null ? validated : ground;
+                memory?.RememberExplorePoint(destination);
+                _exploreDestination = destination;
+                SetNavigationDestination(destination);
                 return;
             }
 
-            movement.SetDestination(transform.position + transform.forward * 4f);
+            SetNavigationDestination(transform.position + biasDirection * 4f);
         }
 
         void TickAvoidDanger()
         {
             if (_currentTarget == null || adapter == null || movement == null)
                 return;
+
+            if (TryTickStaminaRecovery(_currentTarget))
+                return;
+
+            cameraLock?.AimAtTarget(_currentTarget);
 
             Vector3 away = transform.position - _currentTarget.position;
             away.y = 0f;
@@ -345,31 +632,112 @@ namespace Beavermania.Player.AI
             movement.TickMovement(allowJump: true);
         }
 
+        bool TryTickStaminaRecovery(Transform threat)
+        {
+            if (staminaGate == null || adapter == null || movement == null || threat == null)
+                return false;
+
+            staminaGate.UpdateRecoveryState();
+            if (!staminaGate.MustRecoverStamina)
+                return false;
+
+            adapter.ClearCombatInputs();
+            combatRanged?.ResetRangedState();
+
+            Vector3 away = transform.position - threat.position;
+            away.y = 0f;
+            if (away.sqrMagnitude > LookRotationEpsilon)
+            {
+                Vector3 retreatPoint = transform.position + away.normalized * staminaRecoveryRetreatDistance;
+                SetNavigationDestination(retreatPoint);
+                adapter.SetWorldMoveDirection(away.normalized);
+            }
+            else
+            {
+                movement.ClearDestination();
+                adapter.SetWorldMoveDirection(Vector3.zero);
+            }
+
+            adapter.SetSprint(false);
+            movement.TickMovement(allowJump: false);
+            return true;
+        }
+
         void TickCombat()
         {
             if (_currentTarget == null || adapter == null || movement == null)
+                return;
+
+            if (!_currentTarget.gameObject.activeInHierarchy)
+            {
+                combatRanged?.ResetRangedState();
+                TransitionTo(AutoPlayerState.Explore, 10);
+                return;
+            }
+
+            if (TryTickStaminaRecovery(_currentTarget))
                 return;
 
             Vector3 toEnemy = _currentTarget.position - transform.position;
             toEnemy.y = 0f;
             float dist = toEnemy.magnitude;
 
+            cameraLock?.AimAtTarget(_currentTarget);
+
+            CombatRangeMode mode = combatRanged != null
+                ? combatRanged.EvaluateMode(_currentTarget, dist)
+                : CombatRangeMode.Melee;
+
+            if (mode == CombatRangeMode.Stone
+                && (staminaGate == null || staminaGate.CanPerformCombatAttacks()))
+            {
+                combatRanged.TickRangedCombat(_currentTarget, dist, movement);
+                movement.TickMovement(allowJump: false);
+
+                if (adapter.HealthRatio() < LowHealthDefendRatio)
+                    adapter.RequestDefend();
+
+                return;
+            }
+
+            combatRanged?.ResetRangedState();
+
+            string threatTag = perception != null ? perception.NearestThreatTag : _currentTarget.tag;
+            AutoCombatPlan plan = combatSelector != null
+                ? combatSelector.BuildPlan(_currentTarget, dist, threatTag)
+                : default;
+
+            bool useBow = plan.Action == AutoCombatActionKind.Bow;
+            float standOffDistance = useBow ? 7f : CombatAttackDistance;
+
             if (dist > CombatSafeDistance)
-                movement.SetDestination(_currentTarget.position);
-            else if (dist < CombatAttackDistance)
+                SetNavigationDestination(_currentTarget.position);
+            else if (dist < standOffDistance)
                 movement.ClearDestination();
             else
-                movement.SetDestination(_currentTarget.position);
+                SetNavigationDestination(_currentTarget.position);
 
             if (toEnemy.sqrMagnitude > LookRotationEpsilon)
+            {
+                adapter.FaceWorldPosition(_currentTarget.position);
                 adapter.SetWorldMoveDirection(toEnemy.normalized);
+            }
 
-            if (dist <= CombatAttackDistance)
-                adapter.RequestPrimaryAttack();
+            if (staminaGate == null || staminaGate.CanPerformCombatAttacks())
+            {
+                if (combatSelector != null)
+                    combatSelector.ApplyPlan(adapter, plan);
+                else if (dist <= CombatAttackDistance)
+                    adapter.RequestPrimaryAttack();
+                else
+                    adapter.SetSprint(true);
+            }
             else
-                adapter.SetSprint(true);
+            {
+                adapter.ClearCombatInputs();
+            }
 
-            if (adapter.HealthRatio() < LowHealthDefendRatio)
+            if (adapter.HealthRatio() < LowHealthDefendRatio && (staminaGate == null || staminaGate.CanPerformCombatAttacks()))
                 adapter.RequestDefend();
 
             movement.TickMovement(allowJump: false);
@@ -399,8 +767,97 @@ namespace Beavermania.Player.AI
                 adapter.RequestInteract();
             }
 
+            if (shopAdapter != null && shopAdapter.PlayerNeedsShopVisit() && shopAdapter.CanAffordAnyUsefulPurchase())
+            {
+                _activeTrader = idlePlanner != null
+                    ? idlePlanner.GetTraderFromTarget(_currentTarget)
+                    : _currentTarget.GetComponentInParent<Trader>();
+                _shopPhaseTimer = 0f;
+                _shopPurchaseAttempts = 0;
+                TransitionTo(AutoPlayerState.ShopAtTrader, 6, _currentTarget);
+                return;
+            }
+
             _interactionTimer = interactionCooldown;
             TransitionTo(AutoPlayerState.Idle, 0);
+        }
+
+        void TickShopAtTrader()
+        {
+            if (_currentTarget == null || adapter == null || movement == null)
+            {
+                FinishShopVisit();
+                return;
+            }
+
+            _shopPhaseTimer += Time.deltaTime;
+            movement.SetDestination(_currentTarget.position);
+            movement.TickMovement(allowJump: false);
+
+            if (_activeTrader == null)
+                _activeTrader = idlePlanner != null
+                    ? idlePlanner.GetTraderFromTarget(_currentTarget)
+                    : _currentTarget.GetComponentInParent<Trader>();
+
+            if (_activeTrader == null)
+            {
+                FinishShopVisit();
+                return;
+            }
+
+            if (movement.DistanceToDestination > interactionDistance + 0.5f && _shopPhaseTimer < 0.75f)
+                return;
+
+            adapter.SetWorldMoveDirection(Vector3.zero);
+
+            if (!_activeTrader.IsTraderSessionActive())
+            {
+                IAutoInteractable interactable = _currentTarget.GetComponent<IAutoInteractable>();
+                if (interactable != null && interactable.CanAutoInteract(gameObject))
+                    interactable.AutoInteract(gameObject);
+                else
+                    adapter.RequestInteract();
+            }
+
+            if (!_activeTrader.IsShopUiOpen() && _shopPhaseTimer > 0.35f)
+                _activeTrader.BeginAutoShopSession();
+
+            if (shopAdapter != null)
+            {
+                shopAdapter.BindShop(shopAdapter.ResolveShopFromTrader(_currentTarget));
+                if (_activeTrader.IsShopUiOpen())
+                {
+                    if (shopAdapter.TryAutoPurchaseBestNeed())
+                        _shopPurchaseAttempts++;
+                }
+            }
+
+            if (_shopPhaseTimer > 2.5f || _shopPurchaseAttempts >= 2 || (shopAdapter != null && !shopAdapter.PlayerNeedsShopVisit()))
+                FinishShopVisit();
+        }
+
+        void FinishShopVisit()
+        {
+            _activeTrader?.EndAutoTraderSession();
+            memory?.ScheduleNextShopVisit(shopVisitCooldown);
+            _interactionTimer = interactionCooldown;
+            _activeTrader = null;
+            TransitionTo(AutoPlayerState.Explore, 10);
+        }
+
+        void TickSwitchArsenal()
+        {
+            if (adapter == null || idlePlanner == null)
+            {
+                TransitionTo(AutoPlayerState.Explore, 10);
+                return;
+            }
+
+            IdlePlannerResult plan = idlePlanner.LastResult;
+            if (!string.IsNullOrEmpty(plan.ArsenalEntryName))
+                adapter.TryEquipArsenal(plan.ArsenalEntryName);
+
+            TransitionTo(AutoPlayerState.Explore, 10);
         }
 
         void TickChopTree()
@@ -414,7 +871,8 @@ namespace Beavermania.Player.AI
                 return;
             }
 
-            movement.SetDestination(_currentTarget.position);
+            adapter?.EquipForChop();
+            SetNavigationDestination(_currentTarget.position);
             movement.TickMovement(allowJump: false);
 
             if (movement.DistanceToDestination <= ChopDistance)
@@ -432,7 +890,7 @@ namespace Beavermania.Player.AI
             if (_currentTarget == null || adapter == null || movement == null)
                 return;
 
-            movement.SetDestination(_currentTarget.position);
+            SetNavigationDestination(_currentTarget.position);
             movement.TickMovement(allowJump: false);
 
             if (movement.DistanceToDestination <= LogPickupDistance)
@@ -467,7 +925,7 @@ namespace Beavermania.Player.AI
             IAutoBuildTarget build = _currentTarget.GetComponent<IAutoBuildTarget>();
             NewConstructor constructor = build == null ? _currentTarget.GetComponent<NewConstructor>() : null;
 
-            movement.SetDestination(_currentTarget.position);
+            SetNavigationDestination(_currentTarget.position);
             movement.TickMovement(allowJump: false);
 
             if (movement.DistanceToDestination > interactionDistance + 1f)

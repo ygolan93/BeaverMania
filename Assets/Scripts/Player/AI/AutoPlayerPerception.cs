@@ -11,6 +11,7 @@ namespace Beavermania.Player.AI
 
         [Header("Radii")]
         [SerializeField] float combatDetectionRadius = 12f;
+        [SerializeField] float combatEngageRadius = 10f;
         [SerializeField] float npcDetectionRadius = 8f;
         [SerializeField] float treeDetectionRadius = 14f;
         [SerializeField] float logDetectionRadius = 10f;
@@ -26,9 +27,11 @@ namespace Beavermania.Player.AI
         [SerializeField] Transform scanOrigin;
 
         readonly Collider[] _overlapBuffer = new Collider[OverlapBufferSize];
+        float _baseCombatEngageRadius;
 
         public Transform NearestThreat { get; private set; }
         public float NearestThreatDistance { get; private set; }
+        public string NearestThreatTag { get; private set; }
         public Transform NearestInteractable { get; private set; }
         public float NearestInteractableDistance { get; private set; }
         public Transform NearestTree { get; private set; }
@@ -41,6 +44,10 @@ namespace Beavermania.Player.AI
         public Vector3 HazardAvoidDirection { get; private set; }
 
         public float CombatDetectionRadius => combatDetectionRadius;
+        public float CombatEngageRadius => combatEngageRadius > 0f ? combatEngageRadius : combatDetectionRadius * 0.85f;
+        public LayerMask GroundLayers => groundLayers;
+        public LayerMask HazardLayers => hazardLayers;
+        public LayerMask EnemyLayers => enemyLayers;
 
         void Awake()
         {
@@ -50,6 +57,19 @@ namespace Beavermania.Player.AI
             var player = GetComponent<BeaverPlayerBehaviour>();
             if (player != null)
                 enemyLayers = player.enemyLayers;
+
+            _baseCombatEngageRadius = combatEngageRadius > 0f ? combatEngageRadius : combatDetectionRadius * 0.85f;
+        }
+
+        public void ApplyPlaystyleTuning(PlaystyleRuntimeTuning tuning)
+        {
+            if (!tuning.HasProfile || tuning.BlendFactor <= 0f)
+            {
+                combatEngageRadius = _baseCombatEngageRadius;
+                return;
+            }
+
+            combatEngageRadius = tuning.EngageRadius;
         }
 
         public void Scan(AutoPlayerTaskMemory memory)
@@ -73,6 +93,7 @@ namespace Beavermania.Player.AI
         {
             NearestThreat = null;
             NearestThreatDistance = float.MaxValue;
+            NearestThreatTag = string.Empty;
             NearestInteractable = null;
             NearestInteractableDistance = float.MaxValue;
             NearestTree = null;
@@ -103,6 +124,7 @@ namespace Beavermania.Player.AI
 
                 NearestThreatDistance = dist;
                 NearestThreat = col.transform;
+                NearestThreatTag = col.gameObject.tag;
             }
         }
 
@@ -249,6 +271,35 @@ namespace Beavermania.Player.AI
                 HazardAhead = true;
                 HazardAvoidDirection = Vector3.Cross(Vector3.up, forward).normalized;
             }
+        }
+
+        public Transform FindNearestThreatWithinRadius(float radius, AutoPlayerTaskMemory memory)
+        {
+            if (scanOrigin == null || radius <= 0f)
+                return null;
+
+            Transform best = null;
+            float bestDist = float.MaxValue;
+            Vector3 origin = scanOrigin.position;
+            int count = Physics.OverlapSphereNonAlloc(origin, radius, _overlapBuffer, enemyLayers, QueryTriggerInteraction.Collide);
+            for (int i = 0; i < count; i++)
+            {
+                Collider col = _overlapBuffer[i];
+                if (col == null || !IsThreat(col.gameObject))
+                    continue;
+
+                if (memory != null && memory.IsBlacklisted(col.gameObject))
+                    continue;
+
+                float dist = Vector3.Distance(origin, col.transform.position);
+                if (dist >= bestDist)
+                    continue;
+
+                bestDist = dist;
+                best = col.transform;
+            }
+
+            return best;
         }
 
         public bool TryGetGroundPoint(Vector3 near, float maxRadius, out Vector3 groundPoint)

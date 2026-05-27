@@ -3257,6 +3257,105 @@ namespace Beavermania.Player
             return Arsenal != null && Arsenal.Contains(itemId);
         }
 
+        public string GetActiveArsenalEntryName()
+        {
+            if (Arsenal == null || Arsenal.Count == 0)
+                return "Bare Hands";
+
+            if (arsenalBrowser < 0 || arsenalBrowser >= Arsenal.Count)
+                return Arsenal[0];
+
+            return Arsenal[arsenalBrowser];
+        }
+
+        public bool TryEquipArsenalByName(string entryName)
+        {
+            if (Arsenal == null || string.IsNullOrEmpty(entryName))
+                return false;
+
+            int index = Arsenal.IndexOf(entryName);
+            if (index < 0)
+                return false;
+
+            if (arsenalBrowser == index && GetActiveArsenalEntryName() == entryName)
+            {
+                ApplyArsenalEntry(entryName);
+                return true;
+            }
+
+            arsenalBrowser = index;
+            ApplyArsenalEntry(entryName);
+            UpdateSwordGlareAvailability();
+            return true;
+        }
+
+        void ApplyArsenalEntry(string entryName)
+        {
+            InterruptSwordAttackPresentation();
+
+            switch (entryName)
+            {
+                case "Bare Hands":
+                    Otter.Play("Disarm");
+                    HammerHeld = false;
+                    GroundAttack = EffectiveBareHandsDamage;
+                    Otter.SetBool("armor", false);
+                    RightHandWeapon.SetActive(false);
+                    LeftHandWeapon.SetActive(false);
+                    bowEquipped = false;
+                    if (MunitionDisplay != null)
+                        MunitionDisplay.SetActive(false);
+                    SetBowActive(false);
+                    ArmorEquipped = false;
+                    SetArmorSetActive(false);
+                    break;
+                case "Hammers":
+                    Otter.Play("Equip");
+                    HammerHeld = true;
+                    GroundAttack = EffectiveHammerDamage;
+                    Otter.SetBool("armor", false);
+                    RightHandWeapon.SetActive(true);
+                    LeftHandWeapon.SetActive(true);
+                    bowEquipped = false;
+                    if (MunitionDisplay != null)
+                        MunitionDisplay.SetActive(false);
+                    SetBowActive(false);
+                    ArmorEquipped = false;
+                    SetArmorSetActive(false);
+                    break;
+                case "Bow":
+                    Otter.Play("Equip");
+                    CountArrows();
+                    HammerHeld = false;
+                    GroundAttack = EffectiveBowEquippedMeleeDamage;
+                    Otter.SetBool("armor", false);
+                    RightHandWeapon.SetActive(false);
+                    LeftHandWeapon.SetActive(false);
+                    bowEquipped = true;
+                    if (MunitionDisplay != null)
+                        MunitionDisplay.SetActive(true);
+                    SetBowActive(true);
+                    ArmorEquipped = false;
+                    SetArmorSetActive(false);
+                    break;
+                case "ArmorSet":
+                    Otter.Play("Equip");
+                    HammerHeld = false;
+                    Otter.SetBool("armor", false);
+                    RightHandWeapon.SetActive(false);
+                    LeftHandWeapon.SetActive(false);
+                    bowEquipped = false;
+                    if (MunitionDisplay != null)
+                        MunitionDisplay.SetActive(false);
+                    SetBowActive(false);
+                    ArmorEquipped = true;
+                    GroundAttack = EffectiveArmorSetDamage;
+                    Otter.SetBool("armor", true);
+                    SetArmorSetActive(true);
+                    break;
+            }
+        }
+
         public bool TryAcquireHammersFromShop()
         {
             if (OwnsArsenalItem("Hammers"))

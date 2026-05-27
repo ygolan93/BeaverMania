@@ -20,15 +20,28 @@ namespace Beavermania.Player.AI
         [ContextMenu("Install AutoPlayer Components")]
         public void Install()
         {
-            if (GetComponent<AutoPlayerBrain>() == null)
-            {
-                gameObject.AddComponent<AutoPlayerPerception>();
-                gameObject.AddComponent<AutoPlayerMovementAgent>();
-                gameObject.AddComponent<AutoPlayerActionAdapter>();
-                gameObject.AddComponent<AutoPlayerTaskMemory>();
-                gameObject.AddComponent<AutoPlayerDebugHUD>();
-                gameObject.AddComponent<AutoPlayerBrain>();
-            }
+            EnsureComponent<AutoPlayerPerception>();
+            EnsureComponent<AutoPlayerCameraLock>();
+            EnsureComponent<AutoPlayerCombatStaminaGate>();
+            EnsureComponent<AutoPlayerCombatRanged>();
+            EnsureComponent<AutoPlayerCombatSelector>();
+            EnsureComponent<AutoPlayerTerrainSense>();
+            EnsureComponent<AutoPlayerNavigationPlanner>();
+            EnsureComponent<AutoPlayerMovementAgent>();
+            EnsureComponent<AutoPlayerActionAdapter>();
+            EnsureComponent<AutoPlayerTaskMemory>();
+            EnsureComponent<AutoPlayerShopAdapter>();
+            EnsureComponent<AutoPlayerIdlePlanner>();
+            EnsureComponent<AutoPlayerPlaystyleApplier>();
+            EnsureComponent<AutoPlayerManualPlayRecorder>();
+            EnsureComponent<AutoPlayerDebugHUD>();
+            EnsureComponent<AutoPlayerBrain>();
+        }
+
+        void EnsureComponent<T>() where T : Component
+        {
+            if (GetComponent<T>() == null)
+                gameObject.AddComponent<T>();
         }
     }
 }

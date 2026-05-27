@@ -19,6 +19,7 @@ namespace Beavermania.Player.AI
         bool _chopRequested;
         bool _pickUpMode;
         bool _drawLogMode;
+        bool _secondaryCombatHeld;
         bool _sprintEnabled;
 
         public BeaverPlayerBehaviour Player => player;
@@ -49,7 +50,7 @@ namespace Beavermania.Player.AI
             PlayerInputOverride.SetRollHeld(false);
             PlayerInputOverride.SetDefendHeld(_defendRequested);
             PlayerInputOverride.SetPrimaryHeld(_primaryAttackRequested || _chopRequested);
-            PlayerInputOverride.SetSecondaryHeld(_drawLogMode);
+            PlayerInputOverride.SetSecondaryHeld(_secondaryCombatHeld || _drawLogMode);
         }
 
         public void ClearActionRequests()
@@ -59,6 +60,7 @@ namespace Beavermania.Player.AI
             _chopRequested = false;
             _pickUpMode = false;
             _drawLogMode = false;
+            _secondaryCombatHeld = false;
             _sprintEnabled = false;
         }
 
@@ -147,6 +149,85 @@ namespace Beavermania.Player.AI
             if (player == null || player.MaxHealth <= 0f)
                 return 1f;
             return player.CurrentHealth / player.MaxHealth;
+        }
+
+        public bool WasHurtRecently()
+        {
+            return player != null && player.hurt;
+        }
+
+        public float CurrentHealth()
+        {
+            return player != null ? player.CurrentHealth : 0f;
+        }
+
+        public float StaminaRatio()
+        {
+            if (player == null || player.MaxStamina <= 0f)
+                return 1f;
+            return Mathf.Clamp01(player.CurrentStamina / player.MaxStamina);
+        }
+
+        public float CurrentStamina()
+        {
+            return player != null ? player.CurrentStamina : 0f;
+        }
+
+        public void ClearCombatInputs()
+        {
+            _primaryAttackRequested = false;
+            _defendRequested = false;
+            _secondaryCombatHeld = false;
+            _chopRequested = false;
+        }
+
+        public void SetCombatSecondaryHeld(bool held) => _secondaryCombatHeld = held;
+
+        public void FaceWorldPosition(Vector3 worldPosition)
+        {
+            if (player == null)
+                return;
+
+            Vector3 to = worldPosition - player.transform.position;
+            to.y = 0f;
+            if (to.sqrMagnitude < DirectionEpsilon)
+                return;
+
+            player.rotGoal = Quaternion.LookRotation(to.normalized);
+            player.transform.rotation = Quaternion.Slerp(
+                player.transform.rotation,
+                player.rotGoal,
+                Time.deltaTime * 10f);
+        }
+
+        public bool TryEquipArsenal(string entryName)
+        {
+            return player != null && player.TryEquipArsenalByName(entryName);
+        }
+
+        public string GetActiveArsenalName()
+        {
+            return player != null ? player.GetActiveArsenalEntryName() : string.Empty;
+        }
+
+        public void EquipForChop()
+        {
+            if (player == null)
+                return;
+
+            if (player.OwnsArsenalItem("Hammers"))
+                player.TryEquipArsenalByName("Hammers");
+        }
+
+        public void EquipForCombatExplore()
+        {
+            if (player == null)
+                return;
+
+            if (player.OwnsArsenalItem("Bow") && player.arrowMunition > 0)
+                player.TryEquipArsenalByName("Bow");
+            else if (player.OwnsArsenalItem("Hammers"))
+                player.TryEquipArsenalByName("Hammers");
         }
     }
 }

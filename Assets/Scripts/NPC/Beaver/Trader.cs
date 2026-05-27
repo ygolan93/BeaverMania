@@ -49,6 +49,29 @@ namespace Beavermania.NPC
 
         public bool IsTraderSessionActive() => isInteracting || isShopOpen;
 
+        public bool IsShopUiOpen() => IsShopCurrentlyOpen();
+
+        public void BeginAutoShopSession()
+        {
+            if (Player == null || !isPlayerInRange || Shop == null)
+                return;
+
+            if (!isInteracting)
+            {
+                RestorePreviousObjectiveText();
+                isInteracting = true;
+                traderOfferPresentationActive = true;
+                Player.ApplyTraderOfferPresentation(transform);
+            }
+
+            OpenShop();
+        }
+
+        public void EndAutoTraderSession()
+        {
+            CloseInteraction();
+        }
+
         void Start()
         {
             FormalLook = transform.rotation;

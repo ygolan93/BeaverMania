@@ -338,32 +338,24 @@ namespace Beavermania.Player.Combat
             else
                 ResetOwnerReference();
 
-            if (UsesArrowLogic || UsesFireBreathLogic)
+            if (Player != null)
                 ApplyOwnerCollisionIgnores();
 
             if (Ball != null)
             {
                 if (UsesArrowLogic)
                 {
-                    Ball.isKinematic = false;
-                    Ball.detectCollisions = true;
-                    Ball.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-                    Ball.constraints = RigidbodyConstraints.None;
-                    Ball.WakeUp();
+                    ConfigureDynamicLaunchRigidbody();
 
                     float arrowSpeed = Mathf.Abs(initialForwardVel) > 0f ? Mathf.Abs(initialForwardVel) : minArrowForwardSpeed;
                     Ball.velocity = launchDirection.normalized * arrowSpeed;
                 }
                 else if (UsesFireBreathLogic)
                 {
-                    Ball.isKinematic = false;
-                    Ball.detectCollisions = true;
-                    Ball.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-                    Ball.constraints = RigidbodyConstraints.None;
+                    ConfigureDynamicLaunchRigidbody();
                     Ball.useGravity = false;
                     Ball.velocity = Vector3.zero;
                     Ball.angularVelocity = Vector3.zero;
-                    Ball.WakeUp();
 
                     float fireSpeed = Mathf.Abs(initialForwardVel) > 0f ? Mathf.Abs(initialForwardVel) : minFireballForwardSpeed;
                     Ball.velocity = launchDirection * fireSpeed;
@@ -378,6 +370,7 @@ namespace Beavermania.Player.Combat
                 }
                 else
                 {
+                    ConfigureDynamicLaunchRigidbody();
                     Ball.velocity = launchDirection * forwardVel + Vector3.up * upwardVel;
                 }
             }
@@ -470,11 +463,20 @@ namespace Beavermania.Player.Combat
             ownerIgnorePairs.Clear();
         }
 
+        void ConfigureDynamicLaunchRigidbody()
+        {
+            Ball.isKinematic = false;
+            Ball.detectCollisions = true;
+            Ball.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            Ball.constraints = RigidbodyConstraints.None;
+            Ball.WakeUp();
+        }
+
         void ApplyOwnerCollisionIgnores()
         {
             ClearOwnerCollisionIgnores();
 
-            if ((!UsesArrowLogic && !UsesFireBreathLogic) || colliders == null || Player == null)
+            if (colliders == null || Player == null)
                 return;
 
             var ignoreAgainst = new HashSet<Collider>();
@@ -1047,7 +1049,7 @@ namespace Beavermania.Player.Combat
                 return;
             }
 
-            if (IsOwnerCollider(OBJ.collider))
+            if (ShouldIgnoreOwnerCollision(OBJ))
                 return;
 
             var hit = false;

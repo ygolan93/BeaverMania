@@ -23,10 +23,12 @@ namespace Beavermania.UI
         public TextMeshProUGUI ArrowMunition;
 
         bool loggedMissingPlayer;
+        ObjectiveTrackerPresenter objectiveTracker;
 
         void Start()
         {
             BindPlayerHudState();
+            InitializeObjectiveTracker();
         }
 
         void BindPlayerHudState()
@@ -85,10 +87,11 @@ namespace Beavermania.UI
                 }
             }
 
-            if (PlayerHudState.ObjectiveTextOverrideActive)
-                SetText(ObjectiveText, PlayerHudState.ObjectiveTextOverride);
-            else
-                SetText(ObjectiveText, PlayerHudState.ObjectiveText);
+            SetObjectiveText(
+                PlayerHudState.ObjectiveTextOverrideActive
+                    ? PlayerHudState.ObjectiveTextOverride
+                    : PlayerHudState.ObjectiveText,
+                PlayerHudState.ObjectiveTextOverrideActive);
             SetText(DisplayText, PlayerHudState.DebugText);
             SetText(StaminaText, PlayerHudState.StaminaText);
             SetText(LogCountText, PlayerHudState.LogCount);
@@ -98,6 +101,32 @@ namespace Beavermania.UI
             SetText(GobletCount, PlayerHudState.GobletText);
             SetText(AppleCount, PlayerHudState.AppleText);
             SetText(ArrowMunition, PlayerHudState.ArrowText);
+        }
+
+        void InitializeObjectiveTracker()
+        {
+            if (ObjectiveText == null)
+                return;
+
+            objectiveTracker = GetComponent<ObjectiveTrackerPresenter>();
+            if (objectiveTracker == null)
+                objectiveTracker = gameObject.AddComponent<ObjectiveTrackerPresenter>();
+
+            objectiveTracker.Bind(ObjectiveText);
+        }
+
+        void SetObjectiveText(string value, bool isOverride)
+        {
+            if (objectiveTracker == null)
+                InitializeObjectiveTracker();
+
+            if (objectiveTracker != null)
+            {
+                objectiveTracker.SetObjective(value, isOverride);
+                return;
+            }
+
+            SetText(ObjectiveText, value);
         }
 
         static void SetText(TextMeshProUGUI text, string value)

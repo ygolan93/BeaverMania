@@ -2287,11 +2287,11 @@ namespace Beavermania.Player
                 DebugText = HealthPercent + "%";
                 StaminaPercent = System.Math.Round((CurrentStamina / MaxStamina) * 100f, 1);
                 StaminaText = StaminaPercent + "%";
-                Wallet = "COINS: " + Currency;
-                SeedText = "NUTS (R): " + NutCount;
-                AppleText = "APPLES (T): " + Apple;
-                GobletText = "GOBLETS (Y): " + GobletPickup;
-                ArrowText = "ARROWS (RM): " + arrowMunition;
+                Wallet = Currency.ToString();
+                SeedText = NutCount.ToString();
+                AppleText = Apple.ToString();
+                GobletText = GobletPickup.ToString();
+                ArrowText = arrowMunition.ToString();
                 if (ICON_1 != null || ICON_2 != null || ICON_3 != null)
                 {
                     if (Lives >= 3)

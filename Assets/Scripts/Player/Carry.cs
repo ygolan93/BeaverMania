@@ -46,12 +46,12 @@ namespace Beavermania.Player.Movement
         public void Update()
         {
             Vector3 SpawnPos = LogDrop.transform.position;
-            Goal.LogCount =("Log count: "+ i + "/9");
+            Goal.LogCount = i + "/9";
 
             if (Goal.grounded == true)
             {
                 if (i == 9)
-                    Goal.LogCount = ("Log count: 9/9. Press LCtrl+Rmouse for bridge construction");
+                    Goal.LogCount = "9/9  LCtrl+RMB to build";
                 if (PlayerInputReader.WasRollReleased() && i > 0)
                 {
                     i--;

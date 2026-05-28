@@ -73,6 +73,10 @@
 - Do not rewrite input, pause, movement, combat, or objective systems as part of this handoff.
 - Do not scatter bridge/log tips globally; place `TipTriggerZone` only at intended bridge-building/tutorial spaces.
 
+## Implementation complete (code)
+- All planned phases (1–5) and pause collectibles summary are committed on `cursor/feature-ui-ux-gamefeel-improvements-75e4`.
+- Remote tracking branch was deleted; re-push before opening or refreshing a PR.
+
 ## Known limitations
 - Unity Play Mode was not available in Cloud, so layout and serialized-reference behavior need Editor verification.
 - A compact bridge-build instruction remains in the 9/9 log HUD as a fallback while contextual bridge-area tips are verified.

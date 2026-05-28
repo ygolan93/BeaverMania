@@ -10,13 +10,13 @@
 - Mixed
 
 ## Current phase
-- Phase 2 first implementation slice / verification
+- Phase 3 objective tracker implementation / verification
 
 ## Goal
 - Improve HUD clarity first, then phase in tips, objectives, footstep feedback, and carried-log game feel without replacing existing pause, input, movement, or combat systems.
 
 ## Scope
-- Phase 2 second slice: add contextual bridge-area tips through the existing bridge construction component, while keeping the compact log HUD fallback.
+- Phase 3: route the existing objective string through a compact middle-left objective tracker while preserving trader/objective overrides.
 
 ## Out of scope
 - Scene placement of tip trigger zones until Unity Editor follow-up.
@@ -31,6 +31,8 @@
 - `Assets/Scripts/UI/Tips/*`
 - `Assets/Scripts/UI/UIMenu.cs`
 - `Assets/Scripts/Objects/Newbridge/NewConstructor.cs`
+- `Assets/Scripts/UI/DebugReference.cs`
+- `Assets/Scripts/UI/Objectives/ObjectiveTrackerPresenter.cs`
 
 ## Risk level
 - High
@@ -54,10 +56,11 @@
 - Phase 1 HUD cleanup is implemented.
 - Phase 2 tips subsystem code is implemented for review.
 - Contextual bridge construction tips are wired to intended bridge construction areas via `NewConstructor`.
+- Phase 3 objective tracker presentation is implemented for review.
 
 ## Next action
 - Owner: Cursor / Unity Editor
-- Action: Run Play Mode validation, confirm bridge-area tips trigger only near bridge constructors, and place additional `TipTriggerZone` components only after layout/functionality is accepted.
+- Action: Run Play Mode validation, confirm objective tracker readability at middle-left, and verify trader/objective override text still routes correctly.
 
 ## Open questions
 - Whether collectibles should be fully moved into pause/diary UI in a later phase or remain as compact HUD counters.

@@ -6,6 +6,7 @@
 ## Code changes made
 - Compact collectible/ammo/log HUD text values to numbers only so existing icons carry the label meaning.
 - Move `StaminaBar` from the top-left HUD cluster to bottom-left anchored screen space in `PlayerCanvas.prefab`.
+- Add a runtime pause-menu collectibles summary for coins, nuts, apples, goblets, arrows, and logs while preserving compact HUD counters.
 - Add code-only tips subsystem with `TipDefinition`, settings persistence, cooldown/display-count/priority gating, idle/active gating, trigger-zone hooks, and an animated runtime tip card.
 - Add a runtime Tips On/Off toggle to the existing pause menu through `UIMenu` startup without editing the pause menu prefab hierarchy.
 - Add contextual bridge construction tips through `NewConstructor` so bridge/log guidance appears only near intended bridge construction areas.
@@ -26,6 +27,7 @@
 - `Assets/Scripts/Data/Tips/TipRequest.cs`
 - `Assets/Scripts/UI/Tips/*`
 - `Assets/Scripts/UI/UIMenu.cs`
+- `Assets/Scripts/UI/Menus/PauseCollectiblesSummary.cs`
 - `Assets/Scripts/Objects/Newbridge/NewConstructor.cs`
 - `Assets/Scripts/UI/DebugReference.cs`
 - `Assets/Scripts/UI/Objectives/ObjectiveTrackerPresenter.cs`
@@ -50,6 +52,7 @@
 ## Prefab/scene/UI/Animator follow-up required
 - Inspect `PlayerCanvas.prefab` in Unity Editor and confirm `StaminaBar` is readable at bottom-left across common resolutions.
 - Confirm top-right collectible/ammo/log counters still align with their icons after label removal.
+- Confirm pause-menu collectibles summary appears, refreshes when pause opens, and does not overlap volume/restart/controls UI.
 - Decide in Phase 2/3 whether collectibles should move fully into pause/diary UI or remain compact HUD counters.
 - Confirm the runtime `Tips: On/Off` toggle appears in the pause menu and does not overlap volume/restart controls.
 - Confirm bridge tips appear near `NewConstructor` trigger areas and do not appear globally when the player is away from bridge constructors.
@@ -62,7 +65,7 @@
 
 ## What Cursor should test in Play Mode
 - Reproduction path: open Level 1 Remastered, enter Play Mode, move/jump/sprint, pick up coins/nuts/apples/goblets/arrows/logs, open/close pause, toggle Tips off/on.
-- Functional checks: health stays top-left, stamina appears bottom-left and updates, counter text shows icon + number only, objective tracker appears middle-left, log count shows `N/9`, 9-log carry state shows `LCtrl+RMB to build`, carrying logs slows movement/jump/animation and restores on drop/build, goblet boost preserves carried-log penalties, pause menu still opens/closes, Tips toggle persists across pause reopen, bridge tips appear only near bridge construction triggers, footstep particles trigger from existing walk/run step events.
+- Functional checks: health stays top-left, stamina appears bottom-left and updates, counter text shows icon + number only, pause menu shows collectibles summary with current counts, objective tracker appears middle-left, log count shows `N/9`, 9-log carry state shows `LCtrl+RMB to build`, carrying logs slows movement/jump/animation and restores on drop/build, goblet boost preserves carried-log penalties, pause menu still opens/closes, Tips toggle persists across pause reopen, bridge tips appear only near bridge construction triggers, footstep particles trigger from existing walk/run step events.
 - Negative/regression checks: no `NullReferenceException`, trader/lose UI still locks input/cursor, objective text still updates, tips do not show while disabled, paused, in trader UI, or away from bridge construction areas.
 
 ## What Cursor should not change

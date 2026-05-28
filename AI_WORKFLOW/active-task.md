@@ -10,13 +10,13 @@
 - Mixed
 
 ## Current phase
-- Phase 5 carried-log weight implementation / verification
+- Phase 1 follow-up collectibles pause summary / verification
 
 ## Goal
 - Improve HUD clarity first, then phase in tips, objectives, footstep feedback, and carried-log game feel without replacing existing pause, input, movement, or combat systems.
 
 ## Scope
-- Phase 5 first slice: make the existing carried-log movement penalties capped and designer-tunable without replacing player movement.
+- Phase 1 follow-up: add a pause-menu collectibles summary while preserving compact always-visible HUD counters.
 
 ## Out of scope
 - Scene placement of tip trigger zones until Unity Editor follow-up.
@@ -30,6 +30,7 @@
 - `Assets/Scripts/Data/Tips/TipRequest.cs`
 - `Assets/Scripts/UI/Tips/*`
 - `Assets/Scripts/UI/UIMenu.cs`
+- `Assets/Scripts/UI/Menus/PauseCollectiblesSummary.cs`
 - `Assets/Scripts/Objects/Newbridge/NewConstructor.cs`
 - `Assets/Scripts/UI/DebugReference.cs`
 - `Assets/Scripts/UI/Objectives/ObjectiveTrackerPresenter.cs`
@@ -64,10 +65,11 @@
 - Phase 5 carried-log weight penalties are centralized and capped in `Carry`.
 - Phase 5 penalties now rebase when other systems temporarily change walk/run/jump/animation values.
 - Phase 5 carry component now exposes current weight penalty and guards missing references for Play Mode diagnostics.
+- Pause menu now has a runtime collectibles summary for coins, nuts, apples, goblets, arrows, and logs.
 
 ## Next action
 - Owner: Cursor / Unity Editor
-- Action: Run Play Mode validation, confirm log pickup/drop/build restores movement stats correctly, and tune carried-log penalty caps.
+- Action: Run Play Mode validation and confirm the pause-menu collectibles summary is readable and does not overlap existing pause controls.
 
 ## Open questions
 - Whether collectibles should be fully moved into pause/diary UI in a later phase or remain as compact HUD counters.

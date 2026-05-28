@@ -49,6 +49,11 @@ namespace Beavermania.UI.Tips
 
         public static bool TryShowTip(TipDefinition tip, string areaKey = null)
         {
+            return tip != null && TryShowTip(tip.ToRequest(), areaKey);
+        }
+
+        public static bool TryShowTip(TipRequest tip, string areaKey = null)
+        {
             return Instance != null && Instance.TryShow(tip, areaKey);
         }
 
@@ -99,7 +104,7 @@ namespace Beavermania.UI.Tips
                 idleState = player.gameObject.AddComponent<PlayerIdleStateTracker>();
         }
 
-        public bool TryShow(TipDefinition tip, string areaKey = null)
+        public bool TryShow(TipRequest tip, string areaKey = null)
         {
             EnsurePresenter();
 
@@ -110,13 +115,14 @@ namespace Beavermania.UI.Tips
             TipRuntimeState state = GetState(stateKey);
             state.TriggerCount++;
 
-            if (state.TriggerCount % tip.TriggerInterval != 0)
+            int triggerInterval = Mathf.Max(1, tip.TriggerInterval);
+            if (state.TriggerCount % triggerInterval != 0)
                 return false;
 
             if (HasExceededDisplayLimit(tip, state))
                 return false;
 
-            if (Time.unscaledTime - state.LastDisplayTime < tip.CooldownSeconds)
+            if (Time.unscaledTime - state.LastDisplayTime < Mathf.Max(0f, tip.CooldownSeconds))
                 return false;
 
             if (presenter != null && presenter.IsShowing && presenter.CurrentPriority >= tip.Priority)
@@ -128,9 +134,11 @@ namespace Beavermania.UI.Tips
             return true;
         }
 
-        bool CanShowTip(TipDefinition tip)
+        bool CanShowTip(TipRequest tip)
         {
-            if (!TipsSettings.Enabled || tip == null || string.IsNullOrWhiteSpace(tip.DisplayText))
+            if (!TipsSettings.Enabled
+                || string.IsNullOrWhiteSpace(tip.UniqueId)
+                || string.IsNullOrWhiteSpace(tip.DisplayText))
                 return false;
 
             if (player != null && player.IsGameplayInputLocked())
@@ -187,12 +195,12 @@ namespace Beavermania.UI.Tips
             return state;
         }
 
-        static bool HasExceededDisplayLimit(TipDefinition tip, TipRuntimeState state)
+        static bool HasExceededDisplayLimit(TipRequest tip, TipRuntimeState state)
         {
             if (tip.ShowOnlyOnce && state.DisplayCount > 0)
                 return true;
 
-            return state.DisplayCount >= tip.MaxDisplayCount;
+            return state.DisplayCount >= Mathf.Max(1, tip.MaxDisplayCount);
         }
 
         static string BuildStateKey(string uniqueId, string areaKey)

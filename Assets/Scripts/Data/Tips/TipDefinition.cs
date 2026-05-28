@@ -40,6 +40,24 @@ namespace Beavermania.Data.Tips
         public int TriggerInterval => triggerInterval;
         public float DisplaySeconds => displaySeconds;
 
+        public TipRequest ToRequest()
+        {
+            return new TipRequest(
+                UniqueId,
+                DisplayText,
+                Priority,
+                Category,
+                CooldownSeconds,
+                MaxDisplayCount,
+                ShowOnlyOnce,
+                MinimumProgress,
+                BlockDuringCombat,
+                IdleOnly,
+                ActiveOnly,
+                TriggerInterval,
+                DisplaySeconds);
+        }
+
         void OnValidate()
         {
             cooldownSeconds = Mathf.Max(0f, cooldownSeconds);

@@ -7,73 +7,60 @@
 - Feature
 
 ## Owner
-- Mixed
+- Mixed (code complete; Unity verification pending)
 
 ## Current phase
-- Phase 1 follow-up collectibles pause summary / verification
+- Verification and merge readiness
 
 ## Goal
-- Improve HUD clarity first, then phase in tips, objectives, footstep feedback, and carried-log game feel without replacing existing pause, input, movement, or combat systems.
+- Improve HUD clarity, tips, objectives, footstep feedback, and carried-log game feel without replacing pause, input, movement, or combat systems.
 
 ## Scope
-- Phase 1 follow-up: add a pause-menu collectibles summary while preserving compact always-visible HUD counters.
+- All five implementation phases (HUD, tips, objectives, footsteps, log weight) plus pause-menu collectibles summary.
 
 ## Out of scope
-- Scene placement of tip trigger zones until Unity Editor follow-up.
+- Scene placement of `TipTriggerZone` until Unity Editor follow-up.
+- Combat-speed penalty wiring (`GroundBeat`/`AirBeat` are not attack gates).
 - Dialogue, shop, animation, and input-action rewrites.
 
 ## Relevant files/assets
-- `Assets/Scripts/Player/BeaverPlayerBehaviour.cs`
-- `Assets/Scripts/Player/Carry.cs`
 - `Assets/Prefabs/Objects/UI/PlayerCanvas.prefab`
-- `Assets/Scripts/Data/Tips/TipDefinition.cs`
-- `Assets/Scripts/Data/Tips/TipRequest.cs`
-- `Assets/Scripts/UI/Tips/*`
-- `Assets/Scripts/UI/UIMenu.cs`
-- `Assets/Scripts/UI/Menus/PauseCollectiblesSummary.cs`
-- `Assets/Scripts/Objects/Newbridge/NewConstructor.cs`
-- `Assets/Scripts/UI/DebugReference.cs`
+- `Assets/Scripts/Player/BeaverPlayerBehaviour.cs`, `Carry.cs`, `SoundScripts/AudioScript.cs`
+- `Assets/Scripts/UI/UIMenu.cs`, `DebugReference.cs`, `Menus/PauseCollectiblesSummary.cs`
+- `Assets/Scripts/UI/Tips/*`, `Assets/Scripts/Data/Tips/*`
 - `Assets/Scripts/UI/Objectives/ObjectiveTrackerPresenter.cs`
-- `Assets/Scripts/Data/Display/FootstepSurfaceEffectProfile.cs`
-- `Assets/Scripts/Display/FootstepVfxEmitter.cs`
-- `Assets/Scripts/Player/SoundScripts/AudioScript.cs`
+- `Assets/Scripts/Display/FootstepVfxEmitter.cs`, `Assets/Scripts/Data/Display/FootstepSurfaceEffectProfile.cs`
+- `Assets/Scripts/Objects/Newbridge/NewConstructor.cs`
 
 ## Risk level
-- High
+- High (prefab + runtime UI + movement penalties)
 
 ## Branch
-- `cursor/feature-ui-ux-gamefeel-improvements-75e4`
+- `cursor/feature-ui-ux-gamefeel-improvements-75e4` (local commits present; remote upstream deleted — re-push before PR)
 
 ## Codex responsibilities
-- Keep script changes narrow and compile-safe.
-- Record prefab/Unity risks and required Play Mode verification.
+- Done: script-level implementation and handoff notes.
 
 ## Cursor responsibilities
-- Verify HUD layout in Unity Editor across common resolutions.
-- Verify pause/menu/input/gameplay flows in Play Mode.
+- Run Unity Play Mode checklist (below).
+- Re-push branch and open/refresh PR if merging.
 
 ## Required verification
-- Code-level: `dotnet build .ci/BeaverMania.CI.csproj`
-- Unity Editor / Play Mode: open Level 1 Remastered, inspect `PlayerCanvas`, confirm HUD layout and existing UI flows.
+- Code-level: `dotnet build .ci/BeaverMania.CI.csproj` (requires Unity managed DLL paths on the machine; failed locally without Unity install — use Unity Editor compile or CI with Unity refs).
+- Unity Editor / Play Mode: Level 1 Remastered, `PlayerCanvas`, pause/tips/objectives/footsteps/carry flows.
 
 ## Current status
-- Phase 1 HUD cleanup is implemented.
-- Phase 2 tips subsystem code is implemented for review.
-- Contextual bridge construction tips are wired to intended bridge construction areas via `NewConstructor`.
-- Phase 3 objective tracker presentation is implemented for review.
-- Phase 4 footstep VFX is implemented through `AudioScript.Step()` for review.
-- Phase 5 carried-log weight penalties are centralized and capped in `Carry`.
-- Phase 5 penalties now rebase when other systems temporarily change walk/run/jump/animation values.
-- Phase 5 carry component now exposes current weight penalty and guards missing references for Play Mode diagnostics.
-- Pause menu now has a runtime collectibles summary for coins, nuts, apples, goblets, arrows, and logs.
+- Phase 1–5 implementation complete on branch.
+- Pause-menu collectibles summary implemented.
+- PR review fixes applied (bridge hint, footstep material/player gating, carry rebase/penalty readout).
 
 ## Next action
-- Owner: Cursor / Unity Editor
-- Action: Run Play Mode validation and confirm the pause-menu collectibles summary is readable and does not overlap existing pause controls.
+- Owner: User / Unity Editor
+- Action: Complete Play Mode checklist; re-push branch; merge when verified.
 
 ## Open questions
-- Whether collectibles should be fully moved into pause/diary UI in a later phase or remain as compact HUD counters.
-- Which scene locations should receive authored `TipTriggerZone` components for bridge/log guidance.
+- Hide compact HUD collectibles after pause summary is accepted?
+- Which scenes get authored `TipDefinition` + `TipTriggerZone` placements?
 
 ## Handoff needed
-- Yes
+- No further code handoff unless Play Mode finds regressions.

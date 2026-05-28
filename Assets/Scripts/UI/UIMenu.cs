@@ -22,6 +22,7 @@ namespace Beavermania.UI.Menus
         [SerializeField] GameObject restartCheckpointConfirmationPanel;
 
         PauseController pauseController;
+        PauseCollectiblesSummary collectiblesSummary;
         bool loggedMissingPlayer;
         bool loggedMissingMusic;
         bool loggedMissingPauseMenu;
@@ -66,12 +67,19 @@ namespace Beavermania.UI.Menus
             InitializeVolumeSlider();
             InitializeSfxVolumeSlider();
             InitializeTipsUi();
+            InitializeCollectiblesSummary();
         }
 
         void InitializeTipsUi()
         {
             TipsService.EnsureForCanvas(gameObject, Player);
             TipsPauseMenuToggleInstaller.Ensure(PauseMenu);
+        }
+
+        void InitializeCollectiblesSummary()
+        {
+            collectiblesSummary = PauseCollectiblesSummary.Ensure(PauseMenu);
+            RefreshCollectiblesSummary();
         }
 
         void InitializeVolumeSlider()
@@ -146,14 +154,14 @@ namespace Beavermania.UI.Menus
         public void Pause()
         {
             PauseController.Pause();
-            RefreshRestartCheckpointButtonState();
+            RefreshPauseMenuDynamicUi();
         }
 
         public void ChangeBolean()
         {
             PauseController.ChangeBolean();
             if (PauseController.ActivePause)
-                RefreshRestartCheckpointButtonState();
+                RefreshPauseMenuDynamicUi();
         }
 
         public void RestartCheckpointFromMenu()
@@ -197,6 +205,21 @@ namespace Beavermania.UI.Menus
                 return;
 
             restartLastCheckpointButton.interactable = Player != null && Player.Lives > 1;
+        }
+
+        public void RefreshPauseMenuDynamicUi()
+        {
+            RefreshRestartCheckpointButtonState();
+            RefreshCollectiblesSummary();
+        }
+
+        void RefreshCollectiblesSummary()
+        {
+            if (collectiblesSummary == null)
+                collectiblesSummary = PauseCollectiblesSummary.Ensure(PauseMenu);
+
+            if (collectiblesSummary != null)
+                collectiblesSummary.Refresh(Player);
         }
 
         void EnsurePauseMenuOpenListener()
@@ -327,7 +350,7 @@ namespace Beavermania.UI.Menus
 
         void OnEnable()
         {
-            owner?.RefreshRestartCheckpointButtonState();
+            owner?.RefreshPauseMenuDynamicUi();
         }
     }
 }

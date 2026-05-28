@@ -46,6 +46,8 @@ namespace Beavermania.Player.Movement
         bool loggedMissingGoal;
         bool loggedMissingLogDrop;
         bool loggedMissingCarryPoint;
+        bool loggedMissingBridgeDrop;
+        bool loggedMissingBridge;
 
         public float CurrentWeightPenalty01 { get; private set; }
 
@@ -96,6 +98,9 @@ namespace Beavermania.Player.Movement
 
                 if (PlayerInputReader.IsRollHeld() && PlayerInputReader.WasInteractPressed() && i == 9)
                 {
+                    if (!CanBuildBridge())
+                        return;
+
                     LogDrop.transform.localRotation = Quaternion.Slerp(transform.rotation, Quaternion.identity, 0);
                     //SpawnPos = new Vector3(LogDrop.transform.position.x, LogDrop.position.y - 0.5f, LogDrop.position.z);
                     if (Bridge != null)
@@ -194,6 +199,24 @@ namespace Beavermania.Player.Movement
                 && CarryPoint[i] != null;
         }
 
+        bool CanBuildBridge()
+        {
+            bool canBuildBridge = true;
+            if (BridgeDrop == null)
+            {
+                LogMissingBuildReference(nameof(BridgeDrop), ref loggedMissingBridgeDrop);
+                canBuildBridge = false;
+            }
+
+            if (Bridge == null)
+            {
+                LogMissingBuildReference(nameof(Bridge), ref loggedMissingBridge);
+                canBuildBridge = false;
+            }
+
+            return canBuildBridge;
+        }
+
         bool HasRequiredReferences()
         {
             ResolveGoalIfMissing();
@@ -235,6 +258,15 @@ namespace Beavermania.Player.Movement
 
             logged = true;
             Debug.LogWarning($"{nameof(Carry)} on '{name}' is missing {referenceName}; carried-log behavior is disabled until it is assigned.", this);
+        }
+
+        void LogMissingBuildReference(string referenceName, ref bool logged)
+        {
+            if (logged)
+                return;
+
+            logged = true;
+            Debug.LogWarning($"{nameof(Carry)} on '{name}' is missing {referenceName}; bridge build is blocked and carried logs are preserved until it is assigned.", this);
         }
 
 

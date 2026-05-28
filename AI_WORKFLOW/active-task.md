@@ -63,6 +63,7 @@
 - Phase 4 footstep VFX is implemented through `AudioScript.Step()` for review.
 - Phase 5 carried-log weight penalties are centralized and capped in `Carry`.
 - Phase 5 penalties now rebase when other systems temporarily change walk/run/jump/animation values.
+- Phase 5 carry component now exposes current weight penalty and guards missing references for Play Mode diagnostics.
 
 ## Next action
 - Owner: Cursor / Unity Editor

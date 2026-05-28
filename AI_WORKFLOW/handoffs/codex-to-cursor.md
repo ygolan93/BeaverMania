@@ -1,7 +1,7 @@
 # Codex → Cursor Handoff
 
 ## Task
-- UI/UX and game-feel improvements — Phase 1 HUD cleanup, Phase 2 tips, Phase 3 objective tracker
+- UI/UX and game-feel improvements — Phase 1 HUD cleanup, Phase 2 tips, Phase 3 objective tracker, Phase 4 footstep feedback
 
 ## Code changes made
 - Compact collectible/ammo/log HUD text values to numbers only so existing icons carry the label meaning.
@@ -10,6 +10,7 @@
 - Add a runtime Tips On/Off toggle to the existing pause menu through `UIMenu` startup without editing the pause menu prefab hierarchy.
 - Add contextual bridge construction tips through `NewConstructor` so bridge/log guidance appears only near intended bridge construction areas.
 - Add an objective tracker presenter that formats current objective text as a compact bullet list and keeps trader/objective override text flowing through the existing `DebugReference` path.
+- Add pooled footstep contact particles triggered from the existing `AudioScript.Step()` animation-event method, with surface resolution by profile, tag, physics material, material name, or fallback.
 - Record mixed ownership and verification requirements in `AI_WORKFLOW/active-task.md`.
 
 ## Files changed
@@ -25,15 +26,20 @@
 - `Assets/Scripts/Objects/Newbridge/NewConstructor.cs`
 - `Assets/Scripts/UI/DebugReference.cs`
 - `Assets/Scripts/UI/Objectives/ObjectiveTrackerPresenter.cs`
+- `Assets/Scripts/Data/Display/FootstepSurfaceEffectProfile.cs`
+- `Assets/Scripts/Display/FootstepVfxEmitter.cs`
+- `Assets/Scripts/Player/SoundScripts/AudioScript.cs`
 
 ## New or changed serialized fields
 - New serialized tuning fields on `TipDefinition`, `TipsService`, `PlayerIdleStateTracker`, `TipCardPresenter`, and `TipTriggerZone`.
+- New serialized tuning fields on `FootstepSurfaceEffectProfile`, `FootstepVfxEmitter`, and `AudioScript.footstepVfxEmitter`.
 - No existing serialized fields were renamed or removed.
 
 ## Inspector assignments required
 - None expected from script changes.
 - Verify existing `DebugReference` text references and `Health_Bar_Script` slider references remain assigned in the active scenes.
 - Phase 2 scene authoring requires creating `TipDefinition` assets and assigning them to `TipTriggerZone` components in intended areas.
+- Optional: assign a `FootstepSurfaceEffectProfile` on `FootstepVfxEmitter` for tuned per-surface colors/prefabs; fallback procedural dust works without assignment.
 
 ## Prefab/scene/UI/Animator follow-up required
 - Inspect `PlayerCanvas.prefab` in Unity Editor and confirm `StaminaBar` is readable at bottom-left across common resolutions.
@@ -42,11 +48,12 @@
 - Confirm the runtime `Tips: On/Off` toggle appears in the pause menu and does not overlap volume/restart controls.
 - Confirm bridge tips appear near `NewConstructor` trigger areas and do not appear globally when the player is away from bridge constructors.
 - Confirm the objective tracker appears middle-left, is readable, and formats current objectives as a compact list.
+- Confirm footstep particles appear subtly on walk/run animation events and do not appear while idle/airborne animations are not stepping.
 - Add `TipTriggerZone` components near intended bridge/log/tutorial areas after validating the runtime card and toggle.
 
 ## What Cursor should test in Play Mode
 - Reproduction path: open Level 1 Remastered, enter Play Mode, move/jump/sprint, pick up coins/nuts/apples/goblets/arrows/logs, open/close pause, toggle Tips off/on.
-- Functional checks: health stays top-left, stamina appears bottom-left and updates, counter text shows icon + number only, objective tracker appears middle-left, log count shows `N/9`, 9-log carry state shows `LCtrl+RMB to build`, pause menu still opens/closes, Tips toggle persists across pause reopen, bridge tips appear only near bridge construction triggers.
+- Functional checks: health stays top-left, stamina appears bottom-left and updates, counter text shows icon + number only, objective tracker appears middle-left, log count shows `N/9`, 9-log carry state shows `LCtrl+RMB to build`, pause menu still opens/closes, Tips toggle persists across pause reopen, bridge tips appear only near bridge construction triggers, footstep particles trigger from existing walk/run step events.
 - Negative/regression checks: no `NullReferenceException`, trader/lose UI still locks input/cursor, objective text still updates, tips do not show while disabled, paused, in trader UI, or away from bridge construction areas.
 
 ## What Cursor should not change
@@ -59,9 +66,10 @@
 - A compact bridge-build instruction remains in the 9/9 log HUD as a fallback while contextual bridge-area tips are verified.
 - Additional authored `TipDefinition` assets or scene `TipTriggerZone` placements have not been added yet.
 - The objective tracker runtime container is created from code; visual padding/background must be checked in the Editor.
+- Footstep VFX uses procedural fallback particles until a tuned `FootstepSurfaceEffectProfile` or particle prefabs are authored in Unity.
 
 ## Risk notes
 - Enemy/NPC behavior risk: Low for Phase 1.
 - Interaction/dialogue/shop flow risk: Medium because `PlayerCanvas.prefab` and pause menu runtime UI are shared with dialogue/shop/pause flows.
 - Player combat/input risk: Low; input is read for gating only, not rebound or intercepted.
-- Pooling/performance risk: Low; bridge tips use cooldown/attempt throttling and do not spawn particles or pooled objects.
+- Pooling/performance risk: Medium-low; footstep particles are pooled and throttled, but visual/performance impact needs Play Mode observation.

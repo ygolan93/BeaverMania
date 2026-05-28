@@ -10,13 +10,13 @@
 - Mixed
 
 ## Current phase
-- Phase 3 objective tracker implementation / verification
+- Phase 4 footstep feedback implementation / verification
 
 ## Goal
 - Improve HUD clarity first, then phase in tips, objectives, footstep feedback, and carried-log game feel without replacing existing pause, input, movement, or combat systems.
 
 ## Scope
-- Phase 3: route the existing objective string through a compact middle-left objective tracker while preserving trader/objective overrides.
+- Phase 4 first slice: add pooled footstep contact particles through the existing animation footstep event path.
 
 ## Out of scope
 - Scene placement of tip trigger zones until Unity Editor follow-up.
@@ -33,6 +33,9 @@
 - `Assets/Scripts/Objects/Newbridge/NewConstructor.cs`
 - `Assets/Scripts/UI/DebugReference.cs`
 - `Assets/Scripts/UI/Objectives/ObjectiveTrackerPresenter.cs`
+- `Assets/Scripts/Data/Display/FootstepSurfaceEffectProfile.cs`
+- `Assets/Scripts/Display/FootstepVfxEmitter.cs`
+- `Assets/Scripts/Player/SoundScripts/AudioScript.cs`
 
 ## Risk level
 - High
@@ -57,10 +60,11 @@
 - Phase 2 tips subsystem code is implemented for review.
 - Contextual bridge construction tips are wired to intended bridge construction areas via `NewConstructor`.
 - Phase 3 objective tracker presentation is implemented for review.
+- Phase 4 footstep VFX is implemented through `AudioScript.Step()` for review.
 
 ## Next action
 - Owner: Cursor / Unity Editor
-- Action: Run Play Mode validation, confirm objective tracker readability at middle-left, and verify trader/objective override text still routes correctly.
+- Action: Run Play Mode validation, confirm footstep bursts trigger only while grounded/moving animation events fire, and tune/assign surface profiles if needed.
 
 ## Open questions
 - Whether collectibles should be fully moved into pause/diary UI in a later phase or remain as compact HUD counters.

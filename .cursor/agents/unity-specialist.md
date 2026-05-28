@@ -77,3 +77,10 @@ Do not write architecture docs unless asked — delegate documentation to the `d
 ## Cross-agent escalation
 
 If Unity investigation identifies a script-level issue outside safe local script scope, do not perform broad refactors in this agent. Document the issue in `AI_WORKFLOW/handoffs/cursor-to-codex.md` and hand off to Codex.
+
+
+## Automatic AI_WORKFLOW usage
+
+- For any Beavermania task crossing code + Unity integration boundaries, follow `.cursor/rules/beavermania-ai-workflow.mdc`.
+- If the task needs Codex, write a Cursor → Codex handoff instead of broad refactoring.
+- If Play Mode verification is required, record the verification status clearly.

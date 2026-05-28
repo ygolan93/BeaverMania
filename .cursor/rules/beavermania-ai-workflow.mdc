@@ -1,0 +1,55 @@
+---
+description: Enforce automatic AI_WORKFLOW protocol usage for BeaverMania tasks
+alwaysApply: true
+---
+
+# BeaverMania AI_WORKFLOW Protocol (Automatic)
+
+For BeaverMania work, apply AI_WORKFLOW protocol by default.
+
+## Required reads before implementation
+
+- `AGENTS.md`
+- `AI_WORKFLOW/README.md`
+- `AI_WORKFLOW/active-task.md`
+
+Also read as task type requires:
+
+- Feature work: `AI_WORKFLOW/task-templates/feature-task.md`
+- Bugfix work: `AI_WORKFLOW/task-templates/bugfix-task.md`
+- Unity testing/Editor verification: `AI_WORKFLOW/task-templates/unity-verification.md`
+- Mixed Codex/Cursor work: `AI_WORKFLOW/handoffs/cursor-to-codex.md` and `AI_WORKFLOW/handoffs/codex-to-cursor.md`
+
+## Ownership classification (mandatory)
+
+Classify every task before implementation as exactly one:
+
+- Cursor-owned
+- Codex-owned
+- Mixed
+- User decision required
+
+## active-task update policy
+
+Create/update `AI_WORKFLOW/active-task.md`, or explicitly recommend user update, when any of the following are true:
+
+- task touches multiple systems
+- task crosses code + Unity Editor boundaries
+- task affects scene/prefab/UI/animation/Inspector wiring
+- task requires Codex review or handoff
+- task is a new gameplay feature
+- task is a regression-prone bugfix
+
+## Handoff policy
+
+- Create/update `AI_WORKFLOW/handoffs/cursor-to-codex.md` when Cursor discovers a script-level issue outside safe local script scope.
+- Create/update `AI_WORKFLOW/handoffs/codex-to-cursor.md` only when applying or reviewing Codex output that requires Unity Editor follow-up.
+
+## Guardrails
+
+Do not:
+
+- perform broad C# refactors without Codex review
+- edit scenes/prefabs/animation/UI assets without explicit scope
+- claim a Unity runtime issue is fixed without Play Mode verification
+- mark mixed tasks complete without workflow status and verification notes

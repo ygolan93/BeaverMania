@@ -46,3 +46,10 @@ When a prompt involves multi-step feature work, bugfixes crossing code + Unity s
   - `AI_WORKFLOW/handoffs/cursor-to-codex.md`
   - `AI_WORKFLOW/handoffs/codex-to-cursor.md`
 - Which tool owns the next step (Codex, Cursor, or User).
+
+
+## AI_WORKFLOW default assumption
+
+- Generated BeaverMania prompts should assume the AI_WORKFLOW protocol is active.
+- Do not repeat full workflow instructions unless the user asks.
+- Include only the specific `active-task`/handoff requirement relevant to the current task.

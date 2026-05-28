@@ -556,7 +556,8 @@ namespace Beavermania.Player.Combat
 
             return GetComponentInParentSafe<NPC_Basic>(collider) != null
                 || GetComponentInParentSafe<ScorpionScript>(collider) != null
-                || GetComponentInParentSafe<Static_Hive>(collider) != null;
+                || GetComponentInParentSafe<Static_Hive>(collider) != null
+                || GetEnemyDamageReceiver(collider) != null;
         }
 
         bool CanFireBreathExplodeFromCollision(Collision collision)
@@ -581,6 +582,16 @@ namespace Beavermania.Player.Combat
         static T GetComponentInParentSafe<T>(Collider collider) where T : Component
         {
             return collider != null ? collider.GetComponentInParent<T>() : null;
+        }
+
+        static IEnemyDamageReceiver GetEnemyDamageReceiver(Collider collider)
+        {
+            return collider != null ? collider.GetComponentInParent<IEnemyDamageReceiver>() : null;
+        }
+
+        static int GetDamageReceiverId(IEnemyDamageReceiver damageReceiver)
+        {
+            return damageReceiver is Component component ? component.GetInstanceID() : damageReceiver.GetHashCode();
         }
 
         static bool ColliderHasTag(Collider collider, string tag)
@@ -641,6 +652,13 @@ namespace Beavermania.Player.Combat
                 return;
 
             Collider hitCollider = collision.collider;
+
+            IEnemyDamageReceiver damageReceiver = GetEnemyDamageReceiver(hitCollider);
+            if (damageReceiver != null && damageReceiver.ReceiveDamage(Damage, EnemyDamageType.Normal, transform))
+            {
+                ArrowHit();
+                return;
+            }
 
             NPC_Basic npc = GetComponentInParentSafe<NPC_Basic>(hitCollider);
             if (npc != null)
@@ -854,6 +872,13 @@ namespace Beavermania.Player.Combat
                 if (!IsPriorityFireBreathTarget(hitCollider))
                     continue;
 
+                IEnemyDamageReceiver damageReceiver = GetEnemyDamageReceiver(hitCollider);
+                if (damageReceiver != null && damagedTargets.Add(GetDamageReceiverId(damageReceiver)))
+                {
+                    damageReceiver.ReceiveDamage(damageAmount, EnemyDamageType.Fire, transform);
+                    continue;
+                }
+
                 NPC_Basic npc = GetComponentInParentSafe<NPC_Basic>(hitCollider);
                 if (npc != null && damagedTargets.Add(npc.GetInstanceID()))
                 {
@@ -1053,8 +1078,14 @@ namespace Beavermania.Player.Combat
                 return;
 
             var hit = false;
+            IEnemyDamageReceiver damageReceiver = GetEnemyDamageReceiver(OBJ.collider);
+            if (damageReceiver != null && damageReceiver.ReceiveDamage(Damage, EnemyDamageType.Normal, transform))
+            {
+                hit = true;
+                RockHit();
+            }
 
-            if (ColliderHasTag(OBJ.collider, "NPC"))
+            if (!hit && ColliderHasTag(OBJ.collider, "NPC"))
             {
                 hit = true;
                 NPC_Basic npc = GetComponentInParentSafe<NPC_Basic>(OBJ.collider);
@@ -1073,7 +1104,7 @@ namespace Beavermania.Player.Combat
                     Player.ChangeSpeech = 1f;
                 }
             }
-            if (ColliderHasTag(OBJ.collider, "Scorpion"))
+            if (!hit && ColliderHasTag(OBJ.collider, "Scorpion"))
             {
                 hit = true;
                 ScorpionScript scorpion = GetComponentInParentSafe<ScorpionScript>(OBJ.collider);
@@ -1087,7 +1118,7 @@ namespace Beavermania.Player.Combat
                 else
                     RockHit();
             }
-            if (ColliderHasTag(OBJ.collider, "Hive"))
+            if (!hit && ColliderHasTag(OBJ.collider, "Hive"))
             {
                 hit = true;
                 Static_Hive hive = GetComponentInParentSafe<Static_Hive>(OBJ.collider);
@@ -1098,7 +1129,7 @@ namespace Beavermania.Player.Combat
                 else
                     RockHit();
             }
-            if (ColliderHasTag(OBJ.collider, "Isle"))
+            if (!hit && ColliderHasTag(OBJ.collider, "Isle"))
             {
                 hit = true;
                 if (UsesFireBreathLogic)

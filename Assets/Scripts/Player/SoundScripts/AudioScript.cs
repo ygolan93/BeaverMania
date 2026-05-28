@@ -1,4 +1,5 @@
 using Beavermania.Display;
+using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using UnityEngine;
 
 namespace Beavermania.Audio
@@ -15,7 +16,7 @@ namespace Beavermania.Audio
         {
             if (footstepVfxEmitter == null)
                 footstepVfxEmitter = GetComponentInParent<FootstepVfxEmitter>();
-            if (footstepVfxEmitter == null)
+            if (footstepVfxEmitter == null && GetComponentInParent<BeaverPlayer>() != null)
                 footstepVfxEmitter = gameObject.AddComponent<FootstepVfxEmitter>();
         }
 

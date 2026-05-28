@@ -12,6 +12,7 @@
 - Add an objective tracker presenter that formats current objective text as a compact bullet list and keeps trader/objective override text flowing through the existing `DebugReference` path.
 - Add pooled footstep contact particles triggered from the existing `AudioScript.Step()` animation-event method, with surface resolution by profile, tag, physics material, material name, or fallback.
 - Centralize carried-log walk/run/jump/animation penalties in `Carry` with threshold, max weight penalty, per-log penalties, animation multiplier, and caps.
+- Rebase carried-log penalties when other temporary effects change player walk/run/jump/animation values, so the log penalty remains active and restores cleanly.
 - Record mixed ownership and verification requirements in `AI_WORKFLOW/active-task.md`.
 
 ## Files changed
@@ -53,11 +54,12 @@
 - Confirm the objective tracker appears middle-left, is readable, and formats current objectives as a compact list.
 - Confirm footstep particles appear subtly on walk/run animation events and do not appear while idle/airborne animations are not stepping.
 - Confirm carrying logs gradually slows walk/run/jump/animation, then restores those stats after dropping logs or building a bridge.
+- Confirm goblet boost and other temporary movement changes still preserve carried-log penalties while active and restore correctly afterward.
 - Add `TipTriggerZone` components near intended bridge/log/tutorial areas after validating the runtime card and toggle.
 
 ## What Cursor should test in Play Mode
 - Reproduction path: open Level 1 Remastered, enter Play Mode, move/jump/sprint, pick up coins/nuts/apples/goblets/arrows/logs, open/close pause, toggle Tips off/on.
-- Functional checks: health stays top-left, stamina appears bottom-left and updates, counter text shows icon + number only, objective tracker appears middle-left, log count shows `N/9`, 9-log carry state shows `LCtrl+RMB to build`, carrying logs slows movement/jump/animation and restores on drop/build, pause menu still opens/closes, Tips toggle persists across pause reopen, bridge tips appear only near bridge construction triggers, footstep particles trigger from existing walk/run step events.
+- Functional checks: health stays top-left, stamina appears bottom-left and updates, counter text shows icon + number only, objective tracker appears middle-left, log count shows `N/9`, 9-log carry state shows `LCtrl+RMB to build`, carrying logs slows movement/jump/animation and restores on drop/build, goblet boost preserves carried-log penalties, pause menu still opens/closes, Tips toggle persists across pause reopen, bridge tips appear only near bridge construction triggers, footstep particles trigger from existing walk/run step events.
 - Negative/regression checks: no `NullReferenceException`, trader/lose UI still locks input/cursor, objective text still updates, tips do not show while disabled, paused, in trader UI, or away from bridge construction areas.
 
 ## What Cursor should not change

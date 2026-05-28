@@ -62,6 +62,7 @@
 - Phase 3 objective tracker presentation is implemented for review.
 - Phase 4 footstep VFX is implemented through `AudioScript.Step()` for review.
 - Phase 5 carried-log weight penalties are centralized and capped in `Carry`.
+- Phase 5 penalties now rebase when other systems temporarily change walk/run/jump/animation values.
 
 ## Next action
 - Owner: Cursor / Unity Editor

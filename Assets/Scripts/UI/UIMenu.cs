@@ -1,5 +1,6 @@
 using Beavermania.Audio;
 using Beavermania.Core.GameFlow;
+using Beavermania.UI.Tips;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using System.Collections;
 using UnityEngine;
@@ -64,6 +65,13 @@ namespace Beavermania.UI.Menus
             RefreshRestartCheckpointButtonState();
             InitializeVolumeSlider();
             InitializeSfxVolumeSlider();
+            InitializeTipsUi();
+        }
+
+        void InitializeTipsUi()
+        {
+            TipsService.EnsureForCanvas(gameObject, Player);
+            TipsPauseMenuToggleInstaller.Ensure(PauseMenu);
         }
 
         void InitializeVolumeSlider()

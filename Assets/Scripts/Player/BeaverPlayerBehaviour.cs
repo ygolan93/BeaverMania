@@ -1855,7 +1855,8 @@ namespace Beavermania.Player
         bool IsPauseLikeFullscreenUi()
         {
             PauseController activePauseController = ResolvePauseController();
-            if (activePauseController != null && activePauseController.ActivePause)
+            if (activePauseController != null
+                && (activePauseController.ActivePause || activePauseController.IsPauseMenuVisible))
                 return true;
 
             if (LooseScreen != null && LooseScreen.activeSelf)
@@ -2660,6 +2661,9 @@ namespace Beavermania.Player
         [Obsolete]
         public void LateUpdate()
         {
+            if (IsPauseLikeFullscreenUi())
+                PlayerCursorRules.ApplyUnlockedVisible();
+
             if (IsGameplayInputLocked())
                 return;
 

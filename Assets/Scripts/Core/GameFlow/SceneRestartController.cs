@@ -1,3 +1,4 @@
+using Beavermania.Display;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -10,6 +11,7 @@ namespace Beavermania.Core.GameFlow
     public sealed class SceneRestartController : MonoBehaviour
     {
         public const string DefaultLevelSceneName = "Level 1 - Remastered - Steam";
+        public const string MainMenuSceneName = "Menu";
 
         public static void LoadLevel1Single()
         {
@@ -20,8 +22,13 @@ namespace Beavermania.Core.GameFlow
         public static void LoadSceneSingle(string sceneName)
         {
             GameTimeScaleGate.ClearAll();
+            if (IsMainMenuScene(sceneName))
+                PlayerCursorRules.ApplyUnlockedVisible();
             SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
         }
+
+        public static bool IsMainMenuScene(string sceneName) =>
+            sceneName == MainMenuSceneName;
 
         public static void ReloadActiveSceneSingle()
         {

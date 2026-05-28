@@ -13,6 +13,8 @@ namespace Beavermania.Core.GameFlow
 
         public bool ActivePause => activePause;
 
+        public bool IsPauseMenuVisible => pauseMenu != null && pauseMenu.activeInHierarchy;
+
         GameObject pauseMenu;
         GameObject question;
         BeaverPlayer player;

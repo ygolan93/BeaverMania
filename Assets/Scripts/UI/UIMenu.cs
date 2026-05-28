@@ -1,5 +1,6 @@
 using Beavermania.Audio;
 using Beavermania.Core.GameFlow;
+using Beavermania.Display;
 using Beavermania.UI.Tips;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using System.Collections;
@@ -253,7 +254,8 @@ namespace Beavermania.UI.Menus
 
         public void MainMenu()
         {
-            SceneRestartController.LoadSceneSingle("Menu");
+            PlayerCursorRules.ApplyUnlockedVisible();
+            SceneRestartController.LoadSceneSingle(SceneRestartController.MainMenuSceneName);
         }
 
         public void Volume()

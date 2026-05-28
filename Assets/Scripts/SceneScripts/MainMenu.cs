@@ -1,11 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
+using Beavermania.Display;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace Beavermania.UI.Menus
 {
-
     public class MainMenu : MonoBehaviour
     {
         //double Timer=57;
@@ -19,6 +17,21 @@ namespace Beavermania.UI.Menus
         //        PlayGame();
         //    }
         //}
+        void Awake()
+        {
+            PlayerCursorRules.ApplyUnlockedVisible();
+        }
+
+        void OnEnable()
+        {
+            PlayerCursorRules.ApplyUnlockedVisible();
+        }
+
+        void LateUpdate()
+        {
+            PlayerCursorRules.ApplyUnlockedVisible();
+        }
+
         public void PlayGame()
         {
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex +1);

@@ -72,3 +72,8 @@ For each task, provide:
 4. **Test plan** — concrete Play Mode checks (input, pause token, combat, scene reload).
 
 Do not write architecture docs unless asked — delegate documentation to the `docs-architect` subagent.
+
+
+## Cross-agent escalation
+
+If Unity investigation identifies a script-level issue outside safe local script scope, do not perform broad refactors in this agent. Document the issue in `AI_WORKFLOW/handoffs/cursor-to-codex.md` and hand off to Codex.

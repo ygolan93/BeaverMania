@@ -173,3 +173,32 @@ For repo-local workflow detail, read:
 - [AI_CONTEXT/UNITY_SAFETY_RULES.md](AI_CONTEXT/UNITY_SAFETY_RULES.md)
 - [AI_CONTEXT/CODEX_WORKFLOW.md](AI_CONTEXT/CODEX_WORKFLOW.md)
 - [AI_CONTEXT/REVIEW_CHECKLIST.md](AI_CONTEXT/REVIEW_CHECKLIST.md)
+
+## Cursor Cloud specific instructions
+
+### Environment summary
+
+- **.NET SDK 8.0** is pre-installed. The update script runs `dotnet restore .ci/BeaverMania.CI.csproj` on startup.
+- **Unity Editor 2021.3.3f1** is at `/opt/unity/Editor/Unity`. It can report its version and run batch-mode commands, but Play Mode / GUI testing requires a valid Unity license (not present by default in the Cloud VM).
+- **Unity managed DLLs** are at `/opt/unity/Editor/Data/Managed/UnityEngine/`.
+- **Cinemachine source** is at `/opt/unity-packages/cinemachine/`.
+
+### Compilation check (primary verification)
+
+```bash
+cd /workspace/BeaverMania/.ci && dotnet build BeaverMania.CI.csproj
+```
+
+This validates C# syntax, type references, and namespaces across all scripts in `Assets/Scripts/` and `Assets/Prefabs/`. It does **not** verify Inspector assignments, runtime gameplay, or serialized references.
+
+### What you cannot do in Cloud without a Unity license
+
+- Open the Unity Editor GUI or enter Play Mode.
+- Run Unity Test Runner (EditMode/PlayMode tests).
+- Build the game executable.
+
+These require a user-activated Unity license on the VM.
+
+### No other services or dependencies
+
+This is a standalone Unity game project. There are no backend services, databases, Docker containers, npm/pip packages, or web servers to start.

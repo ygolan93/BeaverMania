@@ -1,3 +1,4 @@
+using Beavermania.Display;
 using UnityEngine;
 
 namespace Beavermania.Audio
@@ -8,6 +9,15 @@ namespace Beavermania.Audio
         [SerializeField] AudioClip[] audioClip;
         [SerializeField] AudioSource audioSource;
         [SerializeField] AudioSource audioEffects;
+        [SerializeField] FootstepVfxEmitter footstepVfxEmitter;
+
+        void Awake()
+        {
+            if (footstepVfxEmitter == null)
+                footstepVfxEmitter = GetComponentInParent<FootstepVfxEmitter>();
+            if (footstepVfxEmitter == null)
+                footstepVfxEmitter = gameObject.AddComponent<FootstepVfxEmitter>();
+        }
 
         public void SwordSwing3()
         {
@@ -142,6 +152,9 @@ namespace Beavermania.Audio
         }
         public void Step()
         {
+            if (footstepVfxEmitter != null)
+                footstepVfxEmitter.PlayStep();
+
             if (audioSource == null || audioClip == null || audioClip.Length <= 1)
                 return;
 

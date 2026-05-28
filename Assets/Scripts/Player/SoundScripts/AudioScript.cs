@@ -14,10 +14,16 @@ namespace Beavermania.Audio
 
         void Awake()
         {
-            if (footstepVfxEmitter == null)
-                footstepVfxEmitter = GetComponentInParent<FootstepVfxEmitter>();
-            if (footstepVfxEmitter == null && GetComponentInParent<BeaverPlayer>() != null)
-                footstepVfxEmitter = gameObject.AddComponent<FootstepVfxEmitter>();
+            if (footstepVfxEmitter != null)
+                return;
+
+            footstepVfxEmitter = GetComponentInParent<FootstepVfxEmitter>();
+            if (footstepVfxEmitter != null)
+                return;
+
+            BeaverPlayer player = GetComponentInParent<BeaverPlayer>();
+            if (player != null)
+                footstepVfxEmitter = player.gameObject.AddComponent<FootstepVfxEmitter>();
         }
 
         public void SwordSwing3()

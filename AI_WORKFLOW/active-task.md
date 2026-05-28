@@ -10,13 +10,13 @@
 - Mixed
 
 ## Current phase
-- Phase 4 footstep feedback implementation / verification
+- Phase 5 carried-log weight implementation / verification
 
 ## Goal
 - Improve HUD clarity first, then phase in tips, objectives, footstep feedback, and carried-log game feel without replacing existing pause, input, movement, or combat systems.
 
 ## Scope
-- Phase 4 first slice: add pooled footstep contact particles through the existing animation footstep event path.
+- Phase 5 first slice: make the existing carried-log movement penalties capped and designer-tunable without replacing player movement.
 
 ## Out of scope
 - Scene placement of tip trigger zones until Unity Editor follow-up.
@@ -61,10 +61,11 @@
 - Contextual bridge construction tips are wired to intended bridge construction areas via `NewConstructor`.
 - Phase 3 objective tracker presentation is implemented for review.
 - Phase 4 footstep VFX is implemented through `AudioScript.Step()` for review.
+- Phase 5 carried-log weight penalties are centralized and capped in `Carry`.
 
 ## Next action
 - Owner: Cursor / Unity Editor
-- Action: Run Play Mode validation, confirm footstep bursts trigger only while grounded/moving animation events fire, and tune/assign surface profiles if needed.
+- Action: Run Play Mode validation, confirm log pickup/drop/build restores movement stats correctly, and tune carried-log penalty caps.
 
 ## Open questions
 - Whether collectibles should be fully moved into pause/diary UI in a later phase or remain as compact HUD counters.

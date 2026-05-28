@@ -1,7 +1,7 @@
 # Codex → Cursor Handoff
 
 ## Task
-- UI/UX and game-feel improvements — Phase 1 HUD cleanup, Phase 2 tips, Phase 3 objective tracker, Phase 4 footstep feedback
+- UI/UX and game-feel improvements — Phase 1 HUD cleanup, Phase 2 tips, Phase 3 objective tracker, Phase 4 footstep feedback, Phase 5 carried-log weight
 
 ## Code changes made
 - Compact collectible/ammo/log HUD text values to numbers only so existing icons carry the label meaning.
@@ -11,6 +11,7 @@
 - Add contextual bridge construction tips through `NewConstructor` so bridge/log guidance appears only near intended bridge construction areas.
 - Add an objective tracker presenter that formats current objective text as a compact bullet list and keeps trader/objective override text flowing through the existing `DebugReference` path.
 - Add pooled footstep contact particles triggered from the existing `AudioScript.Step()` animation-event method, with surface resolution by profile, tag, physics material, material name, or fallback.
+- Centralize carried-log walk/run/jump/animation penalties in `Carry` with threshold, max weight penalty, per-log penalties, animation multiplier, and caps.
 - Record mixed ownership and verification requirements in `AI_WORKFLOW/active-task.md`.
 
 ## Files changed
@@ -33,6 +34,7 @@
 ## New or changed serialized fields
 - New serialized tuning fields on `TipDefinition`, `TipsService`, `PlayerIdleStateTracker`, `TipCardPresenter`, and `TipTriggerZone`.
 - New serialized tuning fields on `FootstepSurfaceEffectProfile`, `FootstepVfxEmitter`, and `AudioScript.footstepVfxEmitter`.
+- New serialized tuning fields on `Carry`: log threshold, max weight penalty, max walk/run/jump/animation penalties, animation speed multiplier, and minimum animation speed.
 - No existing serialized fields were renamed or removed.
 
 ## Inspector assignments required
@@ -40,6 +42,7 @@
 - Verify existing `DebugReference` text references and `Health_Bar_Script` slider references remain assigned in the active scenes.
 - Phase 2 scene authoring requires creating `TipDefinition` assets and assigning them to `TipTriggerZone` components in intended areas.
 - Optional: assign a `FootstepSurfaceEffectProfile` on `FootstepVfxEmitter` for tuned per-surface colors/prefabs; fallback procedural dust works without assignment.
+- Optional: tune `Carry` weight fields on the player prefab after Play Mode checks; defaults preserve the previous 9-log total penalties.
 
 ## Prefab/scene/UI/Animator follow-up required
 - Inspect `PlayerCanvas.prefab` in Unity Editor and confirm `StaminaBar` is readable at bottom-left across common resolutions.
@@ -49,11 +52,12 @@
 - Confirm bridge tips appear near `NewConstructor` trigger areas and do not appear globally when the player is away from bridge constructors.
 - Confirm the objective tracker appears middle-left, is readable, and formats current objectives as a compact list.
 - Confirm footstep particles appear subtly on walk/run animation events and do not appear while idle/airborne animations are not stepping.
+- Confirm carrying logs gradually slows walk/run/jump/animation, then restores those stats after dropping logs or building a bridge.
 - Add `TipTriggerZone` components near intended bridge/log/tutorial areas after validating the runtime card and toggle.
 
 ## What Cursor should test in Play Mode
 - Reproduction path: open Level 1 Remastered, enter Play Mode, move/jump/sprint, pick up coins/nuts/apples/goblets/arrows/logs, open/close pause, toggle Tips off/on.
-- Functional checks: health stays top-left, stamina appears bottom-left and updates, counter text shows icon + number only, objective tracker appears middle-left, log count shows `N/9`, 9-log carry state shows `LCtrl+RMB to build`, pause menu still opens/closes, Tips toggle persists across pause reopen, bridge tips appear only near bridge construction triggers, footstep particles trigger from existing walk/run step events.
+- Functional checks: health stays top-left, stamina appears bottom-left and updates, counter text shows icon + number only, objective tracker appears middle-left, log count shows `N/9`, 9-log carry state shows `LCtrl+RMB to build`, carrying logs slows movement/jump/animation and restores on drop/build, pause menu still opens/closes, Tips toggle persists across pause reopen, bridge tips appear only near bridge construction triggers, footstep particles trigger from existing walk/run step events.
 - Negative/regression checks: no `NullReferenceException`, trader/lose UI still locks input/cursor, objective text still updates, tips do not show while disabled, paused, in trader UI, or away from bridge construction areas.
 
 ## What Cursor should not change
@@ -67,6 +71,7 @@
 - Additional authored `TipDefinition` assets or scene `TipTriggerZone` placements have not been added yet.
 - The objective tracker runtime container is created from code; visual padding/background must be checked in the Editor.
 - Footstep VFX uses procedural fallback particles until a tuned `FootstepSurfaceEffectProfile` or particle prefabs are authored in Unity.
+- Carried-log penalties still apply through existing `Carry` stat adjustments; deeper combat attack-speed integration is deferred to avoid broad combat rewrites.
 
 ## Risk notes
 - Enemy/NPC behavior risk: Low for Phase 1.

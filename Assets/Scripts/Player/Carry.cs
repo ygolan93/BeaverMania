@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using Beavermania.Core.Input;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using UnityEngine;
@@ -20,11 +18,27 @@ namespace Beavermania.Player.Movement
 
         [Header("Movement affect factors")]
         public int i = 0;
-        public float WalkFactor=0.07f;
-        public float RunFactor=0.8f;
-        public float JumpFactor=0.3f;
+        public float WalkFactor = 0.07f;
+        public float RunFactor = 0.8f;
+        public float JumpFactor = 0.3f;
         public float SlowAnim = 0.1f;
         public bool CanCarry;
+
+        [Header("Carried log weight tuning")]
+        [SerializeField] int logsCountThreshold = 1;
+        [SerializeField, Range(0f, 1f)] float maxWeightPenalty = 1f;
+        [SerializeField] float maxWalkPenalty = 0.63f;
+        [SerializeField] float maxRunPenalty = 7.2f;
+        [SerializeField] float maxJumpPenalty = 2.7f;
+        [SerializeField] float animationSpeedMultiplier = 1f;
+        [SerializeField] float maxAnimationSpeedPenalty = 0.9f;
+        [SerializeField] float minimumAnimationSpeed = 0.2f;
+
+        float appliedWalkPenalty;
+        float appliedRunPenalty;
+        float appliedJumpPenalty;
+        float appliedAnimationPenalty;
+
         public void OnCollisionEnter(Collision OBJ)
         {
             if (OBJ.gameObject.CompareTag("Part"))
@@ -34,10 +48,7 @@ namespace Beavermania.Player.Movement
                     //Goal.Otter.Play("Crouch");
                     CarryPoint[i].SetActive(true);
                     i++;
-                    Goal.JumpForce -= JumpFactor;
-                    Goal.Walk -= WalkFactor;
-                    Goal.Run -= RunFactor;
-                    Goal.Otter.speed -=SlowAnim;
+                    ApplyCarryWeightPenalty();
                     Destroy(OBJ.transform.gameObject);
                 }
             }
@@ -55,20 +66,13 @@ namespace Beavermania.Player.Movement
                 if (PlayerInputReader.WasRollReleased() && i > 0)
                 {
                     i--;
-                    Goal.JumpForce += JumpFactor;
-                    Goal.Walk += WalkFactor;
-                    Goal.Run += RunFactor;
-                    Goal.Otter.speed += SlowAnim;
+                    ApplyCarryWeightPenalty();
                     Instantiate(Log, SpawnPos, Quaternion.identity);
                     CarryPoint[i].SetActive(false);
                 }
 
                 if (PlayerInputReader.IsRollHeld() && PlayerInputReader.WasInteractPressed() && i == 9)
                 {
-                    Goal.JumpForce += 9 * JumpFactor;
-                    Goal.Otter.speed = 1;
-                    Goal.Walk += 9 * WalkFactor;
-                    Goal.Run += 9 * RunFactor;
                     LogDrop.transform.localRotation = Quaternion.Slerp(transform.rotation, Quaternion.identity, 0);
                     //SpawnPos = new Vector3(LogDrop.transform.position.x, LogDrop.position.y - 0.5f, LogDrop.position.z);
                     Bridge.transform.rotation = Goal.rotGoal * Quaternion.Euler(-90, 0, 0);
@@ -77,6 +81,7 @@ namespace Beavermania.Player.Movement
                     Destroy(newPoof);
 
                     i = 0;
+                    ApplyCarryWeightPenalty();
                     for (int x = 0; x < 9; x++)
                     {
                         CarryPoint[x].SetActive(false);
@@ -90,6 +95,39 @@ namespace Beavermania.Player.Movement
                 else
                     CanCarry = false;
             }
+        }
+
+        void ApplyCarryWeightPenalty()
+        {
+            if (Goal == null)
+                return;
+
+            float walkPenalty = CalculatePenalty(WalkFactor, maxWalkPenalty);
+            float runPenalty = CalculatePenalty(RunFactor, maxRunPenalty);
+            float jumpPenalty = CalculatePenalty(JumpFactor, maxJumpPenalty);
+            float animationPenalty = CalculatePenalty(SlowAnim * animationSpeedMultiplier, maxAnimationSpeedPenalty);
+
+            Goal.Walk += appliedWalkPenalty - walkPenalty;
+            Goal.Run += appliedRunPenalty - runPenalty;
+            Goal.JumpForce += appliedJumpPenalty - jumpPenalty;
+
+            if (Goal.Otter != null)
+            {
+                float animationSpeedBeforeCarryPenalty = Goal.Otter.speed + appliedAnimationPenalty;
+                Goal.Otter.speed = Mathf.Max(minimumAnimationSpeed, animationSpeedBeforeCarryPenalty - animationPenalty);
+                appliedAnimationPenalty = animationSpeedBeforeCarryPenalty - Goal.Otter.speed;
+            }
+
+            appliedWalkPenalty = walkPenalty;
+            appliedRunPenalty = runPenalty;
+            appliedJumpPenalty = jumpPenalty;
+        }
+
+        float CalculatePenalty(float penaltyPerLog, float maxPenalty)
+        {
+            int effectiveLogCount = Mathf.Max(0, i - Mathf.Max(1, logsCountThreshold) + 1);
+            float cappedMaxPenalty = Mathf.Max(0f, maxPenalty) * Mathf.Clamp01(maxWeightPenalty);
+            return Mathf.Min(effectiveLogCount * Mathf.Max(0f, penaltyPerLog), cappedMaxPenalty);
         }
 
 

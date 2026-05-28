@@ -35,3 +35,14 @@ When the workspace is **BeaverProject** / BeaverMania, include these in the prom
 - **Plan**: prefab/scene YAML, animation parameters, Input Actions assets, trader/shop/dialogue flow, multi-system bugs.
 - **Agent**: single-script fix with known file and clear repro.
 - **Multitask**: rare — only when areas are file/prefab disjoint.
+
+## Cross-agent workflow prompts
+
+When a prompt involves multi-step feature work, bugfixes crossing code + Unity scene/prefab/UI/animation boundaries, Codex/Cursor cooperation, or PR/review/merge readiness, include:
+
+- `AI_WORKFLOW/README.md` as protocol context.
+- `AI_WORKFLOW/active-task.md` update requirement (yes/no + owner).
+- Whether a handoff file must be created:
+  - `AI_WORKFLOW/handoffs/cursor-to-codex.md`
+  - `AI_WORKFLOW/handoffs/codex-to-cursor.md`
+- Which tool owns the next step (Codex, Cursor, or User).

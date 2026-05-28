@@ -47,6 +47,24 @@ Codex should avoid unless explicitly requested:
 
 Existing Cursor workflow guidance remains relevant: use planning/review for multi-system work, and only use focused implementation for a small, known script bug with a specific expected outcome.
 
+## Cross-Agent Workflow Protocol
+
+Use the repository workflow layer for mixed Codex/Cursor delivery:
+
+- `AI_WORKFLOW/README.md`
+- `AI_WORKFLOW/active-task.md`
+- `AI_WORKFLOW/handoffs/cursor-to-codex.md`
+- `AI_WORKFLOW/handoffs/codex-to-cursor.md`
+- `AI_WORKFLOW/task-templates/`
+
+Rules:
+
+- Codex and Cursor communicate through these files, not assumptions.
+- If a task crosses script + Unity Editor boundaries, define ownership before implementing.
+- If Codex changes code requiring Inspector/prefab/scene follow-up, it must write a Codex → Cursor handoff.
+- If Cursor finds a script-level issue during Unity debugging, it must write a Cursor → Codex handoff.
+- Do not mark mixed tasks complete until both code-level checks and Unity verification status are recorded.
+
 ## 4. High-Risk Files and Areas
 
 Treat these as high risk:

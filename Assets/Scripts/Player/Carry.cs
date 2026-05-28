@@ -38,6 +38,11 @@ namespace Beavermania.Player.Movement
         float appliedRunPenalty;
         float appliedJumpPenalty;
         float appliedAnimationPenalty;
+        float lastAppliedWalkValue;
+        float lastAppliedRunValue;
+        float lastAppliedJumpValue;
+        float lastAppliedAnimationSpeed;
+        bool hasAppliedStats;
 
         public void OnCollisionEnter(Collision OBJ)
         {
@@ -58,6 +63,7 @@ namespace Beavermania.Player.Movement
         {
             Vector3 SpawnPos = LogDrop.transform.position;
             Goal.LogCount = i + "/9";
+            ApplyCarryWeightPenalty();
 
             if (Goal.grounded == true)
             {
@@ -107,20 +113,29 @@ namespace Beavermania.Player.Movement
             float jumpPenalty = CalculatePenalty(JumpFactor, maxJumpPenalty);
             float animationPenalty = CalculatePenalty(SlowAnim * animationSpeedMultiplier, maxAnimationSpeedPenalty);
 
-            Goal.Walk += appliedWalkPenalty - walkPenalty;
-            Goal.Run += appliedRunPenalty - runPenalty;
-            Goal.JumpForce += appliedJumpPenalty - jumpPenalty;
+            float baseWalk = ResolveBaseValue(Goal.Walk, lastAppliedWalkValue, appliedWalkPenalty);
+            float baseRun = ResolveBaseValue(Goal.Run, lastAppliedRunValue, appliedRunPenalty);
+            float baseJump = ResolveBaseValue(Goal.JumpForce, lastAppliedJumpValue, appliedJumpPenalty);
+
+            Goal.Walk = baseWalk - walkPenalty;
+            Goal.Run = baseRun - runPenalty;
+            Goal.JumpForce = baseJump - jumpPenalty;
 
             if (Goal.Otter != null)
             {
-                float animationSpeedBeforeCarryPenalty = Goal.Otter.speed + appliedAnimationPenalty;
-                Goal.Otter.speed = Mathf.Max(minimumAnimationSpeed, animationSpeedBeforeCarryPenalty - animationPenalty);
-                appliedAnimationPenalty = animationSpeedBeforeCarryPenalty - Goal.Otter.speed;
+                float baseAnimationSpeed = ResolveBaseValue(Goal.Otter.speed, lastAppliedAnimationSpeed, appliedAnimationPenalty);
+                Goal.Otter.speed = Mathf.Max(minimumAnimationSpeed, baseAnimationSpeed - animationPenalty);
+                appliedAnimationPenalty = baseAnimationSpeed - Goal.Otter.speed;
+                lastAppliedAnimationSpeed = Goal.Otter.speed;
             }
 
             appliedWalkPenalty = walkPenalty;
             appliedRunPenalty = runPenalty;
             appliedJumpPenalty = jumpPenalty;
+            lastAppliedWalkValue = Goal.Walk;
+            lastAppliedRunValue = Goal.Run;
+            lastAppliedJumpValue = Goal.JumpForce;
+            hasAppliedStats = true;
         }
 
         float CalculatePenalty(float penaltyPerLog, float maxPenalty)
@@ -128,6 +143,16 @@ namespace Beavermania.Player.Movement
             int effectiveLogCount = Mathf.Max(0, i - Mathf.Max(1, logsCountThreshold) + 1);
             float cappedMaxPenalty = Mathf.Max(0f, maxPenalty) * Mathf.Clamp01(maxWeightPenalty);
             return Mathf.Min(effectiveLogCount * Mathf.Max(0f, penaltyPerLog), cappedMaxPenalty);
+        }
+
+        float ResolveBaseValue(float currentValue, float lastAppliedValue, float appliedPenalty)
+        {
+            if (!hasAppliedStats)
+                return currentValue + appliedPenalty;
+
+            return Mathf.Approximately(currentValue, lastAppliedValue)
+                ? currentValue + appliedPenalty
+                : currentValue;
         }
 
 

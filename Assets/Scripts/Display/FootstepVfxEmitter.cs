@@ -87,14 +87,15 @@ namespace Beavermania.Display
                     return FootstepSurfaceEffectProfile.SurfaceRule.CreateDefault(FootstepSurfaceType.Dust);
                 }
 
-                string materialName = hitCollider.sharedMaterial != null ? hitCollider.sharedMaterial.name : null;
-                if (Contains(materialName, "wood"))
+                string physicsMaterialName = hitCollider.sharedMaterial != null ? hitCollider.sharedMaterial.name : null;
+                string rendererMaterialName = ResolveRendererMaterialName(hitCollider);
+                if (Contains(physicsMaterialName, "wood") || Contains(rendererMaterialName, "wood"))
                     return FootstepSurfaceEffectProfile.SurfaceRule.CreateDefault(FootstepSurfaceType.Wood);
-                if (Contains(materialName, "sand"))
+                if (Contains(physicsMaterialName, "sand") || Contains(rendererMaterialName, "sand"))
                     return FootstepSurfaceEffectProfile.SurfaceRule.CreateDefault(FootstepSurfaceType.Sand);
-                if (Contains(materialName, "mud"))
+                if (Contains(physicsMaterialName, "mud") || Contains(rendererMaterialName, "mud"))
                     return FootstepSurfaceEffectProfile.SurfaceRule.CreateDefault(FootstepSurfaceType.Mud);
-                if (Contains(materialName, "water"))
+                if (Contains(physicsMaterialName, "water") || Contains(rendererMaterialName, "water"))
                     return FootstepSurfaceEffectProfile.SurfaceRule.CreateDefault(FootstepSurfaceType.Water);
             }
 
@@ -206,6 +207,20 @@ namespace Beavermania.Display
         {
             return !string.IsNullOrWhiteSpace(value)
                 && value.IndexOf(fragment, System.StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        static string ResolveRendererMaterialName(Collider hitCollider)
+        {
+            if (hitCollider == null)
+                return null;
+
+            Renderer renderer = hitCollider.GetComponent<Renderer>();
+            if (renderer == null)
+                renderer = hitCollider.GetComponentInParent<Renderer>();
+
+            return renderer != null && renderer.sharedMaterial != null
+                ? renderer.sharedMaterial.name
+                : null;
         }
     }
 }

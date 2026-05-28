@@ -51,7 +51,7 @@ namespace Beavermania.Player.Movement
             if (Goal.grounded == true)
             {
                 if (i == 9)
-                    Goal.LogCount = "9/9";
+                    Goal.LogCount = "9/9  LCtrl+RMB to build";
                 if (PlayerInputReader.WasRollReleased() && i > 0)
                 {
                     i--;

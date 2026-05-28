@@ -29,7 +29,7 @@
 
 ## What Cursor should test in Play Mode
 - Reproduction path: open Level 1 Remastered, enter Play Mode, move/jump/sprint, pick up coins/nuts/apples/goblets/arrows/logs, open/close pause.
-- Functional checks: health stays top-left, stamina appears bottom-left and updates, counter text shows icon + number only, log count shows `N/9`, pause menu still opens/closes.
+- Functional checks: health stays top-left, stamina appears bottom-left and updates, counter text shows icon + number only, log count shows `N/9`, 9-log carry state shows `LCtrl+RMB to build`, pause menu still opens/closes.
 - Negative/regression checks: no `NullReferenceException`, trader/lose UI still locks input/cursor, objective text still updates, bridge construction hinting is not treated as complete until the tips subsystem phase.
 
 ## What Cursor should not change
@@ -38,7 +38,7 @@
 
 ## Known limitations
 - Unity Play Mode was not available in Cloud, so layout and serialized-reference behavior need Editor verification.
-- The long bridge/log instruction text was removed from the always-visible log HUD; Phase 2 should reintroduce contextual bridge guidance through the tips subsystem.
+- A compact bridge-build instruction remains in the 9/9 log HUD until Phase 2 can replace it with contextual tips.
 
 ## Risk notes
 - Enemy/NPC behavior risk: Low for Phase 1.

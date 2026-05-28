@@ -2,12 +2,19 @@ using UnityEngine;
 using UnityEngine.UI;
 using Beavermania.Audio;
 using Beavermania.Core.Input;
+using Beavermania.Data.Tips;
+using Beavermania.UI.Tips;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 
 namespace Beavermania.Objects
 {
     public class NewConstructor : MonoBehaviour
     {
+        const string BridgeLockTipId = "bridge.lock-construction";
+        const string BridgeCarryLogsTipId = "bridge.carry-logs";
+        const string BridgeBuildTipId = "bridge.build-with-logs";
+        const string BridgeExtendTipId = "bridge.extend-with-nut";
+
         public BeaverPlayer Player;
         public int PartCount = 0;
         public int BridgeLimit = 8;
@@ -31,6 +38,10 @@ namespace Beavermania.Objects
         public BoxCollider[] partsColliders;
         bool invokeLock = false;
         Vector3 lockPos;
+        [SerializeField] float bridgeTipRepeatAttemptSeconds = 2f;
+        float nextBridgeTipAttemptTime;
+        string bridgeTipAreaKey;
+
         private void Awake()
         {
             //Ramp = GetComponent<MeshRenderer>();
@@ -45,6 +56,7 @@ namespace Beavermania.Objects
             isLocked = false;
             BridgeText = "press left ctrl for bridge lock and construction";
             BridgeUI.text = BridgeText;
+            bridgeTipAreaKey = "bridge:" + GetInstanceID();
         }
 
         [System.Obsolete]
@@ -87,6 +99,8 @@ namespace Beavermania.Objects
         {
             if (OBJ.gameObject.CompareTag("Player"))
             {
+                TryShowBridgeTip();
+
                 if (PlayerInputReader.WasRollPressed())
                 {
                     if (invokeLock==false)
@@ -120,6 +134,63 @@ namespace Beavermania.Objects
                 Player.ChangeSpeech = 3;
             }
 
+        }
+
+        void TryShowBridgeTip()
+        {
+            if (Time.unscaledTime < nextBridgeTipAttemptTime)
+                return;
+
+            nextBridgeTipAttemptTime = Time.unscaledTime + Mathf.Max(0.25f, bridgeTipRepeatAttemptSeconds);
+
+            if (!isLocked)
+            {
+                TipsService.TryShowTip(new TipRequest(
+                    BridgeLockTipId,
+                    "Hold LCtrl here to lock bridge construction.",
+                    priority: 20,
+                    cooldownSeconds: 12f,
+                    maxDisplayCount: 2,
+                    showOnlyOnce: false,
+                    displaySeconds: 4f), bridgeTipAreaKey);
+                return;
+            }
+
+            if (PartCount >= BridgeLimit)
+            {
+                TipsService.TryShowTip(new TipRequest(
+                    BridgeExtendTipId,
+                    "Use a nut here to extend the bridge.",
+                    priority: 15,
+                    cooldownSeconds: 12f,
+                    maxDisplayCount: 2,
+                    showOnlyOnce: false,
+                    displaySeconds: 4f), bridgeTipAreaKey);
+                return;
+            }
+
+            if (Player != null && Player.Load != null && Player.Load.i > 0)
+            {
+                TipsService.TryShowTip(new TipRequest(
+                    BridgeBuildTipId,
+                    "Drop logs into this bridge frame to build.",
+                    priority: 25,
+                    cooldownSeconds: 8f,
+                    maxDisplayCount: 3,
+                    showOnlyOnce: false,
+                    displaySeconds: 4f), bridgeTipAreaKey);
+                return;
+            }
+
+            TipsService.TryShowTip(new TipRequest(
+                BridgeCarryLogsTipId,
+                "Bring logs here after locking the bridge frame.",
+                priority: 10,
+                cooldownSeconds: 14f,
+                maxDisplayCount: 2,
+                showOnlyOnce: false,
+                idleOnly: true,
+                displaySeconds: 4f), bridgeTipAreaKey);
         }
 
         void MergeColliders(BoxCollider[] bridgeParts)

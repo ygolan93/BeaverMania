@@ -2,12 +2,16 @@ using Beavermania.Audio;
 using Beavermania.Core.Input;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Beavermania.Core.GameFlow
 {
     public class PauseController : MonoBehaviour
     {
-        public bool ActivePause { get; private set; }
+        [FormerlySerializedAs("ActivePause")]
+        [SerializeField] bool activePause;
+
+        public bool ActivePause => activePause;
 
         GameObject pauseMenu;
         GameObject question;
@@ -28,7 +32,7 @@ namespace Beavermania.Core.GameFlow
             if (player == null)
                 LogMissingReference(nameof(player), ref loggedMissingPlayer);
 
-            ActivePause = false;
+            activePause = false;
             ApplyPauseState();
         }
 
@@ -72,7 +76,7 @@ namespace Beavermania.Core.GameFlow
 
         void SetPaused(bool paused)
         {
-            ActivePause = paused;
+            activePause = paused;
             ApplyPauseState();
         }
 
@@ -142,7 +146,7 @@ namespace Beavermania.Core.GameFlow
             if (!ActivePause)
                 return;
 
-            ActivePause = false;
+            activePause = false;
             SetMenuVisible(false);
             SetQuestionVisible(false);
             GameTimeScaleGate.SetFreeze(GameTimeScaleGate.FreezeToken.PauseMenu, false);

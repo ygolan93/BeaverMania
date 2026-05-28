@@ -43,12 +43,25 @@ namespace Beavermania.Player.Movement
         float lastAppliedJumpValue;
         float lastAppliedAnimationSpeed;
         bool hasAppliedStats;
+        bool loggedMissingGoal;
+        bool loggedMissingLogDrop;
+        bool loggedMissingCarryPoint;
+
+        public float CurrentWeightPenalty01 { get; private set; }
+
+        void Awake()
+        {
+            ResolveGoalIfMissing();
+        }
 
         public void OnCollisionEnter(Collision OBJ)
         {
+            if (OBJ == null || OBJ.gameObject == null)
+                return;
+
             if (OBJ.gameObject.CompareTag("Part"))
             {
-                if (i < CarryPoint.Length - 1 && !PlayerInputReader.IsPrimaryHeld())
+                if (CanAddLog() && !PlayerInputReader.IsPrimaryHeld())
                 {
                     //Goal.Otter.Play("Crouch");
                     CarryPoint[i].SetActive(true);
@@ -61,6 +74,9 @@ namespace Beavermania.Player.Movement
 
         public void Update()
         {
+            if (!HasRequiredReferences())
+                return;
+
             Vector3 SpawnPos = LogDrop.transform.position;
             Goal.LogCount = i + "/9";
             ApplyCarryWeightPenalty();
@@ -74,23 +90,34 @@ namespace Beavermania.Player.Movement
                     i--;
                     ApplyCarryWeightPenalty();
                     Instantiate(Log, SpawnPos, Quaternion.identity);
-                    CarryPoint[i].SetActive(false);
+                    if (i >= 0 && i < CarryPoint.Length && CarryPoint[i] != null)
+                        CarryPoint[i].SetActive(false);
                 }
 
                 if (PlayerInputReader.IsRollHeld() && PlayerInputReader.WasInteractPressed() && i == 9)
                 {
                     LogDrop.transform.localRotation = Quaternion.Slerp(transform.rotation, Quaternion.identity, 0);
                     //SpawnPos = new Vector3(LogDrop.transform.position.x, LogDrop.position.y - 0.5f, LogDrop.position.z);
-                    Bridge.transform.rotation = Goal.rotGoal * Quaternion.Euler(-90, 0, 0);
-                    var newPoof= Instantiate(Poof, BridgeDrop.position + new Vector3(0, 0.5f, 0), Goal.transform.rotation * Quaternion.Euler(0, 180, 0));
-                    Instantiate(Bridge, BridgeDrop.position + new Vector3(0,0.5f,0), Goal.transform.rotation*Quaternion.Euler(0,180,0));
-                    Destroy(newPoof);
+                    if (Bridge != null)
+                        Bridge.transform.rotation = Goal.rotGoal * Quaternion.Euler(-90, 0, 0);
+                    if (BridgeDrop != null)
+                    {
+                        if (Poof != null)
+                        {
+                            var newPoof = Instantiate(Poof, BridgeDrop.position + new Vector3(0, 0.5f, 0), Goal.transform.rotation * Quaternion.Euler(0, 180, 0));
+                            Destroy(newPoof);
+                        }
+                        if (Bridge != null)
+                            Instantiate(Bridge, BridgeDrop.position + new Vector3(0, 0.5f, 0), Goal.transform.rotation * Quaternion.Euler(0, 180, 0));
+                    }
 
                     i = 0;
                     ApplyCarryWeightPenalty();
-                    for (int x = 0; x < 9; x++)
+                    int carriedVisualCount = CarryPoint != null ? Mathf.Min(9, CarryPoint.Length) : 0;
+                    for (int x = 0; x < carriedVisualCount; x++)
                     {
-                        CarryPoint[x].SetActive(false);
+                        if (CarryPoint[x] != null)
+                            CarryPoint[x].SetActive(false);
                     }
                 }
 
@@ -108,6 +135,7 @@ namespace Beavermania.Player.Movement
             if (Goal == null)
                 return;
 
+            CurrentWeightPenalty01 = 0f;
             float walkPenalty = CalculatePenalty(WalkFactor, maxWalkPenalty);
             float runPenalty = CalculatePenalty(RunFactor, maxRunPenalty);
             float jumpPenalty = CalculatePenalty(JumpFactor, maxJumpPenalty);
@@ -142,7 +170,9 @@ namespace Beavermania.Player.Movement
         {
             int effectiveLogCount = Mathf.Max(0, i - Mathf.Max(1, logsCountThreshold) + 1);
             float cappedMaxPenalty = Mathf.Max(0f, maxPenalty) * Mathf.Clamp01(maxWeightPenalty);
-            return Mathf.Min(effectiveLogCount * Mathf.Max(0f, penaltyPerLog), cappedMaxPenalty);
+            float penalty = Mathf.Min(effectiveLogCount * Mathf.Max(0f, penaltyPerLog), cappedMaxPenalty);
+            CurrentWeightPenalty01 = Mathf.Max(CurrentWeightPenalty01, cappedMaxPenalty > 0f ? penalty / cappedMaxPenalty : 0f);
+            return penalty;
         }
 
         float ResolveBaseValue(float currentValue, float lastAppliedValue, float appliedPenalty)
@@ -153,6 +183,58 @@ namespace Beavermania.Player.Movement
             return Mathf.Approximately(currentValue, lastAppliedValue)
                 ? currentValue + appliedPenalty
                 : currentValue;
+        }
+
+        bool CanAddLog()
+        {
+            return CarryPoint != null
+                && CarryPoint.Length > 0
+                && i >= 0
+                && i < CarryPoint.Length - 1
+                && CarryPoint[i] != null;
+        }
+
+        bool HasRequiredReferences()
+        {
+            ResolveGoalIfMissing();
+
+            bool hasReferences = true;
+            if (Goal == null)
+            {
+                LogMissingReference(nameof(Goal), ref loggedMissingGoal);
+                hasReferences = false;
+            }
+
+            if (LogDrop == null)
+            {
+                LogMissingReference(nameof(LogDrop), ref loggedMissingLogDrop);
+                hasReferences = false;
+            }
+
+            if (CarryPoint == null || CarryPoint.Length == 0)
+            {
+                LogMissingReference(nameof(CarryPoint), ref loggedMissingCarryPoint);
+                hasReferences = false;
+            }
+
+            return hasReferences;
+        }
+
+        void ResolveGoalIfMissing()
+        {
+            if (Goal != null)
+                return;
+
+            Goal = GetComponent<BeaverPlayer>();
+        }
+
+        void LogMissingReference(string referenceName, ref bool logged)
+        {
+            if (logged)
+                return;
+
+            logged = true;
+            Debug.LogWarning($"{nameof(Carry)} on '{name}' is missing {referenceName}; carried-log behavior is disabled until it is assigned.", this);
         }
 
 

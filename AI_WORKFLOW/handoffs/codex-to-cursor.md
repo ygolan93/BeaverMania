@@ -13,6 +13,7 @@
 - Add pooled footstep contact particles triggered from the existing `AudioScript.Step()` animation-event method, with surface resolution by profile, tag, physics material, material name, or fallback.
 - Centralize carried-log walk/run/jump/animation penalties in `Carry` with threshold, max weight penalty, per-log penalties, animation multiplier, and caps.
 - Rebase carried-log penalties when other temporary effects change player walk/run/jump/animation values, so the log penalty remains active and restores cleanly.
+- Expose `Carry.CurrentWeightPenalty01` for future HUD/combat hooks and add warning guards for missing carry references.
 - Record mixed ownership and verification requirements in `AI_WORKFLOW/active-task.md`.
 
 ## Files changed
@@ -44,6 +45,7 @@
 - Phase 2 scene authoring requires creating `TipDefinition` assets and assigning them to `TipTriggerZone` components in intended areas.
 - Optional: assign a `FootstepSurfaceEffectProfile` on `FootstepVfxEmitter` for tuned per-surface colors/prefabs; fallback procedural dust works without assignment.
 - Optional: tune `Carry` weight fields on the player prefab after Play Mode checks; defaults preserve the previous 9-log total penalties.
+- Inspect any `Carry` missing-reference warnings before tuning movement penalties.
 
 ## Prefab/scene/UI/Animator follow-up required
 - Inspect `PlayerCanvas.prefab` in Unity Editor and confirm `StaminaBar` is readable at bottom-left across common resolutions.
@@ -55,6 +57,7 @@
 - Confirm footstep particles appear subtly on walk/run animation events and do not appear while idle/airborne animations are not stepping.
 - Confirm carrying logs gradually slows walk/run/jump/animation, then restores those stats after dropping logs or building a bridge.
 - Confirm goblet boost and other temporary movement changes still preserve carried-log penalties while active and restore correctly afterward.
+- Confirm no `Carry` missing-reference warnings appear on player prefab instances.
 - Add `TipTriggerZone` components near intended bridge/log/tutorial areas after validating the runtime card and toggle.
 
 ## What Cursor should test in Play Mode

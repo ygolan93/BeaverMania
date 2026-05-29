@@ -166,6 +166,8 @@ Recommended branch names:
 - FPS and rendering stability.
 - Avoid large architecture work unless it directly supports Steam release stability.
 
+For intake and routing between ChatGPT, Cursor, and Codex, use the lightweight routing inbox layer in [AI_WORKFLOW/README.md](AI_WORKFLOW/README.md).
+
 For repo-local workflow detail, read:
 
 - [AI_CONTEXT/PROJECT_OVERVIEW.md](AI_CONTEXT/PROJECT_OVERVIEW.md)

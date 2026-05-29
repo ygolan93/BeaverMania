@@ -15,11 +15,24 @@ namespace Beavermania.Core.GameFlow
             {
                 instance = this;
                 DontDestroyOnLoad(instance);
+                EnsureGameplayServices();
             }
             else
             {
                 Destroy(gameObject);
             }
+        }
+
+        static void EnsureGameplayServices()
+        {
+            if (instance == null)
+                return;
+
+            if (instance.GetComponent<ObjectiveSyncService>() == null)
+                instance.gameObject.AddComponent<ObjectiveSyncService>();
+
+            if (instance.GetComponent<LevelBoundsController>() == null)
+                instance.gameObject.AddComponent<LevelBoundsController>();
         }
     }
 }

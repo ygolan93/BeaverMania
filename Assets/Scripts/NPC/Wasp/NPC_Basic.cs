@@ -14,6 +14,8 @@ namespace Beavermania.NPC
     {
         const float LookRotationEpsilon = 0.0001f;
         const float AnotherWaspLookupCooldown = 1.0f;
+        const float FarAiUpdateDistance = 40f;
+        const float HitEffectVisibleDuration = 0.32f;
         [Header("Core References")]
         public Rigidbody NPC;
         [SerializeField] Animator Wasp;
@@ -42,6 +44,8 @@ namespace Beavermania.NPC
         //public WaspCourse course;
         Vector3 SpawnPos;
         bool deathHandled;
+        EnemyHealthBarVisibility healthBarVisibility;
+        Coroutine hitEffectHideRoutine;
 
         [Header("Floating")]
         public Vector3 currentPos;
@@ -82,6 +86,11 @@ namespace Beavermania.NPC
             CurrentHealth = MaxHealth;
             PlayerTarget = GameObject.FindGameObjectWithTag("Player");
             PlayerHealth = PlayerTarget.GetComponent<BeaverPlayer>();
+            if (NPCHealthBar != null)
+                NPCHealthBar.SetMaxNPCHealth(MaxHealth);
+            healthBarVisibility = GetComponent<EnemyHealthBarVisibility>();
+            if (healthBarVisibility == null)
+                healthBarVisibility = gameObject.AddComponent<EnemyHealthBarVisibility>();
             HitEffect.SetActive(false);
             RandoMovement();
             NPC.velocity = Vector3.forward;
@@ -95,6 +104,18 @@ namespace Beavermania.NPC
             Vector3 Distance = PlayerTarget.transform.position - transform.position;
             PlayerDistance = Distance.magnitude;
             ChangeNav -= Time.deltaTime;
+
+            bool throttleFarAi = PlayerDistance > FarAiUpdateDistance && (Time.frameCount & 1) != 0;
+            if (throttleFarAi)
+            {
+                if (!PlayerInputReader.IsPrimaryHeld() || PlayerDistance > 3)
+                {
+                    HitEffect.SetActive(false);
+                    SlashEffect.SetActive(false);
+                }
+                return;
+            }
+
             if (combo < hit2stun)
             {
                 if (floating == true)
@@ -223,8 +244,10 @@ namespace Beavermania.NPC
                 return;
 
             deathHandled = true;
-            PlayerHealth.Plattering = ("HA! gotcha");
-            PlayerHealth.ChangeSpeech = 1;
+            if (PlayerHealth != null && PlayerHealth.BoostCharge != null)
+                PlayerHealth.BoostCharge.RegisterKill();
+            PlayerHealth.Plattering = "Gotcha!";
+            PlayerHealth.ChangeSpeech = 0.55f;
             PooledOneShotVfx.Spawn(Explosion, transform.position + new Vector3(0, 1, 0), transform.rotation);
             PooledDeathDebris.Spawn(Body, transform.position + new Vector3(0, 1, 0), transform.rotation);
             PooledDeathDebris.Spawn(Head, transform.position + new Vector3(0, 1, 0), transform.rotation);
@@ -414,7 +437,35 @@ namespace Beavermania.NPC
                     }
             }
             combo++;
-            NPCHealthBar.SetNPCHealth(CurrentHealth);
+            if (NPCHealthBar != null)
+                NPCHealthBar.SetNPCHealth(CurrentHealth);
+
+            if (healthBarVisibility != null)
+                healthBarVisibility.NotifyDamaged();
+
+            ShowHitEffectBriefly();
+
+            if (PlayerHealth != null && PlayerHealth.BoostCharge != null)
+                PlayerHealth.BoostCharge.RegisterHit(Damage);
+        }
+
+        void ShowHitEffectBriefly()
+        {
+            if (HitEffect == null)
+                return;
+
+            HitEffect.SetActive(true);
+            if (hitEffectHideRoutine != null)
+                StopCoroutine(hitEffectHideRoutine);
+            hitEffectHideRoutine = StartCoroutine(HideHitEffectAfterDelay());
+        }
+
+        IEnumerator HideHitEffectAfterDelay()
+        {
+            yield return new WaitForSeconds(HitEffectVisibleDuration);
+            if (HitEffect != null)
+                HitEffect.SetActive(false);
+            hitEffectHideRoutine = null;
         }
     }
 }

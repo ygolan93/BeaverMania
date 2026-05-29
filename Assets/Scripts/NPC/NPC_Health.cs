@@ -12,11 +12,17 @@ namespace Beavermania.NPC
 
         public void SetMaxNPCHealth(int NPCH)
         {
+            if (NPCslider == null)
+                return;
+
             NPCslider.maxValue = NPCH;
             NPCslider.value = NPCH;
         }
         public void SetNPCHealth(int NPCH)
         {
+            if (NPCslider == null)
+                return;
+
             NPCslider.value = NPCH;
         }
     }

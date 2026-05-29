@@ -70,6 +70,12 @@ namespace Beavermania.NPC
             Physics.IgnoreLayerCollision(10, 10);
 
             CurrentHealth = MaxHealth;
+            if (BossHealth != null)
+                BossHealth.SetMaxNPCHealth(MaxHealth);
+            var bossHealthVisibility = GetComponent<EnemyHealthBarVisibility>();
+            if (bossHealthVisibility == null)
+                bossHealthVisibility = gameObject.AddComponent<EnemyHealthBarVisibility>();
+            bossHealthVisibility.EnableAlwaysShow();
             Explosion.SetActive(false);
             HitEffect.SetActive(false);
             paceUp = chargeSpeed + 2;
@@ -321,7 +327,11 @@ namespace Beavermania.NPC
             CurrentHealth -= Damage;
             combo++;
             Sound.Beat();
-            BossHealth.SetNPCHealth(CurrentHealth);
+            if (BossHealth != null)
+                BossHealth.SetNPCHealth(CurrentHealth);
+
+            if (Player != null && Player.BoostCharge != null)
+                Player.BoostCharge.RegisterHit(Damage);
         }
         private void Stunned()
         {
@@ -342,6 +352,9 @@ namespace Beavermania.NPC
         }
         private void Death()
         {
+            if (Player != null && Player.BoostCharge != null)
+                Player.BoostCharge.RegisterKill();
+
             isAttacking = false;
             Explosion.SetActive(true);
             Explosion.transform.parent = null;

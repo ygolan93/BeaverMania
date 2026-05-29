@@ -9,8 +9,13 @@ namespace Beavermania.Display
     public sealed class FootstepVfxEmitter : MonoBehaviour
     {
         const int DefaultPoolSize = 8;
+        const string UrpParticleUnlitShaderName = "Universal Render Pipeline/Particles/Unlit";
+        const string LegacyParticleShaderName = "Particles/Standard Unlit";
+
+        static Material s_runtimeFallbackMaterial;
 
         [SerializeField] FootstepSurfaceEffectProfile surfaceProfile;
+        [SerializeField] Material footstepParticleMaterial;
         [SerializeField] Transform raycastOrigin;
         [SerializeField] LayerMask groundLayers = ~0;
         [SerializeField] float raycastDistance = 1.45f;
@@ -49,6 +54,7 @@ namespace Beavermania.Display
             particles.transform.SetPositionAndRotation(position + normal * 0.025f, Quaternion.LookRotation(normal));
             particles.transform.localScale = Vector3.one * rule.Scale;
             ApplyParticleColor(particles, rule.Color);
+
             particles.gameObject.SetActive(true);
             particles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             particles.Play(true);
@@ -110,11 +116,11 @@ namespace Beavermania.Display
             if (poolSize <= 0)
                 return null;
 
-            var instance = new GameObject("FootstepDustVfx", typeof(ParticleSystem));
-            instance.transform.SetParent(transform, false);
-            var particles = instance.GetComponent<ParticleSystem>();
-            ConfigureParticles(particles);
+            var instance = new GameObject("FootstepDustVfx");
             instance.SetActive(false);
+            instance.transform.SetParent(transform, false);
+            var particles = instance.AddComponent<ParticleSystem>();
+            ConfigureParticles(particles);
             poolSize--;
             return particles;
         }
@@ -135,9 +141,12 @@ namespace Beavermania.Display
             proceduralPool.Enqueue(particles);
         }
 
-        static void ConfigureParticles(ParticleSystem particles)
+        void ConfigureParticles(ParticleSystem particles)
         {
+            particles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
             var main = particles.main;
+            main.playOnAwake = false;
             main.duration = 0.28f;
             main.loop = false;
             main.startLifetime = new ParticleSystem.MinMaxCurve(0.18f, 0.38f);
@@ -158,7 +167,9 @@ namespace Beavermania.Display
             var velocity = particles.velocityOverLifetime;
             velocity.enabled = true;
             velocity.space = ParticleSystemSimulationSpace.Local;
+            velocity.x = new ParticleSystem.MinMaxCurve(0f, 0f);
             velocity.y = new ParticleSystem.MinMaxCurve(0.08f, 0.18f);
+            velocity.z = new ParticleSystem.MinMaxCurve(0f, 0f);
 
             var color = particles.colorOverLifetime;
             color.enabled = true;
@@ -176,6 +187,43 @@ namespace Beavermania.Display
                         new GradientAlphaKey(0f, 1f)
                     }
                 });
+
+            ApplyParticleRendererMaterial(particles);
+        }
+
+        void ApplyParticleRendererMaterial(ParticleSystem particles)
+        {
+            Material material = ResolveFootstepMaterial();
+            if (material == null)
+                return;
+
+            var renderer = particles.GetComponent<ParticleSystemRenderer>();
+            if (renderer == null)
+                return;
+
+            renderer.renderMode = ParticleSystemRenderMode.Billboard;
+            renderer.sharedMaterial = material;
+        }
+
+        Material ResolveFootstepMaterial()
+        {
+            if (footstepParticleMaterial != null)
+                return footstepParticleMaterial;
+
+            if (s_runtimeFallbackMaterial != null)
+                return s_runtimeFallbackMaterial;
+
+            Shader shader = Shader.Find(UrpParticleUnlitShaderName);
+            if (shader == null)
+                shader = Shader.Find(LegacyParticleShaderName);
+            if (shader == null)
+                return null;
+
+            s_runtimeFallbackMaterial = new Material(shader)
+            {
+                color = new Color(0.68f, 0.58f, 0.44f, 0.55f)
+            };
+            return s_runtimeFallbackMaterial;
         }
 
         static void ApplyParticleColor(ParticleSystem particles, Color color)

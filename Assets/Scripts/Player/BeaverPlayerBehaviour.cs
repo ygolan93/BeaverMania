@@ -79,6 +79,9 @@ namespace Beavermania.Player
         public GameObject ICON_3;
         [SerializeField] GameObject appleOBJ;
         [SerializeField] GameObject gobletOBJ;
+        [SerializeField] Combat.BoostChargeController boostChargeController;
+
+        public Combat.BoostChargeController BoostCharge => boostChargeController;
 
         [Header("Combat")]
         [SerializeField] Vector3 bowAim;
@@ -243,7 +246,7 @@ namespace Beavermania.Player
         public CinemachineFreeLook FreeLook;
         public CinemachineFreeLook CamForTraders;
         [SerializeField] PlayerCheckpointRespawn checkpointRespawn;
-        public float ChangeSpeech = 1F;
+        public float ChangeSpeech = 0.55f;
         Vector3 stableCameraForwardXZ = Vector3.forward;
         Camera cachedMainCamera;
         Transform cachedMainCameraTransform;
@@ -627,6 +630,8 @@ namespace Beavermania.Player
                 {
                     ApplyHealthLoss(Damage);
                     TriggerHurtFeedbackOnly();
+                    if (boostChargeController != null)
+                        boostChargeController.RegisterPlayerDamaged();
                 }
                 if (Damage < 0)
                 {
@@ -1971,11 +1976,14 @@ namespace Beavermania.Player
             ElectricEffect.SetActive(true);
             PlayElectricEffectSoundOnce();
             GobletClock = 10f;
-            GobletPickup--;
+            if (boostChargeController != null)
+                boostChargeController.SetBoostActive(true);
         }
         public void GobletOFF()
         {
             GobletPicked = false;
+            if (boostChargeController != null)
+                boostChargeController.SetBoostActive(false);
             AnimSpeed = 1;
             Walk = InsertWalk;
             Run = InsertRun;
@@ -2085,6 +2093,10 @@ namespace Beavermania.Player
         {
             CacheMainCamera();
             BindHudState();
+            if (boostChargeController == null)
+                boostChargeController = GetComponent<Combat.BoostChargeController>();
+            if (boostChargeController == null)
+                boostChargeController = gameObject.AddComponent<Combat.BoostChargeController>();
             if (arrowModel != null)
                 arrowModel.SetActive(false);
             bowAim = new Vector3(-0.33f, 20f, -0.3f);
@@ -2291,7 +2303,9 @@ namespace Beavermania.Player
                 Wallet = Currency.ToString();
                 SeedText = NutCount.ToString();
                 AppleText = Apple.ToString();
-                GobletText = GobletPickup.ToString();
+                GobletText = boostChargeController != null
+                    ? boostChargeController.GetHudLabel()
+                    : GobletPickup.ToString();
                 ArrowText = arrowMunition.ToString();
                 if (ICON_1 != null || ICON_2 != null || ICON_3 != null)
                 {
@@ -2561,11 +2575,24 @@ namespace Beavermania.Player
             {
                 if (!inputLocked)
                 {
-                    if (PlayerInputReader.WasGobletUsePressed() && GobletPickup > 0)
+                    if (PlayerInputReader.WasGobletUsePressed())
                     {
-                        Otter.Play("Consume");
-                        Sound.Drink();
-                        GobletON();
+                        if (boostChargeController != null && boostChargeController.TryBeginBoost())
+                        {
+                            Otter.Play("Consume");
+                            Sound.Drink();
+                            GobletON();
+                        }
+                        else if (boostChargeController == null && GobletPickup > 0)
+                        {
+                            Otter.Play("Consume");
+                            Sound.Drink();
+                            GobletON();
+                        }
+                        else if (boostChargeController != null && Sound != null)
+                        {
+                            Sound.Error();
+                        }
                     }
 
                     if (PlayerInputReader.WasGobletUseReleased())

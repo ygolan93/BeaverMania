@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Beavermania.Audio;
+using Beavermania.Core.GameFlow;
 using Beavermania.Core.Input;
 using Beavermania.Data.Tips;
 using Beavermania.UI.Tips;
@@ -41,6 +42,7 @@ namespace Beavermania.Objects
         [SerializeField] float bridgeTipRepeatAttemptSeconds = 2f;
         float nextBridgeTipAttemptTime;
         string bridgeTipAreaKey;
+        bool playerInBridgeRange;
 
         private void Awake()
         {
@@ -95,10 +97,28 @@ namespace Beavermania.Objects
                 Player.ChangeSpeech = 2;
             }
         }
+        void OnTriggerExit(Collider other)
+        {
+            if (!other.CompareTag("Player"))
+                return;
+
+            playerInBridgeRange = false;
+            if (BridgeUI != null)
+            {
+                BridgeUI.enabled = false;
+                BridgeUI.text = string.Empty;
+            }
+        }
+
         public void OnTriggerStay(Collider OBJ)
         {
             if (OBJ.gameObject.CompareTag("Player"))
             {
+                playerInBridgeRange = true;
+                UpdateBridgeProgressUi();
+                if (ObjectiveSyncService.Instance != null)
+                    ObjectiveSyncService.Instance.OnPlayerNearBridgeFrame();
+
                 TryShowBridgeTip();
 
                 if (PlayerInputReader.WasRollPressed())
@@ -124,6 +144,8 @@ namespace Beavermania.Objects
                     BridgeUI.enabled = false;
                     BridgeUI.text = BridgeText;
 
+                    if (ObjectiveSyncService.Instance != null)
+                        ObjectiveSyncService.Instance.OnBridgeConstructionLocked();
                 }
  
             }
@@ -191,6 +213,29 @@ namespace Beavermania.Objects
                 showOnlyOnce: false,
                 idleOnly: true,
                 displaySeconds: 4f), bridgeTipAreaKey);
+        }
+
+        void UpdateBridgeProgressUi()
+        {
+            if (BridgeUI == null || !playerInBridgeRange)
+                return;
+
+            BridgeUI.enabled = true;
+            int carried = Player != null && Player.Load != null ? Player.Load.i : 0;
+
+            if (!isLocked)
+            {
+                BridgeUI.text = "Hold LCtrl to lock bridge frame";
+                return;
+            }
+
+            if (PartCount >= BridgeLimit)
+            {
+                BridgeUI.text = $"Bridge complete ({PartCount}/{BridgeLimit}) — use a nut to extend";
+                return;
+            }
+
+            BridgeUI.text = $"Carried logs: {carried}/9 | Placed: {PartCount}/{BridgeLimit}";
         }
 
         void MergeColliders(BoxCollider[] bridgeParts)

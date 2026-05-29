@@ -33,3 +33,10 @@
 - For cross-boundary work (scripts + Unity Editor), lock next owner explicitly in `active-task.md`.
 - Runtime Unity behavior claims require Play Mode verification.
 - Script-level validation alone is not sufficient for serialized wiring outcomes.
+
+## Routing Inbox Layer
+- Use `AI_WORKFLOW/inbox/task-intake.md` to capture raw requests, evidence, constraints, and initial owner guesses.
+- Use `AI_WORKFLOW/routing/current-routing.md` to record the routing decision, execution order, verification requirements, and stop condition.
+- Use `AI_WORKFLOW/prompts/cursor-next.md` for prepared Cursor execution instructions.
+- Use `AI_WORKFLOW/prompts/codex-next.md` for prepared Codex execution instructions.
+- See `AI_WORKFLOW/automation/README.md` for the semi-automatic ChatGPT → GitHub/AI_WORKFLOW → Codex/Cursor pipeline.

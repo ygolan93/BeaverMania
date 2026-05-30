@@ -25,7 +25,7 @@ namespace Beavermania.Core.GameFlow
                 if (!hasMesh && !hasSprite)
                     continue;
 
-                if (collider.CompareTag("Life"))
+                if (collider.CompareTag("Life") || collider.CompareTag("Coin"))
                     continue;
 
                 collider.gameObject.AddComponent<TriggerVolumeVisualHider>();

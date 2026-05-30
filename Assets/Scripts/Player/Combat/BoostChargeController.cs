@@ -13,10 +13,15 @@ namespace Beavermania.Player.Combat
         int hitsSinceComboBonus;
         float lastCombatActivityTime;
         bool boostActive;
+        float boostDurationSeconds = 10f;
+        float boostTimeRemainingSeconds;
 
         public float CurrentCharge => currentCharge;
         public float MaxCharge => ActiveSettings.maxCharge;
         public float NormalizedCharge => ActiveSettings.maxCharge > 0f ? currentCharge / ActiveSettings.maxCharge : 0f;
+        public float NormalizedBoostTimeRemaining => boostActive && boostDurationSeconds > 0f
+            ? Mathf.Clamp01(boostTimeRemainingSeconds / boostDurationSeconds)
+            : 0f;
         public bool IsReady => !boostActive && currentCharge >= ActiveSettings.readyThreshold;
         public bool IsBoostActive => boostActive;
 
@@ -41,6 +46,18 @@ namespace Beavermania.Player.Combat
         public void SetBoostActive(bool active)
         {
             boostActive = active;
+            if (!active)
+            {
+                boostTimeRemainingSeconds = 0f;
+            }
+        }
+
+        public void SetActiveBoostTime(float remainingSeconds, float durationSeconds)
+        {
+            if (durationSeconds > 0f)
+                boostDurationSeconds = durationSeconds;
+
+            boostTimeRemainingSeconds = Mathf.Max(0f, remainingSeconds);
         }
 
         public bool TryBeginBoost()

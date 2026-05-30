@@ -191,7 +191,8 @@ namespace Beavermania.Player
         public bool GoldPicked;
         public bool Honeypicked;
         public bool GobletPicked;
-        public float GobletClock = 10f;
+        public const float BoostDurationSeconds = 10f;
+        public float GobletClock = BoostDurationSeconds;
         public string GobletText;
         public string ArrowText;
 
@@ -1958,9 +1959,21 @@ namespace Beavermania.Player
         {
             CheckpointRespawn.RestartCheckpoint();
         }
+
+        public void RecoverOutOfBounds(Vector3 safePosition)
+        {
+            transform.position = safePosition;
+            if (Player != null)
+            {
+                Player.velocity = Vector3.zero;
+                Player.angularVelocity = Vector3.zero;
+            }
+        }
+
         public void RestartGame()
         {
             GameTimeScaleGate.ClearAll();
+            Projectile.ClearAllPools();
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
         public void GobletON()
@@ -1975,9 +1988,12 @@ namespace Beavermania.Player
             AirBeat /= 5;
             ElectricEffect.SetActive(true);
             PlayElectricEffectSoundOnce();
-            GobletClock = 10f;
+            GobletClock = BoostDurationSeconds;
             if (boostChargeController != null)
+            {
                 boostChargeController.SetBoostActive(true);
+                boostChargeController.SetActiveBoostTime(GobletClock, BoostDurationSeconds);
+            }
         }
         public void GobletOFF()
         {
@@ -1998,7 +2014,7 @@ namespace Beavermania.Player
             AirBeat = 5 * AirBeat;
             ElectricEffect.SetActive(false);
             StopElectricEffectSound();
-            GobletClock = 10F;
+            GobletClock = BoostDurationSeconds;
 
             if (!grounded && Otter != null)
                 Otter.SetBool("midair", true);
@@ -2095,8 +2111,6 @@ namespace Beavermania.Player
             BindHudState();
             if (boostChargeController == null)
                 boostChargeController = GetComponent<Combat.BoostChargeController>();
-            if (boostChargeController == null)
-                boostChargeController = gameObject.AddComponent<Combat.BoostChargeController>();
             if (arrowModel != null)
                 arrowModel.SetActive(false);
             bowAim = new Vector3(-0.33f, 20f, -0.3f);
@@ -2303,9 +2317,7 @@ namespace Beavermania.Player
                 Wallet = Currency.ToString();
                 SeedText = NutCount.ToString();
                 AppleText = Apple.ToString();
-                GobletText = boostChargeController != null
-                    ? boostChargeController.GetHudLabel()
-                    : GobletPickup.ToString();
+                GobletText = string.Empty;
                 ArrowText = arrowMunition.ToString();
                 if (ICON_1 != null || ICON_2 != null || ICON_3 != null)
                 {
@@ -2604,7 +2616,8 @@ namespace Beavermania.Player
                 {
                     CurrentStamina = MaxStamina;
                     GobletClock -= Time.deltaTime;
-                    HealingText = "Boost time: " + Math.Round(GobletClock);
+                    if (boostChargeController != null)
+                        boostChargeController.SetActiveBoostTime(GobletClock, BoostDurationSeconds);
                     if (GobletClock <= 0)
                     {
                         GobletOFF();

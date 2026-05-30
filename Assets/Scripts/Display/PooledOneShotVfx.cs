@@ -5,6 +5,7 @@ using Beavermania.Audio;
 using Beavermania.NPC;
 using UnityEngine;
 using UnityEngine.Pool;
+using UnityEngine.SceneManagement;
 
 namespace Beavermania.Display
 {
@@ -17,6 +18,35 @@ namespace Beavermania.Display
         const float DefaultVfxMinInterval = 0.08f;
 
         static readonly Dictionary<GameObject, ObjectPool<PooledOneShotVfx>> Pools = new Dictionary<GameObject, ObjectPool<PooledOneShotVfx>>();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void SubscribeSceneClear()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            ClearAllPools();
+        }
+
+        public static void ClearAllPools()
+        {
+            foreach (var entry in Pools)
+            {
+                try
+                {
+                    entry.Value?.Clear();
+                }
+                catch (Exception)
+                {
+                    // Pool may reference instances destroyed during scene unload.
+                }
+            }
+
+            Pools.Clear();
+        }
 
         ObjectPool<PooledOneShotVfx> pool;
         ParticleSystem[] particleSystems;
@@ -43,7 +73,10 @@ namespace Beavermania.Display
             if (pool.CountActive >= MaxActiveInstances)
                 return SpawnOverflow(prefab, position, rotation, prefab.transform.localScale);
 
-            var vfx = pool.Get();
+            var vfx = GetAliveFromPool(pool, prefab);
+            if (vfx == null)
+                return null;
+
             vfx.Spawn(position, rotation, prefab.transform.localScale);
             return vfx.gameObject;
         }
@@ -62,9 +95,41 @@ namespace Beavermania.Display
             if (pool.CountActive >= MaxActiveInstances)
                 return SpawnOverflow(prefab, position, rotation, scale);
 
-            var vfx = pool.Get();
+            var vfx = GetAliveFromPool(pool, prefab);
+            if (vfx == null)
+                return null;
+
             vfx.Spawn(position, rotation, scale);
             return vfx.gameObject;
+        }
+
+        static PooledOneShotVfx GetAliveFromPool(ObjectPool<PooledOneShotVfx> sourcePool, GameObject prefab)
+        {
+            for (int attempt = 0; attempt < 2; attempt++)
+            {
+                var vfx = sourcePool.Get();
+                if (vfx != null && vfx.IsAlive())
+                    return vfx;
+
+                if (Pools.TryGetValue(prefab, out var existing))
+                {
+                    try
+                    {
+                        existing.Clear();
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
+
+                    Pools.Remove(prefab);
+                }
+
+                sourcePool = CreatePool(prefab);
+                Pools[prefab] = sourcePool;
+            }
+
+            return null;
         }
 
         static ObjectPool<PooledOneShotVfx> CreatePool(GameObject prefab)
@@ -232,13 +297,27 @@ namespace Beavermania.Display
 
         void Release()
         {
-            if (!IsAlive() || released || pool == null)
+            if (!IsAlive() || released)
+                return;
+
+            if (pool == null)
                 return;
 
             released = true;
             suppressStopCallback = true;
             StopReturnRoutine();
-            pool.Release(this);
+
+            var activePool = pool;
+            pool = null;
+
+            try
+            {
+                activePool.Release(this);
+            }
+            catch (MissingReferenceException)
+            {
+                // Instance was destroyed during scene unload; pool is reset on next scene load.
+            }
         }
 
         void StopReturnRoutine()

@@ -30,9 +30,6 @@ namespace Beavermania.Core.GameFlow
 
             if (instance.GetComponent<ObjectiveSyncService>() == null)
                 instance.gameObject.AddComponent<ObjectiveSyncService>();
-
-            if (instance.GetComponent<LevelBoundsController>() == null)
-                instance.gameObject.AddComponent<LevelBoundsController>();
         }
     }
 }

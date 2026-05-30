@@ -8,8 +8,6 @@ namespace Beavermania.UI.Hud
     [DisallowMultipleComponent]
     public sealed class BoostChargeHudPresenter : MonoBehaviour
     {
-        const string ReadyPromptText = "Ready - Press Y to activate";
-
         [SerializeField] BoostChargeController boostCharge;
         [SerializeField] Slider chargeSlider;
         [SerializeField] RectTransform staminaBarTemplate;
@@ -17,78 +15,87 @@ namespace Beavermania.UI.Hud
         [SerializeField] Image backgroundImage;
         [SerializeField] TextMeshProUGUI barLabel;
         [SerializeField] float gapAboveStamina = 6f;
-        [SerializeField] Color chargingBackgroundColor = new(0.92f, 0.78f, 0.12f, 1f);
-        [SerializeField] Color readyBackgroundColor = new(0.18f, 0.72f, 0.28f, 1f);
-        [SerializeField] Color activeBackgroundColor = new(0.95f, 0.52f, 0.12f, 1f);
-        [SerializeField] Color chargingFillColor = new(1f, 1f, 1f, 1f);
-        [SerializeField] Color readyFillColor = new(0.92f, 1f, 0.92f, 1f);
-        [SerializeField] Color activeFillColor = new(1f, 0.92f, 0.75f, 1f);
+        [SerializeField] Color chargingTrackColor = new(0.72f, 0.58f, 0.08f, 1f);
+        [SerializeField] Color chargingFillColor = new(0.98f, 0.86f, 0.2f, 1f);
+        [SerializeField] Color readyTrackColor = new(0.12f, 0.52f, 0.2f, 1f);
+        [SerializeField] Color readyFillColor = new(0.22f, 0.82f, 0.34f, 1f);
+        [SerializeField] Color activeTrackColor = new(0.75f, 0.38f, 0.05f, 1f);
+        [SerializeField] Color activeFillColor = new(0.98f, 0.55f, 0.1f, 1f);
+        [SerializeField] Color emptyTrackColor = new(0.18f, 0.18f, 0.18f, 0.9f);
+        [SerializeField] Color emptyFillColor = new(0.55f, 0.45f, 0.1f, 0.35f);
+        [SerializeField] Color barLabelColor = new(0.12f, 0.1f, 0.06f, 1f);
+        [SerializeField] float barLabelFontSize = 16f;
+        [SerializeField] Vector2 barLabelPadding = new(10f, 4f);
 
         bool boostBarCreatedAtRuntime;
         bool barLabelCreatedAtRuntime;
 
         void Awake()
         {
-            ResolveBoostCharge();
             EnsureBoostBarFromStaminaTemplate();
+            DisableLegacyTextOnBoostBar();
+            ResolveBarLabelReference();
             EnsureBarLabel();
             CacheBackgroundImageFromSlider();
         }
 
+        void OnEnable()
+        {
+            ResolveBoostCharge();
+            ResolveBarLabelReference();
+            if (chargeSlider != null && barLabel != null)
+            {
+                DisableLegacyTextOnBoostBar();
+                EnsureBarLabelInsideBar();
+                ConfigureBarLabel(barLabel);
+            }
+        }
+
         void Update()
         {
-            if (boostCharge == null)
-            {
-                ResolveBoostCharge();
-                if (boostCharge == null)
-                    return;
-            }
-
-            if (chargeSlider == null)
+            if (boostCharge == null || chargeSlider == null)
                 return;
 
             if (boostCharge.IsBoostActive)
             {
-                float remaining = boostCharge.NormalizedBoostTimeRemaining;
-                int remainingPercent = Mathf.RoundToInt(remaining * 100f);
-                chargeSlider.value = remainingPercent;
-
-                ApplyBackgroundColor(activeBackgroundColor);
-
-                if (fillImage != null)
-                    fillImage.color = activeFillColor;
-
-                if (barLabel != null)
-                    barLabel.text = $"{remainingPercent}%";
-
+                int percent = boostCharge.GetActiveDisplayPercent();
+                ApplyVisualState(activeTrackColor, activeFillColor, percent, boostCharge.GetHudLabelText());
                 return;
             }
-
-            float normalized = boostCharge.NormalizedCharge;
-            int chargePercent = Mathf.RoundToInt(normalized * 100f);
-            chargeSlider.value = chargePercent;
 
             if (boostCharge.IsReady)
             {
-                chargeSlider.value = chargeSlider.maxValue;
-                ApplyBackgroundColor(readyBackgroundColor);
-
-                if (fillImage != null)
-                    fillImage.color = readyFillColor;
-
-                if (barLabel != null)
-                    barLabel.text = ReadyPromptText;
-
+                ApplyVisualState(readyTrackColor, readyFillColor, 100, boostCharge.GetHudLabelText());
                 return;
             }
 
-            ApplyBackgroundColor(chargingBackgroundColor);
+            int chargePercent = boostCharge.GetChargeDisplayPercent();
+            if (chargePercent > 0)
+            {
+                ApplyVisualState(chargingTrackColor, chargingFillColor, chargePercent, boostCharge.GetHudLabelText());
+                return;
+            }
+
+            ApplyVisualState(emptyTrackColor, emptyFillColor, 0, "Boost 0%");
+        }
+
+        void ApplyVisualState(Color trackColor, Color fillColor, int sliderPercent, string labelText)
+        {
+            int clampedPercent = Mathf.Clamp(sliderPercent, 0, 100);
+            chargeSlider.value = clampedPercent;
+
+            if (backgroundImage != null)
+                backgroundImage.color = trackColor;
 
             if (fillImage != null)
-                fillImage.color = chargingFillColor;
+                fillImage.color = fillColor;
 
-            if (barLabel != null)
-                barLabel.text = $"{chargePercent}%";
+            if (barLabel == null)
+                return;
+
+            barLabel.text = labelText;
+            barLabel.color = barLabelColor;
+            barLabel.ForceMeshUpdate();
         }
 
         void ResolveBoostCharge()
@@ -99,6 +106,9 @@ namespace Beavermania.UI.Hud
             var player = GameObject.FindGameObjectWithTag("Player");
             if (player != null)
                 boostCharge = player.GetComponent<BoostChargeController>();
+
+            if (boostCharge == null)
+                Debug.LogWarning($"{nameof(BoostChargeHudPresenter)}: BoostChargeController not assigned or found on Player.", this);
         }
 
         void EnsureBoostBarFromStaminaTemplate()
@@ -148,17 +158,35 @@ namespace Beavermania.UI.Hud
             boostBarCreatedAtRuntime = true;
         }
 
+        void ResolveBarLabelReference()
+        {
+            if (chargeSlider == null)
+                return;
+
+            if (barLabel != null && barLabel.transform.IsChildOf(chargeSlider.transform))
+                return;
+
+            Transform labelTransform = chargeSlider.transform.Find("BoostBarLabel");
+            if (labelTransform != null)
+                barLabel = labelTransform.GetComponent<TextMeshProUGUI>();
+        }
+
+        void DisableLegacyTextOnBoostBar()
+        {
+            if (chargeSlider == null)
+                return;
+
+            var legacyText = chargeSlider.GetComponent<Text>();
+            if (legacyText != null)
+                legacyText.enabled = false;
+        }
+
         void EnsureBarLabel()
         {
             if (chargeSlider == null)
                 return;
 
-            if (barLabel == null)
-            {
-                Transform existing = chargeSlider.transform.Find("BoostBarLabel");
-                if (existing != null)
-                    barLabel = existing.GetComponent<TextMeshProUGUI>();
-            }
+            ResolveBarLabelReference();
 
             if (barLabel == null)
             {
@@ -178,35 +206,47 @@ namespace Beavermania.UI.Hud
             if (barLabel == null || chargeSlider == null)
                 return;
 
+            var barRect = chargeSlider.GetComponent<RectTransform>();
             var rect = barLabel.rectTransform;
-            rect.SetParent(chargeSlider.transform, false);
-            rect.localScale = Vector3.one;
+            rect.SetParent(barRect, false);
+            rect.SetAsLastSibling();
             rect.localRotation = Quaternion.identity;
+
+            Vector3 parentScale = barRect.localScale;
+            rect.localScale = new Vector3(
+                SafeInverseScale(parentScale.x),
+                SafeInverseScale(parentScale.y),
+                1f);
+
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = Vector2.one;
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.anchoredPosition = Vector2.zero;
             rect.sizeDelta = Vector2.zero;
-            rect.offsetMin = new Vector2(12f, 6f);
-            rect.offsetMax = new Vector2(-12f, -6f);
-            rect.SetAsLastSibling();
+            rect.offsetMin = new Vector2(barLabelPadding.x, barLabelPadding.y);
+            rect.offsetMax = new Vector2(-barLabelPadding.x, -barLabelPadding.y);
         }
 
-        static void ConfigureBarLabel(TextMeshProUGUI label)
+        static float SafeInverseScale(float axisScale)
+        {
+            return axisScale > 0.0001f ? 1f / axisScale : 1f;
+        }
+
+        void ConfigureBarLabel(TextMeshProUGUI label)
         {
             if (label == null)
                 return;
 
             label.alignment = TextAlignmentOptions.Center;
-            label.fontSize = 14f;
+            label.verticalAlignment = VerticalAlignmentOptions.Middle;
+            label.fontSize = barLabelFontSize;
             label.fontStyle = FontStyles.Bold;
-            label.enableAutoSizing = true;
-            label.fontSizeMin = 8f;
-            label.fontSizeMax = 14f;
-            label.overflowMode = TextOverflowModes.Truncate;
+            label.enableAutoSizing = false;
+            label.overflowMode = TextOverflowModes.Ellipsis;
             label.enableWordWrapping = false;
             label.raycastTarget = false;
-            label.text = "0%";
+            label.text = "Boost 0%";
+            label.color = barLabelColor;
         }
 
         RectTransform FindStaminaBarRectTransform()
@@ -251,12 +291,6 @@ namespace Beavermania.UI.Hud
             Transform barBackground = chargeSlider.transform.Find("Bar");
             if (barBackground != null)
                 backgroundImage = barBackground.GetComponent<Image>();
-        }
-
-        void ApplyBackgroundColor(Color color)
-        {
-            if (backgroundImage != null)
-                backgroundImage.color = color;
         }
 
         void OnDestroy()

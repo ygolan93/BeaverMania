@@ -18,7 +18,9 @@ namespace Beavermania.Player.Combat
 
         public float CurrentCharge => currentCharge;
         public float MaxCharge => ActiveSettings.maxCharge;
-        public float NormalizedCharge => ActiveSettings.maxCharge > 0f ? currentCharge / ActiveSettings.maxCharge : 0f;
+        public float NormalizedCharge => ActiveSettings.maxCharge > 0f
+            ? Mathf.Clamp01(currentCharge / ActiveSettings.maxCharge)
+            : 0f;
         public float NormalizedBoostTimeRemaining => boostActive && boostDurationSeconds > 0f
             ? Mathf.Clamp01(boostTimeRemainingSeconds / boostDurationSeconds)
             : 0f;
@@ -111,16 +113,30 @@ namespace Beavermania.Player.Combat
             lastCombatActivityTime = Time.time;
         }
 
-        public string GetHudLabel()
+        public int GetChargeDisplayPercent()
+        {
+            return ToDisplayPercent(NormalizedCharge);
+        }
+
+        public int GetActiveDisplayPercent()
+        {
+            return ToDisplayPercent(NormalizedBoostTimeRemaining);
+        }
+
+        public string GetHudLabelText()
         {
             if (boostActive)
-                return "BOOST ACTIVE";
+                return $"BOOST ACTIVE {GetActiveDisplayPercent()}%";
 
             if (IsReady)
-                return "BOOST READY — press Y";
+                return "READY - Press Y";
 
-            int percent = Mathf.RoundToInt(NormalizedCharge * 100f);
-            return $"Boost {percent}%";
+            return $"Boost {GetChargeDisplayPercent()}%";
+        }
+
+        public string GetHudLabel()
+        {
+            return GetHudLabelText();
         }
 
         void MarkCombatActivity()
@@ -145,6 +161,11 @@ namespace Beavermania.Player.Combat
                 return;
 
             currentCharge = Mathf.Max(0f, currentCharge - ActiveSettings.decayPerSecond * Time.deltaTime);
+        }
+
+        static int ToDisplayPercent(float normalized)
+        {
+            return Mathf.Clamp(Mathf.RoundToInt(normalized * 100f), 0, 100);
         }
 
         static BoostChargeSettings GetDefaultSettings()

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Beavermania.Data.Display;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Beavermania.Display
 {
@@ -11,6 +12,7 @@ namespace Beavermania.Display
         const int DefaultPoolSize = 8;
         const string UrpParticleUnlitShaderName = "Universal Render Pipeline/Particles/Unlit";
         const string LegacyParticleShaderName = "Particles/Standard Unlit";
+        const string DefaultFootstepMaterialPath = "Assets/Materials/VFX/M_FootstepDust_Cartoon.mat";
 
         static Material s_runtimeFallbackMaterial;
 
@@ -18,13 +20,19 @@ namespace Beavermania.Display
         [SerializeField] Material footstepParticleMaterial;
         [SerializeField] Transform raycastOrigin;
         [SerializeField] LayerMask groundLayers = ~0;
-        [SerializeField] float raycastDistance = 1.45f;
+        [SerializeField] float raycastDistance = 2.5f;
         [SerializeField] float minStepInterval = 0.08f;
         [SerializeField] float originHeight = 0.35f;
         [SerializeField] int poolSize = DefaultPoolSize;
 
         readonly Queue<ParticleSystem> proceduralPool = new();
         float nextAllowedStepTime;
+
+        void Awake()
+        {
+            EnsureFootstepMaterialAssigned();
+            PrewarmPool(Mathf.Min(2, poolSize));
+        }
 
         public void PlayStep()
         {
@@ -65,16 +73,31 @@ namespace Beavermania.Display
         {
             Transform origin = raycastOrigin != null ? raycastOrigin : transform;
             Vector3 start = origin.position + Vector3.up * originHeight;
-            if (!Physics.Raycast(start, Vector3.down, out hit, raycastDistance, groundLayers, QueryTriggerInteraction.Ignore))
+            RaycastHit[] hits = Physics.RaycastAll(start, Vector3.down, raycastDistance, groundLayers, QueryTriggerInteraction.Ignore);
+            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+            for (int i = 0; i < hits.Length; i++)
             {
-                rule = default;
-                return false;
+                Collider hitCollider = hits[i].collider;
+                if (hitCollider == null || IsOwnedCollider(hitCollider))
+                    continue;
+
+                hit = hits[i];
+                rule = surfaceProfile != null
+                    ? surfaceProfile.Resolve(hit)
+                    : ResolveDefaultSurface(hit);
+                return true;
             }
 
-            rule = surfaceProfile != null
-                ? surfaceProfile.Resolve(hit)
-                : ResolveDefaultSurface(hit);
-            return true;
+            hit = default;
+            rule = default;
+            return false;
+        }
+
+        bool IsOwnedCollider(Collider collider)
+        {
+            Transform hitTransform = collider.transform;
+            return hitTransform == transform || hitTransform.IsChildOf(transform);
         }
 
         FootstepSurfaceEffectProfile.SurfaceRule ResolveDefaultSurface(RaycastHit hit)
@@ -108,6 +131,19 @@ namespace Beavermania.Display
             return FootstepSurfaceEffectProfile.SurfaceRule.CreateDefault(FootstepSurfaceType.Dust);
         }
 
+        void PrewarmPool(int count)
+        {
+            for (int i = 0; i < count && poolSize > 0; i++)
+            {
+                ParticleSystem particles = CreateProceduralParticleSystem();
+                if (particles == null)
+                    break;
+
+                particles.gameObject.SetActive(false);
+                proceduralPool.Enqueue(particles);
+            }
+        }
+
         ParticleSystem GetProceduralParticleSystem()
         {
             if (proceduralPool.Count > 0)
@@ -116,12 +152,20 @@ namespace Beavermania.Display
             if (poolSize <= 0)
                 return null;
 
+            ParticleSystem particles = CreateProceduralParticleSystem();
+            if (particles != null)
+                poolSize--;
+
+            return particles;
+        }
+
+        ParticleSystem CreateProceduralParticleSystem()
+        {
             var instance = new GameObject("FootstepDustVfx");
             instance.SetActive(false);
             instance.transform.SetParent(transform, false);
             var particles = instance.AddComponent<ParticleSystem>();
             ConfigureParticles(particles);
-            poolSize--;
             return particles;
         }
 
@@ -201,8 +245,22 @@ namespace Beavermania.Display
             if (renderer == null)
                 return;
 
+            renderer.enabled = true;
             renderer.renderMode = ParticleSystemRenderMode.Billboard;
+            renderer.alignment = ParticleSystemRenderSpace.View;
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
             renderer.sharedMaterial = material;
+        }
+
+        void EnsureFootstepMaterialAssigned()
+        {
+            if (footstepParticleMaterial != null)
+                return;
+
+#if UNITY_EDITOR
+            footstepParticleMaterial = UnityEditor.AssetDatabase.LoadAssetAtPath<Material>(DefaultFootstepMaterialPath);
+#endif
         }
 
         Material ResolveFootstepMaterial()
@@ -219,10 +277,13 @@ namespace Beavermania.Display
             if (shader == null)
                 return null;
 
-            s_runtimeFallbackMaterial = new Material(shader)
-            {
-                color = new Color(0.68f, 0.58f, 0.44f, 0.55f)
-            };
+            var dustColor = new Color(0.75f, 0.62f, 0.42f, 0.4f);
+            s_runtimeFallbackMaterial = new Material(shader);
+            if (s_runtimeFallbackMaterial.HasProperty("_BaseColor"))
+                s_runtimeFallbackMaterial.SetColor("_BaseColor", dustColor);
+            else
+                s_runtimeFallbackMaterial.color = dustColor;
+
             return s_runtimeFallbackMaterial;
         }
 

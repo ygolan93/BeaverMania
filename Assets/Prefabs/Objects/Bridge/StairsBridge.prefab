@@ -449,7 +449,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3254111133986252792}
-  m_LocalRotation: {x: -0.54413617, y: 0.4515704, z: 0.4515704, w: 0.54413617}
+  m_LocalRotation: {x: -0.56336564, y: 0.42733967, z: 0.42733967, w: 0.56336564}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -577,6 +577,7 @@ MonoBehaviour:
   BridgeUI: {fileID: 7174448271020595962}
   isLocked: 0
   partsColliders: []
+  bridgeTipRepeatAttemptSeconds: 2
 --- !u!54 &7309007320760698006
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -706,6 +707,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 7dc1a821d2024d44383b6129bd629db8, type: 3}
   audioSource: {fileID: 6699884305589646631}
   audioEffects: {fileID: 6699884305589646631}
+  footstepVfxEmitter: {fileID: 0}
 --- !u!1 &3388617803612306546
 GameObject:
   m_ObjectHideFlags: 0

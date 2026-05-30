@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using Beavermania.Core.GameFlow;
 using Beavermania.Core.Input;
 using Beavermania.Player;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
@@ -497,6 +498,25 @@ namespace Beavermania.NPC
             SafeSetActive(Shop, false);
             if (Player != null)
                 Player.RestoreGameplayAfterTrader();
+
+            if (ObjectiveSyncService.Instance != null)
+                ObjectiveSyncService.Instance.OnTraderDialogueCompleted();
+            else
+                ApplyStageFallback(GameProgressionStage.CollectLogs);
+        }
+
+        static void ApplyStageFallback(GameProgressionStage stage)
+        {
+            var service = FindObjectOfType<ObjectiveSyncService>();
+            if (service == null)
+                return;
+
+            switch (stage)
+            {
+                case GameProgressionStage.CollectLogs:
+                    service.OnTraderDialogueCompleted();
+                    break;
+            }
         }
 
         public void CloseShop()

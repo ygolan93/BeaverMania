@@ -1,4 +1,5 @@
 using Beavermania.Display;
+using Beavermania.Player.Combat;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -16,12 +17,14 @@ namespace Beavermania.Core.GameFlow
         public static void LoadLevel1Single()
         {
             GameTimeScaleGate.ClearAll();
+            Projectile.ClearAllPools();
             SceneManager.LoadScene(DefaultLevelSceneName, LoadSceneMode.Single);
         }
 
         public static void LoadSceneSingle(string sceneName)
         {
             GameTimeScaleGate.ClearAll();
+            Projectile.ClearAllPools();
             if (IsMainMenuScene(sceneName))
                 PlayerCursorRules.ApplyUnlockedVisible();
             SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
@@ -33,6 +36,7 @@ namespace Beavermania.Core.GameFlow
         public static void ReloadActiveSceneSingle()
         {
             GameTimeScaleGate.ClearAll();
+            Projectile.ClearAllPools();
             var active = SceneManager.GetActiveScene();
             SceneManager.LoadScene(active.buildIndex, LoadSceneMode.Single);
         }

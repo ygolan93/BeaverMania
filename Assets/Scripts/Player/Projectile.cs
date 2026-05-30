@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Beavermania.Display;
@@ -6,6 +7,7 @@ using Beavermania.Objects;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using UnityEngine;
 using UnityEngine.Pool;
+using UnityEngine.SceneManagement;
 
 namespace Beavermania.Player.Combat
 {
@@ -29,6 +31,37 @@ namespace Beavermania.Player.Combat
         }
 
         static readonly Dictionary<Projectile, ObjectPool<Projectile>> Pools = new Dictionary<Projectile, ObjectPool<Projectile>>();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void SubscribeSceneClear()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            ClearAllPools();
+        }
+
+        static bool IsUnityAlive(UnityEngine.Object obj) => obj != null;
+
+        public static void ClearAllPools()
+        {
+            foreach (var entry in Pools)
+            {
+                try
+                {
+                    entry.Value?.Clear();
+                }
+                catch (Exception)
+                {
+                    // Pool may reference instances destroyed during scene unload.
+                }
+            }
+
+            Pools.Clear();
+        }
 
         public Rigidbody Ball;
         BeaverPlayer Player;
@@ -137,18 +170,21 @@ namespace Beavermania.Player.Combat
 
         static Projectile ResolvePoolTemplate(Projectile prefab)
         {
-            if (prefab == null)
+            if (!IsUnityAlive(prefab))
                 return null;
 
-            return prefab.poolSourcePrefab != null ? prefab.poolSourcePrefab : prefab;
+            var source = prefab.poolSourcePrefab;
+            return IsUnityAlive(source) ? source : prefab;
         }
 
         public static Projectile Spawn(Projectile prefab, Vector3 position, Quaternion rotation, Vector3? worldLaunchDirection, BeaverPlayer owner)
         {
-            if (prefab == null)
+            if (!IsUnityAlive(prefab))
                 return null;
 
             var template = ResolvePoolTemplate(prefab);
+            if (!IsUnityAlive(template))
+                return null;
             if (!Pools.TryGetValue(template, out var pool))
             {
                 pool = CreatePool(template);
@@ -158,9 +194,41 @@ namespace Beavermania.Player.Combat
             if (pool.CountActive >= MaxActiveInstances)
                 return SpawnOverflow(template, position, rotation, worldLaunchDirection, owner);
 
-            var projectile = pool.Get();
+            var projectile = GetAliveFromPool(pool, template);
+            if (projectile == null)
+                return SpawnOverflow(template, position, rotation, worldLaunchDirection, owner);
+
             projectile.Launch(position, rotation, false, worldLaunchDirection, owner);
             return projectile;
+        }
+
+        static Projectile GetAliveFromPool(ObjectPool<Projectile> sourcePool, Projectile template)
+        {
+            for (var attempt = 0; attempt < 2; attempt++)
+            {
+                var projectile = sourcePool.Get();
+                if (IsUnityAlive(projectile))
+                    return projectile;
+
+                if (Pools.TryGetValue(template, out var existing))
+                {
+                    try
+                    {
+                        existing.Clear();
+                    }
+                    catch (Exception)
+                    {
+                        // ignored
+                    }
+
+                    Pools.Remove(template);
+                }
+
+                sourcePool = CreatePool(template);
+                Pools[template] = sourcePool;
+            }
+
+            return null;
         }
 
         public static GameObject Spawn(GameObject prefab, Vector3 position, Quaternion rotation)
@@ -182,17 +250,27 @@ namespace Beavermania.Player.Combat
                 () => CreateInstance(prefab, pool),
                 projectile =>
                 {
+                    if (!IsUnityAlive(projectile))
+                        return;
+
                     projectile.released = false;
                     projectile.overflowInstance = false;
                     projectile.gameObject.SetActive(true);
                 },
                 projectile =>
                 {
+                    if (!IsUnityAlive(projectile))
+                        return;
+
                     projectile.released = true;
                     projectile.ResetRuntimeState();
                     projectile.gameObject.SetActive(false);
                 },
-                projectile => Destroy(projectile.gameObject),
+                projectile =>
+                {
+                    if (IsUnityAlive(projectile))
+                        Destroy(projectile.gameObject);
+                },
                 true,
                 DefaultPoolCapacity,
                 MaxActiveInstances);
@@ -715,10 +793,18 @@ namespace Beavermania.Player.Combat
             CompleteProjectile(false);
         }
 
+        bool IsAlive() => IsUnityAlive(this);
+
         void OnDisable()
         {
             if (!released)
                 released = true;
+        }
+
+        void OnDestroy()
+        {
+            released = true;
+            pool = null;
         }
 
         private void Update()
@@ -960,13 +1046,26 @@ namespace Beavermania.Player.Combat
         {
             yield return null;
 
+            if (!IsAlive())
+                yield break;
+
             if (overflowInstance || pool == null)
             {
                 Destroy(gameObject);
                 yield break;
             }
 
-            pool.Release(this);
+            var activePool = pool;
+            pool = null;
+
+            try
+            {
+                activePool.Release(this);
+            }
+            catch (MissingReferenceException)
+            {
+                // Instance was destroyed during scene unload; pool is reset on next scene load.
+            }
         }
 
         void CompleteProjectile(bool spawnArrowPickup = false)

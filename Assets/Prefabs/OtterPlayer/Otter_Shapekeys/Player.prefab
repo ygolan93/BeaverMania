@@ -6152,7 +6152,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.7777778, y: 1}
+    m_SensorSize: {x: 2.685366, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -17175,7 +17175,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.7777778, y: 1}
+    m_SensorSize: {x: 2.685366, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -17437,6 +17437,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: dbc60ace29322d842a865131944dd70d, type: 3}
   audioSource: {fileID: 5292208577330189313}
   audioEffects: {fileID: 5012679268726885323}
+  footstepVfxEmitter: {fileID: 9123456789012345010}
 --- !u!114 &911545900803886803
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -29568,7 +29569,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.7777778, y: 1}
+    m_SensorSize: {x: 2.685366, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -29806,6 +29807,8 @@ GameObject:
   - component: {fileID: 8156679125422380708}
   - component: {fileID: 1190784083324918909}
   - component: {fileID: 7080942755712817626}
+  - component: {fileID: 5829473610293847561}
+  - component: {fileID: 9123456789012345010}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -29872,8 +29875,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cebeb71f51b7ec54299a0c4215527197, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fallDamageFactor: 0.202
-  damageVelocity: 0
+  fallDamageFactor: 0.24
+  damageVelocity: 20
 --- !u!114 &3460990902718605333
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -29923,7 +29926,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 11c575b9dcaa7e64cab36d8ee5f8295c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Player: {fileID: 0}
+  Player: {fileID: 4580562239172740872}
   Objective:
   - Talk to the trader
   - Construct the bridge in order to get into the town
@@ -30003,7 +30006,8 @@ MonoBehaviour:
   ICON_3: {fileID: 0}
   appleOBJ: {fileID: 7423331273048657820}
   gobletOBJ: {fileID: 8509926591080787681}
-  bowAim: {x: 0, y: 0, z: 0}
+  boostChargeController: {fileID: 5829473610293847561}
+  bowAim: {x: 0, y: 1, z: 1}
   Arsenal:
   - Bare Hands
   arsenalBrowser: 0
@@ -30041,21 +30045,21 @@ MonoBehaviour:
   Beat: 0
   Ball: {fileID: 1429953180212373313, guid: 618f5c1422316834194d463f67abe9e4, type: 3}
   AttackPoint: {fileID: 4580562237567520680}
-  attackRange: 1
+  attackRange: 15
   enemyLayers:
     serializedVersion: 2
     m_Bits: 1024
   bowAimCamera: {fileID: 0}
   bowAimRayMaxDistance: 400
-  bowAimViewportYOffset: 0.03
+  bowAimViewportYOffset: 0.05
   bowAimRaycastLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 8
   bowProjectileSpawnClearance: 0.5
   minFireBreathCameraHitDistance: 1.25
   fireBreathSpawnForwardOffset: 0.5
   debugFireBreathLaunch: 0
-  maxArrowMunition: 99
+  maxArrowMunition: 100
   bowShotCooldown: 0.25
   GroundBeat: 0.4
   AirBeat: 0.2
@@ -30113,19 +30117,19 @@ MonoBehaviour:
   StaminaText: 
   HealingText: 
   AppleText: 
-  GobletPickup: 3
+  GobletPickup: 10
   Apple: 0
   Currency: 0
-  NutCount: 3
+  NutCount: 0
   SeedText: 
   Wallet: 
   GM: {fileID: 0}
   AimIcon: {fileID: 0}
-  PlayerHudState: {fileID: 0}
-  PlayerObjective: {fileID: 0}
+  PlayerHudState: {fileID: 5724927208157140646}
+  PlayerObjective: {fileID: 3318556070447194429}
   FreeLook: {fileID: 5012679269152501947}
   CamForTraders: {fileID: 9047202634484327852}
-  checkpointRespawn: {fileID: 0}
+  checkpointRespawn: {fileID: 8156679125422380708}
   ChangeSpeech: 1
 --- !u!114 &4580562239172740873
 MonoBehaviour:
@@ -30157,11 +30161,19 @@ MonoBehaviour:
   Goal: {fileID: 4580562239172740872}
   Poof: {fileID: 9157105887711914197, guid: c4f829cb7dd4b864caf8832ec5b1ee55, type: 3}
   i: 0
-  WalkFactor: 0.02
-  RunFactor: 0.2
-  JumpFactor: 0.3
-  SlowAnim: 0.1
+  WalkFactor: 0.8
+  RunFactor: 0.8
+  JumpFactor: 0.8
+  SlowAnim: 0.8
   CanCarry: 0
+  logsCountThreshold: 1
+  maxWeightPenalty: 1
+  maxWalkPenalty: 0.63
+  maxRunPenalty: 7.2
+  maxJumpPenalty: 2.7
+  animationSpeedMultiplier: 1
+  maxAnimationSpeedPenalty: 0.9
+  minimumAnimationSpeed: 0.2
 --- !u!114 &4580562239172740878
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -30224,6 +30236,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ObjectiveText: 
+  ObjectiveTextOverrideActive: 0
+  ObjectiveTextOverride: 
   DebugText: 
   StaminaText: 
   LogCount: 
@@ -30282,6 +30296,42 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1
   drawDebugGizmo: 0
+--- !u!114 &5829473610293847561
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4580562239172740874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a48548210f4559469c5841e88a22d71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  settings: {fileID: 11400000, guid: a7f3c2e14b5d4890a1e2f3c4d5e6f708, type: 2}
+  debugBoostCharge: 0
+--- !u!114 &9123456789012345010
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4580562239172740874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd5d07fcdd7447feb1e1dc4f0f24270b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  surfaceProfile: {fileID: 0}
+  footstepParticleMaterial: {fileID: 2100000, guid: b12d868c9f362f4498e85fefdb151b3e, type: 2}
+  raycastOrigin: {fileID: 0}
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  raycastDistance: 2.5
+  minStepInterval: 0.08
+  originHeight: 0.35
+  poolSize: 8
 --- !u!1 &4622290205047029495
 GameObject:
   m_ObjectHideFlags: 0
@@ -31108,7 +31158,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.7777778, y: 1}
+    m_SensorSize: {x: 2.685366, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -31397,7 +31447,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.7777778, y: 1}
+    m_SensorSize: {x: 2.685366, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -32068,7 +32118,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 1.7777778, y: 1}
+    m_SensorSize: {x: 2.685366, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0

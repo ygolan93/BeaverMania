@@ -1,3 +1,4 @@
+using Beavermania.Core.GameFlow;
 using Beavermania.Core.Input;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using UnityEngine;
@@ -70,6 +71,8 @@ namespace Beavermania.Player.Movement
                     i++;
                     ApplyCarryWeightPenalty();
                     Destroy(OBJ.transform.gameObject);
+                    if (ObjectiveSyncService.Instance != null)
+                        ObjectiveSyncService.Instance.OnLogCollected();
                 }
             }
         }

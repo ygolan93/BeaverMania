@@ -958,8 +958,12 @@ MonoBehaviour:
   Shop: {fileID: 0}
   PlayerDistance: {x: 0, y: 0, z: 0}
   skipPressed: 0
-  Rotate: 0
-  PanelPopUp: 10
+  Rotate: 1
+  PanelPopUp: 4
+  interactKey: 101
+  playerCanvas: {fileID: 0}
+  objectiveText: {fileID: 0}
+  interactionPromptMessage: Press E to interact
 --- !u!65 &1433353639252437099
 BoxCollider:
   m_ObjectHideFlags: 0

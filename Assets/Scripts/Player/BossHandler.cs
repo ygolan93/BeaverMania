@@ -59,8 +59,8 @@ namespace Beavermania.Player.Combat
                 player.FreeLook.m_Orbits[1].m_Radius = 6;
                 player.FreeLook.m_XAxis.m_MaxSpeed = 300;
                 player.FreeLook.m_YAxis.m_MaxSpeed = 2;
-                if (player.Root != null)
-                    player.FreeLook.m_LookAt = player.Root;
+                if (player.GameplayCameraLookTarget != null)
+                    player.FreeLook.m_LookAt = player.GameplayCameraLookTarget;
             }
         }
 

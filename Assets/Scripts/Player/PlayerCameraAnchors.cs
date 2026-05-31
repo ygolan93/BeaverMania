@@ -13,6 +13,8 @@ namespace Beavermania.Player
         const string FollowAnchorName = "CameraFollowAnchor";
         const string GameplayLookAnchorName = "GameplayLookAnchor";
         const string ClosePovLookAnchorName = "ClosePovLookAnchor";
+        static readonly Vector3 DefaultGameplayLookOffset = new Vector3(0f, 1.25f, 0f);
+        static readonly Vector3 DefaultClosePovLookOffset = new Vector3(0f, 1.45f, 0f);
 
         public Transform rootReference;
         public Transform faceReference;
@@ -51,6 +53,8 @@ namespace Beavermania.Player
             cameraFollowAnchor = FindOrCreateChild(container, FollowAnchorName);
             gameplayLookAnchor = FindOrCreateChild(container, GameplayLookAnchorName);
             closePovLookAnchor = FindOrCreateChild(container, ClosePovLookAnchorName);
+            InitializeLocalPosition(gameplayLookAnchor, DefaultGameplayLookOffset);
+            InitializeLocalPosition(closePovLookAnchor, DefaultClosePovLookOffset);
             UpdateAnchors();
         }
 
@@ -68,12 +72,12 @@ namespace Beavermania.Player
         public void UpdateAnchors()
         {
             var root = rootReference != null ? rootReference : transform;
-            var face = faceReference != null ? faceReference : root;
+            var stableLookReference = IsUnsafeAnimatedReference(faceReference) ? null : faceReference;
             var yawRotation = ResolveYawRotation(root);
 
             SetAnchor(cameraFollowAnchor, root.position, yawRotation);
-            SetAnchor(gameplayLookAnchor, face.position, yawRotation);
-            SetAnchor(closePovLookAnchor, face.position, yawRotation);
+            SetAnchor(gameplayLookAnchor, ResolveLookPosition(root, stableLookReference, DefaultGameplayLookOffset), yawRotation);
+            SetAnchor(closePovLookAnchor, ResolveLookPosition(root, stableLookReference, DefaultClosePovLookOffset), yawRotation);
         }
 
         void ResolveExistingAnchors()
@@ -90,10 +94,37 @@ namespace Beavermania.Player
                 closePovLookAnchor = container.Find(ClosePovLookAnchorName);
         }
 
+        static void InitializeLocalPosition(Transform anchor, Vector3 fallbackLocalPosition)
+        {
+            if (anchor != null && anchor.localPosition.sqrMagnitude < 0.000001f)
+                anchor.localPosition = fallbackLocalPosition;
+        }
+
+        static Vector3 ResolveLookPosition(Transform root, Transform stableLookReference, Vector3 fallbackLocalOffset)
+        {
+            if (stableLookReference != null)
+                return stableLookReference.position;
+
+            return root != null ? root.TransformPoint(fallbackLocalOffset) : fallbackLocalOffset;
+        }
+
         static void SetAnchor(Transform anchor, Vector3 position, Quaternion rotation)
         {
             if (anchor != null)
                 anchor.SetPositionAndRotation(position, rotation);
+        }
+
+        static bool IsUnsafeAnimatedReference(Transform reference)
+        {
+            if (reference == null)
+                return false;
+
+            var name = reference.name;
+            return name == "Face"
+                || name == "RootMovement"
+                || name == "mixamorig:Head"
+                || name == "mixamorig:HeadTop_End"
+                || name.IndexOf("spine", System.StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         Quaternion ResolveYawRotation(Transform root)

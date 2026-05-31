@@ -2735,9 +2735,6 @@ namespace Beavermania.Player
 
             if (cameraAnchors.rootReference == null)
                 cameraAnchors.rootReference = Root != null ? Root : transform;
-            if (cameraAnchors.faceReference == null)
-                cameraAnchors.faceReference = Face != null ? Face : cameraAnchors.rootReference;
-
             cameraAnchors.EnsureRuntimeAnchorHierarchy();
             BindGameplayCameraAnchors();
         }

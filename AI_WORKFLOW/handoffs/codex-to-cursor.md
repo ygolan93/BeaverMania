@@ -24,7 +24,7 @@
 ## Inspector assignments required
 - On the player root/prefab, add `PlayerCameraAnchors` if not already present.
 - Assign `rootReference` to the stable player root reference used for camera follow.
-- Assign `faceReference` to a stable non-Cinemachine-target reference used only to position look anchors.
+- Optional: assign `faceReference` only to a stable non-animated reference; if unset, look anchors use their local offsets from `rootReference`.
 - Create/verify child hierarchy under player root:
   - `CameraAnchors`
   - `CameraAnchors/CameraFollowAnchor`
@@ -45,7 +45,7 @@
 
 ## Known limitations
 - Unity Editor/Play Mode was unavailable in this environment. Needs Unity Play Mode verification.
-- Runtime fallback creates missing anchor children if prefab wiring is absent, but serialized prefab hierarchy still needs Editor setup.
+- Runtime fallback creates missing anchor children and no longer defaults `faceReference` to `Face`; serialized prefab hierarchy still needs Editor setup.
 
 ## Risk notes
 - Player camera risk: Medium; gameplay camera target binding changed.

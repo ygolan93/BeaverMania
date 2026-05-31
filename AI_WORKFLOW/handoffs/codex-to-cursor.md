@@ -1,6 +1,36 @@
 # Codex → Cursor Handoff
 
 ## Task
+- AudioListener ownership: move active listener from root player prefab to PlayerPack/Main Camera.
+
+## Files changed
+- `Assets/Prefabs/OtterPlayer/Otter_Shapekeys/Player.prefab`
+- `Assets/Prefabs/OtterPlayer/PlayerPack.prefab`
+- `AI_WORKFLOW/handoffs/codex-to-cursor.md`
+
+## Prefab changes made
+- Disabled the root `Player` `AudioListener` in `Player.prefab`.
+- Added/enabled one `AudioListener` on `PlayerPack/Main Camera` in `PlayerPack.prefab`.
+
+## Inspector assignments required
+- None expected.
+
+## What Cursor should test in Play Mode
+- Open the target test scene using `PlayerPack`.
+- Enter Play Mode and confirm exactly one active `AudioListener` is present.
+- Confirm the Console has no duplicate `AudioListener` warning.
+- Confirm camera audio still follows `PlayerPack/Main Camera`.
+
+## Known limitations
+- Unity Editor/Play Mode was unavailable in this environment. Needs Unity Play Mode verification.
+
+## Risk notes
+- Player/audio prefab risk: Medium; serialized prefab YAML changed in high-risk player assets, but only `AudioListener` enable/component state changed.
+
+---
+
+
+## Task
 - Player camera anchors: replace animated-bone/root Cinemachine targets with stable yaw-only anchor transforms.
 
 ## Code changes made

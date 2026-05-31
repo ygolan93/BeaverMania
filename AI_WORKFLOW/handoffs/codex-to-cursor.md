@@ -1,6 +1,60 @@
 # Codex → Cursor Handoff
 
 ## Task
+- Player camera anchors: replace animated-bone/root Cinemachine targets with stable yaw-only anchor transforms.
+
+## Code changes made
+- Added `PlayerCameraAnchors` runtime component with `rootReference`, `faceReference`, `cameraFollowAnchor`, `gameplayLookAnchor`, and `closePovLookAnchor`.
+- `BeaverPlayerBehaviour` now binds gameplay `CinemachineFreeLook.m_Follow` to `CameraFollowAnchor` and `m_LookAt` to `GameplayLookAnchor` when anchors are available.
+- Close POV/crouch camera retargets to `ClosePovLookAnchor` instead of `Face`.
+- Boss dialogue camera restore retargets gameplay camera to `GameplayLookAnchor` instead of `Root`.
+
+## Files changed
+- `Assets/Scripts/Player/PlayerCameraAnchors.cs`
+- `Assets/Scripts/Player/PlayerCameraAnchors.cs.meta`
+- `Assets/Scripts/Player/BeaverPlayerBehaviour.cs`
+- `Assets/Scripts/Player/BossHandler.cs`
+- `AI_WORKFLOW/handoffs/codex-to-cursor.md`
+
+## New or changed serialized fields
+- New serialized `PlayerCameraAnchors cameraAnchors` reference on `BeaverPlayerBehaviour`.
+- New public `Transform` fields on `PlayerCameraAnchors`: `rootReference`, `faceReference`, `cameraFollowAnchor`, `gameplayLookAnchor`, `closePovLookAnchor`.
+- No existing serialized fields were renamed or removed.
+
+## Inspector assignments required
+- On the player root/prefab, add `PlayerCameraAnchors` if not already present.
+- Assign `rootReference` to the stable player root reference used for camera follow.
+- Optional: assign `faceReference` only to a stable non-animated reference; if unset, look anchors use their local offsets from `rootReference`.
+- Create/verify child hierarchy under player root:
+  - `CameraAnchors`
+  - `CameraAnchors/CameraFollowAnchor`
+  - `CameraAnchors/GameplayLookAnchor`
+  - `CameraAnchors/ClosePovLookAnchor`
+- Assign the three anchor child transforms to the matching `PlayerCameraAnchors` fields.
+- Verify gameplay `CinemachineFreeLook` uses `CameraFollowAnchor` as Follow and `GameplayLookAnchor` as LookAt in Play Mode.
+
+## Prefab/scene/UI/Animator follow-up required
+- Apply the above player prefab/scene hierarchy changes in Unity Editor; Codex did not edit prefab YAML.
+- Do not assign `mixamorig:HeadTop_End`, `mixamorig:Head`, `Face`, `RootMovement`, spine bones, or other animated bones directly to active Cinemachine Follow/LookAt fields.
+
+## What Cursor should test in Play Mode
+- Enter gameplay scene, confirm FreeLook follow/look targets are the anchor children, not bones.
+- Move, sprint, crouch/close POV, and roll; confirm camera position/orientation remains stable and yaw-only/world-up.
+- Enter and exit boss/trader/dialogue camera states; confirm gameplay camera restores to anchor targets.
+- Check console for missing-reference or runtime-created-anchor warnings/errors.
+
+## Known limitations
+- Unity Editor/Play Mode was unavailable in this environment. Needs Unity Play Mode verification.
+- Runtime fallback creates missing anchor children and no longer defaults `faceReference` to `Face`; serialized prefab hierarchy still needs Editor setup.
+
+## Risk notes
+- Player camera risk: Medium; gameplay camera target binding changed.
+- Serialization risk: Low-medium; new fields only, no renamed/removed fields.
+
+---
+
+
+## Task
 - UI/UX and game-feel improvements — Phase 1 HUD cleanup, Phase 2 tips, Phase 3 objective tracker, Phase 4 footstep feedback, Phase 5 carried-log weight
 
 ## Code changes made

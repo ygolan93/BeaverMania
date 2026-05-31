@@ -246,6 +246,7 @@ namespace Beavermania.Player
         bool loggedRuntimeHudStateFallback;
         public CinemachineFreeLook FreeLook;
         public CinemachineFreeLook CamForTraders;
+        [SerializeField] PlayerCameraAnchors cameraAnchors;
         [SerializeField] PlayerCheckpointRespawn checkpointRespawn;
         public float ChangeSpeech = 0.55f;
         Vector3 stableCameraForwardXZ = Vector3.forward;
@@ -254,6 +255,10 @@ namespace Beavermania.Player
         const float LookRotationEpsilon = 0.0001f;
 
         public PlayerCombatBalanceData CombatBalance => combatBalance;
+        public PlayerCameraAnchors CameraAnchors => cameraAnchors;
+        public Transform GameplayCameraFollowTarget => cameraAnchors != null ? cameraAnchors.GameplayFollowTarget : null;
+        public Transform GameplayCameraLookTarget => cameraAnchors != null ? cameraAnchors.GameplayLookTarget : null;
+        public Transform ClosePovCameraLookTarget => cameraAnchors != null ? cameraAnchors.ClosePovLookTarget : null;
 
         float EffectiveScorpionLightDamage => combatBalance != null ? combatBalance.scorpionLightDamage : 15f;
         float EffectiveScorpionHeavyDamage => combatBalance != null ? combatBalance.scorpionHeavyDamage : 30f;
@@ -1769,7 +1774,8 @@ namespace Beavermania.Player
 
         public void HideCursor()
         {
-            PlayerCursorRules.ApplyLockedHidden(FreeLook, Root);
+            BindGameplayCameraAnchors();
+            PlayerCursorRules.ApplyLockedHidden(FreeLook, GameplayCameraLookTarget);
         }
 
         public void ApplyTraderOfferPresentation(Transform traderLookTarget)
@@ -2109,6 +2115,7 @@ namespace Beavermania.Player
         {
             CacheMainCamera();
             BindHudState();
+            BindCameraAnchors();
             if (boostChargeController == null)
                 boostChargeController = GetComponent<Combat.BoostChargeController>();
             if (arrowModel != null)
@@ -2388,9 +2395,9 @@ namespace Beavermania.Player
             {
             //Crouch action - Place Logs
             {
-                if (PlayerInputReader.IsRollHeld() && FreeLook.m_Lens.FieldOfView<20)
+                if (PlayerInputReader.IsRollHeld() && FreeLook != null && FreeLook.m_Lens.FieldOfView<20)
                 {
-                    FreeLook.m_LookAt = Face;
+                    FreeLook.m_LookAt = ClosePovCameraLookTarget;
                 }
 
                 if (PlayerInputReader.IsRollHeld() && grounded == true && Rolling == false && !PlayerInputReader.IsJumpHeld())
@@ -2716,6 +2723,36 @@ namespace Beavermania.Player
             {
                 keepLooking = false;
             }
+        }
+
+
+        void BindCameraAnchors()
+        {
+            if (cameraAnchors == null)
+                cameraAnchors = GetComponent<PlayerCameraAnchors>();
+            if (cameraAnchors == null)
+                cameraAnchors = gameObject.AddComponent<PlayerCameraAnchors>();
+
+            if (cameraAnchors.rootReference == null)
+                cameraAnchors.rootReference = Root != null ? Root : transform;
+            cameraAnchors.EnsureRuntimeAnchorHierarchy();
+            BindGameplayCameraAnchors();
+        }
+
+        void BindGameplayCameraAnchors()
+        {
+            if (cameraAnchors == null)
+                return;
+
+            cameraAnchors.UpdateAnchors();
+
+            if (FreeLook == null)
+                return;
+
+            if (cameraAnchors.GameplayFollowTarget != null)
+                FreeLook.m_Follow = cameraAnchors.GameplayFollowTarget;
+            if (cameraAnchors.GameplayLookTarget != null)
+                FreeLook.m_LookAt = cameraAnchors.GameplayLookTarget;
         }
 
         void CacheMainCamera()

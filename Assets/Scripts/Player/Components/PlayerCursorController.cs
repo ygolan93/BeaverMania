@@ -27,7 +27,7 @@ namespace Beavermania.Player
         public void HideCursor()
         {
             EnsurePresentation();
-            presentation.ApplyLockedHidden(Root);
+            presentation.ApplyLockedHidden(FreeLook != null ? FreeLook.m_LookAt : null);
         }
 
         void EnsurePresentation()

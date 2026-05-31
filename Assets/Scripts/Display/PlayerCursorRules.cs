@@ -9,7 +9,7 @@ namespace Beavermania.Display
     public interface IPlayerCursorPresentation
     {
         void ApplyUnlockedVisible();
-        void ApplyLockedHidden(Transform root);
+        void ApplyLockedHidden(Transform lookTarget = null);
     }
 
     /// <summary>Cinemachine-backed implementation; safe if <see cref="CinemachineFreeLook"/> is null (cursor still locks).</summary>
@@ -24,8 +24,8 @@ namespace Beavermania.Display
 
         public void ApplyUnlockedVisible() => PlayerCursorPresentationCore.ApplyUnlockedVisible();
 
-        public void ApplyLockedHidden(Transform root) =>
-            PlayerCursorPresentationCore.ApplyLockedHidden(freeLook, root);
+        public void ApplyLockedHidden(Transform lookTarget = null) =>
+            PlayerCursorPresentationCore.ApplyLockedHidden(freeLook, lookTarget);
     }
 
     /// <summary>Static entry points for call sites that pass <see cref="CinemachineFreeLook"/> each time.</summary>
@@ -33,8 +33,8 @@ namespace Beavermania.Display
     {
         public static void ApplyUnlockedVisible() => PlayerCursorPresentationCore.ApplyUnlockedVisible();
 
-        public static void ApplyLockedHidden(CinemachineFreeLook freeLook, Transform root) =>
-            PlayerCursorPresentationCore.ApplyLockedHidden(freeLook, root);
+        public static void ApplyLockedHidden(CinemachineFreeLook freeLook, Transform lookTarget = null) =>
+            PlayerCursorPresentationCore.ApplyLockedHidden(freeLook, lookTarget);
     }
 
     static class PlayerCursorPresentationCore
@@ -45,10 +45,10 @@ namespace Beavermania.Display
             Cursor.visible = true;
         }
 
-        internal static void ApplyLockedHidden(CinemachineFreeLook freeLook, Transform root)
+        internal static void ApplyLockedHidden(CinemachineFreeLook freeLook, Transform lookTarget = null)
         {
-            if (freeLook != null && root != null)
-                freeLook.m_LookAt = root;
+            if (freeLook != null && lookTarget != null)
+                freeLook.m_LookAt = lookTarget;
 
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;

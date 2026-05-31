@@ -1775,7 +1775,10 @@ namespace Beavermania.Player
         public void HideCursor()
         {
             BindGameplayCameraAnchors();
-            PlayerCursorRules.ApplyLockedHidden(FreeLook, GameplayCameraLookTarget);
+            var lookTarget = GameplayCameraLookTarget != null
+                ? GameplayCameraLookTarget
+                : FreeLook != null ? FreeLook.m_LookAt : null;
+            PlayerCursorRules.ApplyLockedHidden(FreeLook, lookTarget);
         }
 
         public void ApplyTraderOfferPresentation(Transform traderLookTarget)

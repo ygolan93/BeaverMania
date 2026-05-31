@@ -1329,7 +1329,11 @@ MonoBehaviour:
   PlayerDistance: {x: 0, y: 0, z: 0}
   skipPressed: 0
   Rotate: 0
-  PanelPopUp: 0
+  PanelPopUp: 3
+  interactKey: 101
+  playerCanvas: {fileID: 0}
+  objectiveText: {fileID: 0}
+  interactionPromptMessage: Press E to interact
 --- !u!65 &5016395860630945298
 BoxCollider:
   m_ObjectHideFlags: 0

@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7147620569396934761}
   m_Layer: 0
-  m_Name: FirstTraderItems
+  m_Name: Market
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -732,16 +732,12 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 0}
     - target: {fileID: 4656352576738727975, guid: e754459d61ad89548b636355fc8cebda, type: 3}
+      propertyPath: Rotate
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4656352576738727975, guid: e754459d61ad89548b636355fc8cebda, type: 3}
       propertyPath: TradeText
       value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 4656352576738727975, guid: e754459d61ad89548b636355fc8cebda, type: 3}
-      propertyPath: PanelPopUp
-      value: 6.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 4656352576738727975, guid: e754459d61ad89548b636355fc8cebda, type: 3}
-      propertyPath: Rotate
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4656352576738727975, guid: e754459d61ad89548b636355fc8cebda, type: 3}
       propertyPath: PlayerRoot
@@ -812,11 +808,6 @@ PrefabInstance:
 --- !u!4 &4714630504945401450 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7482375928203675524, guid: e754459d61ad89548b636355fc8cebda, type: 3}
-  m_PrefabInstance: {fileID: 2790831216155048430}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &7360475859234496969 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 4656352576738727975, guid: e754459d61ad89548b636355fc8cebda, type: 3}
   m_PrefabInstance: {fileID: 2790831216155048430}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &5775596289244331789

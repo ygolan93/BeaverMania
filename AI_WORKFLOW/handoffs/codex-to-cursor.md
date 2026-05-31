@@ -6,18 +6,22 @@
 ## Files changed
 - `Assets/Prefabs/OtterPlayer/Otter_Shapekeys/Player.prefab`
 - `Assets/Prefabs/OtterPlayer/PlayerPack.prefab`
+- `Assets/Scenes/ShadowRevenantTestArena.unity`
+- `Assets/Scenes/Level 1 - Remastered - Steam.unity`
 - `AI_WORKFLOW/handoffs/codex-to-cursor.md`
 
 ## Prefab changes made
 - Disabled the root `Player` `AudioListener` in `Player.prefab`.
 - Added/enabled one `AudioListener` on `PlayerPack/Main Camera` in `PlayerPack.prefab`.
+- Kept direct-`Player` scenes covered by overriding the prefab listener enabled in `ShadowRevenantTestArena.unity` and `Level 1 - Remastered - Steam.unity`.
 
 ## Inspector assignments required
 - None expected.
 
 ## What Cursor should test in Play Mode
 - Open the target test scene using `PlayerPack`.
-- Enter Play Mode and confirm exactly one active `AudioListener` is present.
+- Open `ShadowRevenantTestArena.unity` and `Level 1 - Remastered - Steam.unity`.
+- Enter Play Mode and confirm exactly one active `AudioListener` is present in each scene.
 - Confirm the Console has no duplicate `AudioListener` warning.
 - Confirm camera audio still follows `PlayerPack/Main Camera`.
 
@@ -25,7 +29,7 @@
 - Unity Editor/Play Mode was unavailable in this environment. Needs Unity Play Mode verification.
 
 ## Risk notes
-- Player/audio prefab risk: Medium; serialized prefab YAML changed in high-risk player assets, but only `AudioListener` enable/component state changed.
+- Player/audio prefab risk: Medium; serialized prefab/scene YAML changed in high-risk player assets/scenes, but only `AudioListener` enable/component state changed.
 
 ---
 

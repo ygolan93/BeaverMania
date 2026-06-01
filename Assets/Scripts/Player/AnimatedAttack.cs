@@ -15,6 +15,7 @@ namespace Beavermania.Player.Combat
         [SerializeField] Transform Sphere;
         [SerializeField] GameObject GlowEffect;
         [SerializeField] LayerMask enemyLayers;
+        [SerializeField] bool enableHitDebugLogs;
 
         const int FallbackBareHandsMeleeDamage = 50;
         const int FallbackBowMeleeDamage = 50;
@@ -74,7 +75,7 @@ namespace Beavermania.Player.Combat
                 if (enemy == null)
                     continue;
 
-                if (enemy.name != null)
+                if (enableHitDebugLogs && enemy.name != null)
                     Debug.Log("Hit " + enemy.name);
 
                 if (TryApplyInterfaceDamage(enemy, Damage))

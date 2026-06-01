@@ -1,23 +1,35 @@
 using System;
+using Beavermania.Display;
 using UnityEngine;
 
 namespace Beavermania.NPC
 {
-    public sealed class ShadowRevenantShadeMinion : MonoBehaviour, IShadowRevenantPooledItem
+    public sealed class ShadowRevenantShadeMinion : MonoBehaviour, IShadowRevenantPooledItem, IEnemyDamageReceiver
     {
         const float DirectionEpsilon = 0.0001f;
+        const float HitFlashDuration = 0.12f;
+        static readonly int EmissionColorId = Shader.PropertyToID("_EmissionColor");
 
         [SerializeField] Rigidbody shadeRigidbody;
         [SerializeField] Collider damageCollider;
         [SerializeField] Animator animator;
+        [SerializeField] Renderer[] eyeRenderers;
+        [SerializeField] bool enableDebugLogs;
 
         Action<ShadowRevenantShadeMinion> releaseToPool;
         IShadowRevenantTarget target;
+        GameObject hitVfxPrefab;
+        GameObject deathVfxPrefab;
+        MaterialPropertyBlock eyePropertyBlock;
         float moveSpeed;
         float damage;
         float damageCooldown;
         float nextDamageTime;
         float lifetimeRemaining;
+        float hitFlashRemaining;
+        Color[] defaultEyeEmission;
+        int currentHealth;
+        int maxHealth;
         bool released = true;
 
         public bool IsPoolActive => !released;
@@ -43,6 +55,39 @@ namespace Beavermania.NPC
 
             if (animator == null)
                 animator = GetComponentInChildren<Animator>();
+
+            if (eyeRenderers == null || eyeRenderers.Length == 0)
+            {
+                var left = transform.Find("EyeLeft");
+                var right = transform.Find("EyeRight");
+                if (left != null && right != null)
+                    eyeRenderers = new[] { left.GetComponent<Renderer>(), right.GetComponent<Renderer>() };
+            }
+
+            if (eyePropertyBlock == null)
+                eyePropertyBlock = new MaterialPropertyBlock();
+
+            CacheDefaultEyeEmission();
+        }
+
+        void CacheDefaultEyeEmission()
+        {
+            if (eyeRenderers == null || eyeRenderers.Length == 0)
+                return;
+
+            if (defaultEyeEmission != null && defaultEyeEmission.Length == eyeRenderers.Length)
+                return;
+
+            defaultEyeEmission = new Color[eyeRenderers.Length];
+            for (var i = 0; i < eyeRenderers.Length; i++)
+            {
+                Renderer renderer = eyeRenderers[i];
+                if (renderer == null || renderer.sharedMaterial == null)
+                    continue;
+
+                if (renderer.sharedMaterial.HasProperty(EmissionColorId))
+                    defaultEyeEmission[i] = renderer.sharedMaterial.GetColor(EmissionColorId);
+            }
         }
 
         public void Activate(
@@ -51,7 +96,10 @@ namespace Beavermania.NPC
             float speed,
             float contactDamage,
             float contactDamageCooldown,
-            float lifetime)
+            float lifetime,
+            int health,
+            GameObject hitVfx,
+            GameObject deathVfx)
         {
             CacheReferences();
             released = false;
@@ -61,6 +109,11 @@ namespace Beavermania.NPC
             damageCooldown = Mathf.Max(0.05f, contactDamageCooldown);
             nextDamageTime = 0f;
             lifetimeRemaining = Mathf.Max(0.05f, lifetime);
+            maxHealth = Mathf.Max(1, health);
+            currentHealth = maxHealth;
+            hitVfxPrefab = hitVfx;
+            deathVfxPrefab = deathVfx;
+            hitFlashRemaining = 0f;
             transform.position = position;
 
             if (damageCollider != null)
@@ -81,7 +134,17 @@ namespace Beavermania.NPC
 
             lifetimeRemaining -= Time.deltaTime;
             if (lifetimeRemaining <= 0f || target == null || target.TargetTransform == null)
+            {
                 DeactivateToPool();
+                return;
+            }
+
+            if (hitFlashRemaining > 0f)
+            {
+                hitFlashRemaining -= Time.deltaTime;
+                if (hitFlashRemaining <= 0f)
+                    RestoreEyeEmission();
+            }
         }
 
         void FixedUpdate()
@@ -131,6 +194,72 @@ namespace Beavermania.NPC
             nextDamageTime = Time.time + damageCooldown;
         }
 
+        public bool ReceiveDamage(int amount, EnemyDamageType damageType, Transform source)
+        {
+            if (released || amount <= 0)
+                return false;
+
+            currentHealth = Mathf.Max(0, currentHealth - amount);
+            SpawnHitVfx();
+            FlashEyes();
+
+            if (currentHealth <= 0)
+            {
+                SpawnDeathVfx();
+                DeactivateToPool();
+            }
+
+            return true;
+        }
+
+        void SpawnHitVfx()
+        {
+            if (hitVfxPrefab != null)
+                PooledOneShotVfx.Spawn(hitVfxPrefab, transform.position + Vector3.up * 0.35f, Quaternion.identity);
+        }
+
+        void SpawnDeathVfx()
+        {
+            if (deathVfxPrefab != null)
+                PooledOneShotVfx.Spawn(deathVfxPrefab, transform.position + Vector3.up * 0.25f, Quaternion.identity);
+        }
+
+        void FlashEyes()
+        {
+            if (eyeRenderers == null || eyeRenderers.Length == 0)
+                return;
+
+            hitFlashRemaining = HitFlashDuration;
+            Color flash = new Color(0.6f, 1.4f, 0.7f);
+            for (var i = 0; i < eyeRenderers.Length; i++)
+            {
+                Renderer renderer = eyeRenderers[i];
+                if (renderer == null)
+                    continue;
+
+                renderer.GetPropertyBlock(eyePropertyBlock);
+                eyePropertyBlock.SetColor(EmissionColorId, flash);
+                renderer.SetPropertyBlock(eyePropertyBlock);
+            }
+        }
+
+        void RestoreEyeEmission()
+        {
+            if (eyeRenderers == null || defaultEyeEmission == null)
+                return;
+
+            for (var i = 0; i < eyeRenderers.Length; i++)
+            {
+                Renderer renderer = eyeRenderers[i];
+                if (renderer == null)
+                    continue;
+
+                renderer.GetPropertyBlock(eyePropertyBlock);
+                eyePropertyBlock.SetColor(EmissionColorId, defaultEyeEmission[i]);
+                renderer.SetPropertyBlock(eyePropertyBlock);
+            }
+        }
+
         public void DeactivateToPool()
         {
             if (released)
@@ -139,6 +268,8 @@ namespace Beavermania.NPC
             released = true;
             target = null;
             lifetimeRemaining = 0f;
+            hitFlashRemaining = 0f;
+            RestoreEyeEmission();
 
             if (shadeRigidbody != null)
             {

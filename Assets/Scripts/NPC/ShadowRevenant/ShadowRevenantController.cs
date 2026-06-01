@@ -2,6 +2,7 @@ using Beavermania.Data.NPC;
 using Beavermania.Display;
 using Beavermania.Objects;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Beavermania.NPC
 {
@@ -25,9 +26,28 @@ namespace Beavermania.NPC
         [SerializeField] NPC_Health healthBar;
         [SerializeField] ShadowRevenantPoolHub poolHub;
         [SerializeField] Collider[] phaseDisabledColliders;
+        [SerializeField] Light projectileMuzzleGlow;
+        [SerializeField] GameObject[] summonSigilVisuals;
+        [SerializeField] Transform bossVisualRoot;
+        [SerializeField] Color healthBarLightBreakFillColor = new Color(0.35f, 1f, 0.45f, 1f);
+        [SerializeField] bool enableDebugLogs;
+
+        Image healthBarFillImage;
+        Color healthBarDefaultFillColor = Color.white;
+        bool healthBarFillColorCached;
+
+        enum StrafeMode
+        {
+            Orbit = 0,
+            TowardTarget = 1,
+            AwayFromFog = 2
+        }
 
         IShadowRevenantTarget target;
         ShadowRevenantState state = ShadowRevenantState.Dormant;
+        ShadowRevenantState previousState;
+        ShadowRevenantDreadFogZone pendingFogCast;
+        StrafeMode strafeMode = StrafeMode.Orbit;
         int currentHealth;
         float stateTimer;
         float projectileCooldownRemaining;
@@ -97,9 +117,47 @@ namespace Beavermania.NPC
             if (poolHub == null)
                 poolHub = GetComponent<ShadowRevenantPoolHub>();
 
+            if (projectileMuzzleGlow == null && projectileMuzzle != null)
+                projectileMuzzleGlow = projectileMuzzle.GetComponentInChildren<Light>(true);
+
             healthBarVisibility = GetComponent<EnemyHealthBarVisibility>();
             if (healthBarVisibility == null)
                 healthBarVisibility = gameObject.AddComponent<EnemyHealthBarVisibility>();
+
+            CacheHealthBarFillColor();
+
+            if (bossVisualRoot == null)
+            {
+                Transform visual = transform.Find("Visual");
+                if (visual != null)
+                    bossVisualRoot = visual;
+            }
+        }
+
+        void CacheHealthBarFillColor()
+        {
+            if (healthBarFillColorCached || healthBar == null || healthBar.NPCslider == null)
+                return;
+
+            Transform fillRect = healthBar.NPCslider.fillRect;
+            if (fillRect == null)
+                return;
+
+            healthBarFillImage = fillRect.GetComponent<Image>();
+            if (healthBarFillImage == null)
+                return;
+
+            healthBarDefaultFillColor = healthBarFillImage.color;
+            healthBarFillColorCached = true;
+        }
+
+        void SetHealthBarLightBreakAccent(bool enabled)
+        {
+            CacheHealthBarFillColor();
+            if (healthBarFillImage == null)
+                return;
+
+            healthBarFillImage.color = enabled ? healthBarLightBreakFillColor : healthBarDefaultFillColor;
         }
 
         void ResetHealth()
@@ -207,25 +265,80 @@ namespace Beavermania.NPC
                 return;
             }
 
+            strafeMode = ResolveStrafeMode(distance);
+
             if (TryStartPhase(distance))
                 return;
 
-            if (TryStartSummon())
-                return;
+            if (poolHub != null && poolHub.ActiveShadeCount > 0)
+            {
+                if (TryStartFog(distance))
+                    return;
 
-            if (TryStartFog(distance))
-                return;
+                if (TryStartProjectile(distance))
+                    return;
+            }
+            else
+            {
+                if (TryStartSummon())
+                    return;
 
-            if (TryStartProjectile(distance))
-                return;
+                if (TryStartFog(distance))
+                    return;
+
+                if (TryStartProjectile(distance))
+                    return;
+            }
 
             if (state != ShadowRevenantState.Strafe)
                 EnterState(ShadowRevenantState.Strafe, 0f);
         }
 
+        StrafeMode ResolveStrafeMode(float distance)
+        {
+            if (poolHub != null && target != null && poolHub.IsTargetInsideActiveFog(target)
+                && IsBossNearActiveFogCenter())
+            {
+                return StrafeMode.AwayFromFog;
+            }
+
+            if (poolHub != null && poolHub.ActiveShadeCount > 0 && distance <= config.closeRange)
+                return StrafeMode.AwayFromFog;
+
+            if (distance > config.mediumRange)
+                return StrafeMode.TowardTarget;
+
+            return StrafeMode.Orbit;
+        }
+
+        bool IsBossNearActiveFogCenter()
+        {
+            if (poolHub == null || config == null || target == null || target.TargetTransform == null)
+                return false;
+
+            if (!poolHub.IsTargetInsideActiveFog(target))
+                return false;
+
+            Vector3 delta = transform.position - target.TargetTransform.position;
+            delta.y = 0f;
+            float maxDistance = config.fogRadius * 1.25f;
+            return delta.sqrMagnitude <= maxDistance * maxDistance;
+        }
+
         bool TryStartPhase(float distance)
         {
-            if (phaseCooldownRemaining > 0f || distance > config.phaseTriggerRange || lightBrokenRemaining > 0f)
+            if (phaseCooldownRemaining > 0f || lightBrokenRemaining > 0f)
+                return false;
+
+            bool inCloseRange = distance <= config.closeRange;
+            if (config.preferPhaseWhenClose && inCloseRange && distance <= config.phaseTriggerRange)
+            {
+                EnterState(ShadowRevenantState.PhaseShiftEnter, config.phaseWindup);
+                phaseCooldownRemaining = config.phaseCooldown;
+                return true;
+            }
+
+            if (!inCloseRange || distance > config.phaseTriggerRange)
                 return false;
 
             EnterState(ShadowRevenantState.PhaseShiftEnter, config.phaseWindup);
@@ -238,6 +351,9 @@ namespace Beavermania.NPC
             if (projectileCooldownRemaining > 0f || distance > config.projectileRange)
                 return false;
 
+            if (distance < config.closeRange * 0.75f)
+                return false;
+
             EnterState(ShadowRevenantState.ProjectileWindup, config.projectileWindup);
             return true;
         }
@@ -245,6 +361,21 @@ namespace Beavermania.NPC
         bool TryStartFog(float distance)
         {
             if (fogCooldownRemaining > 0f || distance > config.fogRange)
+                return false;
+
+            if (distance < config.closeRange * 0.5f)
+                return false;
+
+            if (poolHub != null)
+            {
+                if (poolHub.ActiveFogCount >= config.fogMaxActive)
+                    return false;
+
+                if (target != null && poolHub.IsTargetInsideActiveFog(target))
+                    return false;
+            }
+
+            if (distance < config.closeRange || distance > config.mediumRange * 1.35f)
                 return false;
 
             EnterState(ShadowRevenantState.FogWindup, config.fogWindup);
@@ -280,7 +411,7 @@ namespace Beavermania.NPC
             if (stateTimer > 0f)
                 return;
 
-            SpawnFog();
+            ActivatePendingFogDamage();
             fogCooldownRemaining = config.fogCooldown;
             EnterState(ShadowRevenantState.FogRecover, config.fogRecover);
         }
@@ -348,13 +479,41 @@ namespace Beavermania.NPC
             poolHub.SpawnProjectile(origin, rotation, direction, target);
         }
 
-        void SpawnFog()
+        void BeginFogTelegraph()
         {
-            if (poolHub == null || target == null || target.TargetTransform == null)
+            if (poolHub == null)
                 return;
 
-            Vector3 position = fogSpawnAnchor != null ? fogSpawnAnchor.position : target.TargetTransform.position;
-            poolHub.SpawnFog(position, target);
+            Vector3 position = ResolveFogSpawnPosition();
+            pendingFogCast = poolHub.SpawnFogTelegraph(position);
+            if (pendingFogCast == null && enableDebugLogs)
+                Debug.LogWarning("[ShadowRevenant] Fog telegraph spawn failed (pool exhausted).", this);
+        }
+
+        void ActivatePendingFogDamage()
+        {
+            if (pendingFogCast == null || config == null)
+                return;
+
+            pendingFogCast.BeginDamagePhase(
+                config.fogDuration,
+                config.fogDamagePerTick,
+                config.fogTickInterval,
+                config.fogSlowPercent,
+                target,
+                config.fogFadeOutTime);
+            pendingFogCast = null;
+        }
+
+        Vector3 ResolveFogSpawnPosition()
+        {
+            if (fogSpawnAnchor != null)
+                return fogSpawnAnchor.position;
+
+            if (target != null && target.TargetTransform != null)
+                return target.TargetTransform.position;
+
+            return transform.position;
         }
 
         void SpawnShades()
@@ -424,13 +583,26 @@ namespace Beavermania.NPC
             if (horizontal.sqrMagnitude <= DirectionEpsilon)
                 return;
 
-            Vector3 tangent = Vector3.Cross(Vector3.up, horizontal.normalized);
-            Vector3 nextPosition = transform.position + tangent * (config.strafeSpeed * Time.fixedDeltaTime);
+            Vector3 moveDirection;
+            switch (strafeMode)
+            {
+                case StrafeMode.TowardTarget:
+                    moveDirection = horizontal.normalized;
+                    break;
+                case StrafeMode.AwayFromFog:
+                    moveDirection = -horizontal.normalized;
+                    break;
+                default:
+                    moveDirection = Vector3.Cross(Vector3.up, horizontal.normalized);
+                    break;
+            }
+
+            Vector3 nextPosition = transform.position + moveDirection * (config.strafeSpeed * Time.fixedDeltaTime);
 
             if (body.isKinematic)
                 body.MovePosition(ResolveHoverPosition(nextPosition));
             else
-                body.velocity = new Vector3(tangent.x * config.strafeSpeed, 0f, tangent.z * config.strafeSpeed);
+                body.velocity = new Vector3(moveDirection.x * config.strafeSpeed, 0f, moveDirection.z * config.strafeSpeed);
         }
 
         void ConfigureRigidbodyForHover()
@@ -595,8 +767,11 @@ namespace Beavermania.NPC
 
         void EnterState(ShadowRevenantState nextState, float duration)
         {
+            OnExitState(state);
+            previousState = state;
             state = nextState;
             stateTimer = Mathf.Max(0f, duration);
+            OnEnterState(nextState);
 
             bool phased = nextState == ShadowRevenantState.PhaseShiftEnter
                 || nextState == ShadowRevenantState.Phased
@@ -618,6 +793,69 @@ namespace Beavermania.NPC
                 teleportApplied = false;
         }
 
+        void OnEnterState(ShadowRevenantState entered)
+        {
+            switch (entered)
+            {
+                case ShadowRevenantState.FogWindup:
+                    BeginFogTelegraph();
+                    break;
+                case ShadowRevenantState.ProjectileWindup:
+                    SetProjectileMuzzleGlow(true);
+                    break;
+                case ShadowRevenantState.SummonWindup:
+                    SetSummonSigilsVisible(true);
+                    break;
+                case ShadowRevenantState.PhaseShiftEnter:
+                    SpawnVfx(config != null ? config.phaseVfxPrefab : null, transform.position + Vector3.up * 0.5f);
+                    break;
+                case ShadowRevenantState.LightBroken:
+                    SetHealthBarLightBreakAccent(true);
+                    break;
+            }
+        }
+
+        void OnExitState(ShadowRevenantState exited)
+        {
+            switch (exited)
+            {
+                case ShadowRevenantState.LightBroken:
+                    SetHealthBarLightBreakAccent(false);
+                    break;
+                case ShadowRevenantState.ProjectileWindup:
+                    SetProjectileMuzzleGlow(false);
+                    break;
+                case ShadowRevenantState.SummonWindup:
+                    SetSummonSigilsVisible(false);
+                    break;
+                case ShadowRevenantState.FogWindup:
+                    if (pendingFogCast != null && state != ShadowRevenantState.FogRecover)
+                    {
+                        pendingFogCast.DeactivateToPool();
+                        pendingFogCast = null;
+                    }
+                    break;
+            }
+        }
+
+        void SetProjectileMuzzleGlow(bool enabled)
+        {
+            if (projectileMuzzleGlow != null)
+                projectileMuzzleGlow.enabled = enabled;
+        }
+
+        void SetSummonSigilsVisible(bool visible)
+        {
+            if (summonSigilVisuals == null)
+                return;
+
+            for (var i = 0; i < summonSigilVisuals.Length; i++)
+            {
+                if (summonSigilVisuals[i] != null)
+                    summonSigilVisuals[i].SetActive(visible);
+            }
+        }
+
         void SetPhaseCollision(bool enabled)
         {
             if (phaseDisabledColliders == null)
@@ -637,17 +875,78 @@ namespace Beavermania.NPC
 
             deathHandled = true;
             state = ShadowRevenantState.Dead;
-            SetPhaseCollision(true);
+            SetPhaseCollision(false);
 
             if (body != null)
+            {
                 body.velocity = Vector3.zero;
+                body.angularVelocity = Vector3.zero;
+            }
 
             if (animator != null)
                 animator.SetTrigger(DeadHash);
 
-            SpawnVfx(config != null ? config.deathVfxPrefab : null, transform.position + Vector3.up);
+            if (poolHub != null)
+                poolHub.ReleaseAllActiveCombat();
+
+            if (pendingFogCast != null)
+            {
+                pendingFogCast.DeactivateToPool();
+                pendingFogCast = null;
+            }
+
+            Vector3 deathPosition = ResolveHoverPosition(transform.position);
+            SpawnVfx(config != null ? config.deathVfxPrefab : null, deathPosition + Vector3.up * 1.2f);
+            SpawnRemains(deathPosition);
             SpawnDrops();
-            gameObject.SetActive(false);
+            HideBossAfterDeath();
+        }
+
+        void HideBossAfterDeath()
+        {
+            if (healthBar != null)
+            {
+                Canvas barCanvas = healthBar.GetComponentInParent<Canvas>();
+                if (barCanvas != null)
+                    barCanvas.enabled = false;
+            }
+
+            if (bossVisualRoot != null)
+                bossVisualRoot.gameObject.SetActive(false);
+            else
+            {
+                Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
+                for (var i = 0; i < renderers.Length; i++)
+                {
+                    if (renderers[i] != null)
+                        renderers[i].enabled = false;
+                }
+            }
+
+            Collider[] colliders = GetComponentsInChildren<Collider>(true);
+            for (var i = 0; i < colliders.Length; i++)
+            {
+                if (colliders[i] != null)
+                    colliders[i].enabled = false;
+            }
+
+            if (projectileMuzzleGlow != null)
+                projectileMuzzleGlow.enabled = false;
+
+            SetSummonSigilsVisible(false);
+        }
+
+        void SpawnRemains(Vector3 groundedPosition)
+        {
+            if (config == null || config.remainsPrefab == null)
+                return;
+
+            GameObject remains = Instantiate(config.remainsPrefab, groundedPosition, Quaternion.identity);
+            ShadowRevenantRemains remainsBehaviour = remains.GetComponent<ShadowRevenantRemains>();
+            if (remainsBehaviour == null)
+                remainsBehaviour = remains.AddComponent<ShadowRevenantRemains>();
+
+            remainsBehaviour.ConfigureLifetime(config.remainsLifetime);
         }
 
         void SpawnDrops()

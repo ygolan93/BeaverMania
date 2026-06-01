@@ -97,6 +97,15 @@ namespace Beavermania.NPC
             if (hitTarget == null || !hitTarget.CanReceiveShadowDamage)
                 return;
 
+            if (hitTarget.IsParrying)
+            {
+                if (impactVfxPrefab != null)
+                    Beavermania.Display.PooledOneShotVfx.Spawn(impactVfxPrefab, transform.position, transform.rotation);
+
+                DeactivateToPool();
+                return;
+            }
+
             hitTarget.ReceiveShadowDamage(damage);
             if (impactVfxPrefab != null)
                 Beavermania.Display.PooledOneShotVfx.Spawn(impactVfxPrefab, transform.position, transform.rotation);

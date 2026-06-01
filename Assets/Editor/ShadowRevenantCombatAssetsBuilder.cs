@@ -25,6 +25,9 @@ namespace Beavermania.EditorTools
         const string DeathVfxPath = PrefabFolder + "/ShadowRevenantDeathVFX.prefab";
         const string PhaseVfxPath = PrefabFolder + "/ShadowRevenantPhaseVFX.prefab";
         const string LightBreakVfxPath = PrefabFolder + "/ShadowRevenantLightBreakVFX.prefab";
+        const string ShadeHitVfxPath = PrefabFolder + "/ShadowRevenantShadeHitVFX.prefab";
+        const string ShadeDeathVfxPath = PrefabFolder + "/ShadowRevenantShadeDeathVFX.prefab";
+        const string RemainsPrefabPath = PrefabFolder + "/ShadowRevenantRemains.prefab";
 
         static readonly int EnemyLayer = LayerMask.NameToLayer("Enemy");
 
@@ -67,42 +70,64 @@ namespace Beavermania.EditorTools
             GameObject hitVfx = BuildBurstVfxPrefab(
                 HitVfxPath,
                 "ShadowRevenantHitVFX",
-                new Color(0.12f, 0.1f, 0.18f, 0.85f),
-                new Color(0.2f, 0.95f, 0.35f, 0f),
-                0.45f,
-                0.35f,
-                24,
-                0.5f);
+                new Color(0.1f, 0.08f, 0.14f, 0.9f),
+                new Color(0.25f, 1f, 0.4f, 0f),
+                0.4f,
+                0.42f,
+                28,
+                0.45f);
 
             GameObject deathVfx = BuildBurstVfxPrefab(
                 DeathVfxPath,
                 "ShadowRevenantDeathVFX",
-                new Color(0.08f, 0.06f, 0.12f, 0.9f),
-                new Color(0.15f, 0.85f, 0.3f, 0f),
-                0.9f,
-                0.55f,
-                48,
-                0.85f);
+                new Color(0.06f, 0.05f, 0.1f, 0.95f),
+                new Color(0.2f, 0.95f, 0.35f, 0f),
+                1f,
+                0.65f,
+                56,
+                1f);
 
             GameObject phaseVfx = BuildBurstVfxPrefab(
                 PhaseVfxPath,
                 "ShadowRevenantPhaseVFX",
-                new Color(0.1f, 0.08f, 0.16f, 0.75f),
-                new Color(0.25f, 0.9f, 0.45f, 0f),
-                0.7f,
-                0.5f,
-                36,
-                0.75f);
+                new Color(0.18f, 0.06f, 0.28f, 0.85f),
+                new Color(0.35f, 0.15f, 0.55f, 0f),
+                0.85f,
+                0.58f,
+                42,
+                0.8f);
 
             GameObject lightBreakVfx = BuildBurstVfxPrefab(
                 LightBreakVfxPath,
                 "ShadowRevenantLightBreakVFX",
-                new Color(1f, 0.92f, 0.55f, 0.95f),
-                new Color(0.35f, 1f, 0.4f, 0f),
-                0.65f,
-                0.45f,
-                40,
-                0.7f);
+                new Color(1f, 0.95f, 0.65f, 1f),
+                new Color(0.4f, 1f, 0.45f, 0f),
+                0.55f,
+                0.62f,
+                52,
+                0.75f);
+
+            GameObject shadeHitVfx = BuildBurstVfxPrefab(
+                ShadeHitVfxPath,
+                "ShadowRevenantShadeHitVFX",
+                new Color(0.12f, 0.1f, 0.16f, 0.75f),
+                new Color(0.3f, 1f, 0.4f, 0f),
+                0.25f,
+                0.22f,
+                12,
+                0.3f);
+
+            GameObject shadeDeathVfx = BuildBurstVfxPrefab(
+                ShadeDeathVfxPath,
+                "ShadowRevenantShadeDeathVFX",
+                new Color(0.08f, 0.06f, 0.12f, 0.85f),
+                new Color(0.35f, 1f, 0.45f, 0f),
+                0.35f,
+                0.3f,
+                18,
+                0.4f);
+
+            GameObject remainsPrefab = BuildRemainsPrefab(bodyMaterial);
 
             ShadowRevenantConfig config = AssetDatabase.LoadAssetAtPath<ShadowRevenantConfig>(ConfigPath);
             if (config == null)
@@ -115,12 +140,39 @@ namespace Beavermania.EditorTools
             config.deathVfxPrefab = deathVfx;
             config.phaseVfxPrefab = phaseVfx;
             config.lightBreakVfxPrefab = lightBreakVfx;
+            config.shadeHitVfxPrefab = shadeHitVfx;
+            config.shadeDeathVfxPrefab = shadeDeathVfx;
+            config.remainsPrefab = remainsPrefab;
+            config.remainsLifetime = 45f;
 
             EditorUtility.SetDirty(config);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            Debug.Log("[ShadowRevenantCombatAssetsBuilder] Assigned projectile, fog, shade, and four VFX prefabs on ShadowRevenantConfig. deathDropPrefabs left empty (optional).");
+            Debug.Log("[ShadowRevenantCombatAssetsBuilder] Assigned projectile, fog, shade, VFX, and remains on ShadowRevenantConfig.");
+        }
+
+        static GameObject BuildRemainsPrefab(Material bodyMaterial)
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<GameObject>(RemainsPrefabPath);
+            if (existing != null && existing.GetComponent<ShadowRevenantRemains>() != null)
+                return existing;
+
+            var root = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            root.name = "ShadowRevenantRemains";
+            root.transform.localScale = new Vector3(0.85f, 0.14f, 0.85f);
+
+            var meshCollider = root.GetComponent<MeshCollider>();
+            if (meshCollider != null)
+                UnityEngine.Object.DestroyImmediate(meshCollider);
+
+            ApplyMaterial(root, bodyMaterial);
+            var remains = root.AddComponent<ShadowRevenantRemains>();
+            var serializedRemains = new SerializedObject(remains);
+            serializedRemains.FindProperty("lifetimeSeconds").floatValue = 45f;
+            serializedRemains.ApplyModifiedPropertiesWithoutUndo();
+
+            return SavePrefab(root, RemainsPrefabPath);
         }
 
         static Material LoadOrCreatePlaceholderMaterial()
@@ -138,6 +190,32 @@ namespace Beavermania.EditorTools
                 color = new Color(0.08f, 0.07f, 0.12f, 1f)
             };
             AssetDatabase.CreateAsset(material, PlaceholderMaterialPath);
+            return material;
+        }
+
+        static Material LoadOrCreateFogTelegraphMaterial()
+        {
+            const string path = PrefabFolder + "/ShadowRevenantFogTelegraph.mat";
+            var existing = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (existing != null)
+                return existing;
+
+            var shader = Shader.Find("Standard");
+            var material = new Material(shader) { color = new Color(0.82f, 0.14f, 0.12f, 0.28f) };
+            AssetDatabase.CreateAsset(material, path);
+            return material;
+        }
+
+        static Material LoadOrCreateFogActiveMaterial()
+        {
+            const string path = PrefabFolder + "/ShadowRevenantFogActive.mat";
+            var existing = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (existing != null)
+                return existing;
+
+            var shader = Shader.Find("Standard");
+            var material = new Material(shader) { color = new Color(0.6f, 0.1f, 0.1f, 0.24f) };
+            AssetDatabase.CreateAsset(material, path);
             return material;
         }
 
@@ -198,18 +276,32 @@ namespace Beavermania.EditorTools
             fogCollider.isTrigger = true;
             fogCollider.radius = 5f;
 
-            var visualRoot = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            visualRoot.name = "visualRoot";
-            visualRoot.transform.SetParent(root.transform, false);
-            visualRoot.transform.localPosition = Vector3.zero;
-            visualRoot.transform.localScale = new Vector3(1f, 0.05f, 1f);
-            UnityEngine.Object.DestroyImmediate(visualRoot.GetComponent<Collider>());
-            ApplyMaterial(visualRoot, material);
+            Material telegraphMaterial = LoadOrCreateFogTelegraphMaterial();
+            Material activeMaterial = LoadOrCreateFogActiveMaterial();
+
+            var telegraphRoot = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            telegraphRoot.name = "TelegraphRing";
+            telegraphRoot.transform.SetParent(root.transform, false);
+            telegraphRoot.transform.localPosition = new Vector3(0f, 0.01f, 0f);
+            telegraphRoot.transform.localScale = new Vector3(10f, 0.04f, 10f);
+            UnityEngine.Object.DestroyImmediate(telegraphRoot.GetComponent<Collider>());
+            ApplyMaterial(telegraphRoot, telegraphMaterial);
+            telegraphRoot.SetActive(false);
+
+            var activeVisual = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            activeVisual.name = "ActiveHazard";
+            activeVisual.transform.SetParent(root.transform, false);
+            activeVisual.transform.localPosition = new Vector3(0f, 0.02f, 0f);
+            activeVisual.transform.localScale = new Vector3(10f, 0.03f, 10f);
+            UnityEngine.Object.DestroyImmediate(activeVisual.GetComponent<Collider>());
+            ApplyMaterial(activeVisual, activeMaterial);
+            activeVisual.SetActive(false);
 
             var fog = root.AddComponent<ShadowRevenantDreadFogZone>();
             var serializedFog = new SerializedObject(fog);
             serializedFog.FindProperty("fogCollider").objectReferenceValue = fogCollider;
-            serializedFog.FindProperty("visualRoot").objectReferenceValue = visualRoot.transform;
+            serializedFog.FindProperty("telegraphRoot").objectReferenceValue = telegraphRoot.transform;
+            serializedFog.FindProperty("activeVisualRoot").objectReferenceValue = activeVisual.transform;
             serializedFog.ApplyModifiedPropertiesWithoutUndo();
 
             return SavePrefab(root, FogPrefabPath);
@@ -219,7 +311,7 @@ namespace Beavermania.EditorTools
         {
             var root = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             root.name = "ShadowRevenantShadeMinion";
-            root.transform.localScale = new Vector3(0.55f, 0.55f, 0.55f);
+            root.transform.localScale = new Vector3(2f, 2f, 2f);
             if (EnemyLayer >= 0)
                 root.layer = EnemyLayer;
 
@@ -229,7 +321,7 @@ namespace Beavermania.EditorTools
 
             var sphereCollider = root.AddComponent<SphereCollider>();
             sphereCollider.isTrigger = true;
-            sphereCollider.radius = 0.5f;
+            sphereCollider.radius = 0.42f;
 
             var rigidbody = root.AddComponent<Rigidbody>();
             rigidbody.useGravity = false;

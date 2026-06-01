@@ -11,6 +11,7 @@ namespace Beavermania.NPC
         [SerializeField] float engageDistance = 14f;
         [SerializeField] float recentlyDamagedDuration = 2.5f;
         [SerializeField] bool alwaysShow;
+        [SerializeField] ShadowRevenantController shadowRevenant;
 
         float damagedVisibleUntil;
         NPC_Basic wasp;
@@ -19,6 +20,9 @@ namespace Beavermania.NPC
         {
             if (healthBarCanvas == null)
                 healthBarCanvas = GetComponentInChildren<Canvas>(true);
+
+            if (shadowRevenant == null)
+                shadowRevenant = GetComponent<ShadowRevenantController>();
 
             wasp = GetComponentInParent<NPC_Basic>();
             if (wasp == null)
@@ -55,6 +59,12 @@ namespace Beavermania.NPC
 
         bool ShouldShowHealthBar()
         {
+            if (shadowRevenant != null)
+            {
+                ShadowRevenantState state = shadowRevenant.State;
+                return state != ShadowRevenantState.Dormant && state != ShadowRevenantState.Dead;
+            }
+
             if (alwaysShow)
                 return true;
 

@@ -17,13 +17,19 @@ namespace Beavermania.Objects
         }
         private void Update()
         {
+            if (CameraTarget == null)
+            {
+                CameraTarget = GameObject.FindGameObjectWithTag("MainCamera");
+                if (CameraTarget == null)
+                    return;
+            }
+
             Distance = CameraTarget.transform.position - transform.position;
             if (Distance.sqrMagnitude > LookRotationEpsilon && Distance.magnitude > 0.5f)
             {
                 Quaternion rotGoal = Quaternion.LookRotation(Distance);
                 transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.1f);
             }
-
         }
 
     }

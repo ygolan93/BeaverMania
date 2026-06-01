@@ -18,6 +18,15 @@ namespace Beavermania.Data.NPC
         public float faceTurnSpeed = 8f;
         public float strafeSpeed = 4f;
 
+        [Header("Hover / Grounding")]
+        public bool usePhysicsGravity;
+        public float hoverHeight;
+        public float groundCheckStartHeight = 12f;
+        public float groundCheckDistance = 24f;
+        public LayerMask groundMask;
+        [Tooltip("0 = instant vertical snap to hover height.")]
+        public float verticalSnapSpeed;
+
         [Header("Phase Shift")]
         public float phaseCooldown = 8f;
         public float phaseDuration = 2.4f;
@@ -96,6 +105,9 @@ namespace Beavermania.Data.NPC
             WarnIf(fogTickInterval <= 0f, "fogTickInterval must be > 0.");
             WarnIf(maxActiveMinions < 0, "maxActiveMinions must be >= 0.");
             WarnIf(summonCount < 0, "summonCount must be >= 0.");
+            WarnIf(hoverHeight < 0f, "hoverHeight must be >= 0.");
+            WarnIf(groundCheckDistance <= 0f, "groundCheckDistance must be > 0.");
+            WarnIf(groundCheckStartHeight <= 0f, "groundCheckStartHeight must be > 0.");
         }
 
         void WarnIf(bool condition, string message)

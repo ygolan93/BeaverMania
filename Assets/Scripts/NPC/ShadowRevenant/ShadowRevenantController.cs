@@ -37,6 +37,8 @@ namespace Beavermania.NPC
         float lightBrokenRemaining;
         bool deathHandled;
         bool teleportApplied;
+        float spawnAnchorY;
+        EnemyHealthBarVisibility healthBarVisibility;
 
         public ShadowRevenantState State => state;
         public int CurrentHealth => currentHealth;
@@ -44,15 +46,19 @@ namespace Beavermania.NPC
         void Awake()
         {
             CacheReferences();
+            ConfigureRigidbodyForHover();
             if (poolHub != null)
                 poolHub.Initialize(config);
         }
 
         void Start()
         {
+            spawnAnchorY = transform.position.y;
             ResolveTarget();
             ResetHealth();
             EnterState(ShadowRevenantState.Dormant, 0f);
+            MaintainHoverHeight();
+            spawnAnchorY = transform.position.y;
         }
 
         void OnEnable()
@@ -71,8 +77,13 @@ namespace Beavermania.NPC
 
         void FixedUpdate()
         {
+            if (state == ShadowRevenantState.Dead || deathHandled)
+                return;
+
             if (state == ShadowRevenantState.Strafe)
                 StrafeAroundTarget();
+
+            MaintainHoverHeight();
         }
 
         void CacheReferences()
@@ -85,6 +96,10 @@ namespace Beavermania.NPC
 
             if (poolHub == null)
                 poolHub = GetComponent<ShadowRevenantPoolHub>();
+
+            healthBarVisibility = GetComponent<EnemyHealthBarVisibility>();
+            if (healthBarVisibility == null)
+                healthBarVisibility = gameObject.AddComponent<EnemyHealthBarVisibility>();
         }
 
         void ResetHealth()
@@ -393,10 +408,10 @@ namespace Beavermania.NPC
                     continue;
                 }
 
-                return grounded;
+                return ResolveHoverPosition(grounded);
             }
 
-            return transform.position;
+            return ResolveHoverPosition(transform.position);
         }
 
         void StrafeAroundTarget()
@@ -410,8 +425,101 @@ namespace Beavermania.NPC
                 return;
 
             Vector3 tangent = Vector3.Cross(Vector3.up, horizontal.normalized);
-            Vector3 velocity = tangent * config.strafeSpeed;
-            body.velocity = new Vector3(velocity.x, body.velocity.y, velocity.z);
+            Vector3 nextPosition = transform.position + tangent * (config.strafeSpeed * Time.fixedDeltaTime);
+
+            if (body.isKinematic)
+                body.MovePosition(ResolveHoverPosition(nextPosition));
+            else
+                body.velocity = new Vector3(tangent.x * config.strafeSpeed, 0f, tangent.z * config.strafeSpeed);
+        }
+
+        void ConfigureRigidbodyForHover()
+        {
+            if (body == null)
+                return;
+
+            bool useGravity = config != null && config.usePhysicsGravity;
+            body.useGravity = useGravity;
+            body.isKinematic = !useGravity;
+            body.velocity = Vector3.zero;
+            body.angularVelocity = Vector3.zero;
+            body.constraints = RigidbodyConstraints.FreezeRotation;
+        }
+
+        LayerMask ResolveGroundMask()
+        {
+            if (config == null)
+                return Physics.DefaultRaycastLayers;
+
+            return config.groundMask.value != 0 ? config.groundMask : config.teleportGroundMask;
+        }
+
+        float ResolveGroundCheckStartHeight()
+        {
+            if (config == null)
+                return 12f;
+
+            return config.groundCheckStartHeight > 0f
+                ? config.groundCheckStartHeight
+                : Mathf.Max(0.1f, config.teleportRaycastHeight);
+        }
+
+        float ResolveGroundCheckDistance()
+        {
+            if (config == null)
+                return 24f;
+
+            return config.groundCheckDistance > 0f
+                ? config.groundCheckDistance
+                : Mathf.Max(0.1f, config.teleportRaycastHeight) * 2f;
+        }
+
+        Vector3 ResolveHoverPosition(Vector3 desiredWorldPosition)
+        {
+            if (config == null)
+                return desiredWorldPosition;
+
+            float startHeight = ResolveGroundCheckStartHeight();
+            float checkDistance = ResolveGroundCheckDistance();
+            Vector3 rayOrigin = desiredWorldPosition + Vector3.up * startHeight;
+
+            if (Physics.Raycast(
+                    rayOrigin,
+                    Vector3.down,
+                    out RaycastHit hit,
+                    checkDistance,
+                    ResolveGroundMask(),
+                    QueryTriggerInteraction.Ignore))
+            {
+                float finalY = hit.point.y + config.hoverHeight;
+                return new Vector3(desiredWorldPosition.x, finalY, desiredWorldPosition.z);
+            }
+
+            float fallbackY = Mathf.Max(desiredWorldPosition.y, spawnAnchorY);
+            return new Vector3(desiredWorldPosition.x, fallbackY, desiredWorldPosition.z);
+        }
+
+        void MaintainHoverHeight()
+        {
+            if (config == null || deathHandled)
+                return;
+
+            Vector3 resolved = ResolveHoverPosition(transform.position);
+            Vector3 nextPosition = resolved;
+
+            if (config.verticalSnapSpeed > 0f)
+            {
+                float y = Mathf.MoveTowards(
+                    transform.position.y,
+                    resolved.y,
+                    config.verticalSnapSpeed * Time.fixedDeltaTime);
+                nextPosition = new Vector3(transform.position.x, y, transform.position.z);
+            }
+
+            if (body != null && body.isKinematic)
+                body.MovePosition(nextPosition);
+            else
+                transform.position = nextPosition;
         }
 
         void FaceTarget()
@@ -453,6 +561,8 @@ namespace Beavermania.NPC
             currentHealth = Mathf.Max(0, currentHealth - resolvedDamage);
             if (healthBar != null)
                 healthBar.SetNPCHealth(currentHealth);
+
+            healthBarVisibility?.NotifyDamaged();
 
             SpawnVfx(config.hitVfxPrefab, transform.position + Vector3.up);
             if (currentHealth <= 0)

@@ -1,47 +1,68 @@
 # Active Task
 
 ## Task title
-- First Trader + Military Trader scene/UI re-integration (Level 1 Remastered)
+- Shadow Revenant test arena rebuild (`ShadowRevenantTestArena.unity`)
 
 ## Type
-- Bugfix / Unity wiring
+- Feature / Unity wiring
 
 ## Owner
-- Mixed (serialization fix applied; Unity Play Mode verification pending)
+- Mixed (assets generated; Unity Play Mode verification pending)
 
 ## Current phase
 - Verification
 
 ## Goal
-- Restore First Trader and Military Trader proximity, dialogue, shop, camera lock, and objective progression after NPCs were removed/re-added.
+- Fully restore playable Shadow Revenant boss in the test arena with config, pooled ability prefabs, placeholder visuals, and scene instance.
 
 ## Scope
-- FirstTraderItems + PlayerCanvas TraderPanel aliases (done)
-- Military Trader via Camp Trading Point prefab + Combat Panel UI aliases (done)
-- Scene wiring in `Level 1 - Remastered - Steam.unity`
+- `Assets/Scenes/ShadowRevenantTestArena.unity` — boss prefab instance at ~(0, 0, 12)
+- `Assets/Prefabs/NPC/ShadowRevenant/*` — boss, projectile, fog, shade, animator, material
+- `Assets/Data/NPC/ShadowRevenant/ShadowRevenantConfig.asset`
+- `Assets/Editor/ShadowRevenantTestArenaBuilder.cs` — menu/batch rebuild utility
 
 ## Relevant files/assets
-- `Assets/Prefabs/Objects/FirstTraderItems.prefab`
-- `Assets/Prefabs/BeaverNPC/Camp Trading Point.prefab`
-- `Assets/Prefabs/Objects/UI/PlayerCanvas.prefab`
-- `Assets/Prefabs/Objects/UI/Combat Panel.prefab`
-- `Assets/Scenes/Level 1 - Remastered - Steam.unity`
-- `Assets/Data/Dialogue/MilitaryTraderDialogueData.asset`
+- `Assets/Prefabs/NPC/ShadowRevenant/ShadowRevenant.prefab`
+- `Assets/Data/NPC/ShadowRevenant/ShadowRevenantConfig.asset`
+- `Assets/Scripts/NPC/ShadowRevenant/ShadowRevenantController.cs`
+- `Assets/Scripts/NPC/ShadowRevenant/ShadowRevenantTestSceneBinder.cs`
 
 ## Risk level
-- High (trader/shop/dialogue serialized references; Military Trader placed near Camp Checkpoint)
+- Medium (YAML-generated prefabs; Unity reimport may adjust serialization)
 
 ## Current status
-- YAML/prefab wiring restored for both traders.
-- Military Trader placed at ~(1440, 599.5, -1720) near Camp Checkpoint — **verify position in Scene view**.
-- Unity MCP unavailable during implementation.
+- Config asset, ability prefabs, boss prefab, and scene instance added.
+- Placeholder capsule visuals + minimal `ShadowRevenant.controller` (Phased, Attack, Stagger, Summon, Dead).
+- **World HP bar added:** `HealthBarAnchor` → `Sphere` (`RotateUI`) → world Canvas → Slider; combat-only visibility.
+- **Floor sink fix:** `ShadowRevenantConfig` hover/ground fields; `ShadowRevenantController` `ResolveHoverPosition` + `MaintainHoverHeight`; Rigidbody gravity off + kinematic; horizontal strafe via `MovePosition`; teleport uses hover Y.
+- Prefab: `useGravity=0`, `isKinematic=1`. Builder aligned.
+- **Combat prefab references repaired:** `shadeMinionPrefab` → `ShadowRevenantShadeMinion` (fileID 9000007); VFX prefabs assigned (`Hit/Death/Phase/LightBreak` + `PooledOneShotVfx`); projectile/fog unchanged; `deathDropPrefabs` intentionally empty.
+- Shade minion: sphere body + green eye spheres (`ShadowRevenantShadeEye.mat`).
+- VFX are lightweight `HurtEffect` clones (tune via **Beavermania → Build → Shadow Revenant Combat Assets** or replace particles in Editor).
+- **Needs Unity Play Mode verification** (agent cannot run Editor here).
 
 ## Next action
 - Owner: User / Unity Editor
-- Action: Open scene, confirm MilitaryTrader placement and all Inspector refs; run Play Mode checklist for both traders.
+- Action: Open `ShadowRevenantTestArena`, confirm `ShadowRevenant` has no missing scripts, enter Play Mode.
 
 ## Required verification
-- Unity Play Mode on 2nd island: military trader prompt, CampDialogue, combat shop, clean exit.
+- Unity Play Mode: aggro, projectile/fog/shade, player damage, boss death, no console errors.
+- Optional: **Beavermania → Build → Shadow Revenant Test Arena** to regenerate via `PrefabUtility` if any reference breaks after reimport.
 
 ## Handoff needed
-- No Codex handoff unless Play Mode reveals script-level regressions.
+- No Codex handoff unless Play Mode reveals script bugs.
+
+## Play Mode checklist
+- [ ] Boss **does not sink** through floor at spawn or while dormant (hover height stable)
+- [ ] Strafe/chase: horizontal movement only; Y stays at ground + `hoverHeight`
+- [ ] Phase teleport: lands around player above floor
+- [ ] HUD wires via `ShadowRevenantTestSceneBinder` (no binder warning)
+- [ ] Boss dormant: world HP bar **hidden**
+- [ ] After aggro: HP bar **visible**, billboards toward player camera
+- [ ] Melee/ranged reduces boss HP slider fill
+- [ ] Walk toward boss → leaves Dormant, strafes/attacks
+- [ ] At least two of: projectile hit, fog slow, shade damage
+- [ ] Shade summon: minions spawn (no Type Mismatch / null pool errors)
+- [ ] Hit / phase / light-break / death VFX visible when abilities trigger
+- [ ] `ShadowRevenantConfig`: no Type Mismatch on shade minion; all VFX fields assigned
+- [ ] Boss death: HP bar hidden; no `RotateUI` / visibility console errors

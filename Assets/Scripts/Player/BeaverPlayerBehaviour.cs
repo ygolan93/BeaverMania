@@ -2124,7 +2124,15 @@ namespace Beavermania.Player
                 MunitionDisplay.SetActive(false);
             Player = GetComponent<Rigidbody>();
             var gmObject = GameObject.FindGameObjectWithTag("GM");
-            GM = gmObject != null ? gmObject.GetComponent<GameMaster>() : null;
+            if (gmObject != null)
+            {
+                var taggedGameMaster = gmObject.GetComponent<GameMaster>();
+                if (taggedGameMaster != null)
+                    GM = taggedGameMaster;
+            }
+
+            if (GM == null)
+                GM = FindObjectOfType<GameMaster>();
             //Enable/Disable Background music
             if (seekMusic == true)
             {

@@ -14,7 +14,11 @@ namespace Beavermania.Core.GameFlow
             if (instance == null)
             {
                 instance = this;
-                DontDestroyOnLoad(instance);
+
+                if (transform.parent != null)
+                    transform.SetParent(null);
+
+                DontDestroyOnLoad(gameObject);
                 EnsureGameplayServices();
             }
             else

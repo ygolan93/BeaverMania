@@ -26,6 +26,9 @@ namespace Beavermania.Audio
                     Destroy(musicObjects[i]);
             }
 
+            if (transform.parent != null)
+                transform.SetParent(null);
+
             DontDestroyOnLoad(gameObject);
         }
     }

@@ -1,9 +1,11 @@
 using System;
+using Beavermania.Audio;
 using Beavermania.Data.NPC;
 using Beavermania.Display;
 using Beavermania.NPC;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Beavermania.EditorTools
 {
@@ -28,6 +30,13 @@ namespace Beavermania.EditorTools
         const string ShadeHitVfxPath = PrefabFolder + "/ShadowRevenantShadeHitVFX.prefab";
         const string ShadeDeathVfxPath = PrefabFolder + "/ShadowRevenantShadeDeathVFX.prefab";
         const string RemainsPrefabPath = PrefabFolder + "/ShadowRevenantRemains.prefab";
+        const string ChargeWindupVfxPath = PrefabFolder + "/ShadowRevenantChargeWindupVFX.prefab";
+        const string ChargeImpactVfxPath = PrefabFolder + "/ShadowRevenantChargeImpactVFX.prefab";
+        const string ProjectileTracerVfxPath = PrefabFolder + "/ShadowRevenantProjectileTracerVFX.prefab";
+        const string AudioProfilePath = "Assets/Data/Audio/ShadowRevenant/ShadowRevenantAudioProfile.asset";
+        const string AudioSfxFolder = "Assets/Data/Audio/ShadowRevenant/Sfx";
+        const string BossPrefabPath = PrefabFolder + "/ShadowRevenant.prefab";
+        const string AimLineMaterialPath = PrefabFolder + "/ShadowRevenantAimLine.mat";
 
         static readonly int EnemyLayer = LayerMask.NameToLayer("Enemy");
 
@@ -73,8 +82,8 @@ namespace Beavermania.EditorTools
                 new Color(0.1f, 0.08f, 0.14f, 0.9f),
                 new Color(0.25f, 1f, 0.4f, 0f),
                 0.4f,
-                0.42f,
-                28,
+                0.72f,
+                34,
                 0.45f);
 
             GameObject deathVfx = BuildBurstVfxPrefab(
@@ -83,8 +92,8 @@ namespace Beavermania.EditorTools
                 new Color(0.06f, 0.05f, 0.1f, 0.95f),
                 new Color(0.2f, 0.95f, 0.35f, 0f),
                 1f,
-                0.65f,
-                56,
+                1.1f,
+                64,
                 1f);
 
             GameObject phaseVfx = BuildBurstVfxPrefab(
@@ -93,8 +102,8 @@ namespace Beavermania.EditorTools
                 new Color(0.18f, 0.06f, 0.28f, 0.85f),
                 new Color(0.35f, 0.15f, 0.55f, 0f),
                 0.85f,
-                0.58f,
-                42,
+                1f,
+                48,
                 0.8f);
 
             GameObject lightBreakVfx = BuildBurstVfxPrefab(
@@ -103,8 +112,8 @@ namespace Beavermania.EditorTools
                 new Color(1f, 0.95f, 0.65f, 1f),
                 new Color(0.4f, 1f, 0.45f, 0f),
                 0.55f,
-                0.62f,
-                52,
+                1.05f,
+                58,
                 0.75f);
 
             GameObject shadeHitVfx = BuildBurstVfxPrefab(
@@ -113,8 +122,8 @@ namespace Beavermania.EditorTools
                 new Color(0.12f, 0.1f, 0.16f, 0.75f),
                 new Color(0.3f, 1f, 0.4f, 0f),
                 0.25f,
-                0.22f,
-                12,
+                0.38f,
+                16,
                 0.3f);
 
             GameObject shadeDeathVfx = BuildBurstVfxPrefab(
@@ -123,11 +132,46 @@ namespace Beavermania.EditorTools
                 new Color(0.08f, 0.06f, 0.12f, 0.85f),
                 new Color(0.35f, 1f, 0.45f, 0f),
                 0.35f,
-                0.3f,
-                18,
+                0.52f,
+                22,
                 0.4f);
 
             GameObject remainsPrefab = BuildRemainsPrefab(bodyMaterial);
+
+            GameObject chargeWindupVfx = BuildBurstVfxPrefab(
+                ChargeWindupVfxPath,
+                "ShadowRevenantChargeWindupVFX",
+                new Color(0.15f, 0.9f, 0.35f, 0.85f),
+                new Color(0.05f, 0.2f, 0.1f, 0f),
+                0.35f,
+                0.6f,
+                26,
+                0.45f);
+
+            GameObject chargeImpactVfx = BuildBurstVfxPrefab(
+                ChargeImpactVfxPath,
+                "ShadowRevenantChargeImpactVFX",
+                new Color(0.1f, 0.08f, 0.14f, 0.9f),
+                new Color(0.35f, 1f, 0.45f, 0f),
+                0.45f,
+                0.85f,
+                38,
+                0.55f);
+
+            GameObject projectileTracerVfx = BuildBurstVfxPrefab(
+                ProjectileTracerVfxPath,
+                "ShadowRevenantProjectileTracerVFX",
+                new Color(0.25f, 1f, 0.45f, 0.95f),
+                new Color(0.05f, 0.25f, 0.1f, 0f),
+                0.2f,
+                0.32f,
+                18,
+                0.25f);
+
+            Material aimLineMaterial = LoadOrCreateAimLineMaterial();
+
+            ShadowRevenantAudioProfile audioProfile = LoadOrCreateAudioProfile();
+            WireAudioProfile(audioProfile);
 
             ShadowRevenantConfig config = AssetDatabase.LoadAssetAtPath<ShadowRevenantConfig>(ConfigPath);
             if (config == null)
@@ -144,12 +188,263 @@ namespace Beavermania.EditorTools
             config.shadeDeathVfxPrefab = shadeDeathVfx;
             config.remainsPrefab = remainsPrefab;
             config.remainsLifetime = 45f;
+            config.chargeWindupVfxPrefab = chargeWindupVfx;
+            config.chargeImpactVfxPrefab = chargeImpactVfx;
+            config.projectileTracerVfxPrefab = projectileTracerVfx;
+            config.audioProfile = audioProfile;
+
+            SerializedObject serializedConfig = new SerializedObject(config);
+            serializedConfig.FindProperty("projectileObstructionMask").intValue = 1 << 9;
+            serializedConfig.FindProperty("chargeObstructionMask").intValue = 1 << 9;
+            serializedConfig.ApplyModifiedPropertiesWithoutUndo();
+
+            EnsureShadeMinionAudioComponent(shadePrefab);
+            EnsureBossAimLineVisuals(aimLineMaterial);
 
             EditorUtility.SetDirty(config);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            Debug.Log("[ShadowRevenantCombatAssetsBuilder] Assigned projectile, fog, shade, VFX, and remains on ShadowRevenantConfig.");
+            Debug.Log("[ShadowRevenantCombatAssetsBuilder] Assigned projectile, fog, shade, VFX, charge/tracer VFX, audio profile, and remains on ShadowRevenantConfig.");
+        }
+
+        static ShadowRevenantAudioProfile LoadOrCreateAudioProfile()
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<ShadowRevenantAudioProfile>(AudioProfilePath);
+            if (existing != null)
+                return existing;
+
+            EnsureFolder("Assets/Data/Audio/ShadowRevenant");
+            var profile = ScriptableObject.CreateInstance<ShadowRevenantAudioProfile>();
+            AssetDatabase.CreateAsset(profile, AudioProfilePath);
+            return profile;
+        }
+
+        static void WireAudioProfile(ShadowRevenantAudioProfile profile)
+        {
+            if (profile == null)
+                return;
+
+            EnsureFolder(AudioSfxFolder);
+
+            profile.shadeAttack = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/ShadeAttack.asset",
+                "Assets/Sounds/Knife.mp3",
+                1f,
+                0.15f);
+            profile.shadeOrbitLoop = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/ShadeOrbitLoop.asset",
+                "Assets/Sounds/AHH.mp3",
+                0.55f,
+                1.2f);
+            profile.shadeSpawn = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/ShadeSpawn.asset",
+                "Assets/Sounds/Buzz.mp3",
+                0.6f,
+                0.2f);
+            profile.shadeApproachMove = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/ShadeApproachMove.asset",
+                "Assets/Sounds/Buzz.mp3",
+                0.7f,
+                0.15f);
+            profile.shadeHit = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/ShadeHit.asset",
+                "Assets/Sounds/SwordDamageLite.mp3",
+                0.35f,
+                0.12f);
+            profile.shadeDeath = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/ShadeDeath.asset",
+                "Assets/Sounds/SwordDamageHeavy.mp3",
+                1f,
+                0.08f);
+            profile.bossStrafePulse = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/BossStrafePulse.asset",
+                "Assets/Sounds/Beat.ogg",
+                0.4f,
+                0.45f);
+
+            profile.bossSpawn = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/BossSpawn.asset",
+                "Assets/Sounds/Monster Breathing.mp3",
+                0.65f,
+                0.5f);
+            profile.bossAggro = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/BossAggro.asset",
+                "Assets/Sounds/Electric - Sound Effect.mp3",
+                0.7f,
+                1f);
+            profile.phaseOut = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/PhaseOut.asset",
+                "Assets/Sounds/Poof.mp3",
+                0.6f,
+                0.3f);
+            profile.phaseIn = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/PhaseIn.asset",
+                "Assets/Sounds/Whoosh.ogg",
+                0.65f,
+                0.3f);
+            profile.bossHit = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/BossHit.asset",
+                "Assets/Sounds/SwordDamageLite.mp3",
+                0.35f,
+                0.12f);
+            profile.lightBreak = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/LightBreak.asset",
+                "Assets/Sounds/Growth.mp3",
+                0.75f,
+                0.4f);
+            profile.bossDeath = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/BossDeath.asset",
+                "Assets/Sounds/Boom (mp3cut.net).mp3",
+                1f,
+                0.5f);
+            profile.bossRemainsSettle = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/BossRemainsSettle.asset",
+                "Assets/Sounds/Pop.ogg",
+                0.5f,
+                0.3f);
+            profile.projectileWindup = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/ProjectileWindup.asset",
+                "Assets/Sounds/cartoon fireball sound effect.mp3",
+                0.55f,
+                0.25f);
+            profile.projectileFire = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/ProjectileFire.asset",
+                "Assets/Sounds/ArrowShoot.mp3",
+                0.7f,
+                0.2f);
+            profile.projectileImpact = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/ProjectileImpact.asset",
+                "Assets/Sounds/AirHit.mp3",
+                0.65f,
+                0.15f);
+            profile.fogTelegraph = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/FogTelegraph.asset",
+                "Assets/Sounds/Wind.ogg",
+                0.45f,
+                0.4f);
+            profile.fogActiveStart = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/FogActiveStart.asset",
+                "Assets/Sounds/Underwater.ogg",
+                0.5f,
+                0.5f);
+            profile.fogDisappear = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/FogDisappear.asset",
+                "Assets/Sounds/Poof.mp3",
+                0.4f,
+                0.3f);
+            profile.summonWindup = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/SummonWindup.asset",
+                "Assets/Sounds/Monster Breathing.mp3",
+                0.55f,
+                0.35f);
+            profile.summonComplete = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/SummonComplete.asset",
+                "Assets/Sounds/Growth.mp3",
+                0.7f,
+                0.4f);
+            profile.chargeWindup = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/ChargeWindup.asset",
+                "Assets/Sounds/ArrowDraw.mp3",
+                0.55f,
+                0.3f);
+            profile.chargeDash = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/ChargeDash.asset",
+                "Assets/Sounds/Slide.ogg",
+                0.65f,
+                0.25f);
+            profile.chargeImpact = LoadOrCreateSfxEvent(
+                AudioSfxFolder + "/ChargeImpact.asset",
+                "Assets/Sounds/SwordDamageHeavy.mp3",
+                0.85f,
+                0.2f);
+
+            if (profile.ambientLoopClip == null)
+            {
+                profile.ambientLoopClip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Eden/Music/Interface and Item Sounds/MISC/Danger [loop].wav");
+                profile.ambientLoopVolume = 0.35f;
+            }
+
+            EditorUtility.SetDirty(profile);
+        }
+
+        static SfxEventDefinition LoadOrCreateSfxEvent(string assetPath, string clipPath, float volume, float minInterval)
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<SfxEventDefinition>(assetPath);
+            AudioClip clip = AssetDatabase.LoadAssetAtPath<AudioClip>(clipPath);
+            if (clip == null)
+            {
+                Debug.LogWarning("[ShadowRevenantCombatAssetsBuilder] Missing audio clip at " + clipPath, null);
+                return existing;
+            }
+
+            if (existing == null)
+            {
+                existing = ScriptableObject.CreateInstance<SfxEventDefinition>();
+                AssetDatabase.CreateAsset(existing, assetPath);
+            }
+
+            existing.clip = clip;
+            existing.volume = volume;
+            existing.pitchMin = 1f;
+            existing.pitchMax = 1f;
+            existing.minInterval = minInterval;
+            EditorUtility.SetDirty(existing);
+            return existing;
+        }
+
+        static void EnsureFolder(string path)
+        {
+            if (AssetDatabase.IsValidFolder(path))
+                return;
+
+            string parent = System.IO.Path.GetDirectoryName(path)?.Replace('\\', '/');
+            string folderName = System.IO.Path.GetFileName(path);
+            if (!string.IsNullOrEmpty(parent) && !AssetDatabase.IsValidFolder(parent))
+                EnsureFolder(parent);
+
+            if (!string.IsNullOrEmpty(parent))
+                AssetDatabase.CreateFolder(parent, folderName);
+        }
+
+        static void EnsureShadeMinionAudioComponent(GameObject shadePrefab)
+        {
+            if (shadePrefab == null)
+                return;
+
+            ShadowRevenantShadeMinion shade = shadePrefab.GetComponent<ShadowRevenantShadeMinion>();
+            if (shade == null)
+                return;
+
+            if (shadePrefab.GetComponent<AudioSource>() == null)
+                shadePrefab.AddComponent<AudioSource>();
+
+            if (shadePrefab.GetComponent<ShadowRevenantShadeAudio>() == null)
+                shadePrefab.AddComponent<ShadowRevenantShadeAudio>();
+
+            AudioSource audioSource = shadePrefab.GetComponent<AudioSource>();
+            ShadowRevenantShadeAudio shadeAudio = shadePrefab.GetComponent<ShadowRevenantShadeAudio>();
+            if (audioSource != null)
+            {
+                audioSource.playOnAwake = false;
+                audioSource.loop = false;
+                audioSource.spatialBlend = 1f;
+                audioSource.rolloffMode = AudioRolloffMode.Linear;
+                audioSource.minDistance = 1f;
+                audioSource.maxDistance = 25f;
+            }
+
+            if (shadeAudio != null && audioSource != null)
+            {
+                SerializedObject serializedAudio = new SerializedObject(shadeAudio);
+                serializedAudio.FindProperty("actionSource").objectReferenceValue = audioSource;
+                serializedAudio.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            Transform rootTransform = shadePrefab.transform;
+            rootTransform.localScale = new Vector3(2f / 1.5f, 2f / 1.5f, 2f / 1.5f);
+
+            PrefabUtility.SavePrefabAsset(shadePrefab);
         }
 
         static GameObject BuildRemainsPrefab(Material bodyMaterial)
@@ -311,7 +606,7 @@ namespace Beavermania.EditorTools
         {
             var root = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             root.name = "ShadowRevenantShadeMinion";
-            root.transform.localScale = new Vector3(2f, 2f, 2f);
+            root.transform.localScale = new Vector3(2f / 1.5f, 2f / 1.5f, 2f / 1.5f);
             if (EnemyLayer >= 0)
                 root.layer = EnemyLayer;
 
@@ -370,8 +665,10 @@ namespace Beavermania.EditorTools
             float duration)
         {
             var root = new GameObject(objectName);
+            root.transform.localScale = Vector3.one * 1.25f;
             var particleSystem = root.AddComponent<ParticleSystem>();
-            root.AddComponent<ParticleSystemRenderer>();
+            if (root.GetComponent<ParticleSystemRenderer>() == null)
+                root.AddComponent<ParticleSystemRenderer>();
             root.AddComponent<PooledOneShotVfx>();
 
             var main = particleSystem.main;
@@ -420,6 +717,87 @@ namespace Beavermania.EditorTools
             renderer.material = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Particle.mat");
 
             return SavePrefab(root, path);
+        }
+
+        static Material LoadOrCreateAimLineMaterial()
+        {
+            Material existing = AssetDatabase.LoadAssetAtPath<Material>(AimLineMaterialPath);
+            if (existing != null)
+                return existing;
+
+            Shader shader = Shader.Find("Sprites/Default")
+                ?? Shader.Find("Unlit/Color")
+                ?? Shader.Find("Universal Render Pipeline/Unlit");
+            if (shader == null)
+            {
+                Debug.LogWarning("[ShadowRevenantCombatAssetsBuilder] Could not resolve aim line shader.", null);
+                return null;
+            }
+
+            var material = new Material(shader);
+            material.name = "ShadowRevenantAimLine";
+            material.color = Color.white;
+
+            if (shader.name.Contains("Universal Render Pipeline"))
+            {
+                material.SetFloat("_Surface", 1f);
+                material.SetFloat("_Blend", 0f);
+                material.SetFloat("_AlphaClip", 0f);
+                material.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                material.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                material.SetFloat("_ZWrite", 0f);
+                material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+                material.EnableKeyword("_ALPHAPREMULTIPLY_ON");
+                material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            }
+
+            AssetDatabase.CreateAsset(material, AimLineMaterialPath);
+            return material;
+        }
+
+        static void EnsureBossAimLineVisuals(Material aimLineMaterial)
+        {
+            GameObject bossRoot = PrefabUtility.LoadPrefabContents(BossPrefabPath);
+            try
+            {
+                Transform aimLineTransform = bossRoot.transform.Find("ProjectileAimLine");
+                if (aimLineTransform == null)
+                {
+                    Debug.LogWarning("[ShadowRevenantCombatAssetsBuilder] ProjectileAimLine child missing on boss prefab.", bossRoot);
+                    return;
+                }
+
+                LineRenderer lineRenderer = aimLineTransform.GetComponent<LineRenderer>();
+                ShadowRevenantProjectileAimLine aimLine = aimLineTransform.GetComponent<ShadowRevenantProjectileAimLine>();
+                if (lineRenderer == null || aimLine == null)
+                {
+                    Debug.LogWarning("[ShadowRevenantCombatAssetsBuilder] ProjectileAimLine components missing on boss prefab.", aimLineTransform);
+                    return;
+                }
+
+                if (aimLineMaterial != null)
+                    lineRenderer.sharedMaterial = aimLineMaterial;
+
+                lineRenderer.useWorldSpace = true;
+                lineRenderer.shadowCastingMode = ShadowCastingMode.Off;
+                lineRenderer.receiveShadows = false;
+                lineRenderer.alignment = LineAlignment.View;
+                lineRenderer.textureMode = LineTextureMode.Stretch;
+                lineRenderer.numCapVertices = 4;
+                lineRenderer.numCornerVertices = 2;
+                lineRenderer.sortingOrder = 10;
+
+                SerializedObject serializedAimLine = new SerializedObject(aimLine);
+                if (aimLineMaterial != null)
+                    serializedAimLine.FindProperty("aimLineMaterial").objectReferenceValue = aimLineMaterial;
+                serializedAimLine.ApplyModifiedPropertiesWithoutUndo();
+
+                PrefabUtility.SaveAsPrefabAsset(bossRoot, BossPrefabPath);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(bossRoot);
+            }
         }
 
         static void ApplyMaterial(GameObject target, Material material)

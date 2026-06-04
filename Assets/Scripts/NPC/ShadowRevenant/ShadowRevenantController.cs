@@ -29,6 +29,9 @@ namespace Beavermania.NPC
         [SerializeField] Light projectileMuzzleGlow;
         [SerializeField] GameObject[] summonSigilVisuals;
         [SerializeField] Transform bossVisualRoot;
+        [SerializeField] ShadowRevenantChargeAttack chargeAttack;
+        [SerializeField] ShadowRevenantProjectileAimLine projectileAimLine;
+        [SerializeField] ShadowRevenantAudio bossAudio;
         [SerializeField] Color healthBarLightBreakFillColor = new Color(0.35f, 1f, 0.45f, 1f);
         [SerializeField] bool enableDebugLogs;
 
@@ -54,9 +57,14 @@ namespace Beavermania.NPC
         float fogCooldownRemaining;
         float summonCooldownRemaining;
         float phaseCooldownRemaining;
+        float chargeCooldownRemaining;
+        float comboCooldownRemaining;
         float lightBrokenRemaining;
+        int comboFollowUpsThisChain;
         bool deathHandled;
         bool teleportApplied;
+        bool aggroAnnounced;
+        float nextStrafePulseTime;
         float spawnAnchorY;
         EnemyHealthBarVisibility healthBarVisibility;
 
@@ -79,6 +87,7 @@ namespace Beavermania.NPC
             EnterState(ShadowRevenantState.Dormant, 0f);
             MaintainHoverHeight();
             spawnAnchorY = transform.position.y;
+            PlayBossAudio(ShadowRevenantAudioEvent.BossSpawn);
         }
 
         void OnEnable()
@@ -100,8 +109,11 @@ namespace Beavermania.NPC
             if (state == ShadowRevenantState.Dead || deathHandled)
                 return;
 
-            if (state == ShadowRevenantState.Strafe)
+            if (state == ShadowRevenantState.Strafe || state == ShadowRevenantState.ChargeActive)
                 StrafeAroundTarget();
+
+            if (state == ShadowRevenantState.ChargeActive)
+                TickChargeMovement();
 
             MaintainHoverHeight();
         }
@@ -132,6 +144,57 @@ namespace Beavermania.NPC
                 if (visual != null)
                     bossVisualRoot = visual;
             }
+
+            if (chargeAttack == null)
+            {
+                chargeAttack = GetComponent<ShadowRevenantChargeAttack>();
+                if (chargeAttack == null)
+                    chargeAttack = gameObject.AddComponent<ShadowRevenantChargeAttack>();
+            }
+
+            if (bossAudio == null)
+            {
+                bossAudio = GetComponent<ShadowRevenantAudio>();
+                if (bossAudio == null)
+                {
+                    if (GetComponent<AudioSource>() == null)
+                        gameObject.AddComponent<AudioSource>();
+
+                    bossAudio = gameObject.AddComponent<ShadowRevenantAudio>();
+                }
+            }
+
+            if (bossAudio != null && config != null && config.audioProfile != null)
+                bossAudio.SetProfile(config.audioProfile);
+
+            if (projectileAimLine == null)
+                projectileAimLine = GetComponentInChildren<ShadowRevenantProjectileAimLine>(true);
+
+            if (projectileAimLine != null && config != null)
+                projectileAimLine.ApplyConfig(config, projectileMuzzle);
+            else if (config != null && config.enableProjectileAimLine)
+                EnsureProjectileAimLine();
+        }
+
+        void EnsureProjectileAimLine()
+        {
+            projectileAimLine = GetComponentInChildren<ShadowRevenantProjectileAimLine>(true);
+            if (projectileAimLine != null)
+                return;
+
+            Transform existing = transform.Find("ProjectileAimLine");
+            GameObject aimObject = existing != null ? existing.gameObject : new GameObject("ProjectileAimLine");
+            if (existing == null)
+                aimObject.transform.SetParent(transform, false);
+
+            if (aimObject.GetComponent<LineRenderer>() == null)
+                aimObject.AddComponent<LineRenderer>();
+
+            projectileAimLine = aimObject.GetComponent<ShadowRevenantProjectileAimLine>();
+            if (projectileAimLine == null)
+                projectileAimLine = aimObject.AddComponent<ShadowRevenantProjectileAimLine>();
+
+            projectileAimLine.ApplyConfig(config, projectileMuzzle);
         }
 
         void CacheHealthBarFillColor()
@@ -187,6 +250,8 @@ namespace Beavermania.NPC
             fogCooldownRemaining = Mathf.Max(0f, fogCooldownRemaining - Time.deltaTime);
             summonCooldownRemaining = Mathf.Max(0f, summonCooldownRemaining - Time.deltaTime);
             phaseCooldownRemaining = Mathf.Max(0f, phaseCooldownRemaining - Time.deltaTime);
+            chargeCooldownRemaining = Mathf.Max(0f, chargeCooldownRemaining - Time.deltaTime);
+            comboCooldownRemaining = Mathf.Max(0f, comboCooldownRemaining - Time.deltaTime);
 
             if (lightBrokenRemaining > 0f)
                 lightBrokenRemaining = Mathf.Max(0f, lightBrokenRemaining - Time.deltaTime);
@@ -218,19 +283,19 @@ namespace Beavermania.NPC
                     TickProjectileWindup();
                     break;
                 case ShadowRevenantState.ProjectileRecover:
-                    TickRecover(ShadowRevenantState.Strafe);
+                    TickRecover(ShadowRevenantState.Strafe, ShadowRevenantAbilityKind.Projectile);
                     break;
                 case ShadowRevenantState.FogWindup:
                     TickFogWindup();
                     break;
                 case ShadowRevenantState.FogRecover:
-                    TickRecover(ShadowRevenantState.Strafe);
+                    TickRecover(ShadowRevenantState.Strafe, ShadowRevenantAbilityKind.Fog);
                     break;
                 case ShadowRevenantState.SummonWindup:
                     TickSummonWindup();
                     break;
                 case ShadowRevenantState.SummonRecover:
-                    TickRecover(ShadowRevenantState.Strafe);
+                    TickRecover(ShadowRevenantState.Strafe, ShadowRevenantAbilityKind.Summon);
                     break;
                 case ShadowRevenantState.PhaseShiftEnter:
                     TickPhaseShiftEnter();
@@ -245,13 +310,31 @@ namespace Beavermania.NPC
                 case ShadowRevenantState.Teleport:
                     EnterState(ShadowRevenantState.Phased, config.phaseDuration);
                     break;
+                case ShadowRevenantState.ChargeWindup:
+                    TickChargeWindup();
+                    break;
+                case ShadowRevenantState.ChargeActive:
+                    TickChargeActive();
+                    break;
+                case ShadowRevenantState.ChargeRecover:
+                    TickRecover(ShadowRevenantState.Strafe, ShadowRevenantAbilityKind.Charge);
+                    break;
             }
         }
 
         void TickDormant()
         {
             if (DistanceToTarget() <= config.aggroRange)
+            {
+                if (!aggroAnnounced)
+                {
+                    aggroAnnounced = true;
+                    PlayBossAudio(ShadowRevenantAudioEvent.BossAggro);
+                    bossAudio?.StartAmbientLoop();
+                }
+
                 EnterState(ShadowRevenantState.Idle, 0.5f);
+            }
         }
 
         void TickDecisionState()
@@ -289,6 +372,9 @@ namespace Beavermania.NPC
                 if (TryStartProjectile(distance))
                     return;
             }
+
+            if (TryStartCharge(distance))
+                return;
 
             if (state != ShadowRevenantState.Strafe)
                 EnterState(ShadowRevenantState.Strafe, 0f);
@@ -333,6 +419,7 @@ namespace Beavermania.NPC
             bool inCloseRange = distance <= config.closeRange;
             if (config.preferPhaseWhenClose && inCloseRange && distance <= config.phaseTriggerRange)
             {
+                comboFollowUpsThisChain = 0;
                 EnterState(ShadowRevenantState.PhaseShiftEnter, config.phaseWindup);
                 phaseCooldownRemaining = config.phaseCooldown;
                 return true;
@@ -341,6 +428,7 @@ namespace Beavermania.NPC
             if (!inCloseRange || distance > config.phaseTriggerRange)
                 return false;
 
+            comboFollowUpsThisChain = 0;
             EnterState(ShadowRevenantState.PhaseShiftEnter, config.phaseWindup);
             phaseCooldownRemaining = config.phaseCooldown;
             return true;
@@ -354,7 +442,24 @@ namespace Beavermania.NPC
             if (distance < config.closeRange * 0.75f)
                 return false;
 
+            comboFollowUpsThisChain = 0;
             EnterState(ShadowRevenantState.ProjectileWindup, config.projectileWindup);
+            return true;
+        }
+
+        bool TryStartCharge(float distance)
+        {
+            if (config == null || !config.enableChargeAttack || chargeCooldownRemaining > 0f)
+                return false;
+
+            if (lightBrokenRemaining > 0f)
+                return false;
+
+            if (distance < config.chargeMinRange || distance > config.chargeMaxRange)
+                return false;
+
+            comboFollowUpsThisChain = 0;
+            EnterState(ShadowRevenantState.ChargeWindup, config.chargeWindup);
             return true;
         }
 
@@ -378,6 +483,7 @@ namespace Beavermania.NPC
             if (distance < config.closeRange || distance > config.mediumRange * 1.35f)
                 return false;
 
+            comboFollowUpsThisChain = 0;
             EnterState(ShadowRevenantState.FogWindup, config.fogWindup);
             return true;
         }
@@ -390,6 +496,7 @@ namespace Beavermania.NPC
             if (poolHub.ActiveShadeCount >= config.maxActiveMinions)
                 return false;
 
+            comboFollowUpsThisChain = 0;
             EnterState(ShadowRevenantState.SummonWindup, config.summonWindup);
             return true;
         }
@@ -397,12 +504,71 @@ namespace Beavermania.NPC
         void TickProjectileWindup()
         {
             FaceTarget();
+            UpdateProjectileAimLine();
             if (stateTimer > 0f)
                 return;
 
             FireProjectile();
             projectileCooldownRemaining = config.projectileCooldown;
             EnterState(ShadowRevenantState.ProjectileRecover, config.projectileRecover);
+        }
+
+        void TickChargeWindup()
+        {
+            FaceTarget();
+            if (stateTimer > 0f)
+                return;
+
+            BeginChargeActive();
+        }
+
+        void BeginChargeActive()
+        {
+            if (target == null || target.TargetTransform == null)
+            {
+                EnterState(ShadowRevenantState.ChargeRecover, config.chargeRecover);
+                return;
+            }
+
+            Vector3 toTarget = target.TargetTransform.position - transform.position;
+            Vector3 horizontal = new Vector3(toTarget.x, 0f, toTarget.z);
+            if (chargeAttack != null)
+                chargeAttack.BeginCharge(horizontal);
+
+            PlayBossAudio(ShadowRevenantAudioEvent.ChargeDash);
+            EnterState(ShadowRevenantState.ChargeActive, config.chargeDuration);
+        }
+
+        void TickChargeActive()
+        {
+            if (stateTimer > 0f)
+                return;
+
+            EndChargeActive();
+            chargeCooldownRemaining = config.chargeCooldown;
+            EnterState(ShadowRevenantState.ChargeRecover, config.chargeRecover);
+        }
+
+        void TickChargeMovement()
+        {
+            if (chargeAttack == null || config == null)
+                return;
+
+            bool blocked = chargeAttack.TickMovement(config, body, Time.fixedDeltaTime, ResolveHoverPosition);
+            if (chargeAttack.TryApplyHit(config, target, out Vector3 impactPoint))
+            {
+                chargeAttack.SpawnImpactVfx(config, impactPoint);
+                PlayBossAudio(ShadowRevenantAudioEvent.ChargeImpact);
+            }
+
+            if (blocked && stateTimer > config.chargeDuration * 0.35f)
+                stateTimer = 0f;
+        }
+
+        void EndChargeActive()
+        {
+            if (chargeAttack != null)
+                chargeAttack.EndCharge();
         }
 
         void TickFogWindup()
@@ -444,10 +610,14 @@ namespace Beavermania.NPC
                 teleportApplied = true;
                 transform.position = ResolveTeleportPosition();
                 SpawnVfx(config.phaseVfxPrefab, transform.position);
+                PlayBossAudio(ShadowRevenantAudioEvent.PhaseIn);
             }
 
             if (stateTimer <= 0f)
-                EnterState(ShadowRevenantState.Strafe, 0f);
+            {
+                if (!TryBeginComboFollowUp(ShadowRevenantAbilityKind.Phase))
+                    EnterState(ShadowRevenantState.Strafe, 0f);
+            }
         }
 
         void TickLightBroken()
@@ -457,11 +627,74 @@ namespace Beavermania.NPC
                 EnterState(ShadowRevenantState.Strafe, 0f);
         }
 
-        void TickRecover(ShadowRevenantState nextState)
+        void TickRecover(ShadowRevenantState nextState, ShadowRevenantAbilityKind completedAction)
         {
             FaceTarget();
-            if (stateTimer <= 0f)
-                EnterState(nextState, 0f);
+            if (stateTimer > 0f)
+                return;
+
+            if (TryBeginComboFollowUp(completedAction))
+                return;
+
+            EnterState(nextState, 0f);
+        }
+
+        bool TryBeginComboFollowUp(ShadowRevenantAbilityKind completedAction)
+        {
+            if (config == null || lightBrokenRemaining > 0f)
+                return false;
+
+            float distance = DistanceToTarget();
+            bool targetInFog = poolHub != null && target != null && poolHub.IsTargetInsideActiveFog(target);
+
+            if (!ShadowRevenantComboPlanner.TryResolveFollowUp(
+                    config,
+                    completedAction,
+                    distance,
+                    targetInFog,
+                    comboCooldownRemaining,
+                    comboFollowUpsThisChain,
+                    projectileCooldownRemaining,
+                    chargeCooldownRemaining,
+                    out ShadowRevenantAbilityKind followUp))
+            {
+                return false;
+            }
+
+            comboFollowUpsThisChain++;
+            comboCooldownRemaining = config.comboCooldown;
+            return TryEnterComboAbility(followUp);
+        }
+
+        bool TryEnterComboAbility(ShadowRevenantAbilityKind ability)
+        {
+            if (config == null)
+                return false;
+
+            float distance = DistanceToTarget();
+
+            switch (ability)
+            {
+                case ShadowRevenantAbilityKind.Projectile:
+                    if (projectileCooldownRemaining > 0f || distance > config.projectileRange || distance < config.closeRange * 0.75f)
+                        return false;
+
+                    EnterState(ShadowRevenantState.ProjectileWindup, config.projectileWindup);
+                    return true;
+
+                case ShadowRevenantAbilityKind.Charge:
+                    if (!config.enableChargeAttack || chargeCooldownRemaining > 0f)
+                        return false;
+
+                    if (distance < config.chargeMinRange || distance > config.chargeMaxRange)
+                        return false;
+
+                    EnterState(ShadowRevenantState.ChargeWindup, config.chargeWindup);
+                    return true;
+
+                default:
+                    return false;
+            }
         }
 
         void FireProjectile()
@@ -470,13 +703,29 @@ namespace Beavermania.NPC
                 return;
 
             Vector3 origin = projectileMuzzle != null ? projectileMuzzle.position : transform.position + Vector3.up;
-            Vector3 aimPoint = target.TargetTransform.position + Vector3.up;
+            Vector3 aimPoint = target.TargetTransform.position + Vector3.up * 1.2f;
             Vector3 direction = aimPoint - origin;
             if (direction.sqrMagnitude <= DirectionEpsilon)
                 direction = transform.forward;
 
             Quaternion rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
             poolHub.SpawnProjectile(origin, rotation, direction, target);
+            projectileAimLine?.OnFired(config);
+            PlayBossAudio(ShadowRevenantAudioEvent.ProjectileFire);
+        }
+
+        void UpdateProjectileAimLine()
+        {
+            if (projectileAimLine == null || config == null || !config.enableProjectileAimLine)
+                return;
+
+            if (target == null || target.TargetTransform == null)
+                return;
+
+            float windupDuration = Mathf.Max(0.01f, config.projectileWindup);
+            float progress = 1f - Mathf.Clamp01(stateTimer / windupDuration);
+            Vector3 aimPoint = target.TargetTransform.position + Vector3.up * 1.2f;
+            projectileAimLine.UpdateLine(aimPoint, progress);
         }
 
         void BeginFogTelegraph()
@@ -488,6 +737,8 @@ namespace Beavermania.NPC
             pendingFogCast = poolHub.SpawnFogTelegraph(position);
             if (pendingFogCast == null && enableDebugLogs)
                 Debug.LogWarning("[ShadowRevenant] Fog telegraph spawn failed (pool exhausted).", this);
+            else
+                PlayBossAudio(ShadowRevenantAudioEvent.FogTelegraph);
         }
 
         void ActivatePendingFogDamage()
@@ -503,6 +754,7 @@ namespace Beavermania.NPC
                 target,
                 config.fogFadeOutTime);
             pendingFogCast = null;
+            PlayBossAudio(ShadowRevenantAudioEvent.FogActiveStart);
         }
 
         Vector3 ResolveFogSpawnPosition()
@@ -528,8 +780,10 @@ namespace Beavermania.NPC
                 Vector3 position = spawnPoint != null
                     ? spawnPoint.position
                     : transform.position + transform.right * (i - count * 0.5f);
-                poolHub.SpawnShade(position, target);
+                poolHub.SpawnShade(position, target, i);
             }
+
+            PlayBossAudio(ShadowRevenantAudioEvent.SummonComplete);
         }
 
         Transform ResolveShadeSpawnPoint(int index)
@@ -603,6 +857,12 @@ namespace Beavermania.NPC
                 body.MovePosition(ResolveHoverPosition(nextPosition));
             else
                 body.velocity = new Vector3(moveDirection.x * config.strafeSpeed, 0f, moveDirection.z * config.strafeSpeed);
+
+            if (Time.time >= nextStrafePulseTime)
+            {
+                PlayBossAudio(ShadowRevenantAudioEvent.BossStrafePulse);
+                nextStrafePulseTime = Time.time + config.bossStrafePulseInterval;
+            }
         }
 
         void ConfigureRigidbodyForHover()
@@ -737,6 +997,7 @@ namespace Beavermania.NPC
             healthBarVisibility?.NotifyDamaged();
 
             SpawnVfx(config.hitVfxPrefab, transform.position + Vector3.up);
+            PlayBossAudio(ShadowRevenantAudioEvent.BossHit);
             if (currentHealth <= 0)
                 Die();
 
@@ -762,6 +1023,7 @@ namespace Beavermania.NPC
             lightBrokenRemaining = Mathf.Max(duration, config.lightBreakStaggerSeconds);
             EnterState(ShadowRevenantState.LightBroken, lightBrokenRemaining);
             SpawnVfx(config.lightBreakVfxPrefab, transform.position + Vector3.up);
+            PlayBossAudio(ShadowRevenantAudioEvent.LightBreak);
             return true;
         }
 
@@ -802,15 +1064,23 @@ namespace Beavermania.NPC
                     break;
                 case ShadowRevenantState.ProjectileWindup:
                     SetProjectileMuzzleGlow(true);
+                    BeginProjectileAimLine();
+                    PlayBossAudio(ShadowRevenantAudioEvent.ProjectileWindup);
                     break;
                 case ShadowRevenantState.SummonWindup:
                     SetSummonSigilsVisible(true);
+                    PlayBossAudio(ShadowRevenantAudioEvent.SummonWindup);
                     break;
                 case ShadowRevenantState.PhaseShiftEnter:
                     SpawnVfx(config != null ? config.phaseVfxPrefab : null, transform.position + Vector3.up * 0.5f);
+                    PlayBossAudio(ShadowRevenantAudioEvent.PhaseOut);
                     break;
                 case ShadowRevenantState.LightBroken:
                     SetHealthBarLightBreakAccent(true);
+                    break;
+                case ShadowRevenantState.ChargeWindup:
+                    SpawnVfx(config != null ? config.chargeWindupVfxPrefab : null, transform.position + Vector3.up * 0.4f);
+                    PlayBossAudio(ShadowRevenantAudioEvent.ChargeWindup);
                     break;
             }
         }
@@ -824,9 +1094,14 @@ namespace Beavermania.NPC
                     break;
                 case ShadowRevenantState.ProjectileWindup:
                     SetProjectileMuzzleGlow(false);
+                    projectileAimLine?.Hide();
                     break;
                 case ShadowRevenantState.SummonWindup:
                     SetSummonSigilsVisible(false);
+                    break;
+                case ShadowRevenantState.ChargeWindup:
+                case ShadowRevenantState.ChargeActive:
+                    EndChargeActive();
                     break;
                 case ShadowRevenantState.FogWindup:
                     if (pendingFogCast != null && state != ShadowRevenantState.FogRecover)
@@ -876,6 +1151,9 @@ namespace Beavermania.NPC
             deathHandled = true;
             state = ShadowRevenantState.Dead;
             SetPhaseCollision(false);
+            EndChargeActive();
+            projectileAimLine?.Hide();
+            bossAudio?.StopLoops();
 
             if (body != null)
             {
@@ -897,7 +1175,9 @@ namespace Beavermania.NPC
 
             Vector3 deathPosition = ResolveHoverPosition(transform.position);
             SpawnVfx(config != null ? config.deathVfxPrefab : null, deathPosition + Vector3.up * 1.2f);
+            PlayBossAudio(ShadowRevenantAudioEvent.BossDeath);
             SpawnRemains(deathPosition);
+            PlayBossAudio(ShadowRevenantAudioEvent.BossRemainsSettle);
             SpawnDrops();
             HideBossAfterDeath();
         }
@@ -969,6 +1249,29 @@ namespace Beavermania.NPC
         {
             if (prefab != null)
                 PooledOneShotVfx.Spawn(prefab, position, Quaternion.identity);
+        }
+
+        void BeginProjectileAimLine()
+        {
+            if (projectileAimLine == null || config == null || !config.enableProjectileAimLine)
+                return;
+
+            projectileAimLine.ApplyConfig(config, projectileMuzzle);
+            projectileAimLine.BeginWindup();
+        }
+
+        void PlayBossAudio(ShadowRevenantAudioEvent audioEvent)
+        {
+            if (bossAudio == null && config != null && config.audioProfile != null)
+            {
+                bossAudio = GetComponent<ShadowRevenantAudio>();
+                if (bossAudio == null)
+                    bossAudio = gameObject.AddComponent<ShadowRevenantAudio>();
+
+                bossAudio.SetProfile(config.audioProfile);
+            }
+
+            bossAudio?.Play(audioEvent);
         }
     }
 }

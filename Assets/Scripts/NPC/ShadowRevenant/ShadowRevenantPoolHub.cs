@@ -93,7 +93,7 @@ namespace Beavermania.NPC
             return fog;
         }
 
-        public ShadowRevenantShadeMinion SpawnShade(Vector3 position, IShadowRevenantTarget target)
+        public ShadowRevenantShadeMinion SpawnShade(Vector3 position, IShadowRevenantTarget target, int spawnIndex)
         {
             EnsurePools();
             if (shadePool == null || config == null || activeShades.Count >= Mathf.Max(1, config.shadeMaxActive))
@@ -107,13 +107,12 @@ namespace Beavermania.NPC
             shade.Activate(
                 position,
                 target,
-                config.shadeMoveSpeed,
-                config.shadeDamage,
-                config.shadeDamageCooldown,
-                config.shadeLifetime,
-                config.shadeMaxHealth,
+                config,
+                spawnIndex,
                 config.shadeHitVfxPrefab,
-                config.shadeDeathVfxPrefab);
+                config.shadeDeathVfxPrefab,
+                config.audioProfile,
+                config.shadeAttackSfxCooldown);
             return shade;
         }
 
@@ -262,8 +261,35 @@ namespace Beavermania.NPC
 
         void RegisterShade(ShadowRevenantShadeMinion shade)
         {
-            if (shade != null && !activeShades.Contains(shade))
-                activeShades.Add(shade);
+            if (shade == null || activeShades.Contains(shade))
+                return;
+
+            Collider[] newColliders = shade.GetComponentsInChildren<Collider>(true);
+            for (var i = 0; i < activeShades.Count; i++)
+            {
+                ShadowRevenantShadeMinion existing = activeShades[i];
+                if (existing == null)
+                    continue;
+
+                Collider[] existingColliders = existing.GetComponentsInChildren<Collider>(true);
+                for (var a = 0; a < newColliders.Length; a++)
+                {
+                    Collider newCollider = newColliders[a];
+                    if (newCollider == null || newCollider.isTrigger)
+                        continue;
+
+                    for (var b = 0; b < existingColliders.Length; b++)
+                    {
+                        Collider existingCollider = existingColliders[b];
+                        if (existingCollider == null || existingCollider.isTrigger)
+                            continue;
+
+                        Physics.IgnoreCollision(newCollider, existingCollider, true);
+                    }
+                }
+            }
+
+            activeShades.Add(shade);
         }
 
         void ReleaseProjectile(ShadowRevenantProjectile projectile)

@@ -7,7 +7,7 @@ namespace Beavermania.Data.NPC
     public sealed class ShadowRevenantConfig : ScriptableObject
     {
         [Header("Health")]
-        public int maxHealth = 4000;
+        public int maxHealth = 4200;
         [Range(0f, 2f)] public float normalDamageMultiplier = 1f;
         [Range(0f, 1f)] public float phasedDamageMultiplier = 0f;
         [Range(1f, 4f)] public float lightBrokenDamageMultiplier = 1.75f;
@@ -46,13 +46,20 @@ namespace Beavermania.Data.NPC
 
         [Header("Shadow Projectile")]
         public ShadowRevenantProjectile projectilePrefab;
-        public int projectileDamage = 32;
+        public int projectileDamage = 30;
         public float projectileSpeed = 28f;
         public float projectileLifetime = 5f;
         public float projectileCooldown = 1.85f;
         public float projectileWindup = 0.55f;
         public float projectileRecover = 0.35f;
         public float projectileRange = 36f;
+
+        [Header("Projectile Aim Line")]
+        public bool enableProjectileAimLine = true;
+        public float projectileAimLineWidth = 0.15f;
+        public Color projectileAimLineColor = new Color(0.2f, 1f, 0.45f, 0.85f);
+        public GameObject projectileTracerVfxPrefab;
+        public LayerMask projectileObstructionMask;
 
         [Header("Dread Fog")]
         public ShadowRevenantDreadFogZone fogPrefab;
@@ -83,6 +90,47 @@ namespace Beavermania.Data.NPC
         public int shadeMaxHealth = 2;
         public GameObject shadeHitVfxPrefab;
         public GameObject shadeDeathVfxPrefab;
+        public float shadeAttackSfxCooldown = 1.1f;
+        public float shadeOrbitRadius = 5.5f;
+        public float shadeRetreatRange = 2.4f;
+        public float shadeRetreatSpeed = 9f;
+        public float shadeRetreatDuration = 0.85f;
+        public float shadeApproachDuration = 0.55f;
+        public float shadeApproachInterval = 2.75f;
+        public float shadeApproachIntervalVariance = 1.25f;
+        [Range(0f, 1f)] public float shadeApproachChance = 0.7f;
+        public float shadeMaxApproachDuration = 8f;
+        [Range(1f, 2f)] public float shadeApproachSpeedMultiplier = 1.35f;
+        public float shadeHoverHeight = 1.2f;
+        public float shadeOrbitSfxInterval = 2.4f;
+        public float bossStrafePulseInterval = 0.45f;
+
+        [Header("Charge Attack")]
+        public bool enableChargeAttack = true;
+        public int chargeDamage = 24;
+        public float chargeCooldown = 10f;
+        public float chargeWindup = 0.75f;
+        public float chargeDuration = 0.55f;
+        public float chargeRecover = 0.65f;
+        public float chargeSpeed = 18f;
+        public float chargeMinRange = 6f;
+        public float chargeMaxRange = 11f;
+        public float chargeHitRadius = 1.4f;
+        public LayerMask chargeObstructionMask;
+        public GameObject chargeImpactVfxPrefab;
+        public GameObject chargeWindupVfxPrefab;
+
+        [Header("Combos")]
+        public bool enableCombos = true;
+        [Range(0f, 1f)] public float comboChance = 0.18f;
+        public float comboCooldown = 7.5f;
+        public int maxComboFollowUps = 1;
+        public bool allowProjectileAfterSummon = true;
+        public bool allowProjectileAfterPhase = true;
+        public bool allowChargeAfterProjectile = true;
+        public bool allowProjectileAfterFog = true;
+        public bool disallowChargeAfterFog = true;
+        public bool disallowFogAfterCharge = true;
 
         [Header("Light Break")]
         public float lightBreakVulnerableDuration = 3.25f;
@@ -105,6 +153,9 @@ namespace Beavermania.Data.NPC
         public GameObject phaseVfxPrefab;
         public GameObject lightBreakVfxPrefab;
 
+        [Header("Audio")]
+        public ShadowRevenantAudioProfile audioProfile;
+
         void OnValidate()
         {
             WarnIf(maxHealth <= 0, "maxHealth must be > 0.");
@@ -118,6 +169,16 @@ namespace Beavermania.Data.NPC
             WarnIf(maxActiveMinions < 0, "maxActiveMinions must be >= 0.");
             WarnIf(summonCount < 0, "summonCount must be >= 0.");
             WarnIf(shadeMaxHealth <= 0, "shadeMaxHealth must be > 0.");
+            WarnIf(shadeOrbitRadius <= 0f, "shadeOrbitRadius must be > 0.");
+            WarnIf(shadeRetreatRange <= 0f, "shadeRetreatRange must be > 0.");
+            WarnIf(shadeRetreatDuration <= 0f, "shadeRetreatDuration must be > 0.");
+            WarnIf(shadeApproachDuration <= 0f, "shadeApproachDuration must be > 0.");
+            WarnIf(shadeApproachInterval <= 0f, "shadeApproachInterval must be > 0.");
+            WarnIf(shadeApproachIntervalVariance < 0f, "shadeApproachIntervalVariance must be >= 0.");
+            WarnIf(shadeMaxApproachDuration <= 0f, "shadeMaxApproachDuration must be > 0.");
+            WarnIf(shadeOrbitSfxInterval <= 0f, "shadeOrbitSfxInterval must be > 0.");
+            WarnIf(bossStrafePulseInterval <= 0f, "bossStrafePulseInterval must be > 0.");
+            WarnIf(shadeHoverHeight < 0f, "shadeHoverHeight must be >= 0.");
             WarnIf(hoverHeight < 0f, "hoverHeight must be >= 0.");
             WarnIf(groundCheckDistance <= 0f, "groundCheckDistance must be > 0.");
             WarnIf(groundCheckStartHeight <= 0f, "groundCheckStartHeight must be > 0.");
@@ -127,6 +188,11 @@ namespace Beavermania.Data.NPC
             WarnIf(fogVisualScaleMultiplier <= 0f, "fogVisualScaleMultiplier must be > 0.");
             WarnIf(fogFadeOutTime < 0f, "fogFadeOutTime must be >= 0.");
             WarnIf(remainsLifetime <= 0f, "remainsLifetime must be > 0.");
+            WarnIf(chargeDuration <= 0f, "chargeDuration must be > 0.");
+            WarnIf(chargeSpeed <= 0f, "chargeSpeed must be > 0.");
+            WarnIf(chargeMaxRange < chargeMinRange, "chargeMaxRange should be >= chargeMinRange.");
+            WarnIf(maxComboFollowUps < 0, "maxComboFollowUps must be >= 0.");
+            WarnIf(comboCooldown < 0f, "comboCooldown must be >= 0.");
         }
 
         void WarnIf(bool condition, string message)

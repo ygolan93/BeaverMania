@@ -14718,6 +14718,7 @@ GameObject:
   - component: {fileID: 6781668698357604149}
   - component: {fileID: 6959099223400008894}
   - component: {fileID: 868839116775335622}
+  - component: {fileID: 3847291056482736491}
   m_Layer: 0
   m_Name: GoldBrick
   m_TagString: Gold
@@ -14820,3 +14821,17 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.07885216, y: 0.046485364, z: 0.1986402}
   m_Center: {x: 0, y: -0.00675732, z: 0}
+--- !u!114 &3847291056482736491
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6781668698355597813}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8e7d6c5b4a39281706f5e4d3c2b1a09, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pickUpEffectPrefab: {fileID: 7182710564418422932, guid: bbbaa7b8658126b4fa095636216f35d7, type: 3}
+  spawnOffset: {x: 0, y: 0.3, z: 0}

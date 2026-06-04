@@ -33,6 +33,7 @@ namespace Beavermania.Objects
                 Guard.activateSkip();
                 Guard.enabled = false;
                 Open = true;
+                CollectiblePickUpVfxEmitter.TryPlay(OBJ.gameObject);
                 Destroy(OBJ.gameObject);
             }
         }

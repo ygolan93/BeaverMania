@@ -2109,7 +2109,11 @@ namespace Beavermania.Player
         }
         public void Start()
         {
+            Player = GetComponent<Rigidbody>();
             CacheMainCamera();
+            if (!ValidateRequiredStartupReferences())
+                return;
+
             BindHudState();
             if (boostChargeController == null)
                 boostChargeController = GetComponent<Combat.BoostChargeController>();
@@ -2124,7 +2128,6 @@ namespace Beavermania.Player
             ClearAllAimMarkSources();
             if (MunitionDisplay != null)
                 MunitionDisplay.SetActive(false);
-            Player = GetComponent<Rigidbody>();
             var gmObject = GameObject.FindGameObjectWithTag("GM");
             if (gmObject != null)
             {
@@ -2240,6 +2243,41 @@ namespace Beavermania.Player
             SyncHudState();
             UpdateSwordGlareAvailability();
         }
+
+        bool ValidateRequiredStartupReferences()
+        {
+            bool valid = true;
+
+            if (Player == null)
+            {
+                LogMissingRequiredStartupReference("Rigidbody component");
+                valid = false;
+            }
+
+            if (Otter == null)
+            {
+                LogMissingRequiredStartupReference(nameof(Otter));
+                valid = false;
+            }
+
+            if (cachedMainCamera == null)
+            {
+                LogMissingRequiredStartupReference("Camera.main");
+                valid = false;
+            }
+
+            if (valid)
+                return true;
+
+            enabled = false;
+            return false;
+        }
+
+        void LogMissingRequiredStartupReference(string referenceName)
+        {
+            Debug.LogError($"{nameof(BeaverPlayerBehaviour)} on '{name}' is missing required reference '{referenceName}'. Disabling this component to prevent repeated input-loop NullReferenceExceptions.", this);
+        }
+
         [System.Obsolete]
         public void Update()
         {

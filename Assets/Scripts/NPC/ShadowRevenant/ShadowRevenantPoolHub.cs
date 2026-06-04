@@ -9,12 +9,18 @@ namespace Beavermania.NPC
     {
         [SerializeField] ShadowRevenantConfig config;
         [SerializeField] Transform poolRoot;
+        [SerializeField] bool enableDebugLogs;
 
         ObjectPool<ShadowRevenantProjectile> projectilePool;
         ObjectPool<ShadowRevenantDreadFogZone> fogPool;
         ObjectPool<ShadowRevenantShadeMinion> shadePool;
 
-        public int ActiveShadeCount => shadePool != null ? shadePool.CountActive : 0;
+        readonly List<ShadowRevenantProjectile> activeProjectiles = new List<ShadowRevenantProjectile>(16);
+        readonly List<ShadowRevenantDreadFogZone> activeFogs = new List<ShadowRevenantDreadFogZone>(8);
+        readonly List<ShadowRevenantShadeMinion> activeShades = new List<ShadowRevenantShadeMinion>(8);
+
+        public int ActiveShadeCount => activeShades.Count;
+        public int ActiveFogCount => activeFogs.Count;
 
         public void Initialize(ShadowRevenantConfig revenantConfig)
         {
@@ -36,10 +42,14 @@ namespace Beavermania.NPC
             IShadowRevenantTarget target)
         {
             EnsurePools();
-            if (projectilePool == null || config == null || projectilePool.CountActive >= Mathf.Max(1, config.projectileMaxActive))
+            if (projectilePool == null || config == null || activeProjectiles.Count >= Mathf.Max(1, config.projectileMaxActive))
+            {
+                LogPoolExhausted("projectile");
                 return null;
+            }
 
             ShadowRevenantProjectile projectile = projectilePool.Get();
+            RegisterProjectile(projectile);
             projectile.Activate(
                 position,
                 rotation,
@@ -51,39 +61,105 @@ namespace Beavermania.NPC
             return projectile;
         }
 
-        public ShadowRevenantDreadFogZone SpawnFog(Vector3 position, IShadowRevenantTarget target)
+        public ShadowRevenantDreadFogZone SpawnFogTelegraph(Vector3 position)
         {
             EnsurePools();
-            if (fogPool == null || config == null || fogPool.CountActive >= Mathf.Max(1, config.fogMaxActive))
+            if (fogPool == null || config == null || activeFogs.Count >= Mathf.Max(1, config.fogMaxActive))
+            {
+                LogPoolExhausted("fog");
                 return null;
+            }
 
             ShadowRevenantDreadFogZone fog = fogPool.Get();
-            fog.Activate(
-                position,
-                config.fogRadius,
+            RegisterFog(fog);
+            float maxPoolLifetime = config.fogWindup + config.fogDuration + config.fogFadeOutTime;
+            fog.BeginTelegraph(position, config.fogRadius, config.fogVisualScaleMultiplier, maxPoolLifetime);
+            return fog;
+        }
+
+        public ShadowRevenantDreadFogZone SpawnFog(Vector3 position, IShadowRevenantTarget target)
+        {
+            ShadowRevenantDreadFogZone fog = SpawnFogTelegraph(position);
+            if (fog == null)
+                return null;
+
+            fog.BeginDamagePhase(
                 config.fogDuration,
                 config.fogDamagePerTick,
                 config.fogTickInterval,
                 config.fogSlowPercent,
-                target);
+                target,
+                config.fogFadeOutTime);
             return fog;
         }
 
-        public ShadowRevenantShadeMinion SpawnShade(Vector3 position, IShadowRevenantTarget target)
+        public ShadowRevenantShadeMinion SpawnShade(Vector3 position, IShadowRevenantTarget target, int spawnIndex)
         {
             EnsurePools();
-            if (shadePool == null || config == null || shadePool.CountActive >= Mathf.Max(1, config.shadeMaxActive))
+            if (shadePool == null || config == null || activeShades.Count >= Mathf.Max(1, config.shadeMaxActive))
+            {
+                LogPoolExhausted("shade");
                 return null;
+            }
 
             ShadowRevenantShadeMinion shade = shadePool.Get();
+            RegisterShade(shade);
             shade.Activate(
                 position,
                 target,
-                config.shadeMoveSpeed,
-                config.shadeDamage,
-                config.shadeDamageCooldown,
-                config.shadeLifetime);
+                config,
+                spawnIndex,
+                config.shadeHitVfxPrefab,
+                config.shadeDeathVfxPrefab,
+                config.audioProfile,
+                config.shadeAttackSfxCooldown);
             return shade;
+        }
+
+        public bool IsTargetInsideActiveFog(IShadowRevenantTarget hitTarget)
+        {
+            if (hitTarget == null || hitTarget.TargetTransform == null)
+                return false;
+
+            Vector3 targetPosition = hitTarget.TargetTransform.position;
+            for (var i = 0; i < activeFogs.Count; i++)
+            {
+                ShadowRevenantDreadFogZone fog = activeFogs[i];
+                if (fog == null || !fog.IsDamagePhaseActive)
+                    continue;
+
+                Vector3 delta = targetPosition - fog.ZoneCenter;
+                delta.y = 0f;
+                if (delta.sqrMagnitude <= fog.CurrentRadius * fog.CurrentRadius)
+                    return true;
+            }
+
+            return false;
+        }
+
+        public void ReleaseAllActiveCombat()
+        {
+            for (var i = activeProjectiles.Count - 1; i >= 0; i--)
+            {
+                if (activeProjectiles[i] != null)
+                    activeProjectiles[i].DeactivateToPool();
+            }
+
+            for (var i = activeFogs.Count - 1; i >= 0; i--)
+            {
+                if (activeFogs[i] != null)
+                    activeFogs[i].DeactivateToPool();
+            }
+
+            for (var i = activeShades.Count - 1; i >= 0; i--)
+            {
+                if (activeShades[i] != null)
+                    activeShades[i].DeactivateToPool();
+            }
+
+            activeProjectiles.Clear();
+            activeFogs.Clear();
+            activeShades.Clear();
         }
 
         void EnsurePools()
@@ -157,18 +233,81 @@ namespace Beavermania.NPC
             switch (instance)
             {
                 case ShadowRevenantProjectile projectile:
-                    projectile.Bind(projectilePool.Release);
+                    projectile.Bind(ReleaseProjectile);
                     break;
                 case ShadowRevenantDreadFogZone fog:
-                    fog.Bind(fogPool.Release);
+                    fog.Bind(ReleaseFog);
                     break;
                 case ShadowRevenantShadeMinion shade:
-                    shade.Bind(shadePool.Release);
+                    shade.Bind(ReleaseShade);
                     break;
             }
 
             instance.gameObject.SetActive(false);
             return instance;
+        }
+
+        void RegisterProjectile(ShadowRevenantProjectile projectile)
+        {
+            if (projectile != null && !activeProjectiles.Contains(projectile))
+                activeProjectiles.Add(projectile);
+        }
+
+        void RegisterFog(ShadowRevenantDreadFogZone fog)
+        {
+            if (fog != null && !activeFogs.Contains(fog))
+                activeFogs.Add(fog);
+        }
+
+        void RegisterShade(ShadowRevenantShadeMinion shade)
+        {
+            if (shade == null || activeShades.Contains(shade))
+                return;
+
+            Collider[] newColliders = shade.GetComponentsInChildren<Collider>(true);
+            for (var i = 0; i < activeShades.Count; i++)
+            {
+                ShadowRevenantShadeMinion existing = activeShades[i];
+                if (existing == null)
+                    continue;
+
+                Collider[] existingColliders = existing.GetComponentsInChildren<Collider>(true);
+                for (var a = 0; a < newColliders.Length; a++)
+                {
+                    Collider newCollider = newColliders[a];
+                    if (newCollider == null || newCollider.isTrigger)
+                        continue;
+
+                    for (var b = 0; b < existingColliders.Length; b++)
+                    {
+                        Collider existingCollider = existingColliders[b];
+                        if (existingCollider == null || existingCollider.isTrigger)
+                            continue;
+
+                        Physics.IgnoreCollision(newCollider, existingCollider, true);
+                    }
+                }
+            }
+
+            activeShades.Add(shade);
+        }
+
+        void ReleaseProjectile(ShadowRevenantProjectile projectile)
+        {
+            activeProjectiles.Remove(projectile);
+            projectilePool?.Release(projectile);
+        }
+
+        void ReleaseFog(ShadowRevenantDreadFogZone fog)
+        {
+            activeFogs.Remove(fog);
+            fogPool?.Release(fog);
+        }
+
+        void ReleaseShade(ShadowRevenantShadeMinion shade)
+        {
+            activeShades.Remove(shade);
+            shadePool?.Release(shade);
         }
 
         void Prewarm<T>(ObjectPool<T> pool, int count) where T : Component, IShadowRevenantPooledItem
@@ -182,6 +321,12 @@ namespace Beavermania.NPC
 
             for (var i = 0; i < items.Count; i++)
                 pool.Release(items[i]);
+        }
+
+        void LogPoolExhausted(string poolName)
+        {
+            if (enableDebugLogs)
+                Debug.LogWarning($"[ShadowRevenantPoolHub] {poolName} pool exhausted or unavailable.", this);
         }
     }
 }

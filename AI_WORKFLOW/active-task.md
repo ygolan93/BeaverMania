@@ -1,16 +1,16 @@
 # Active Task
 
 ## Task title
-- Shadow Revenant boss battle optimization (charge, combos, aim-line, SFX, balance)
+- Shadow Revenant boss battle optimization + fog/death feedback fix
 
 ## Type
-- Feature (scripts + config + prefab wiring)
+- Feature + bugfix (scripts + config + prefab wiring)
 
 ## Owner
 - Mixed — **Unity Play Mode verification pending**
 
 ## Current phase
-- Implementation complete (Phases 1–7); Phase 8 verification checklist below
+- Implementation complete (Phases 1–7 plus fog/death fix); Phase 8 verification checklist below
 
 ## Goal
 - Occasional telegraphed boss charge with single-hit melee
@@ -18,6 +18,8 @@
 - Projectile aim-line/tracer during windup
 - Boss + minion SFX via `ShadowRevenantAudioProfile` + `GameplayAudio` throttling
 - Balance pass (maxHealth 4200, readable pressure)
+- Dread Fog always clears within ~windup+duration+fade seconds and returns to pool
+- Boss death shows death VFX + remains; boss visual hides without silent vanish
 
 ## Changes made
 
@@ -45,11 +47,16 @@
 ### Phase 7 — Balance
 - `ShadowRevenantConfig.asset`: maxHealth 4200, multipliers normalized, charge/combo/aim fields
 
+### Fog/death fix
+- **Fog:** `poolLifetimeRemaining` fail-safe from telegraph start (`fogWindup + fogDuration + fogFadeOutTime`); `Update` always counts down; particle stop on pool return; explicit `pendingFogCast.DeactivateToPool()` on death.
+- **Death:** `SpawnRemains`, `HideBossAfterDeath` (visual/colliders/HP bar off, boss root stays for state); death VFX at grounded position + 1.2m up.
+- **Assets:** `ShadowRevenantRemains` script/prefab; config `remainsPrefab`, `remainsLifetime`; builder creates/assigns remains.
+
 ### Builder
-- `ShadowRevenantCombatAssetsBuilder`: charge/tracer VFX, audio profile, shade audio component
+- `ShadowRevenantCombatAssetsBuilder`: charge/tracer VFX, audio profile, shade audio component, remains prefab/config assignment
 
 ## Manual Unity steps
-- [ ] Run **Beavermania → Build → Shadow Revenant Combat Assets** (charge/tracer VFX refs, audio profile link)
+- [ ] Run **Beavermania → Build → Shadow Revenant Combat Assets** (charge/tracer VFX refs, audio profile link, death VFX/remains refs)
 - [ ] Assign `SfxEventDefinition` clips on `ShadowRevenantAudioProfile` (or embed AudioSource on VFX prefabs)
 - [ ] Assign Sfx mixer group on boss/minion `AudioSource` components (match Wasp/Scorpion)
 - [ ] Play Mode in `ShadowRevenantTestArena.unity` — full checklist below
@@ -62,6 +69,7 @@
 - [ ] Boss occasionally charges at medium range; windup → dash → single hit → recover
 - [ ] One follow-up combo sometimes; never endless chains
 - [ ] Boss hit / light-break / death SFX + VFX + remains
+- [ ] Boss visual hides after death while boss root remains available for state cleanup
 - [ ] Minion spawn / attack (cooldown) / hit / death SFX + VFX
 - [ ] No stuck audio loops after boss death
 - [ ] No NullReference spam; stable FPS; pooled hierarchy bounded

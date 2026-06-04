@@ -16,6 +16,9 @@ namespace Beavermania.NPC
         Teleport = 11,
         LightBroken = 12,
         Staggered = 13,
-        Dead = 14
+        Dead = 14,
+        ChargeWindup = 15,
+        ChargeActive = 16,
+        ChargeRecover = 17
     }
 }

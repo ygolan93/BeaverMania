@@ -1,0 +1,155 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: acb0e34192624e9c8862e434012c1fab, type: 3}
+  m_Name: ShadowRevenantConfig
+  m_EditorClassIdentifier: 
+  maxHealth: 4200
+  normalDamageMultiplier: 1
+  phasedDamageMultiplier: 0.36
+  lightBrokenDamageMultiplier: 1.75
+  aggroRange: 48
+  leashRange: 70
+  faceTurnSpeed: 8
+  strafeSpeed: 5.25
+  closeRange: 6
+  mediumRange: 18
+  farRange: 30
+  preferPhaseWhenClose: 1
+  usePhysicsGravity: 0
+  hoverHeight: 1.6
+  groundCheckStartHeight: 12
+  groundCheckDistance: 24
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 513
+  verticalSnapSpeed: 8
+  phaseCooldown: 6.5
+  phaseDuration: 1.8
+  phaseWindup: 0.45
+  phaseTriggerRange: 18
+  teleportMinRadius: 9
+  teleportMaxRadius: 17
+  teleportRaycastHeight: 12
+  teleportClearanceRadius: 1.2
+  teleportValidationAttempts: 12
+  teleportGroundMask:
+    serializedVersion: 2
+    m_Bits: 1
+  teleportObstructionMask:
+    serializedVersion: 2
+    m_Bits: 512
+  projectilePrefab: {fileID: 7000007, guid: dd3d5ccb7b8a4f0386866da9215baf25, type: 3}
+  projectileDamage: 30
+  projectileSpeed: 28
+  projectileLifetime: 5
+  projectileCooldown: 1.85
+  projectileWindup: 0.55
+  projectileRecover: 0.35
+  projectileRange: 36
+  enableProjectileAimLine: 1
+  projectileAimLineWidth: 0.06
+  projectileAimLineColor: {r: 0.2, g: 1, b: 0.4, a: 0.35}
+  projectileTracerVfxPrefab: {fileID: 7752040534911599370, guid: c8e97d7834919aa4aa0b3af1126000b7, type: 3}
+  projectileObstructionMask:
+    serializedVersion: 2
+    m_Bits: 512
+  fogPrefab: {fileID: 8000004, guid: a6a167a503ca48fc9b972cf4a86f8090, type: 3}
+  fogRadius: 4.5
+  fogDuration: 3.75
+  fogDamagePerTick: 12
+  fogTickInterval: 0.6
+  fogSlowPercent: 0.45
+  fogCooldown: 6.25
+  fogWindup: 0.9
+  fogRecover: 0.45
+  fogRange: 24
+  fogVisualScaleMultiplier: 1
+  fogFadeOutTime: 0.25
+  shadeMinionPrefab: {fileID: 9000007, guid: 5c846133f4ff4fe580352d620964ffd3, type: 3}
+  maxActiveMinions: 4
+  summonCount: 3
+  summonCooldown: 9.5
+  summonWindup: 0.8
+  summonRecover: 0.7
+  shadeMoveSpeed: 7
+  shadeDamage: 14
+  shadeDamageCooldown: 1.1
+  shadeLifetime: 16
+  shadeMaxHealth: 2
+  shadeHitVfxPrefab: {fileID: 5773892071003525454, guid: a8bbf551612752342809c75cf660f2db, type: 3}
+  shadeDeathVfxPrefab: {fileID: 754187712697850083, guid: 9fab77bb86b5788429c7947aa06e8def, type: 3}
+  shadeAttackSfxCooldown: 1.1
+  shadeOrbitRadius: 5.5
+  shadeRetreatRange: 2.4
+  shadeRetreatSpeed: 9
+  shadeRetreatDuration: 0.85
+  shadeApproachDuration: 0.55
+  shadeApproachInterval: 2.75
+  shadeApproachIntervalVariance: 1.25
+  shadeApproachChance: 0.7
+  shadeMaxApproachDuration: 8
+  shadeApproachSpeedMultiplier: 1.35
+  shadeHoverHeight: 1.2
+  shadeOrbitSfxInterval: 2.4
+  bossStrafePulseInterval: 0.45
+  enableChargeAttack: 1
+  chargeDamage: 24
+  chargeCooldown: 10
+  chargeWindup: 0.75
+  chargeDuration: 0.55
+  chargeRecover: 0.65
+  chargeSpeed: 18
+  chargeMinRange: 6
+  chargeMaxRange: 11
+  chargeHitRadius: 1.4
+  chargeObstructionMask:
+    serializedVersion: 2
+    m_Bits: 512
+  chargeImpactVfxPrefab: {fileID: 7844971772153961093, guid: 62cec6294a18bf3488992e31e646e713, type: 3}
+  chargeWindupVfxPrefab: {fileID: 1748418293888677769, guid: f2ab68b4f8b32fe45802ce65a5e9838d, type: 3}
+  enableCombos: 1
+  comboChance: 0.18
+  comboCooldown: 7.5
+  maxComboFollowUps: 1
+  allowProjectileAfterSummon: 1
+  allowProjectileAfterPhase: 1
+  allowChargeAfterProjectile: 1
+  allowProjectileAfterFog: 1
+  disallowChargeAfterFog: 1
+  disallowFogAfterCharge: 1
+  lightBreakVulnerableDuration: 3.25
+  lightBreakStaggerSeconds: 0.45
+  projectilePrewarmCount: 8
+  projectileMaxActive: 24
+  fogPrewarmCount: 4
+  fogMaxActive: 4
+  shadePrewarmCount: 3
+  shadeMaxActive: 6
+  deathDropPrefabs:
+  - {fileID: 6781668698355597813, guid: 6e45f1a44d4cf314280c08d948e62908, type: 3}
+  - {fileID: 7679416759401954559, guid: 9f5cfb054d2b7174882402aae5da7193, type: 3}
+  - {fileID: 7679416759401954559, guid: 9f5cfb054d2b7174882402aae5da7193, type: 3}
+  - {fileID: 7679416759401954559, guid: 9f5cfb054d2b7174882402aae5da7193, type: 3}
+  - {fileID: 7679416759401954559, guid: 9f5cfb054d2b7174882402aae5da7193, type: 3}
+  - {fileID: 7679416759401954559, guid: 9f5cfb054d2b7174882402aae5da7193, type: 3}
+  - {fileID: 7679416759401954559, guid: 9f5cfb054d2b7174882402aae5da7193, type: 3}
+  - {fileID: 7679416759401954559, guid: 9f5cfb054d2b7174882402aae5da7193, type: 3}
+  - {fileID: 7679416759401954559, guid: 9f5cfb054d2b7174882402aae5da7193, type: 3}
+  - {fileID: 7679416759401954559, guid: 9f5cfb054d2b7174882402aae5da7193, type: 3}
+  - {fileID: 7679416759401954559, guid: 9f5cfb054d2b7174882402aae5da7193, type: 3}
+  remainsPrefab: {fileID: 11000001, guid: c4d5e6f7a8b94d0e9f1a2b3c4d5e6f7a, type: 3}
+  remainsLifetime: 45
+  hitVfxPrefab: {fileID: 3400547379593215125, guid: 04ef1cb82b604f7abfe9c3c72ba32076, type: 3}
+  deathVfxPrefab: {fileID: 3400547379593215125, guid: a8ded34a491b47a58d2cb1989f3d39de, type: 3}
+  phaseVfxPrefab: {fileID: 3400547379593215125, guid: d3404c0f7ecb4c8f8c6263b9d1d1512a, type: 3}
+  lightBreakVfxPrefab: {fileID: 3400547379593215125, guid: bb372c93c81442d0b4d63fa54f649f35, type: 3}
+  audioProfile: {fileID: 11400000, guid: c2d3e4f5a6b7488990a1b2c3d4e5f608, type: 2}

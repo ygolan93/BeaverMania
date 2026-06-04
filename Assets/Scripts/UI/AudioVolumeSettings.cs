@@ -14,6 +14,7 @@ namespace Beavermania.Audio
         const string MasterVolumeParam = "MasterVolume";
         const string MusicVolumeParam = "MusicVolume";
         const string SfxVolumeParam = "SfxVolume";
+        const string EnemiesVolumeParam = "EnemiesVolume";
 
         public const float DefaultMasterLinear = 1f;
         public const float DefaultMusicLinear = 0.8f;
@@ -169,13 +170,28 @@ namespace Beavermania.Audio
         public void ApplySfxVolume(float linearVolume, bool save = true)
         {
             linearVolume = Mathf.Clamp01(linearVolume);
-            SetMixerParameter(SfxVolumeParam, linearVolume);
+            ApplySfxVolumesToMixer(audioMixer, linearVolume);
 
             if (save)
             {
                 PlayerPrefs.SetFloat(SfxVolumePrefKey, linearVolume);
                 PlayerPrefs.Save();
             }
+        }
+
+        public static void ApplySfxVolumesToMixer(AudioMixer mixer, float linearVolume)
+        {
+            if (mixer == null)
+                return;
+
+            float decibels = LinearToDecibels(linearVolume);
+            mixer.SetFloat(SfxVolumeParam, decibels);
+            mixer.SetFloat(EnemiesVolumeParam, decibels);
+        }
+
+        public static void EnsureSfxVolumesFromPrefs(AudioMixer mixer)
+        {
+            ApplySfxVolumesToMixer(mixer, GetSavedSfx());
         }
 
         public void ApplySfxVolumeFromMenu(float linearVolume)
@@ -206,6 +222,7 @@ namespace Beavermania.Audio
             LogMixerParameter(MasterVolumeParam, GetSavedMaster());
             LogMixerParameter(MusicVolumeParam, GetSavedMusic());
             LogMixerParameter(SfxVolumeParam, GetSavedSfx());
+            LogMixerParameter(EnemiesVolumeParam, GetSavedSfx());
 #endif
         }
 

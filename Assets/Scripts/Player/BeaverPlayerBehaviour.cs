@@ -1860,11 +1860,16 @@ namespace Beavermania.Player
             return false;
         }
 
-        bool IsPauseLikeFullscreenUi()
+        bool IsPauseUiActive()
         {
             PauseController activePauseController = ResolvePauseController();
-            if (activePauseController != null
-                && (activePauseController.ActivePause || activePauseController.IsPauseMenuVisible))
+            return activePauseController != null
+                && (activePauseController.ActivePause || activePauseController.IsPauseMenuVisible);
+        }
+
+        bool IsPauseLikeFullscreenUi()
+        {
+            if (IsPauseUiActive())
                 return true;
 
             if (LooseScreen != null && LooseScreen.activeSelf)
@@ -1874,7 +1879,16 @@ namespace Beavermania.Player
 
         void ApplyPauseLikeUiCameraState()
         {
-            if (IsPauseLikeFullscreenUi())
+            if (IsPauseUiActive())
+            {
+                if (FreeLook != null)
+                    FreeLook.enabled = false;
+                if (CamForTraders != null)
+                    CamForTraders.enabled = false;
+                return;
+            }
+
+            if (LooseScreen != null && LooseScreen.activeSelf)
             {
                 PlayerCursorRules.ApplyUnlockedVisible();
                 if (FreeLook != null)
@@ -2711,9 +2725,6 @@ namespace Beavermania.Player
         [Obsolete]
         public void LateUpdate()
         {
-            if (IsPauseLikeFullscreenUi())
-                PlayerCursorRules.ApplyUnlockedVisible();
-
             if (IsGameplayInputLocked())
                 return;
 

@@ -6,6 +6,7 @@ using Beavermania.Core.GameFlow;
 using Beavermania.Display;
 using Beavermania.Core.Input;
 using Beavermania.NPC;
+using Beavermania.Objects;
 using Beavermania.Data.Combat;
 using Beavermania.Player.Combat;
 using Beavermania.Player.Movement;
@@ -403,9 +404,10 @@ namespace Beavermania.Player
             if (OBJ.gameObject.CompareTag("Gold") && GoldPicked == false)
             {
                 Otter.Play("Crouch");
+                Sound.PickItem();
+                CollectiblePickUpVfxEmitter.TryPlay(OBJ.gameObject);
                 GoldON();
                 Destroy(OBJ.gameObject);
-            
             }
             if (OBJ.gameObject.CompareTag("NPC") && isParried == true 
                 || OBJ.gameObject.CompareTag("Scorpion") && isParried == true 

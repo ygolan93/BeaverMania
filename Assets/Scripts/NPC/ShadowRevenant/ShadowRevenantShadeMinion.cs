@@ -356,10 +356,13 @@ namespace Beavermania.NPC
                 shadeRigidbody.velocity = new Vector3(velocity.x, 0f, velocity.z);
                 shadeRigidbody.angularVelocity = Vector3.zero;
 
+                Vector3 currentPosition = shadeRigidbody.position;
                 float nextY = behaviorConfig.verticalSnapSpeed > 0f
-                    ? Mathf.MoveTowards(transform.position.y, targetY, behaviorConfig.verticalSnapSpeed * Time.fixedDeltaTime)
+                    ? Mathf.MoveTowards(currentPosition.y, targetY, behaviorConfig.verticalSnapSpeed * Time.fixedDeltaTime)
                     : targetY;
-                shadeRigidbody.MovePosition(new Vector3(transform.position.x, nextY, transform.position.z));
+                Vector3 nextPosition = currentPosition + velocity * Time.fixedDeltaTime;
+                nextPosition.y = nextY;
+                shadeRigidbody.MovePosition(nextPosition);
 
                 if (moveDirection.sqrMagnitude > DirectionEpsilon)
                     transform.rotation = Quaternion.LookRotation(moveDirection);

@@ -345,23 +345,22 @@ namespace Beavermania.NPC
 
         void ApplyMovement(Vector3 moveDirection, float speed)
         {
-            Vector3 resolvedHover = ResolveHoverPosition(transform.position);
-            float targetY = resolvedHover.y;
+            Vector3 horizontalVelocity = moveDirection.sqrMagnitude > DirectionEpsilon
+                ? moveDirection * speed
+                : Vector3.zero;
+            horizontalVelocity.y = 0f;
 
             if (shadeRigidbody != null)
             {
-                Vector3 velocity = moveDirection.sqrMagnitude > DirectionEpsilon
-                    ? moveDirection * speed
-                    : Vector3.zero;
-                shadeRigidbody.velocity = new Vector3(velocity.x, 0f, velocity.z);
+                Vector3 currentPosition = shadeRigidbody.position;
+                Vector3 nextPosition = currentPosition + horizontalVelocity * Time.fixedDeltaTime;
+                float targetY = ResolveHoverPosition(nextPosition).y;
+                shadeRigidbody.velocity = horizontalVelocity;
                 shadeRigidbody.angularVelocity = Vector3.zero;
 
-                Vector3 currentPosition = shadeRigidbody.position;
-                float nextY = behaviorConfig.verticalSnapSpeed > 0f
+                nextPosition.y = behaviorConfig.verticalSnapSpeed > 0f
                     ? Mathf.MoveTowards(currentPosition.y, targetY, behaviorConfig.verticalSnapSpeed * Time.fixedDeltaTime)
                     : targetY;
-                Vector3 nextPosition = currentPosition + velocity * Time.fixedDeltaTime;
-                nextPosition.y = nextY;
                 shadeRigidbody.MovePosition(nextPosition);
 
                 if (moveDirection.sqrMagnitude > DirectionEpsilon)
@@ -369,8 +368,10 @@ namespace Beavermania.NPC
             }
             else
             {
-                transform.position += moveDirection * (speed * Time.fixedDeltaTime);
-                transform.position = new Vector3(transform.position.x, targetY, transform.position.z);
+                Vector3 nextPosition = transform.position + horizontalVelocity * Time.fixedDeltaTime;
+                float targetY = ResolveHoverPosition(nextPosition).y;
+                nextPosition.y = targetY;
+                transform.position = nextPosition;
                 if (moveDirection.sqrMagnitude > DirectionEpsilon)
                     transform.rotation = Quaternion.LookRotation(moveDirection);
             }

@@ -1,5 +1,6 @@
 using Beavermania.Audio;
 using Beavermania.Core.Input;
+using Beavermania.Display;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -72,8 +73,15 @@ namespace Beavermania.Core.GameFlow
             if (!isBound)
                 return;
 
+            if (ActivePause)
+            {
+                if (PlayerInputReader.WasResumePressed())
+                    ResumeIfPaused();
+                return;
+            }
+
             if (PlayerInputReader.WasPausePressed())
-                ChangeBolean();
+                Pause();
         }
 
         void SetPaused(bool paused)
@@ -92,7 +100,7 @@ namespace Beavermania.Core.GameFlow
                 SetMenuVisible(true);
                 GameTimeScaleGate.SetFreeze(GameTimeScaleGate.FreezeToken.PauseMenu, true);
                 PauseBackgroundMusic();
-                player.ShowCursor();
+                ApplyPausedCursorState();
                 return;
             }
 
@@ -101,8 +109,18 @@ namespace Beavermania.Core.GameFlow
             SetQuestionVisible(false);
             ResumeBackgroundMusic();
 
-            if (!player.IsGameplayInputLocked())
-                player.HideCursor();
+            ApplyGameplayCursorStateIfUnlocked();
+        }
+
+        void ApplyPausedCursorState()
+        {
+            PlayerCursorRules.ApplyUnlockedVisible();
+        }
+
+        void ApplyGameplayCursorStateIfUnlocked()
+        {
+            if (player != null && !player.IsGameplayInputLocked())
+                PlayerCursorRules.ApplyLockedHidden(player.FreeLook, player.Root);
         }
 
         void PauseBackgroundMusic()
@@ -154,8 +172,7 @@ namespace Beavermania.Core.GameFlow
             GameTimeScaleGate.SetFreeze(GameTimeScaleGate.FreezeToken.PauseMenu, false);
             ResumeBackgroundMusic();
 
-            if (player != null && !player.IsGameplayInputLocked())
-                player.HideCursor();
+            ApplyGameplayCursorStateIfUnlocked();
         }
 
         void LogMissingReference(string referenceName, ref bool logged)

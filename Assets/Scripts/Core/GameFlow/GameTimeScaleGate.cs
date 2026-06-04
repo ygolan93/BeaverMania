@@ -26,6 +26,7 @@ namespace Beavermania.Core.GameFlow
         static void ResetStaticsForDomainReload()
         {
             s_activeTokens = FreezeToken.None;
+            Time.timeScale = RunningScale;
         }
 
         public static bool IsFrozen => s_activeTokens != FreezeToken.None;

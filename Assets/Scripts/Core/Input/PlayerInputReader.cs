@@ -44,6 +44,17 @@ namespace Beavermania.Core.Input
         /// <summary>Gameplay pause: Escape (primary) or backquote / tilde (alias).</summary>
         public static bool WasPausePressed()
         {
+            return WasPauseTogglePressed();
+        }
+
+        /// <summary>Pause-menu resume uses the same performed/down edge as pause.</summary>
+        public static bool WasResumePressed()
+        {
+            return WasPauseTogglePressed();
+        }
+
+        static bool WasPauseTogglePressed()
+        {
             return UnityEngine.Input.GetKeyDown(KeyCode.Escape)
                 || UnityEngine.Input.GetKeyDown(KeyCode.BackQuote);
         }

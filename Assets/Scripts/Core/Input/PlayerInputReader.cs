@@ -48,6 +48,12 @@ namespace Beavermania.Core.Input
                 || UnityEngine.Input.GetKeyDown(KeyCode.BackQuote);
         }
 
+        /// <summary>Pause menu resume uses the same down-edge as pause to avoid hold/release double toggles.</summary>
+        public static bool WasResumePressed()
+        {
+            return WasPausePressed();
+        }
+
         public static bool IsSprintHeld()
         {
             return UnityEngine.Input.GetKey(KeyCode.LeftShift);

@@ -72,7 +72,11 @@ namespace Beavermania.Core.GameFlow
             if (!isBound)
                 return;
 
-            if (PlayerInputReader.WasPausePressed())
+            bool toggleRequested = ActivePause
+                ? PlayerInputReader.WasResumePressed()
+                : PlayerInputReader.WasPausePressed();
+
+            if (toggleRequested)
                 ChangeBolean();
         }
 

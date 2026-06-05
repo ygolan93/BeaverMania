@@ -34,6 +34,14 @@ namespace Beavermania.NPC
         public Quaternion rotGoal;
         Vector3 awakePos;
 
+        bool HasConfiguredPatrol()
+        {
+            return wayPoints != null
+                && wayPoints.Length > 0
+                && currentPoint >= 0
+                && currentPoint < wayPoints.Length
+                && wayPoints[currentPoint] != null;
+        }
 
         [System.Obsolete]
         void Start()
@@ -50,6 +58,9 @@ namespace Beavermania.NPC
 
             moveClock = 10.0f;
             initialClock = moveClock;
+
+            if (!HasConfiguredPatrol())
+                moving = false;
         }
         private void OnCollisionEnter(Collision OBJ)
         {
@@ -89,6 +100,9 @@ namespace Beavermania.NPC
         {
             if (OBJ.gameObject.CompareTag("NPCWP"))
             {
+                if (!HasConfiguredPatrol())
+                    return;
+
                 if (currentPoint < wayPoints.Length && onward == true)
                 {
                     currentPoint++;
@@ -134,6 +148,9 @@ namespace Beavermania.NPC
         }
         void Movement()
         { 
+            if (!HasConfiguredPatrol())
+                return;
+
             if (moveClock>0)
             {
                 moveClock -= Time.deltaTime;

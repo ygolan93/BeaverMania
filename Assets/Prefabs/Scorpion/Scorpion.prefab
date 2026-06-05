@@ -53871,10 +53871,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Scorpion: {fileID: 160509433125316345}
+  statsData: {fileID: 11400000, guid: 4d457511c3b5bf64ea8e8f079ef7319d, type: 2}
+  defaultStatsResourcePath: 
   BossHealth: {fileID: 6003487228124988379}
   CurrentHealth: 8000
-  MaxHealth: 8000
   Player: {fileID: 0}
+  boostCharge: {fileID: 0}
   drops:
   - {fileID: 2657320476707681433, guid: 06f9d786657c1ad4da503fca33b8ce6b, type: 3}
   - {fileID: 2657320476707681433, guid: 06f9d786657c1ad4da503fca33b8ce6b, type: 3}
@@ -53882,26 +53884,31 @@ MonoBehaviour:
   - {fileID: 7679416759401954559, guid: 9f5cfb054d2b7174882402aae5da7193, type: 3}
   - {fileID: 7679416759401954559, guid: 9f5cfb054d2b7174882402aae5da7193, type: 3}
   combo: 0
-  comboLimit: 15
-  StunnedClock: 10
   isAttacking: 0
-  chargeSpeed: 8
-  chargeClock: 1
   Jaw1A: {fileID: 2631068468930072073}
   Jaw1B: {fileID: 3574585947653929594}
   Jaw2A: {fileID: 3877933947483839307}
   Jaw2B: {fileID: 9083913364248970971}
   Sting: {fileID: 747129927400765033}
   state: Idle
-  lookDistance: 30
-  chargeDistance: 20
-  attackDistance: 2.2
   currentDistance: 0
   rotGoal: {x: 0, y: 0, z: 0, w: 0}
   HitEffect: {fileID: 3298826728073757572}
   Explosion: {fileID: 8530238590734212565}
   StunEffect: {fileID: 2948367004167687818}
   Sound: {fileID: 7866589409725028557}
+  legacyMaxHealth: 8000
+  legacyComboLimit: 15
+  legacyStunDuration: 10
+  legacyChargeSpeed: 8
+  legacyChargeDuration: 1
+  legacyLookDistance: 30
+  legacyChargeDistance: 20
+  legacyAttackDistance: 2.2
+  legacyAttackDamage: 15
+  legacyStingDamage: 30
+  legacyRotationSpeed: 0.05
+  legacyRecoveryDuration: 0
 --- !u!114 &6003487228124988379
 MonoBehaviour:
   m_ObjectHideFlags: 0

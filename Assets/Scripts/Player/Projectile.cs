@@ -672,6 +672,15 @@ namespace Beavermania.Player.Combat
             return damageReceiver is Component component ? component.GetInstanceID() : damageReceiver.GetHashCode();
         }
 
+        static void ApplyLegacyScorpionComboBonus(IEnemyDamageReceiver damageReceiver, int bonus)
+        {
+            if (bonus <= 0)
+                return;
+
+            if (damageReceiver is ScorpionScript scorpion)
+                scorpion.combo += bonus;
+        }
+
         static bool ColliderHasTag(Collider collider, string tag)
         {
             if (collider == null || string.IsNullOrEmpty(tag))
@@ -734,6 +743,7 @@ namespace Beavermania.Player.Combat
             IEnemyDamageReceiver damageReceiver = GetEnemyDamageReceiver(hitCollider);
             if (damageReceiver != null && damageReceiver.ReceiveDamage(Damage, EnemyDamageType.Normal, transform))
             {
+                ApplyLegacyScorpionComboBonus(damageReceiver, 3);
                 ArrowHit();
                 return;
             }
@@ -961,7 +971,10 @@ namespace Beavermania.Player.Combat
                 IEnemyDamageReceiver damageReceiver = GetEnemyDamageReceiver(hitCollider);
                 if (damageReceiver != null && damagedTargets.Add(GetDamageReceiverId(damageReceiver)))
                 {
-                    damageReceiver.ReceiveDamage(damageAmount, EnemyDamageType.Fire, transform);
+                    bool appliedDamage = damageReceiver.ReceiveDamage(damageAmount, EnemyDamageType.Fire, transform);
+                    if (appliedDamage)
+                        ApplyLegacyScorpionComboBonus(damageReceiver, 3);
+
                     continue;
                 }
 
@@ -1180,6 +1193,7 @@ namespace Beavermania.Player.Combat
             IEnemyDamageReceiver damageReceiver = GetEnemyDamageReceiver(OBJ.collider);
             if (damageReceiver != null && damageReceiver.ReceiveDamage(Damage, EnemyDamageType.Normal, transform))
             {
+                ApplyLegacyScorpionComboBonus(damageReceiver, 3);
                 hit = true;
                 RockHit();
             }

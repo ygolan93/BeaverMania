@@ -51366,32 +51366,45 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Scorpion: {fileID: 407642689355950290}
+  statsData: {fileID: 11400000, guid: 74352a16c8d74c54aa59d9e1bcffc07d, type: 2}
+  defaultStatsResourcePath: 
   BossHealth: {fileID: 6107630362012945904}
   CurrentHealth: 150000
-  MaxHealth: 150000
   Player: {fileID: 0}
-  drops: []
+  boostCharge: {fileID: 0}
+  drops:
+  - {fileID: 2644262761601828232, guid: 71817b782d9840b4ca3c247d66955dac, type: 3}
+  - {fileID: 2644262761601828232, guid: 71817b782d9840b4ca3c247d66955dac, type: 3}
+  - {fileID: 2644262761601828232, guid: 71817b782d9840b4ca3c247d66955dac, type: 3}
+  - {fileID: 2644262761601828232, guid: 71817b782d9840b4ca3c247d66955dac, type: 3}
+  - {fileID: 2644262761601828232, guid: 71817b782d9840b4ca3c247d66955dac, type: 3}
+  - {fileID: 2644262761601828232, guid: 71817b782d9840b4ca3c247d66955dac, type: 3}
   combo: 0
-  comboLimit: 20
-  StunnedClock: 7
   isAttacking: 0
-  chargeSpeed: 15
-  chargeClock: 5
   Jaw1A: {fileID: 2526920102824034338}
   Jaw1B: {fileID: 3893775697488114769}
   Jaw2A: {fileID: 3621794351671399776}
   Jaw2B: {fileID: 8755712033370654960}
   Sting: {fileID: 994262058274469954}
   state: Idle
-  lookDistance: 40
-  chargeDistance: 30
-  attackDistance: 4
   currentDistance: 0
   rotGoal: {x: 0, y: 0, z: 0, w: 0}
   HitEffect: {fileID: 3050568388787473839}
   Explosion: {fileID: 8211043342563841022}
   StunEffect: {fileID: 3420684630745268385}
   Sound: {fileID: 3272819708306223537}
+  legacyMaxHealth: 150000
+  legacyComboLimit: 20
+  legacyStunDuration: 7
+  legacyChargeSpeed: 15
+  legacyChargeDuration: 5
+  legacyLookDistance: 40
+  legacyChargeDistance: 30
+  legacyAttackDistance: 4
+  legacyAttackDamage: 15
+  legacyStingDamage: 30
+  legacyRotationSpeed: 0.05
+  legacyRecoveryDuration: 0
 --- !u!114 &6107630362012945904
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -51404,7 +51417,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31ea55b4c87a18340bd56bcc0c07b233, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  NPCslider: {fileID: 0}
+  NPCslider: {fileID: 4047390277484216756}
 --- !u!54 &6107630362012945911
 Rigidbody:
   m_ObjectHideFlags: 0

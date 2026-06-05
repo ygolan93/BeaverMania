@@ -21,8 +21,16 @@ namespace Beavermania.NPC
 
         void Awake()
         {
-            if (player == null)
-                player = GetComponent<BeaverPlayer>();
+            if (player != null)
+                return;
+
+            player = GetComponent<BeaverPlayer>();
+            if (player != null)
+                return;
+
+            GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+            if (playerObject != null)
+                player = playerObject.GetComponent<BeaverPlayer>();
         }
 
         void Update()

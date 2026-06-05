@@ -60,6 +60,15 @@ namespace Beavermania.NPC
             CacheReferences();
         }
 
+        void Start()
+        {
+            if (released || target != null)
+                return;
+
+            if (ShadowRevenantTargetResolver.TryResolve(out IShadowRevenantTarget resolvedTarget, out _, this))
+                target = resolvedTarget;
+        }
+
         void CacheReferences()
         {
             if (shadeRigidbody == null)
@@ -130,6 +139,13 @@ namespace Beavermania.NPC
             CacheReferences();
             released = false;
             target = minionTarget;
+            if (target == null)
+            {
+                if (!ShadowRevenantTargetResolver.TryResolve(out IShadowRevenantTarget resolvedTarget, out _, this))
+                    return;
+
+                target = resolvedTarget;
+            }
             behaviorConfig = config;
             moveSpeed = config != null ? Mathf.Max(0f, config.shadeMoveSpeed) : 0f;
             damage = config != null ? Mathf.Max(0f, config.shadeDamage) : 0f;

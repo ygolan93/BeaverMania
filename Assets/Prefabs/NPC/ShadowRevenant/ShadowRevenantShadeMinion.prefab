@@ -15,8 +15,8 @@ GameObject:
   - component: {fileID: 8681903175244230962}
   - component: {fileID: 9000006}
   - component: {fileID: 9000007}
-  - component: {fileID: -5659604619671948892}
-  - component: {fileID: -5928873704692485326}
+  - component: {fileID: -6058851227065147677}
+  - component: {fileID: 2197712907586772633}
   m_Layer: 10
   m_Name: ShadowRevenantShadeMinion
   m_TagString: Untagged
@@ -33,8 +33,8 @@ Transform:
   m_GameObject: {fileID: 9000001}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
-  m_ConstrainProportionsScale: 1
+  m_LocalScale: {x: 1.3333334, y: 1.3333334, z: 1.3333334}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 9010002}
   - {fileID: 9010012}
@@ -150,7 +150,7 @@ MonoBehaviour:
   animator: {fileID: 0}
   eyeRenderers: []
   enableDebugLogs: 0
---- !u!82 &-5659604619671948892
+--- !u!82 &-6058851227065147677
 AudioSource:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -168,7 +168,7 @@ AudioSource:
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
-  Priority: 48
+  Priority: 128
   DopplerLevel: 1
   MinDistance: 1
   MaxDistance: 25
@@ -206,7 +206,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -246,7 +246,7 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &-5928873704692485326
+--- !u!114 &2197712907586772633
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -258,7 +258,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1a2c3d4e5f6478990a1b2c3d4e5f606, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  actionSource: {fileID: -5659604619671948892}
+  actionSource: {fileID: -6058851227065147677}
 --- !u!1 &9010001
 GameObject:
   m_ObjectHideFlags: 0

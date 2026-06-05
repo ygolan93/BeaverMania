@@ -234,14 +234,16 @@ namespace Beavermania.NPC
         {
             if (targetTransform == null)
             {
-                GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-                if (playerObject != null)
-                    targetTransform = playerObject.transform;
+                if (ShadowRevenantTargetResolver.TryResolve(out IShadowRevenantTarget resolvedTarget, out Transform resolvedTransform, this))
+                {
+                    target = resolvedTarget;
+                    targetTransform = resolvedTransform;
+                }
+
+                return;
             }
 
-            target = targetTransform != null ? targetTransform.GetComponentInParent<IShadowRevenantTarget>() : null;
-            if (target == null && targetTransform != null)
-                target = targetTransform.GetComponentInChildren<IShadowRevenantTarget>();
+            target = ShadowRevenantTargetResolver.ResolveFromTransform(targetTransform, this);
         }
 
         void TickCooldowns()

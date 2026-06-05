@@ -12,27 +12,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: acb0e34192624e9c8862e434012c1fab, type: 3}
   m_Name: ShadowRevenantConfig
   m_EditorClassIdentifier: 
-  maxHealth: 4200
-  normalDamageMultiplier: 1
-  phasedDamageMultiplier: 0.36
-  lightBrokenDamageMultiplier: 1.75
-  aggroRange: 48
+  maxHealth: 100000
+  normalDamageMultiplier: 1.679
+  phasedDamageMultiplier: 0.82
+  lightBrokenDamageMultiplier: 3.11
+  aggroRange: 30
   leashRange: 70
-  faceTurnSpeed: 8
-  strafeSpeed: 5.25
+  faceTurnSpeed: 10
+  strafeSpeed: 10
   closeRange: 6
   mediumRange: 18
   farRange: 30
   preferPhaseWhenClose: 1
   usePhysicsGravity: 0
-  hoverHeight: 1.6
+  hoverHeight: 1.5
   groundCheckStartHeight: 12
   groundCheckDistance: 24
   groundMask:
     serializedVersion: 2
     m_Bits: 513
   verticalSnapSpeed: 8
-  phaseCooldown: 6.5
+  phaseCooldown: 6
   phaseDuration: 1.8
   phaseWindup: 0.45
   phaseTriggerRange: 18
@@ -56,35 +56,35 @@ MonoBehaviour:
   projectileRecover: 0.35
   projectileRange: 36
   enableProjectileAimLine: 1
-  projectileAimLineWidth: 0.06
-  projectileAimLineColor: {r: 0.2, g: 1, b: 0.4, a: 0.35}
+  projectileAimLineWidth: 0.1
+  projectileAimLineColor: {r: 1, g: 0.25382873, b: 0, a: 0.35}
   projectileTracerVfxPrefab: {fileID: 7752040534911599370, guid: c8e97d7834919aa4aa0b3af1126000b7, type: 3}
   projectileObstructionMask:
     serializedVersion: 2
     m_Bits: 512
   fogPrefab: {fileID: 8000004, guid: a6a167a503ca48fc9b972cf4a86f8090, type: 3}
-  fogRadius: 4.5
-  fogDuration: 3.75
-  fogDamagePerTick: 12
-  fogTickInterval: 0.6
+  fogRadius: 8
+  fogDuration: 5
+  fogDamagePerTick: 20
+  fogTickInterval: 1
   fogSlowPercent: 0.45
   fogCooldown: 6.25
   fogWindup: 0.9
   fogRecover: 0.45
   fogRange: 24
-  fogVisualScaleMultiplier: 1
+  fogVisualScaleMultiplier: 1.5
   fogFadeOutTime: 0.25
   shadeMinionPrefab: {fileID: 9000007, guid: 5c846133f4ff4fe580352d620964ffd3, type: 3}
-  maxActiveMinions: 4
-  summonCount: 3
-  summonCooldown: 9.5
+  maxActiveMinions: 30
+  summonCount: 10
+  summonCooldown: 4
   summonWindup: 0.8
   summonRecover: 0.7
-  shadeMoveSpeed: 7
-  shadeDamage: 14
+  shadeMoveSpeed: 10
+  shadeDamage: 30
   shadeDamageCooldown: 1.1
   shadeLifetime: 16
-  shadeMaxHealth: 2
+  shadeMaxHealth: 100
   shadeHitVfxPrefab: {fileID: 5773892071003525454, guid: a8bbf551612752342809c75cf660f2db, type: 3}
   shadeDeathVfxPrefab: {fileID: 754187712697850083, guid: 9fab77bb86b5788429c7947aa06e8def, type: 3}
   shadeAttackSfxCooldown: 1.1
@@ -95,14 +95,14 @@ MonoBehaviour:
   shadeApproachDuration: 0.55
   shadeApproachInterval: 2.75
   shadeApproachIntervalVariance: 1.25
-  shadeApproachChance: 0.7
+  shadeApproachChance: 0.5
   shadeMaxApproachDuration: 8
-  shadeApproachSpeedMultiplier: 1.35
+  shadeApproachSpeedMultiplier: 1.5
   shadeHoverHeight: 1.2
   shadeOrbitSfxInterval: 2.4
   bossStrafePulseInterval: 0.45
   enableChargeAttack: 1
-  chargeDamage: 24
+  chargeDamage: 50
   chargeCooldown: 10
   chargeWindup: 0.75
   chargeDuration: 0.55
@@ -117,7 +117,7 @@ MonoBehaviour:
   chargeImpactVfxPrefab: {fileID: 7844971772153961093, guid: 62cec6294a18bf3488992e31e646e713, type: 3}
   chargeWindupVfxPrefab: {fileID: 1748418293888677769, guid: f2ab68b4f8b32fe45802ce65a5e9838d, type: 3}
   enableCombos: 1
-  comboChance: 0.18
+  comboChance: 0.2
   comboCooldown: 7.5
   maxComboFollowUps: 1
   allowProjectileAfterSummon: 1

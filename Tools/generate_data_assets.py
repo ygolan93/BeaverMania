@@ -121,18 +121,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHealth: 1000
   maxStamina: 100
-  bareHandsMeleeDamage: 50
-  bowEquippedMeleeDamage: 50
-  hammerMeleeDamage: 700
-  armorSetMeleeDamage: 200
-  armorSetAirDamage: 200
-  bareHandsAirDamage: 20
   rollAttackDamage: 200
   scorpionLightDamage: 15
   scorpionHeavyDamage: 30
   shroomHealPerTick: 2
   appleHealAmount: 500
-  bowShotStaminaCost: 30
   stoneThrowStaminaCost: 20
   attackRange: 0.5
   groundBeat: 0.3

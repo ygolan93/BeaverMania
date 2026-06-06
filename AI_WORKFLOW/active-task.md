@@ -1,73 +1,54 @@
 # Active Task
 
 ## Task title
-- Combat balance pass — five-tier enemy hierarchy
+- Weapon ScriptableObject refactor
 
 ## Type
-- Mixed (ScriptableObject tuning + script migration + Unity Play Mode verification)
+- Mixed (ScriptableObject + scripts + player prefab wiring + Play Mode verification)
 
 ## Owner
 - **Cursor** — implementation complete
-- **User** — full feel validation in Level 1 Remastered
+- **User** — Play Mode parity verification
 
 ## Current phase
-- Data assets tuned; Wasp SO migration done; boss projectile mitigation added; MCP spot-check passed
+- Scripts, WeaponData assets, and Player.prefab wiring complete; CI build blocked locally (UnityEngine refs unavailable in this environment)
 
 ## Goal
-- Balance player vs enemy combat across difficulty tiers (easiest → hardest):
-  1. Wasps
-  2. Shadow Revenant Shade Minions
-  3. Scorpions
-  4. Shadow Revenant Mini Boss
-  5. Scorpion Boss
-- Early enemies tuned for bare hands (50 dmg); bosses for hammer (700) + bow (2000) + boost
+- Migrate per-weapon combat stats from `PlayerCombatBalanceData` / string arsenal switches into `WeaponData` SO + `Weapon` runtime component without gameplay changes.
 
 ## Changes made (2026-06-06)
 
-### Phase 0 — Data hygiene
-- Reverted mistaken `BoostChargeController` on enemy prefabs (Scorpion, ScorpionBoss, ShadowRevenant)
-- Synced `Assets/Resources/Beavermania/Combat/BoostChargeSettings_Default.asset` with Data copy
-- Reverted accidental Scorpion Boss 1.5M HP local edit
+### New types
+- `Assets/Scripts/Data/Combat/WeaponData.cs` — weapon stats, category enum, legacy ID, capability flags
+- `Assets/Scripts/Player/Combat/Weapon.cs` — owned loadout, equip/cycle, legacy bootstrap
 
-### Phase 1 — Wasp ScriptableObject migration
-- New `WaspStatsData.cs` + `Assets/Data/NPC/Wasp/WaspStats_Default.asset`
-- Resources fallback: `Assets/Resources/Beavermania/NPC/Wasp/WaspStats_Default.asset`
-- `NPC_Basic.cs` reads stats via SO with legacy fallback chain
-- `LVL1 Wasp.prefab` wired to `WaspStats_Default`
+### Default assets
+- `Assets/Data/Combat/Weapons/*_Default.asset` (Bare Hands, Bow, Hammers, Armor Set)
+- `Assets/Resources/Beavermania/Combat/Weapons/*_Default.asset` (runtime fallback)
 
-### Phase 2 — Tier tuning (HP hierarchy)
-| Tier | Asset | HP | Notes |
-|------|-------|-----|-------|
-| Wasp | `WaspStats_Default` | **450** | ~9 bare-hand hits |
-| Shade | `ShadowRevenantConfig` | **600** | dmg **24** |
-| Scorpion | `ScorpionStatsData` | **8000** | unchanged |
-| Shadow Revenant | `ShadowRevenantConfig` | **100000** | proj/charge/fog slightly tuned |
-| Scorpion Boss | `ScorpionBossStatsData` | **150000** | jaw **20**, sting **65**, attackDistance **7** |
+### Integrations
+- `BeaverPlayerBehaviour` — `weaponLoadout` ref, `EquippedWeaponData`, `ApplyEquippedWeaponVisuals`, legacy `Arsenal` sync preserved; removed dead `GroundAttack` field
+- `AnimatedAttack` — ground/air damage from equipped `WeaponData`; roll attack stays on combat balance
+- `SwordEffects` — fire breath + swing trails gated on weapon capability/category
+- `PlayerCombatBalanceData` — weapon fields removed (keeps roll attack, health/stamina, non-weapon tuning)
 
-HP order: 450 < 600 < 8000 << 100000 < 150000 ✓
-
-### Phase 3 — Boss projectile mitigation
-- `ScorpionStatsData.projectileDamageMultiplier` — boss asset **0.35** (arrow ~700 effective)
-- `ShadowRevenantConfig.playerProjectileDamageMultiplier` — **0.4** (arrow ~800 effective at normal mult)
-- `ScorpionScript` + `ShadowRevenantController` apply multiplier when damage source is `Projectile`
-
-## Unity MCP verification (spot-check)
-- Play Mode Level 1: wasps report **450 HP**; scorpions **8000**; ScorpionBoss **150000** sting **65**
-- Needs full manual TTK/threat matrix per tier
+### Prefab
+- `Assets/Prefabs/Player/Otter_Shapekeys/Player.prefab` — `Weapon` component + catalog SO refs + `weaponLoadout` wired
 
 ## Manual Play Mode validation checklist
-- [ ] Wasp (bare hands): 6–10 hits to kill; survivable in groups
-- [ ] Shade minion (bare hands): harder than wasp, easier than scorpion
-- [ ] Scorpion (hammer): ~10–15 hits; sting telegraphed and survivable
-- [ ] Shadow Revenant (hammer + bow + boost): ~90–150 s; bow not instant delete
-- [ ] Scorpion Boss (full kit): longest fight; sting scary but fair
-- [ ] No console errors from balance changes
+- [ ] Bare hands ground (50) / air kick (20) vs wasps unchanged
+- [ ] Hammer melee (~700, 2m radius)
+- [ ] Bow melee + arrow shot stamina (30)
+- [ ] Armor set ground slash (200) + hurricane kick air (350)
+- [ ] Fire breath HP cost + sword glare armor-only
+- [ ] Shop pickup + arsenal browse cycles; legacy string `Arsenal` still populated
+- [ ] Wasp hit VFX/SFX still correct per weapon
+- [ ] Roll attack still 200 dmg
 
 ## Result
-- Script/data integration: **Pass**
+- Script/data/prefab integration: **Pass (pending Unity compile in Editor)**
 - Full combat feel: **Needs user Play Mode verification**
 
 ## Out of scope
-- Arrow/FireBreath global damage retune (boss multipliers used instead)
-- Level 1 scene layout / spawn count changes
-- Trader/shop economy
+- Shop.cs / NPC_Basic.cs string API changes
+- UI, save system, animation clip edits

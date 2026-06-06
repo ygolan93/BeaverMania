@@ -81,6 +81,7 @@ namespace Beavermania.Player
         [SerializeField] GameObject appleOBJ;
         [SerializeField] GameObject gobletOBJ;
         [SerializeField] Combat.BoostChargeController boostChargeController;
+        [SerializeField] Combat.Weapon weaponLoadout;
 
         public Combat.BoostChargeController BoostCharge => boostChargeController;
 
@@ -169,7 +170,6 @@ namespace Beavermania.Player
         float _bowNextDrawAllowedTime;
         [SerializeField] bool debugBowCombat;
         [SerializeField] float InitialFall = 0.2f;
-        public int GroundAttack = 50;
         public bool bowEquipped;
         public bool HammerHeld;
         public bool ArmorEquipped;
@@ -255,18 +255,21 @@ namespace Beavermania.Player
         const float LookRotationEpsilon = 0.0001f;
 
         public PlayerCombatBalanceData CombatBalance => combatBalance;
+        public WeaponData EquippedWeaponData => weaponLoadout != null ? weaponLoadout.EquippedWeapon : null;
 
         float EffectiveScorpionLightDamage => combatBalance != null ? combatBalance.scorpionLightDamage : 15f;
         float EffectiveScorpionHeavyDamage => combatBalance != null ? combatBalance.scorpionHeavyDamage : 30f;
         float EffectiveShroomHealPerTick => combatBalance != null ? combatBalance.shroomHealPerTick : 2f;
         float EffectiveAppleHealAmount => combatBalance != null ? combatBalance.appleHealAmount : 500f;
-        float EffectiveBowShotStaminaCost => combatBalance != null ? combatBalance.bowShotStaminaCost : 30f;
         float EffectiveStoneThrowStaminaCost => combatBalance != null ? combatBalance.stoneThrowStaminaCost : 20f;
-        float EffectiveFireBreathHealthCostPercent => combatBalance != null ? combatBalance.fireBreathHealthCostPercent : 20f;
-        int EffectiveBareHandsDamage => combatBalance != null ? combatBalance.bareHandsMeleeDamage : 50;
-        int EffectiveHammerDamage => combatBalance != null ? combatBalance.hammerMeleeDamage : 700;
-        int EffectiveBowEquippedMeleeDamage => combatBalance != null ? combatBalance.bowEquippedMeleeDamage : 50;
-        int EffectiveArmorSetDamage => combatBalance != null ? combatBalance.armorSetMeleeDamage : 200;
+        float EffectiveBowShotStaminaCost
+        {
+            get
+            {
+                WeaponData bowData = weaponLoadout != null ? weaponLoadout.ResolveBow() : null;
+                return bowData != null ? bowData.bowShotStaminaCost : 30f;
+            }
+        }
 
         public void OnCollisionEnter(Collision OBJ)
         {
@@ -365,6 +368,7 @@ namespace Beavermania.Player
                 Otter.Play("Crouch");
                 Arsenal.Add("Hammers");
                 ArsenalCounter++;
+                ResolveWeaponLoadout()?.TryAddOwned(ResolveWeaponLoadout()?.ResolveHammer());
                 Sound.PickItem();
                 SpawnPickUpEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
                 Destroy(OBJ.gameObject);
@@ -376,6 +380,7 @@ namespace Beavermania.Player
                 Otter.Play("Crouch");
                 Arsenal.Add("Bow");
                 ArsenalCounter++;
+                ResolveWeaponLoadout()?.TryAddOwned(ResolveWeaponLoadout()?.ResolveBow());
                 Sound.PickItem();
                 SetArrowMunition(5);
                 CountArrows();
@@ -389,6 +394,7 @@ namespace Beavermania.Player
                 Otter.Play("Crouch");
                 Arsenal.Add("ArmorSet");
                 ArsenalCounter++;
+                ResolveWeaponLoadout()?.TryAddOwned(ResolveWeaponLoadout()?.ResolveArmorSet());
                 Sound.PickItem();
                 SpawnPickUpEffect(OBJ.transform.position + new Vector3(0, 0.3f, 0));
                 Destroy(OBJ.gameObject);
@@ -1268,10 +1274,23 @@ namespace Beavermania.Player
 
         public float GetFireBreathHealthCost()
         {
-            if (MaxHealth <= 0f || EffectiveFireBreathHealthCostPercent <= 0f)
+            if (MaxHealth <= 0f)
                 return 0f;
 
-            return MaxHealth * (EffectiveFireBreathHealthCostPercent / 100f);
+            float costPercent = 0f;
+            if (EquippedWeaponData != null && EquippedWeaponData.supportsFireBreath)
+                costPercent = EquippedWeaponData.fireBreathHealthCostPercent;
+            else if (weaponLoadout != null)
+            {
+                WeaponData armorData = weaponLoadout.ResolveArmorSet();
+                if (armorData != null)
+                    costPercent = armorData.fireBreathHealthCostPercent;
+            }
+
+            if (costPercent <= 0f)
+                return 0f;
+
+            return MaxHealth * (costPercent / 100f);
         }
 
         public bool CanPayFireBreathCost()
@@ -2240,6 +2259,7 @@ namespace Beavermania.Player
             var flatFwd = new Vector3(transform.forward.x, 0, transform.forward.z);
             stableCameraForwardXZ = flatFwd.sqrMagnitude > 1e-6f ? flatFwd.normalized : Vector3.forward;
             CountArrows();
+            BootstrapWeaponLoadout();
             SyncHudState();
             UpdateSwordGlareAvailability();
         }
@@ -2485,111 +2505,12 @@ namespace Beavermania.Player
                     else
                     {
                         Sound.SwitchItem();
-                        if (arsenalBrowser < ArsenalCounter)
+                        Combat.Weapon loadout = ResolveWeaponLoadout();
+                        if (loadout != null && loadout.TryCycleNext(ArsenalCounter, out WeaponData nextWeapon, out int newBrowserIndex))
                         {
-                            arsenalBrowser++;
-                        }
-                        else
-                        {
-                            arsenalBrowser = 0;
-                        }
-
-                        InterruptSwordAttackPresentation();
-
-                        switch (Arsenal[arsenalBrowser])
-                        {
-                            case "Bare Hands":
-                                {
-                                    Otter.Play("Disarm");
-                                    //Turn off Hammers
-                                    HammerHeld = false;
-                                    GroundAttack = EffectiveBareHandsDamage;
-                                    Otter.SetBool("armor", false);
-                                    RightHandWeapon.SetActive(false);
-                                    LeftHandWeapon.SetActive(false);
-
-                                    //Turn off Bow Gear
-                                    bowEquipped = false;
-                                    if (MunitionDisplay != null)
-                                        MunitionDisplay.SetActive(false);
-                                    SetBowActive(false);
-
-                                    //Turn off Armor Set
-                                    ArmorEquipped = false;
-                                    SetArmorSetActive(false);
-
-                                    break;
-                                }
-
-                            case "Hammers":
-                                {
-                                    Otter.Play("Equip");
-                                    //Turn on Hammers
-                                    HammerHeld = true;
-                                    GroundAttack = EffectiveHammerDamage;
-                                    Otter.SetBool("armor", false);
-                                    RightHandWeapon.SetActive(true);
-                                    LeftHandWeapon.SetActive(true);
-
-                                    //Turn off Bow
-                                    bowEquipped = false;
-                                    if (MunitionDisplay != null)
-                                        MunitionDisplay.SetActive(false);
-                                    SetBowActive(false);
-
-                                    //Turn off Armor Set
-                                    ArmorEquipped = false;
-                                    SetArmorSetActive(false);
-
-                                    break;
-                                }
-
-                            case "Bow":
-                                {
-                                    Otter.Play("Equip");
-                                    CountArrows();
-                                    //Turn off Hammers
-                                    HammerHeld = false;
-                                    GroundAttack = EffectiveBowEquippedMeleeDamage;
-                                    Otter.SetBool("armor", false);
-                                    RightHandWeapon.SetActive(false);
-                                    LeftHandWeapon.SetActive(false);
-
-                                    //Turn on Bow
-                                    bowEquipped = true;
-                                    if (MunitionDisplay != null)
-                                        MunitionDisplay.SetActive(true);
-                                    SetBowActive(true);
-
-                                    //Turn off Armor Set
-                                    ArmorEquipped = false;
-                                    SetArmorSetActive(false);
-
-                                    break;
-                                }
-                            case "ArmorSet":
-                                {
-                                    Otter.Play("Equip");
-                                    //Turn off Hammers
-                                    HammerHeld = false;
-                                    Otter.SetBool("armor", false);
-                                    RightHandWeapon.SetActive(false);
-                                    LeftHandWeapon.SetActive(false);
-
-                                    //Turn off Bow
-                                    bowEquipped = false;
-                                    if (MunitionDisplay != null)
-                                        MunitionDisplay.SetActive(false);
-                                    SetBowActive(false);
-
-                                    //Turn on Armor Set
-                                    ArmorEquipped = true;
-                                    GroundAttack = EffectiveArmorSetDamage;
-                                    Otter.SetBool("armor", true);
-                                    SetArmorSetActive(true);
-                                    break;
-                                }
-
+                            arsenalBrowser = newBrowserIndex;
+                            InterruptSwordAttackPresentation();
+                            ApplyEquippedWeaponVisuals(nextWeapon);
                         }
 
                         UpdateSwordGlareAvailability();
@@ -2731,7 +2652,6 @@ namespace Beavermania.Player
                             Otter.SetBool("fight", false);
                         }
 
-                        GroundAttack = EffectiveBareHandsDamage;
                         Beat = 0;
                         Otter.speed = AnimSpeed;
                     }
@@ -3292,6 +3212,105 @@ namespace Beavermania.Player
             UpdateSwordGlareAvailability();
         }
 
+        Combat.Weapon ResolveWeaponLoadout()
+        {
+            if (weaponLoadout != null)
+                return weaponLoadout;
+
+            weaponLoadout = GetComponent<Combat.Weapon>();
+            return weaponLoadout;
+        }
+
+        void BootstrapWeaponLoadout()
+        {
+            Combat.Weapon loadout = ResolveWeaponLoadout();
+            if (loadout == null)
+            {
+                Debug.LogWarning($"{nameof(BeaverPlayerBehaviour)}: missing {nameof(Combat.Weapon)} component; weapon data fallback only.", this);
+                return;
+            }
+
+            loadout.BootstrapFromLegacyArsenal(Arsenal, arsenalBrowser);
+            ApplyEquippedWeaponVisuals(loadout.EquippedWeapon, playEquipAnim: false);
+        }
+
+        void ApplyEquippedWeaponVisuals(WeaponData weaponData, bool playEquipAnim = true)
+        {
+            if (weaponData == null || Otter == null)
+                return;
+
+            switch (weaponData.category)
+            {
+                case WeaponCategory.BareHands:
+                    if (playEquipAnim)
+                        Otter.Play("Disarm");
+                    HammerHeld = false;
+                    Otter.SetBool("armor", false);
+                    if (RightHandWeapon != null)
+                        RightHandWeapon.SetActive(false);
+                    if (LeftHandWeapon != null)
+                        LeftHandWeapon.SetActive(false);
+                    bowEquipped = false;
+                    if (MunitionDisplay != null)
+                        MunitionDisplay.SetActive(false);
+                    SetBowActive(false);
+                    ArmorEquipped = false;
+                    SetArmorSetActive(false);
+                    break;
+                case WeaponCategory.Hammer:
+                    if (playEquipAnim)
+                        Otter.Play("Equip");
+                    HammerHeld = true;
+                    Otter.SetBool("armor", false);
+                    if (RightHandWeapon != null)
+                        RightHandWeapon.SetActive(true);
+                    if (LeftHandWeapon != null)
+                        LeftHandWeapon.SetActive(true);
+                    bowEquipped = false;
+                    if (MunitionDisplay != null)
+                        MunitionDisplay.SetActive(false);
+                    SetBowActive(false);
+                    ArmorEquipped = false;
+                    SetArmorSetActive(false);
+                    break;
+                case WeaponCategory.Bow:
+                    if (playEquipAnim)
+                        Otter.Play("Equip");
+                    CountArrows();
+                    HammerHeld = false;
+                    Otter.SetBool("armor", false);
+                    if (RightHandWeapon != null)
+                        RightHandWeapon.SetActive(false);
+                    if (LeftHandWeapon != null)
+                        LeftHandWeapon.SetActive(false);
+                    bowEquipped = true;
+                    if (MunitionDisplay != null)
+                        MunitionDisplay.SetActive(true);
+                    SetBowActive(true);
+                    ArmorEquipped = false;
+                    SetArmorSetActive(false);
+                    break;
+                case WeaponCategory.ArmorSet:
+                    if (playEquipAnim)
+                        Otter.Play("Equip");
+                    HammerHeld = false;
+                    Otter.SetBool("armor", true);
+                    if (RightHandWeapon != null)
+                        RightHandWeapon.SetActive(false);
+                    if (LeftHandWeapon != null)
+                        LeftHandWeapon.SetActive(false);
+                    bowEquipped = false;
+                    if (MunitionDisplay != null)
+                        MunitionDisplay.SetActive(false);
+                    SetBowActive(false);
+                    ArmorEquipped = true;
+                    SetArmorSetActive(true);
+                    break;
+            }
+
+            UpdateSwordGlareAvailability();
+        }
+
         void ClearBowDrawState()
         {
             _bowAimSessionOpen = false;
@@ -3359,6 +3378,7 @@ namespace Beavermania.Player
 
             Arsenal.Add("Hammers");
             ArsenalCounter++;
+            ResolveWeaponLoadout()?.TryAddOwned(ResolveWeaponLoadout()?.ResolveHammer());
             return true;
         }
 
@@ -3372,6 +3392,7 @@ namespace Beavermania.Player
 
             Arsenal.Add("Bow");
             ArsenalCounter++;
+            ResolveWeaponLoadout()?.TryAddOwned(ResolveWeaponLoadout()?.ResolveBow());
 
             if (arrowMunition <= 0)
                 SetArrowMunition(starterArrowCount);
@@ -3391,6 +3412,7 @@ namespace Beavermania.Player
 
             Arsenal.Add("ArmorSet");
             ArsenalCounter++;
+            ResolveWeaponLoadout()?.TryAddOwned(ResolveWeaponLoadout()?.ResolveArmorSet());
             return true;
         }
 

@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+using Beavermania.Data.Combat;
 using Beavermania.NPC;
 using Beavermania.Objects;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
@@ -7,7 +6,6 @@ using UnityEngine;
 
 namespace Beavermania.Player.Combat
 {
-
     public class AnimatedAttack : MonoBehaviour
     {
         [SerializeField] BeaverPlayer Player;
@@ -17,13 +15,11 @@ namespace Beavermania.Player.Combat
         [SerializeField] LayerMask enemyLayers;
         [SerializeField] bool enableHitDebugLogs;
 
-        const int FallbackBareHandsMeleeDamage = 50;
-        const int FallbackBowMeleeDamage = 50;
-        const int FallbackHammerMeleeDamage = 700;
-        const int FallbackArmorSetMeleeDamage = 200;
-        const int FallbackArmorSetAirDamage = 200;
-        const int FallbackBareHandsAirDamage = 20;
         const int FallbackRollAttackDamage = 200;
+        const int FallbackBareHandsGroundDamage = 50;
+        const int FallbackBareHandsAirDamage = 20;
+        const float FallbackBareHandsGroundRadius = 0.7f;
+        const float FallbackBareHandsAirRadius = 2.5f;
 
         private void Start()
         {
@@ -32,40 +28,15 @@ namespace Beavermania.Player.Combat
                 GlowEffect.SetActive(false);
         }
 
-        int BareHandsMeleeDamage =>
-            Player != null && Player.CombatBalance != null
-                ? Player.CombatBalance.bareHandsMeleeDamage
-                : FallbackBareHandsMeleeDamage;
-
-        int BowMeleeDamage =>
-            Player != null && Player.CombatBalance != null
-                ? Player.CombatBalance.bowEquippedMeleeDamage
-                : FallbackBowMeleeDamage;
-
-        int HammerMeleeDamage =>
-            Player != null && Player.CombatBalance != null
-                ? Player.CombatBalance.hammerMeleeDamage
-                : FallbackHammerMeleeDamage;
-
-        int ArmorSetMeleeDamage =>
-            Player != null && Player.CombatBalance != null
-                ? Player.CombatBalance.armorSetMeleeDamage
-                : FallbackArmorSetMeleeDamage;
-
-        int ArmorSetAirDamage =>
-            Player != null && Player.CombatBalance != null
-                ? Player.CombatBalance.armorSetAirDamage
-                : FallbackArmorSetAirDamage;
-
-        int BareHandsAirDamage =>
-            Player != null && Player.CombatBalance != null
-                ? Player.CombatBalance.bareHandsAirDamage
-                : FallbackBareHandsAirDamage;
-
         int RollAttackDamage =>
             Player != null && Player.CombatBalance != null
                 ? Player.CombatBalance.rollAttackDamage
                 : FallbackRollAttackDamage;
+
+        WeaponData ResolveEquippedWeaponData()
+        {
+            return Player != null ? Player.EquippedWeaponData : null;
+        }
 
         public void CauseDamage(Vector3 origin, float range, int Damage)
         {
@@ -117,7 +88,6 @@ namespace Beavermania.Player.Combat
             return damageReceiver != null && damageReceiver.ReceiveDamage(damage, EnemyDamageType.Normal, transform);
         }
 
-
         public void RollAttack()
         {
             CauseDamage(AttackPoint.position, 1.5f, RollAttackDamage);
@@ -125,34 +95,23 @@ namespace Beavermania.Player.Combat
 
         public void GroundAttack()
         {
-            var arsenal = Player.GetComponent<BeaverPlayer>().Arsenal;
-            var weapon = Player.GetComponent<BeaverPlayer>().arsenalBrowser;
-            switch (arsenal[weapon])
+            WeaponData weaponData = ResolveEquippedWeaponData();
+            if (weaponData == null)
             {
-                case "Bare Hands":
-                    {
-                        CauseDamage(AttackPoint.position, 0.7f, BareHandsMeleeDamage);
-                        break;
-                    }
-                case "Bow":
-                    {
-                        CauseDamage(AttackPoint.position, 1f, BowMeleeDamage);
-                        break;
-                    }
-                case "Hammers":
-                    {
-                        CauseDamage(AttackPoint.position, 2f, HammerMeleeDamage);
-                        break;
-                    }
-                case "ArmorSet":
-                    {
-                        var feetPos = Sphere.position + new Vector3(0, 0.5f, 0);
-                        CauseDamage(feetPos, 4f, ArmorSetMeleeDamage);
-                        break;
-                    }
+                CauseDamage(
+                    AttackPoint.position,
+                    FallbackBareHandsGroundRadius,
+                    FallbackBareHandsGroundDamage);
+                return;
             }
 
+            Vector3 origin = weaponData.category == WeaponCategory.ArmorSet && Sphere != null
+                ? Sphere.position + Vector3.up * weaponData.groundAttackOriginYOffset
+                : AttackPoint.position + Vector3.up * weaponData.groundAttackOriginYOffset;
+
+            CauseDamage(origin, weaponData.groundAttackRadius, weaponData.groundMeleeDamage);
         }
+
         /// <summary>
         /// Hurricane Kick damage window (animation event). Weapon-independent skill; bow does not block air kick hits.
         /// </summary>
@@ -166,10 +125,17 @@ namespace Beavermania.Player.Combat
             if (Player == null || Sphere == null)
                 return;
 
-            if (Player.ArmorEquipped)
-                CauseDamage(Sphere.position + new Vector3(0, 0.5f, 0), 4f, ArmorSetAirDamage);
-            else
-                CauseDamage(Sphere.position, 2.5f, BareHandsAirDamage);
+            WeaponData weaponData = ResolveEquippedWeaponData();
+            if (weaponData != null && weaponData.category == WeaponCategory.ArmorSet)
+            {
+                Vector3 origin = Sphere.position + Vector3.up * weaponData.groundAttackOriginYOffset;
+                CauseDamage(origin, weaponData.airAttackRadius, weaponData.airMeleeDamage);
+                return;
+            }
+
+            int airDamage = weaponData != null ? weaponData.airMeleeDamage : FallbackBareHandsAirDamage;
+            float airRadius = weaponData != null ? weaponData.airAttackRadius : FallbackBareHandsAirRadius;
+            CauseDamage(Sphere.position, airRadius, airDamage);
         }
 
         public void ShieldParryON()

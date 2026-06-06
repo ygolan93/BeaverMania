@@ -1,50 +1,73 @@
 # Active Task
 
 ## Task title
-- Scorpion refactor Unity integration + prefab wiring
+- Combat balance pass — five-tier enemy hierarchy
 
 ## Type
-- Feature integration (ScriptableObject assets + prefab serialization)
+- Mixed (ScriptableObject tuning + script migration + Unity Play Mode verification)
 
 ## Owner
-- **Cursor** — Play Mode boss-fight verification pending (user)
+- **Cursor** — implementation complete
+- **User** — full feel validation in Level 1 Remastered
 
 ## Current phase
-- Prefab + stats assets wired via Unity MCP; full arena combat checklist not automated
+- Data assets tuned; Wasp SO migration done; boss projectile mitigation added; MCP spot-check passed
 
 ## Goal
-- Wire refactored `ScorpionScript` + `ScorpionStatsData` on Scorpion prefabs
-- Preserve existing combat tuning, VFX, audio, and collider references
-- Validate boss in Level 1 Remastered scene
+- Balance player vs enemy combat across difficulty tiers (easiest → hardest):
+  1. Wasps
+  2. Shadow Revenant Shade Minions
+  3. Scorpions
+  4. Shadow Revenant Mini Boss
+  5. Scorpion Boss
+- Early enemies tuned for bare hands (50 dmg); bosses for hammer (700) + bow (2000) + boost
 
-## Changes made (2026-06-05)
+## Changes made (2026-06-06)
 
-### ScriptableObject assets created
-- `Assets/Data/NPC/Scorpion/ScorpionStatsData.asset` — arena/default tuning (8000 HP)
-- `Assets/Data/NPC/Scorpion/ScorpionBossStatsData.asset` — boss variant tuning (150000 HP)
+### Phase 0 — Data hygiene
+- Reverted mistaken `BoostChargeController` on enemy prefabs (Scorpion, ScorpionBoss, ShadowRevenant)
+- Synced `Assets/Resources/Beavermania/Combat/BoostChargeSettings_Default.asset` with Data copy
+- Reverted accidental Scorpion Boss 1.5M HP local edit
 
-### Prefab wiring
-- `Assets/Prefabs/Scorpion/Scorpion.prefab` — `statsData` → `ScorpionStatsData.asset`
-- `Assets/Prefabs/Scorpion/ScorpionBoss.prefab` — `statsData` → `ScorpionBossStatsData.asset`
-- Unity migrated inline stats to `legacy*` fallback fields on both prefabs (FormerlySerializedAs)
+### Phase 1 — Wasp ScriptableObject migration
+- New `WaspStatsData.cs` + `Assets/Data/NPC/Wasp/WaspStats_Default.asset`
+- Resources fallback: `Assets/Resources/Beavermania/NPC/Wasp/WaspStats_Default.asset`
+- `NPC_Basic.cs` reads stats via SO with legacy fallback chain
+- `LVL1 Wasp.prefab` wired to `WaspStats_Default`
 
-### Scene note
-- `Level 1 - Remastered - Steam.unity` boss instance uses **`ScorpionBoss.prefab`** (renamed `ScorpionBoss`), with scene override `Player` reference wired.
+### Phase 2 — Tier tuning (HP hierarchy)
+| Tier | Asset | HP | Notes |
+|------|-------|-----|-------|
+| Wasp | `WaspStats_Default` | **450** | ~9 bare-hand hits |
+| Shade | `ShadowRevenantConfig` | **600** | dmg **24** |
+| Scorpion | `ScorpionStatsData` | **8000** | unchanged |
+| Shadow Revenant | `ShadowRevenantConfig` | **100000** | proj/charge/fog slightly tuned |
+| Scorpion Boss | `ScorpionBossStatsData` | **150000** | jaw **20**, sting **65**, attackDistance **7** |
 
-## Manual Unity steps
-- [ ] Play Mode: enter boss arena in `Level 1 - Remastered - Steam.unity`
-- [ ] Full combat checklist below
+HP order: 450 < 600 < 8000 << 100000 < 150000 ✓
 
-## Play Mode validation checklist
-- [ ] Scorpion detects player
-- [ ] Charge / attack loop works
-- [ ] Player damages Scorpion; HP bar updates
-- [ ] Parry/stun loop works
-- [ ] Death triggers explosion + drops
-- [ ] No NullReferenceException / missing script warnings
-- [ ] Animator params `Walk`, `Backwards`, `Attack`, `Stunned` OK
-- [ ] Audio (Beat/Sting) on hit
+### Phase 3 — Boss projectile mitigation
+- `ScorpionStatsData.projectileDamageMultiplier` — boss asset **0.35** (arrow ~700 effective)
+- `ShadowRevenantConfig.playerProjectileDamageMultiplier` — **0.4** (arrow ~800 effective at normal mult)
+- `ScorpionScript` + `ShadowRevenantController` apply multiplier when damage source is `Projectile`
+
+## Unity MCP verification (spot-check)
+- Play Mode Level 1: wasps report **450 HP**; scorpions **8000**; ScorpionBoss **150000** sting **65**
+- Needs full manual TTK/threat matrix per tier
+
+## Manual Play Mode validation checklist
+- [ ] Wasp (bare hands): 6–10 hits to kill; survivable in groups
+- [ ] Shade minion (bare hands): harder than wasp, easier than scorpion
+- [ ] Scorpion (hammer): ~10–15 hits; sting telegraphed and survivable
+- [ ] Shadow Revenant (hammer + bow + boost): ~90–150 s; bow not instant delete
+- [ ] Scorpion Boss (full kit): longest fight; sting scary but fair
+- [ ] No console errors from balance changes
 
 ## Result
-- Integration: **Pass** (prefab/assets)
-- Play Mode boss fight: **Needs user verification**
+- Script/data integration: **Pass**
+- Full combat feel: **Needs user Play Mode verification**
+
+## Out of scope
+- Arrow/FireBreath global damage retune (boss multipliers used instead)
+- Level 1 scene layout / spawn count changes
+- Trader/shop economy

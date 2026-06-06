@@ -6,6 +6,8 @@ namespace Beavermania.Player.Combat
     [DisallowMultipleComponent]
     public sealed class BoostChargeController : MonoBehaviour
     {
+        const string DefaultSettingsResourcePath = "Beavermania/Combat/BoostChargeSettings_Default";
+
         [SerializeField] BoostChargeSettings settings;
         [SerializeField] bool debugBoostCharge;
 
@@ -33,6 +35,9 @@ namespace Beavermania.Player.Combat
 
         void Awake()
         {
+            if (settings == null)
+                settings = LoadDefaultSettings();
+
             currentCharge = 0f;
             lastCombatActivityTime = Time.time;
         }
@@ -173,8 +178,17 @@ namespace Beavermania.Player.Combat
             if (s_defaultSettings != null)
                 return s_defaultSettings;
 
+            s_defaultSettings = LoadDefaultSettings();
+            if (s_defaultSettings != null)
+                return s_defaultSettings;
+
             s_defaultSettings = ScriptableObject.CreateInstance<BoostChargeSettings>();
             return s_defaultSettings;
+        }
+
+        static BoostChargeSettings LoadDefaultSettings()
+        {
+            return Resources.Load<BoostChargeSettings>(DefaultSettingsResourcePath);
         }
     }
 }

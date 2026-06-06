@@ -132,6 +132,11 @@ namespace Beavermania.NPC
             SetEffectActive(StunEffect, false);
         }
 
+        void Start()
+        {
+            ResolvePlayerReferences();
+        }
+
         void Update()
         {
             if (hitEffectTimer <= 0f)
@@ -333,6 +338,7 @@ namespace Beavermania.NPC
             if (BossHealth != null)
                 BossHealth.SetNPCHealth(CurrentHealth);
 
+            EnsureBoostChargeResolved();
             boostCharge?.RegisterHit(damage);
 
             if (CurrentHealth <= 0)
@@ -351,6 +357,7 @@ namespace Beavermania.NPC
             state = currentState.ToString();
             CurrentHealth = 0;
             isAttacking = false;
+            EnsureBoostChargeResolved();
             boostCharge?.RegisterKill();
             if (BossHealth != null)
                 BossHealth.SetNPCHealth(CurrentHealth);
@@ -405,6 +412,14 @@ namespace Beavermania.NPC
                 boostCharge = Player.BoostCharge != null ? Player.BoostCharge : Player.GetComponent<BoostChargeController>();
 
             targetTransform = Player != null ? Player.transform : null;
+        }
+
+        void EnsureBoostChargeResolved()
+        {
+            if (boostCharge != null)
+                return;
+
+            ResolvePlayerReferences();
         }
 
         void RefreshTargetContext()

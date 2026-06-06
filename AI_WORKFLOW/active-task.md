@@ -1,54 +1,49 @@
 # Active Task
 
 ## Task title
-- Weapon ScriptableObject refactor
+- Demo Settlement Layout Pass (Island 1 Village + Island 2 Forward Camp)
 
 ## Type
-- Mixed (ScriptableObject + scripts + player prefab wiring + Play Mode verification)
+- Mixed (Unity scene layout + user Play Mode verification)
 
 ## Owner
-- **Cursor** — implementation complete
-- **User** — Play Mode parity verification
+- **Cursor** — scene hierarchy, prefab placement, markers, light probes (complete)
+- **User** — terrain sculpt/paint, NavMesh bake, Play Mode validation
 
 ## Current phase
-- Scripts, WeaponData assets, and Player.prefab wiring complete; CI build blocked locally (UnityEngine refs unavailable in this environment)
+- Layout pass complete; **placement correction pass complete (2026-06-06)** — awaiting user Play Mode + terrain follow-up
 
 ## Goal
-- Migrate per-weapon combat stats from `PlayerCombatBalanceData` / string arsenal switches into `WeaponData` SO + `Weapon` runtime component without gameplay changes.
+- Narrative settlement/layout pass for 30–40 min demo flow: village hub → bridge objective → forward camp → hive escalation → red boss.
 
-## Changes made (2026-06-06)
+## Scene
+- **Edited:** `Assets/Scenes/Level 1 - Remastered - Steam.unity`
+- **Backup:** `Assets/Scenes/BackUp Scene/Level 1 - Remastered - Steam - LD Backup 2026-06-06.unity`
 
-### New types
-- `Assets/Scripts/Data/Combat/WeaponData.cs` — weapon stats, category enum, legacy ID, capability flags
-- `Assets/Scripts/Player/Combat/Weapon.cs` — owned loadout, equip/cycle, legacy bootstrap
+## Constraints preserved
+- `PlayerPack-Drop and Play`, `Market/Trader`, `Camp/Camp Trader` not moved
+- Checkpoints, bosses, hives untouched
+- No gameplay script changes
 
-### Default assets
-- `Assets/Data/Combat/Weapons/*_Default.asset` (Bare Hands, Bow, Hammers, Armor Set)
-- `Assets/Resources/Beavermania/Combat/Weapons/*_Default.asset` (runtime fallback)
+## Branch
+- `feature/demo-settlement-layout-pass`
 
-### Integrations
-- `BeaverPlayerBehaviour` — `weaponLoadout` ref, `EquippedWeaponData`, `ApplyEquippedWeaponVisuals`, legacy `Arsenal` sync preserved; removed dead `GroundAttack` field
-- `AnimatedAttack` — ground/air damage from equipped `WeaponData`; roll attack stays on combat balance
-- `SwordEffects` — fire breath + swing trails gated on weapon capability/category
-- `PlayerCombatBalanceData` — weapon fields removed (keeps roll attack, health/stamina, non-weapon tuning)
+## Placement correction pass (2026-06-06, Cursor-owned)
+- Downscaled oversized props: `PRP_I1_Cart_01` (0.35), `PRP_I1_FarmSack_01` (0.38), `PRP_I1_CrateCluster_03` (0.4), dock crates/barrel (0.55–0.6), blacksmith anvil/hammer (0.45)
+- Disabled white placeholder `pPlane1` child on farm sack instance
+- Repositioned cart off bridge path; bridge dressing scaled/side-offset
+- Moved path markers (`MRK_I1/I2_MainPath_A`, `INT_I2_HiveTrigger_01`) off walk lanes
+- Rescaled/repositioned I2 dead trees, fences, barricades to path edges
+- Marked corrected props Static
+- **Needs Unity Play Mode verification**
 
-### Prefab
-- `Assets/Prefabs/Player/Otter_Shapekeys/Player.prefab` — `Weapon` component + catalog SO refs + `weaponLoadout` wired
-
-## Manual Play Mode validation checklist
-- [ ] Bare hands ground (50) / air kick (20) vs wasps unchanged
-- [ ] Hammer melee (~700, 2m radius)
-- [ ] Bow melee + arrow shot stamina (30)
-- [ ] Armor set ground slash (200) + hurricane kick air (350)
-- [ ] Fire breath HP cost + sword glare armor-only
-- [ ] Shop pickup + arsenal browse cycles; legacy string `Arsenal` still populated
-- [ ] Wasp hit VFX/SFX still correct per weapon
-- [ ] Roll attack still 200 dmg
+## Manual follow-up (user)
+- [ ] Terrain pad flatten + path texture paint (dock, village paths, hive/boss approach)
+- [ ] Rebake light probes (empty groups placed — run Generate Lighting or manual probe placement)
+- [ ] NavMesh rebake if enemy pathing breaks
+- [ ] Play Mode: trader prompts, bridge build colliders near `PRP_I1_BridgePart_*`, boss arena clearance
+- [ ] Verify decorative `NewBridgePart` instances do not block bridge gameplay
 
 ## Result
-- Script/data/prefab integration: **Pass (pending Unity compile in Editor)**
-- Full combat feel: **Needs user Play Mode verification**
-
-## Out of scope
-- Shop.cs / NPC_Basic.cs string API changes
-- UI, save system, animation clip edits
+- **Layout pass: complete (Needs Unity Play Mode verification)**
+- **Placement correction pass: complete (Needs Unity Play Mode verification)**

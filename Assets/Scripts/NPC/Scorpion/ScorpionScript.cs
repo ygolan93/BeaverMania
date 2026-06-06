@@ -1,7 +1,6 @@
 using Beavermania.Data.NPC;
 using Beavermania.Player.Combat;
 using Beavermania.Objects;
-using Beavermania.Player.Combat;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using UnityEngine;
 using UnityEngine.Serialization;

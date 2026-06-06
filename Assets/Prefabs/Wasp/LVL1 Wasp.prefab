@@ -15436,18 +15436,20 @@ MonoBehaviour:
   rotGoal: {x: 0, y: 0, z: 0, w: 0}
   AttackSpeed: 7
   PlayerDistance: 0
-  Recovery: 10
   currentPos: {x: 0, y: 0, z: 0}
   floating: 0
-  floatSpeed: 1
-  floatDistance: 1
-  maxTiltAngle: 7
-  hit2stun: 10
+  statsData: {fileID: 11400000, guid: f6a7b8c9d0e1f2a3b4c5d6e7f8091a2b, type: 2}
+  defaultStatsResourcePath: 
   combo: 0
-  Damage2Player: 15
-  MaxHealth: 1000
   CurrentHealth: 0
   NPCHealthBar: {fileID: 2735624339671731889}
+  legacyFloatSpeed: 1
+  legacyFloatDistance: 1
+  legacyMaxTiltAngle: 7
+  legacyHitsToStun: 10
+  legacyDamageToPlayer: 15
+  legacyMaxHealth: 1000
+  legacyStunRecovery: 10
   HitEffect: {fileID: 7022265487677813612}
   SlashEffect: {fileID: 8559851003464421313}
   Explosion: {fileID: 1892078723244562, guid: 46876a2780737ec45a19d62f88e5ce56, type: 3}

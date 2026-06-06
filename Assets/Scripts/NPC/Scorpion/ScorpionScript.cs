@@ -1,4 +1,5 @@
 using Beavermania.Data.NPC;
+using Beavermania.Player.Combat;
 using Beavermania.Objects;
 using Beavermania.Player.Combat;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
@@ -332,19 +333,35 @@ namespace Beavermania.NPC
             transform.rotation = rotGoal;
             SetEffectActive(HitEffect, true);
             hitEffectTimer = HitEffectDuration;
-            CurrentHealth = Mathf.Max(0, CurrentHealth - damage);
+            int resolvedDamage = ResolveIncomingDamage(damage, damageType, source);
+            CurrentHealth = Mathf.Max(0, CurrentHealth - resolvedDamage);
             combo++;
             Sound?.Beat();
             if (BossHealth != null)
                 BossHealth.SetNPCHealth(CurrentHealth);
 
             EnsureBoostChargeResolved();
-            boostCharge?.RegisterHit(damage);
+            boostCharge?.RegisterHit(resolvedDamage);
 
             if (CurrentHealth <= 0)
                 Death();
 
             return true;
+        }
+
+        int ResolveIncomingDamage(int damage, EnemyDamageType damageType, Transform source)
+        {
+            if (damageType != EnemyDamageType.Normal || source == null)
+                return damage;
+
+            if (source.GetComponentInParent<Projectile>() == null)
+                return damage;
+
+            float multiplier = Mathf.Clamp01(ActiveStats.projectileDamageMultiplier);
+            if (multiplier >= 0.999f)
+                return damage;
+
+            return Mathf.Max(1, Mathf.RoundToInt(damage * multiplier));
         }
 
         void Death()

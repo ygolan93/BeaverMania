@@ -1,10 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using Beavermania.Core.Input;
+using Beavermania.Data.NPC;
 using Beavermania.Display;
 using Beavermania.Objects;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Beavermania.NPC
 {
@@ -35,7 +37,6 @@ namespace Beavermania.NPC
         public float AttackSpeed = 7f;
         public float PlayerDistance;
         float ChangeNav = 5f;
-        public float Recovery = 10f;
         float ChargeClock = 0.7f;
         bool Contact = false;
         float a;
@@ -50,17 +51,42 @@ namespace Beavermania.NPC
         [Header("Floating")]
         public Vector3 currentPos;
         public bool floating;
-        public float floatSpeed = 1.0f;
-        public float floatDistance = 1.0f;
-        public float maxTiltAngle = 10.0f;
+
+        [Header("Stats")]
+        [SerializeField] WaspStatsData statsData;
+        [SerializeField] string defaultStatsResourcePath;
 
         [Header("Health and Damage")]
-        public int hit2stun;
         public int combo = 0;
-        public int Damage2Player = 1;
-        public int MaxHealth = 2000;
         public int CurrentHealth;
         public NPC_Health NPCHealthBar;
+
+        [Header("Legacy Stats Fallback")]
+        [FormerlySerializedAs("floatSpeed")]
+        [SerializeField] float legacyFloatSpeed = 1f;
+        [FormerlySerializedAs("floatDistance")]
+        [SerializeField] float legacyFloatDistance = 1f;
+        [FormerlySerializedAs("maxTiltAngle")]
+        [SerializeField] float legacyMaxTiltAngle = 10f;
+        [FormerlySerializedAs("hit2stun")]
+        [SerializeField] int legacyHitsToStun = 10;
+        [FormerlySerializedAs("Damage2Player")]
+        [SerializeField] int legacyDamageToPlayer = 1;
+        [FormerlySerializedAs("MaxHealth")]
+        [SerializeField] int legacyMaxHealth = 2000;
+        [FormerlySerializedAs("Recovery")]
+        [SerializeField] float legacyStunRecovery = 10f;
+
+        WaspStatsData fallbackStats;
+        float stunRecoveryClock;
+
+        public int MaxHealth => ActiveStats.maxHealth;
+        public int hit2stun => ActiveStats.hitsToStun;
+        public int Damage2Player => ActiveStats.damageToPlayer;
+        float floatSpeed => ActiveStats.floatSpeed;
+        float floatDistance => ActiveStats.floatDistance;
+        float maxTiltAngle => ActiveStats.maxTiltAngle;
+        WaspStatsData ActiveStats => statsData != null ? statsData : ResolveFallbackStats();
 
         [Header("Effects")]
         public GameObject HitEffect;
@@ -84,6 +110,7 @@ namespace Beavermania.NPC
             Wasp = GetComponent<Animator>();
             npcCollider = GetComponent<Collider>();
             CurrentHealth = MaxHealth;
+            stunRecoveryClock = ActiveStats.stunRecovery;
             PlayerTarget = GameObject.FindGameObjectWithTag("Player");
             PlayerHealth = PlayerTarget.GetComponent<BeaverPlayer>();
             if (NPCHealthBar != null)
@@ -176,8 +203,8 @@ namespace Beavermania.NPC
             else
             {
                 Stunned();
-                Recovery -= Time.deltaTime;
-                if (Recovery <= 0)
+                stunRecoveryClock -= Time.deltaTime;
+                if (stunRecoveryClock <= 0f)
                 {
                     Recovered();
                     combo = 0;
@@ -275,7 +302,7 @@ namespace Beavermania.NPC
                 Contact = true;
                 if (PlayerHealth.isParried== true)
                 {
-                    TakeDamage(20);
+                    TakeDamage(ActiveStats.parryDamage);
                     combo += 10;
                 }
             }
@@ -286,7 +313,7 @@ namespace Beavermania.NPC
             if (OBJ.gameObject.CompareTag("Damage"))
             {
                 Wasp.SetBool("Beat", true);
-                TakeDamage(15);
+                TakeDamage(ActiveStats.weaponHitDamage);
                 Sound.Beat();
                 combo = hit2stun;
             }
@@ -343,7 +370,7 @@ namespace Beavermania.NPC
             BuzzSource.SetActive(true);
             floating = false;
             Wasp.SetBool("Stunned", false);
-            Recovery = 10f;
+            stunRecoveryClock = ActiveStats.stunRecovery;
             NPC.constraints = RigidbodyConstraints.FreezeRotation;
             NPC.useGravity = false;
         }
@@ -466,6 +493,42 @@ namespace Beavermania.NPC
             if (HitEffect != null)
                 HitEffect.SetActive(false);
             hitEffectHideRoutine = null;
+        }
+
+        WaspStatsData ResolveFallbackStats()
+        {
+            if (fallbackStats != null)
+                return fallbackStats;
+
+            WaspStatsData loadedStats = LoadConfiguredStatsData();
+            if (loadedStats != null)
+            {
+                fallbackStats = loadedStats;
+                return fallbackStats;
+            }
+
+            fallbackStats = ScriptableObject.CreateInstance<WaspStatsData>();
+            fallbackStats.hideFlags = HideFlags.HideAndDontSave;
+            fallbackStats.maxHealth = legacyMaxHealth;
+            fallbackStats.damageToPlayer = legacyDamageToPlayer;
+            fallbackStats.hitsToStun = legacyHitsToStun;
+            fallbackStats.stunRecovery = legacyStunRecovery;
+            fallbackStats.floatSpeed = legacyFloatSpeed;
+            fallbackStats.floatDistance = legacyFloatDistance;
+            fallbackStats.maxTiltAngle = legacyMaxTiltAngle;
+            fallbackStats.weaponHitDamage = 15;
+            fallbackStats.parryDamage = 20;
+
+            Debug.LogWarning($"{name}: WaspStatsData reference missing. Using legacy serialized fallback values.", this);
+            return fallbackStats;
+        }
+
+        WaspStatsData LoadConfiguredStatsData()
+        {
+            if (!string.IsNullOrWhiteSpace(defaultStatsResourcePath))
+                return Resources.Load<WaspStatsData>(defaultStatsResourcePath);
+
+            return null;
         }
     }
 }

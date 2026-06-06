@@ -29810,6 +29810,7 @@ GameObject:
   - component: {fileID: 7080942755712817626}
   - component: {fileID: 5829473610293847561}
   - component: {fileID: 9123456789012345010}
+  - component: {fileID: 9123456789012345011}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -30008,6 +30009,7 @@ MonoBehaviour:
   appleOBJ: {fileID: 7423331273048657820}
   gobletOBJ: {fileID: 8509926591080787681}
   boostChargeController: {fileID: 5829473610293847561}
+  weaponLoadout: {fileID: 9123456789012345011}
   bowAim: {x: 0, y: 1, z: 1}
   Arsenal:
   - Bare Hands
@@ -30066,7 +30068,6 @@ MonoBehaviour:
   AirBeat: 0.2
   debugBowCombat: 0
   InitialFall: 0.2
-  GroundAttack: 30
   bowEquipped: 0
   HammerHeld: 0
   ArmorEquipped: 0
@@ -30311,6 +30312,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   settings: {fileID: 11400000, guid: a7f3c2e14b5d4890a1e2f3c4d5e6f708, type: 2}
   debugBoostCharge: 0
+--- !u!114 &9123456789012345011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4580562239172740874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 61520ac65b504f5f85a6f78a31ed708e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bareHands: {fileID: 11400000, guid: 7d55fcfac023418eb89d67f90b16ba48, type: 2}
+  hammer: {fileID: 11400000, guid: c262b2ff23a34d479a19c8777c3be256, type: 2}
+  bow: {fileID: 11400000, guid: 1ba56638a127400cb78776fcec4c2f01, type: 2}
+  armorSet: {fileID: 11400000, guid: ceef7d2283b240ec95143f951d88c0dd, type: 2}
 --- !u!114 &9123456789012345010
 MonoBehaviour:
   m_ObjectHideFlags: 0

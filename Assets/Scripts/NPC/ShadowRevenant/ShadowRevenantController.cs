@@ -1,6 +1,7 @@
 using Beavermania.Data.NPC;
 using Beavermania.Display;
 using Beavermania.Objects;
+using Beavermania.Player.Combat;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -988,6 +989,9 @@ namespace Beavermania.NPC
                 ApplyLightBreak(config.lightBreakVulnerableDuration, source);
 
             float multiplier = ResolveDamageMultiplier(isLightBreakDamage);
+            if (damageType == EnemyDamageType.Normal && source != null && source.GetComponentInParent<Projectile>() != null)
+                multiplier *= config.playerProjectileDamageMultiplier;
+
             int resolvedDamage = Mathf.RoundToInt(Mathf.Max(0, damage) * multiplier);
             if (resolvedDamage <= 0)
                 return false;

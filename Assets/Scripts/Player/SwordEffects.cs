@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Beavermania.Data.Combat;
 using Beavermania.Player;
 using UnityEngine;
 
@@ -54,6 +55,14 @@ namespace Beavermania.Player.Combat
             BeaverPlayerBehaviour owner = ResolveOwner();
             if (owner == null)
                 return;
+
+            WeaponData equippedWeapon = owner.EquippedWeaponData;
+            if (equippedWeapon == null || !equippedWeapon.supportsFireBreath)
+            {
+                owner.StopFireBreathAttackPresentation();
+                owner.UpdateSwordGlareAvailability();
+                return;
+            }
 
             if (FireBreath == null || AttackPoint == null || Sword == null)
             {
@@ -218,12 +227,20 @@ namespace Beavermania.Player.Combat
 
         public void GreatSwing()
         {
+            BeaverPlayerBehaviour owner = ResolveOwner();
+            if (owner?.EquippedWeaponData == null || owner.EquippedWeaponData.category != WeaponCategory.ArmorSet)
+                return;
+
             var greatTrail = Instantiate(SwordCopter, Sword.position, Sword.rotation);
             greatTrail.transform.parent = Sword;
         }
 
         public void SmallSwing()
         {
+            BeaverPlayerBehaviour owner = ResolveOwner();
+            if (owner?.EquippedWeaponData == null || owner.EquippedWeaponData.category != WeaponCategory.ArmorSet)
+                return;
+
             var smallTrail = Instantiate(SwordPlainTrail, Sword.position, Sword.rotation);
             smallTrail.transform.parent = Sword;
         }

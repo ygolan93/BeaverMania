@@ -16,6 +16,7 @@ MonoBehaviour:
   normalDamageMultiplier: 1.679
   phasedDamageMultiplier: 0.82
   lightBrokenDamageMultiplier: 3.11
+  playerProjectileDamageMultiplier: 0.4
   aggroRange: 30
   leashRange: 70
   faceTurnSpeed: 10
@@ -48,7 +49,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 512
   projectilePrefab: {fileID: 7000007, guid: dd3d5ccb7b8a4f0386866da9215baf25, type: 3}
-  projectileDamage: 30
+  projectileDamage: 28
   projectileSpeed: 28
   projectileLifetime: 5
   projectileCooldown: 1.85
@@ -65,7 +66,7 @@ MonoBehaviour:
   fogPrefab: {fileID: 8000004, guid: a6a167a503ca48fc9b972cf4a86f8090, type: 3}
   fogRadius: 8
   fogDuration: 5
-  fogDamagePerTick: 20
+  fogDamagePerTick: 18
   fogTickInterval: 1
   fogSlowPercent: 0.45
   fogCooldown: 6.25
@@ -81,10 +82,10 @@ MonoBehaviour:
   summonWindup: 0.8
   summonRecover: 0.7
   shadeMoveSpeed: 10
-  shadeDamage: 30
+  shadeDamage: 24
   shadeDamageCooldown: 1.1
   shadeLifetime: 16
-  shadeMaxHealth: 100
+  shadeMaxHealth: 600
   shadeHitVfxPrefab: {fileID: 5773892071003525454, guid: a8bbf551612752342809c75cf660f2db, type: 3}
   shadeDeathVfxPrefab: {fileID: 754187712697850083, guid: 9fab77bb86b5788429c7947aa06e8def, type: 3}
   shadeAttackSfxCooldown: 1.1
@@ -102,7 +103,7 @@ MonoBehaviour:
   shadeOrbitSfxInterval: 2.4
   bossStrafePulseInterval: 0.45
   enableChargeAttack: 1
-  chargeDamage: 50
+  chargeDamage: 45
   chargeCooldown: 10
   chargeWindup: 0.75
   chargeDuration: 0.55

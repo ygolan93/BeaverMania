@@ -11,6 +11,7 @@ namespace Beavermania.Data.NPC
         [Range(0f, 2f)] public float normalDamageMultiplier = 1f;
         [Range(0f, 1f)] public float phasedDamageMultiplier = 0f;
         [Range(1f, 4f)] public float lightBrokenDamageMultiplier = 1.75f;
+        [Range(0.05f, 1f)] public float playerProjectileDamageMultiplier = 0.4f;
 
         [Header("Detection")]
         public float aggroRange = 48f;

@@ -1,50 +1,54 @@
 # Active Task
 
 ## Task title
-- Scorpion refactor Unity integration + prefab wiring
+- Weapon ScriptableObject refactor
 
 ## Type
-- Feature integration (ScriptableObject assets + prefab serialization)
+- Mixed (ScriptableObject + scripts + player prefab wiring + Play Mode verification)
 
 ## Owner
-- **Cursor** — Play Mode boss-fight verification pending (user)
+- **Cursor** — implementation complete
+- **User** — Play Mode parity verification
 
 ## Current phase
-- Prefab + stats assets wired via Unity MCP; full arena combat checklist not automated
+- Scripts, WeaponData assets, and Player.prefab wiring complete; CI build blocked locally (UnityEngine refs unavailable in this environment)
 
 ## Goal
-- Wire refactored `ScorpionScript` + `ScorpionStatsData` on Scorpion prefabs
-- Preserve existing combat tuning, VFX, audio, and collider references
-- Validate boss in Level 1 Remastered scene
+- Migrate per-weapon combat stats from `PlayerCombatBalanceData` / string arsenal switches into `WeaponData` SO + `Weapon` runtime component without gameplay changes.
 
-## Changes made (2026-06-05)
+## Changes made (2026-06-06)
 
-### ScriptableObject assets created
-- `Assets/Data/NPC/Scorpion/ScorpionStatsData.asset` — arena/default tuning (8000 HP)
-- `Assets/Data/NPC/Scorpion/ScorpionBossStatsData.asset` — boss variant tuning (150000 HP)
+### New types
+- `Assets/Scripts/Data/Combat/WeaponData.cs` — weapon stats, category enum, legacy ID, capability flags
+- `Assets/Scripts/Player/Combat/Weapon.cs` — owned loadout, equip/cycle, legacy bootstrap
 
-### Prefab wiring
-- `Assets/Prefabs/Scorpion/Scorpion.prefab` — `statsData` → `ScorpionStatsData.asset`
-- `Assets/Prefabs/Scorpion/ScorpionBoss.prefab` — `statsData` → `ScorpionBossStatsData.asset`
-- Unity migrated inline stats to `legacy*` fallback fields on both prefabs (FormerlySerializedAs)
+### Default assets
+- `Assets/Data/Combat/Weapons/*_Default.asset` (Bare Hands, Bow, Hammers, Armor Set)
+- `Assets/Resources/Beavermania/Combat/Weapons/*_Default.asset` (runtime fallback)
 
-### Scene note
-- `Level 1 - Remastered - Steam.unity` boss instance uses **`ScorpionBoss.prefab`** (renamed `ScorpionBoss`), with scene override `Player` reference wired.
+### Integrations
+- `BeaverPlayerBehaviour` — `weaponLoadout` ref, `EquippedWeaponData`, `ApplyEquippedWeaponVisuals`, legacy `Arsenal` sync preserved; removed dead `GroundAttack` field
+- `AnimatedAttack` — ground/air damage from equipped `WeaponData`; roll attack stays on combat balance
+- `SwordEffects` — fire breath + swing trails gated on weapon capability/category
+- `PlayerCombatBalanceData` — weapon fields removed (keeps roll attack, health/stamina, non-weapon tuning)
 
-## Manual Unity steps
-- [ ] Play Mode: enter boss arena in `Level 1 - Remastered - Steam.unity`
-- [ ] Full combat checklist below
+### Prefab
+- `Assets/Prefabs/Player/Otter_Shapekeys/Player.prefab` — `Weapon` component + catalog SO refs + `weaponLoadout` wired
 
-## Play Mode validation checklist
-- [ ] Scorpion detects player
-- [ ] Charge / attack loop works
-- [ ] Player damages Scorpion; HP bar updates
-- [ ] Parry/stun loop works
-- [ ] Death triggers explosion + drops
-- [ ] No NullReferenceException / missing script warnings
-- [ ] Animator params `Walk`, `Backwards`, `Attack`, `Stunned` OK
-- [ ] Audio (Beat/Sting) on hit
+## Manual Play Mode validation checklist
+- [ ] Bare hands ground (50) / air kick (20) vs wasps unchanged
+- [ ] Hammer melee (~700, 2m radius)
+- [ ] Bow melee + arrow shot stamina (30)
+- [ ] Armor set ground slash (200) + hurricane kick air (350)
+- [ ] Fire breath HP cost + sword glare armor-only
+- [ ] Shop pickup + arsenal browse cycles; legacy string `Arsenal` still populated
+- [ ] Wasp hit VFX/SFX still correct per weapon
+- [ ] Roll attack still 200 dmg
 
 ## Result
-- Integration: **Pass** (prefab/assets)
-- Play Mode boss fight: **Needs user verification**
+- Script/data/prefab integration: **Pass (pending Unity compile in Editor)**
+- Full combat feel: **Needs user Play Mode verification**
+
+## Out of scope
+- Shop.cs / NPC_Basic.cs string API changes
+- UI, save system, animation clip edits

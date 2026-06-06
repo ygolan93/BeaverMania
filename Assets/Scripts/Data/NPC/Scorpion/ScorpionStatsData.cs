@@ -17,6 +17,7 @@ namespace Beavermania.Data.NPC
         [Min(0)] public int stingDamage = 30;
         [Min(0f)] public float rotationSpeed = 0.05f;
         [Min(0f)] public float recoveryDuration = 0f;
+        [Range(0.05f, 1f)] public float projectileDamageMultiplier = 1f;
 
         void OnValidate()
         {

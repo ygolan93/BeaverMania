@@ -1,0 +1,62 @@
+using System;
+using UnityEngine;
+using UnityEngine.InputSystem;
+
+// Replace <GeneratedActionsClass> with the generated wrapper type from your .inputactions asset.
+// Rename Player, Move, Look, and Jump to match the real map and action names in that wrapper.
+public sealed class GeneratedInputReader : MonoBehaviour
+{
+    private <GeneratedActionsClass> _actions;
+
+    public Vector2 Move { get; private set; }
+    public Vector2 Look { get; private set; }
+    public bool JumpHeld { get; private set; }
+    public event Action JumpPressed;
+
+    private void Awake()
+    {
+        // Instantiate only. Do not enable maps or wire external objects here.
+        _actions = new <GeneratedActionsClass>();
+    }
+
+    private void OnEnable()
+    {
+        _actions.Player.Jump.performed += OnJumpPerformed;
+        _actions.Player.Jump.canceled += OnJumpCanceled;
+        _actions.Player.Enable();
+    }
+
+    private void Update()
+    {
+        // Value-based controls are polled continuously for stable joystick and keyboard behavior.
+        Move = _actions.Player.Move.ReadValue<Vector2>();
+        Look = _actions.Player.Look.ReadValue<Vector2>();
+    }
+
+    private void OnDisable()
+    {
+        _actions.Player.Disable();
+        _actions.Player.Jump.performed -= OnJumpPerformed;
+        _actions.Player.Jump.canceled -= OnJumpCanceled;
+
+        Move = Vector2.zero;
+        Look = Vector2.zero;
+        JumpHeld = false;
+    }
+
+    private void OnDestroy()
+    {
+        _actions?.Dispose();
+    }
+
+    private void OnJumpPerformed(InputAction.CallbackContext context)
+    {
+        JumpHeld = true;
+        JumpPressed?.Invoke();
+    }
+
+    private void OnJumpCanceled(InputAction.CallbackContext context)
+    {
+        JumpHeld = false;
+    }
+}

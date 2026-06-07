@@ -1,0 +1,87 @@
+using System;
+using System.Collections.Generic;
+using NUnit.Framework;
+using UnityEngine;
+
+// Replace the example names with the target production types.
+public sealed class ExampleStateMachineEditModeTests
+{
+    private readonly List<UnityEngine.Object> _ownedObjects = new List<UnityEngine.Object>();
+
+    private GameObject _host;
+    private FakeDependency _dependency;
+    private ExampleStateMachine _sut;
+
+    [SetUp]
+    public void SetUp()
+    {
+        _host = RegisterOwned(new GameObject("ExampleStateMachineHost"));
+        _dependency = new FakeDependency();
+        _sut = new ExampleStateMachine(_dependency);
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        for (var i = _ownedObjects.Count - 1; i >= 0; i--)
+        {
+            if (_ownedObjects[i] != null)
+            {
+                UnityEngine.Object.DestroyImmediate(_ownedObjects[i]);
+            }
+        }
+
+        _ownedObjects.Clear();
+        ExampleStateMachine.ResetStaticsForTests();
+    }
+
+    [Test]
+    public void Advance_WhenTriggerIsValid_TransitionsToExpectedState()
+    {
+        // Arrange
+        _sut.SetState(ExampleState.Idle);
+
+        // Act
+        _sut.Advance();
+
+        // Assert
+        Assert.That(_sut.CurrentState, Is.EqualTo(ExampleState.Active));
+    }
+
+    [Test]
+    public void Advance_WhenDependencyIsMissing_ThrowsArgumentNullException()
+    {
+        // Arrange
+        _sut = null;
+
+        // Act
+        TestDelegate act = () => _sut = new ExampleStateMachine(null);
+
+        // Assert
+        Assert.That(act, Throws.TypeOf<ArgumentNullException>());
+    }
+
+    [Test]
+    public void Advance_WhenTriggerIsRejected_LeavesStateUnchanged()
+    {
+        // Arrange
+        _sut.SetState(ExampleState.Locked);
+
+        // Act
+        _sut.Advance();
+
+        // Assert
+        Assert.That(_sut.CurrentState, Is.EqualTo(ExampleState.Locked));
+    }
+
+    private T RegisterOwned<T>(T instance) where T : UnityEngine.Object
+    {
+        _ownedObjects.Add(instance);
+        return instance;
+    }
+
+    private sealed class FakeDependency : IExampleDependency
+    {
+        public bool AllowAdvance { get; set; } = true;
+    }
+}

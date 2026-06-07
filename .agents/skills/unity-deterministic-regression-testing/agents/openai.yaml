@@ -1,0 +1,6 @@
+interface:
+  display_name: "Unity Deterministic Regression Testing"
+  short_description: "Generate deterministic UTF regression suites"
+  default_prompt: "Use $unity-deterministic-regression-testing to map the component boundary, make the script testable if needed, and return deterministic Unity Test Framework EditMode or PlayMode regression coverage with cleanup and CI-safe assertions."
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,62 @@
+using UnityEngine;
+
+// This consumer depends on a reader component and never touches bindings or action maps directly.
+public sealed class GeneratedInputConsumer : MonoBehaviour
+{
+    [SerializeField] private GeneratedInputReader _input;
+    [SerializeField] private float _moveSpeed = 5f;
+
+    private Vector3 _pendingMove;
+    private bool _jumpQueued;
+
+    private void OnEnable()
+    {
+        if (_input != null)
+        {
+            _input.JumpPressed += OnJumpPressed;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (_input != null)
+        {
+            _input.JumpPressed -= OnJumpPressed;
+        }
+
+        _pendingMove = Vector3.zero;
+        _jumpQueued = false;
+    }
+
+    private void Update()
+    {
+        if (_input == null)
+        {
+            return;
+        }
+
+        var move = _input.Move;
+        _pendingMove = new Vector3(move.x, 0f, move.y);
+    }
+
+    private void FixedUpdate()
+    {
+        transform.position += _pendingMove * (_moveSpeed * Time.fixedDeltaTime);
+
+        if (_jumpQueued)
+        {
+            _jumpQueued = false;
+            PerformJump();
+        }
+    }
+
+    private void OnJumpPressed()
+    {
+        _jumpQueued = true;
+    }
+
+    private void PerformJump()
+    {
+        // Replace with the repo's real jump behavior.
+    }
+}

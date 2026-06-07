@@ -1,0 +1,28 @@
+# InputReader Lifecycle Validation
+
+Date: 2026-06-07
+
+## Automated tests (EditMode)
+
+- **InputReaderLifecycleTests**: **Pass (4/4)** via **Beavermania → Validation → Run InputReader Lifecycle Tests**
+- `EnableDisableCycle_DoesNotDuplicateJumpEvent` — Pass
+- `RepeatedSetGameplay_DoesNotDuplicateJumpEvent` — Pass
+- `PauseInput_SwitchesToUi_AndNextPressResumesGameplay` — Pass
+- `OnDisable_StopsJumpAndPauseCallbacks` — Pass
+- Edit Mode teardown fix: `InputReader.ReleaseActions()` skips generated `Dispose()` when `!Application.isPlaying` (no Destroy-in-Edit-Mode warnings)
+
+## Prerequisites
+
+- Input System: **com.unity.inputsystem@1.5.1**
+- `activeInputHandler`: **2 (Both)**
+- Test assembly: **Beavermania.Editor.Tests** (`Assets/Editor/Tests/`)
+- BeaverInputSystem.cs SHA256: **C0CBA2B2BA11787307B89A14E00E1CF5F6A28A1D6415B1CBB1BB50F2160436FB** (unchanged)
+
+## Manual Play Mode (legacy PlayerInputReader)
+
+- Not re-run this session; recommended smoke on Level 1 Remastered - Steam before merge.
+
+## Notes
+
+- `InputReader` SO is not yet wired into `BeaverPlayerBehaviour` / `PauseController`.
+- Lifecycle regression coverage is EditMode `InputTestFixture` tests, not PlayMode.

@@ -1,0 +1,53 @@
+Use these starters as copy targets for a real `.asmdef` file. Rename the assembly, update references, and verify runner resolution if `overrideReferences` is later enabled.
+
+EditMode starter:
+
+```json
+{
+  "name": "BeaverProject.Example.EditMode.Tests",
+  "rootNamespace": "Beavermania.Tests",
+  "references": [
+    "Assembly-CSharp"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
+```
+
+PlayMode starter:
+
+```json
+{
+  "name": "BeaverProject.Example.PlayMode.Tests",
+  "rootNamespace": "Beavermania.Tests",
+  "references": [
+    "Assembly-CSharp"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
+```
+
+If the target suite uses package-owned test helpers such as `InputTestFixture`, confirm the package is present and exposed to tests before copying the starter into the repo.

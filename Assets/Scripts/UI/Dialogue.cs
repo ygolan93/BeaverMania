@@ -42,6 +42,8 @@ namespace Beavermania.UI
 
         void Start()
         {
+            TryResolveMerchant();
+
             if (PlayerObjective == null && Player != null)
                 PlayerObjective = Player.GetComponent<ObjectiveUI>();
 
@@ -157,6 +159,8 @@ namespace Beavermania.UI
             }
             else
             {
+                TryResolveMerchant();
+
                 if (Merchant != null)
                     Merchant.activateSkip();
                 else if (!loggedMissingMerchant)
@@ -184,6 +188,8 @@ namespace Beavermania.UI
         {
             Debug.Log("Dialogue: OpenShop clicked.", this);
 
+            TryResolveMerchant();
+
             if (Merchant != null)
             {
                 Merchant.OpenShop();
@@ -199,6 +205,8 @@ namespace Beavermania.UI
         {
             Debug.Log("Dialogue: CloseShop clicked.", this);
 
+            TryResolveMerchant();
+
             if (Merchant != null)
             {
                 Merchant.CloseShop();
@@ -208,6 +216,39 @@ namespace Beavermania.UI
             Debug.LogWarning(
                 $"{nameof(Dialogue)} on '{name}' cannot close shop: {nameof(Merchant)} is not assigned.",
                 this);
+        }
+
+        void TryResolveMerchant()
+        {
+            if (Merchant != null)
+                return;
+
+            var traders = FindObjectsOfType<Trader>(true);
+            for (int i = 0; i < traders.Length; i++)
+            {
+                if (traders[i] != null && traders[i].IsTraderSessionActive())
+                {
+                    Merchant = traders[i];
+                    return;
+                }
+            }
+
+            var anchor = panel != null ? panel : transform;
+            for (int i = 0; i < traders.Length; i++)
+            {
+                var dialoguePanel = traders[i].DialoguePanel;
+                if (dialoguePanel == null)
+                    continue;
+
+                var dialogueTransform = dialoguePanel.transform;
+                if (dialoguePanel == anchor.gameObject
+                    || anchor.IsChildOf(dialogueTransform)
+                    || dialogueTransform.IsChildOf(anchor))
+                {
+                    Merchant = traders[i];
+                    return;
+                }
+            }
         }
 
         void LogMissingReference(string referenceName, ref bool logged)

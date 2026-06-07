@@ -1,4 +1,5 @@
 using Beavermania.Display;
+using Beavermania.NPC;
 using UnityEngine;
 
 public class Destroy : MonoBehaviour
@@ -22,6 +23,13 @@ public class Destroy : MonoBehaviour
     public void DestroySelf()
     {
         if (destroySelfSuppressed)
+            return;
+
+        var pooled = GetComponentInParent<PooledDeathDebris>();
+        if (pooled == null)
+            pooled = GetComponent<PooledDeathDebris>();
+
+        if (pooled != null && pooled.HandleLegacyDestroy(this))
             return;
 
         if (effect != null)

@@ -118,8 +118,17 @@ namespace Beavermania.Core.Input
 
         void ResetTransientState()
         {
-            _currentMove = Vector2.zero;
-            _isSprinting = false;
+            if (_currentMove != Vector2.zero)
+            {
+                _currentMove = Vector2.zero;
+                MoveEvent?.Invoke(_currentMove);
+            }
+
+            if (_isSprinting)
+            {
+                _isSprinting = false;
+                SprintEvent?.Invoke(false);
+            }
         }
 
         public void OnMove(InputAction.CallbackContext context)

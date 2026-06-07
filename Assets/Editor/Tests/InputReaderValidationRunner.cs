@@ -29,17 +29,15 @@ namespace Beavermania.Editor.Validation
                 }
             };
 
-            var callback = new ResultsCallback();
+            var callback = new ResultsCallback(report =>
+            {
+                WriteResults(report);
+                UnityEngine.Object.DestroyImmediate(api);
+            });
+
             api.RegisterCallbacks(callback);
             api.Execute(new ExecutionSettings(filter));
-
-            if (!callback.WaitForCompletion(TimeSpan.FromMinutes(3)))
-            {
-                WriteResults("InputReader lifecycle test run timed out after 3 minutes.");
-                return;
-            }
-
-            WriteResults(callback.BuildReport());
+            Debug.Log("InputReader lifecycle tests started. Results will be written when the run completes.");
         }
 
         static void WriteResults(string body)
@@ -56,28 +54,16 @@ namespace Beavermania.Editor.Validation
 
         sealed class ResultsCallback : ICallbacks
         {
+            readonly Action<string> _onRunFinished;
             readonly object _gate = new object();
-            bool _complete;
             int _passed;
             int _failed;
             int _skipped;
             readonly System.Text.StringBuilder _details = new System.Text.StringBuilder();
 
-            public bool WaitForCompletion(TimeSpan timeout)
+            public ResultsCallback(Action<string> onRunFinished)
             {
-                var deadline = DateTime.UtcNow + timeout;
-                while (DateTime.UtcNow < deadline)
-                {
-                    lock (_gate)
-                    {
-                        if (_complete)
-                            return true;
-                    }
-
-                    System.Threading.Thread.Sleep(250);
-                }
-
-                return false;
+                _onRunFinished = onRunFinished;
             }
 
             public string BuildReport()
@@ -102,10 +88,7 @@ namespace Beavermania.Editor.Validation
 
             public void RunFinished(ITestResultAdaptor result)
             {
-                lock (_gate)
-                {
-                    _complete = true;
-                }
+                _onRunFinished?.Invoke(BuildReport());
             }
 
             public void TestStarted(ITestAdaptor test)

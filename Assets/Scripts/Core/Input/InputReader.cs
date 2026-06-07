@@ -44,7 +44,23 @@ namespace Beavermania.Core.Input
         void OnDestroy()
         {
             ClearCallbacksAndDisableMaps();
-            _actions?.Dispose();
+            ReleaseActions();
+        }
+
+        void ReleaseActions()
+        {
+            if (_actions == null)
+                return;
+
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+            {
+                _actions = null;
+                return;
+            }
+#endif
+
+            _actions.Dispose();
             _actions = null;
         }
 

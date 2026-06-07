@@ -1,18 +1,22 @@
 {
-  "name": "Beavermania.Core.Input.PlayMode.Tests",
-  "rootNamespace": "Beavermania.Tests",
+  "name": "Beavermania.Editor.Tests",
+  "rootNamespace": "Beavermania",
   "references": [
-    "Assembly-CSharp"
+    "Beavermania.Core.Input",
+    "Unity.InputSystem",
+    "Unity.InputSystem.TestFramework"
   ],
   "optionalUnityReferences": [
     "TestAssemblies"
   ],
-  "includePlatforms": [],
+  "includePlatforms": [
+    "Editor"
+  ],
   "excludePlatforms": [],
   "allowUnsafeCode": false,
   "overrideReferences": false,
   "precompiledReferences": [],
-  "autoReferenced": false,
+  "autoReferenced": true,
   "defineConstraints": [],
   "versionDefines": [],
   "noEngineReferences": false

@@ -10,7 +10,6 @@ using UnityEngine.TestTools;
 
 namespace Beavermania.Tests.Core.Input
 {
-    // Update action names or bindings if the generated BeaverInputSystem differs.
     public sealed class InputReaderLifecycleTests : InputTestFixture
     {
         const BindingFlags InstanceBindingFlags = BindingFlags.Instance | BindingFlags.NonPublic;
@@ -39,7 +38,6 @@ namespace Beavermania.Tests.Core.Input
         [UnityTest]
         public IEnumerator EnableDisableCycle_DoesNotDuplicateJumpEvent()
         {
-            // Arrange
             int jumpCount = 0;
             _reader.JumpEvent += OnJump;
             InvokeLifecycleMethod("OnDisable");
@@ -47,11 +45,9 @@ namespace Beavermania.Tests.Core.Input
             InvokeLifecycleMethod("OnEnable");
             yield return null;
 
-            // Act
             Press(_keyboard.spaceKey);
             yield return null;
 
-            // Assert
             Assert.That(jumpCount, Is.EqualTo(1));
 
             _reader.JumpEvent -= OnJump;
@@ -68,18 +64,15 @@ namespace Beavermania.Tests.Core.Input
         [UnityTest]
         public IEnumerator RepeatedSetGameplay_DoesNotDuplicateJumpEvent()
         {
-            // Arrange
             int jumpCount = 0;
             _reader.JumpEvent += OnJump;
             _reader.SetGameplay();
             _reader.SetGameplay();
             yield return null;
 
-            // Act
             Press(_keyboard.spaceKey);
             yield return null;
 
-            // Assert
             Assert.That(jumpCount, Is.EqualTo(1));
 
             _reader.JumpEvent -= OnJump;
@@ -96,13 +89,11 @@ namespace Beavermania.Tests.Core.Input
         [UnityTest]
         public IEnumerator PauseInput_SwitchesToUi_AndNextPressResumesGameplay()
         {
-            // Arrange
             int pauseCount = 0;
             int resumeCount = 0;
             _reader.PauseEvent += OnPause;
             _reader.ResumeEvent += OnResume;
 
-            // Act
             Press(_keyboard.escapeKey);
             yield return null;
             Release(_keyboard.escapeKey);
@@ -110,7 +101,6 @@ namespace Beavermania.Tests.Core.Input
             Press(_keyboard.escapeKey);
             yield return null;
 
-            // Assert
             Assert.That(pauseCount, Is.EqualTo(1));
             Assert.That(resumeCount, Is.EqualTo(1));
 
@@ -134,7 +124,6 @@ namespace Beavermania.Tests.Core.Input
         [UnityTest]
         public IEnumerator OnDisable_StopsJumpAndPauseCallbacks()
         {
-            // Arrange
             int jumpCount = 0;
             int pauseCount = 0;
             _reader.JumpEvent += OnJump;
@@ -142,7 +131,6 @@ namespace Beavermania.Tests.Core.Input
             InvokeLifecycleMethod("OnDisable");
             yield return null;
 
-            // Act
             Press(_keyboard.spaceKey);
             yield return null;
             Release(_keyboard.spaceKey);
@@ -150,7 +138,6 @@ namespace Beavermania.Tests.Core.Input
             Press(_keyboard.escapeKey);
             yield return null;
 
-            // Assert
             Assert.That(jumpCount, Is.EqualTo(0));
             Assert.That(pauseCount, Is.EqualTo(0));
 

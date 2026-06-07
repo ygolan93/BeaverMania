@@ -1,74 +1,28 @@
-# InputReader Play Mode Validation
+# InputReader Lifecycle Validation
 
 Date: 2026-06-07
 
+## Automated tests (EditMode)
+
+- **InputReaderLifecycleTests**: **Pass (4/4)** via **Beavermania → Validation → Run InputReader Lifecycle Tests**
+- `EnableDisableCycle_DoesNotDuplicateJumpEvent` — Pass
+- `RepeatedSetGameplay_DoesNotDuplicateJumpEvent` — Pass
+- `PauseInput_SwitchesToUi_AndNextPressResumesGameplay` — Pass
+- `OnDisable_StopsJumpAndPauseCallbacks` — Pass
+- Edit Mode teardown fix: `InputReader.ReleaseActions()` skips generated `Dispose()` when `!Application.isPlaying` (no Destroy-in-Edit-Mode warnings)
+
 ## Prerequisites
 
-- Input System package: **com.unity.inputsystem@1.5.1** (installed via MCP; present in `Packages/manifest.json`)
-- BeaverInputSystem generated: **Assets/Scripts/Core/Input/BeaverInputSystem.cs** (auto-generated from `.inputactions`)
-- Baseline SHA256: **C0CBA2B2BA11787307B89A14E00E1CF5F6A28A1D6415B1CBB1BB50F2160436FB**
-- Post-validation SHA256: **C0CBA2B2BA11787307B89A14E00E1CF5F6A28A1D6415B1CBB1BB50F2160436FB** (unchanged)
-- `activeInputHandler`: **2 (Both)** in `ProjectSettings/ProjectSettings.asset`
-- Input code assembly: **Beavermania.Core.Input.dll** compiled successfully
-- Test assembly: **Beavermania.Editor.Tests** (EditMode InputTestFixture suite under `Assets/Editor/Tests/`)
+- Input System: **com.unity.inputsystem@1.5.1**
+- `activeInputHandler`: **2 (Both)**
+- Test assembly: **Beavermania.Editor.Tests** (`Assets/Editor/Tests/`)
+- BeaverInputSystem.cs SHA256: **C0CBA2B2BA11787307B89A14E00E1CF5F6A28A1D6415B1CBB1BB50F2160436FB** (unchanged)
 
-## Automated tests
+## Manual Play Mode (legacy PlayerInputReader)
 
-- **InputReaderLifecycleTests**: **Blocked — awaiting Unity recompile after asmdef fix**
-- **Root cause (compile)**: `Beavermania.Editor.Tests.asmdef` had duplicate `UnityEngine.TestRunner` / `UnityEditor.TestRunner` refs alongside `optionalUnityReferences: TestAssemblies` → **fixed** (removed explicit TestRunner refs; set `autoReferenced: true`)
-- MCP bridge: **disconnected** (`No adapter found after connection`) — reconnect via **Window → MCP for Unity**
-- Debug instrumentation: **active** in `InputReader.cs` + first lifecycle test → writes `debug-e411b2.log` at repo root
-- Run manually: **Beavermania → Validation → Run InputReader Lifecycle Tests**
+- Not re-run this session; recommended smoke on Level 1 Remastered - Steam before merge.
 
-Expected pass criteria:
-- `EnableDisableCycle_DoesNotDuplicateJumpEvent`
-- `RepeatedSetGameplay_DoesNotDuplicateJumpEvent`
-- `PauseInput_SwitchesToUi_AndNextPressResumesGameplay`
-- `OnDisable_StopsJumpAndPauseCallbacks`
+## Notes
 
-## Manual Play Mode (Level 1 Remastered - Steam)
-
-- **Movement**: Not executed (MCP Play Mode unavailable this session)
-- **Jump**: Not executed
-- **Sprint**: Not executed
-- **Pause**: Not executed
-- **Resume**: Not executed
-
-Manual checklist (legacy `PlayerInputReader` path — current gameplay):
-1. Enter Play Mode on Level 1 Remastered - Steam
-2. WASD movement ~2s each direction — player moves, no console spam
-3. Single Space — one jump only
-4. LeftShift + W — sprint/run
-5. Single Escape — pause menu, timeScale 0, cursor visible
-6. Single Escape again — resume, movement restored
-
-## Console
-
-- New InputReader compile errors: **none** (Beavermania.Core.Input.dll built)
-- Duplicate-event symptoms observed: **none during automated portion**
-- Pre-existing unrelated: terrain tree shader errors (`TheGivingTree` / Nature/Soft Occlusion)
-- Unrelated scene/prefab dirty flags detected (`StairsBridge.prefab`, Level 1 scene) — review before commit
-
-## BeaverInputSystem.cs integrity
-
-- Baseline SHA: C0CBA2B2BA11787307B89A14E00E1CF5F6A28A1D6415B1CBB1BB50F2160436FB
-- Post-validation SHA: C0CBA2B2BA11787307B89A14E00E1CF5F6A28A1D6415B1CBB1BB50F2160436FB
-- Manual edits to generated file: **none confirmed** (`git diff` empty for generated `.cs`)
-
-## Limitations
-
-- Lifecycle double-fire fix is validated by **InputTestFixture** tests once `Beavermania.Editor.Tests` compiles and runs; manual WASD/Space smoke validates legacy `PlayerInputReader` only.
-- `InputReader` ScriptableObject is not yet wired into `BeaverPlayerBehaviour` / `PauseController`.
-- Unity MCP bridge must be reconnected (MCP for Unity window) before agent-driven Play Mode/console automation can resume.
-
-## Determinism checklist
-
-| Check | Status |
-| --- | --- |
-| Inherits `InputTestFixture` with `Setup()` / `TearDown()` overrides | Yes |
-| Virtual devices added in `Setup()` via `InputSystem.AddDevice<Keyboard>()` | Yes |
-| `yield return null` after each simulated input change | Yes |
-| Spawned `InputReader` destroyed in `TearDown()` before `base.TearDown()` | Yes |
-| Action maps enabled in `OnEnable()`, disabled in `OnDisable()` (production) | Yes |
-| Test assembly references Input System + TestFramework | Yes (`Beavermania.Editor.Tests.asmdef`) |
-| `com.unity.inputsystem` in manifest `testables` | Yes |
+- `InputReader` SO is not yet wired into `BeaverPlayerBehaviour` / `PauseController`.
+- Lifecycle regression coverage is EditMode `InputTestFixture` tests, not PlayMode.

@@ -29,6 +29,10 @@ namespace Beavermania.UI.Hud
 
         bool boostBarCreatedAtRuntime;
         bool barLabelCreatedAtRuntime;
+        const float RefreshIntervalSeconds = 0.066f;
+        float refreshTimer;
+        int lastSliderPercent = -1;
+        string lastLabelText;
 
         void Awake()
         {
@@ -56,27 +60,44 @@ namespace Beavermania.UI.Hud
             if (boostCharge == null || chargeSlider == null)
                 return;
 
+            refreshTimer -= Time.deltaTime;
+            if (refreshTimer > 0f)
+                return;
+
+            refreshTimer = RefreshIntervalSeconds;
+
             if (boostCharge.IsBoostActive)
             {
                 int percent = boostCharge.GetActiveDisplayPercent();
-                ApplyVisualState(activeTrackColor, activeFillColor, percent, boostCharge.GetHudLabelText());
+                ApplyVisualStateIfChanged(activeTrackColor, activeFillColor, percent, boostCharge.GetHudLabelText());
                 return;
             }
 
             if (boostCharge.IsReady)
             {
-                ApplyVisualState(readyTrackColor, readyFillColor, 100, boostCharge.GetHudLabelText());
+                ApplyVisualStateIfChanged(readyTrackColor, readyFillColor, 100, boostCharge.GetHudLabelText());
                 return;
             }
 
             int chargePercent = boostCharge.GetChargeDisplayPercent();
             if (chargePercent > 0)
             {
-                ApplyVisualState(chargingTrackColor, chargingFillColor, chargePercent, boostCharge.GetHudLabelText());
+                ApplyVisualStateIfChanged(chargingTrackColor, chargingFillColor, chargePercent, boostCharge.GetHudLabelText());
                 return;
             }
 
-            ApplyVisualState(emptyTrackColor, emptyFillColor, 0, "Boost 0%");
+            ApplyVisualStateIfChanged(emptyTrackColor, emptyFillColor, 0, "Boost 0%");
+        }
+
+        void ApplyVisualStateIfChanged(Color trackColor, Color fillColor, int sliderPercent, string labelText)
+        {
+            int clampedPercent = Mathf.Clamp(sliderPercent, 0, 100);
+            if (clampedPercent == lastSliderPercent && labelText == lastLabelText)
+                return;
+
+            lastSliderPercent = clampedPercent;
+            lastLabelText = labelText;
+            ApplyVisualState(trackColor, fillColor, clampedPercent, labelText);
         }
 
         void ApplyVisualState(Color trackColor, Color fillColor, int sliderPercent, string labelText)
@@ -95,7 +116,6 @@ namespace Beavermania.UI.Hud
 
             barLabel.text = labelText;
             barLabel.color = barLabelColor;
-            barLabel.ForceMeshUpdate();
         }
 
         void ResolveBoostCharge()

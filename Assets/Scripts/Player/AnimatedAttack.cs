@@ -20,6 +20,10 @@ namespace Beavermania.Player.Combat
         const int FallbackBareHandsAirDamage = 20;
         const float FallbackBareHandsGroundRadius = 0.7f;
         const float FallbackBareHandsAirRadius = 2.5f;
+        const int OverlapBufferSize = 24;
+
+        static readonly Collider[] OverlapBuffer = new Collider[OverlapBufferSize];
+        static readonly int[] ProcessedTargetIds = new int[OverlapBufferSize];
 
         private void Start()
         {
@@ -40,11 +44,26 @@ namespace Beavermania.Player.Combat
 
         public void CauseDamage(Vector3 origin, float range, int Damage)
         {
-            Collider[] hitEnemies = Physics.OverlapSphere(origin, range, enemyLayers);
-            foreach (Collider enemy in hitEnemies)
+            int hitCount = Physics.OverlapSphereNonAlloc(
+                origin,
+                range,
+                OverlapBuffer,
+                enemyLayers,
+                QueryTriggerInteraction.Collide);
+
+            int processedCount = 0;
+            for (int i = 0; i < hitCount; i++)
             {
+                Collider enemy = OverlapBuffer[i];
                 if (enemy == null)
                     continue;
+
+                int dedupeKey = ResolveDamageDedupeKey(enemy);
+                if (WasTargetAlreadyProcessed(dedupeKey, processedCount))
+                    continue;
+
+                ProcessedTargetIds[processedCount] = dedupeKey;
+                processedCount++;
 
                 if (enableHitDebugLogs && enemy.name != null)
                     Debug.Log("Hit " + enemy.name);
@@ -56,27 +75,51 @@ namespace Beavermania.Player.Combat
                 {
                     case "NPC":
                         {
-                            var wasp = enemy.gameObject.GetComponent<NPC_Basic>();
+                            if (!enemy.TryGetComponent(out NPC_Basic wasp))
+                                wasp = enemy.GetComponentInParent<NPC_Basic>();
                             if (wasp != null)
                                 wasp.TakeDamage(Damage);
                             break;
                         }
                     case "Hive":
                         {
-                            var hive = enemy.gameObject.GetComponent<Static_Hive>();
+                            if (!enemy.TryGetComponent(out Static_Hive hive))
+                                hive = enemy.GetComponentInParent<Static_Hive>();
                             if (hive != null)
                                 hive.TakeDamage(Damage);
                             break;
                         }
                     case "Scorpion":
                         {
-                            var scorpion = enemy.gameObject.GetComponent<ScorpionScript>();
+                            if (!enemy.TryGetComponent(out ScorpionScript scorpion))
+                                scorpion = enemy.GetComponentInParent<ScorpionScript>();
                             if (scorpion != null)
                                 scorpion.TakeDamage(Damage);
                             break;
                         }
                 }
             }
+        }
+
+        static int ResolveDamageDedupeKey(Collider enemy)
+        {
+            IEnemyDamageReceiver damageReceiver = enemy.GetComponentInParent<IEnemyDamageReceiver>();
+            if (damageReceiver is Component receiverComponent)
+                return receiverComponent.GetInstanceID();
+
+            Transform root = enemy.transform.root;
+            return root != null ? root.GetInstanceID() : enemy.GetInstanceID();
+        }
+
+        static bool WasTargetAlreadyProcessed(int dedupeKey, int processedCount)
+        {
+            for (int i = 0; i < processedCount; i++)
+            {
+                if (ProcessedTargetIds[i] == dedupeKey)
+                    return true;
+            }
+
+            return false;
         }
 
         bool TryApplyInterfaceDamage(Collider enemy, int damage)

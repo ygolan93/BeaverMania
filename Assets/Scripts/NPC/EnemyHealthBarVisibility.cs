@@ -5,6 +5,8 @@ namespace Beavermania.NPC
     [DisallowMultipleComponent]
     public sealed class EnemyHealthBarVisibility : MonoBehaviour
     {
+        const float RefreshIntervalSeconds = 0.1f;
+
         [SerializeField] Canvas healthBarCanvas;
         [SerializeField] Transform playerTransform;
         [SerializeField] float showDistance = 22f;
@@ -14,6 +16,9 @@ namespace Beavermania.NPC
         [SerializeField] ShadowRevenantController shadowRevenant;
 
         float damagedVisibleUntil;
+        float refreshTimer;
+        bool visibilityDirty = true;
+        bool lastAppliedVisibility;
         NPC_Basic wasp;
 
         void Awake()
@@ -38,22 +43,31 @@ namespace Beavermania.NPC
                     playerTransform = player.transform;
             }
 
+            lastAppliedVisibility = false;
             ApplyVisibility(false);
         }
 
         void Update()
         {
+            refreshTimer -= Time.deltaTime;
+            if (!visibilityDirty && refreshTimer > 0f)
+                return;
+
+            refreshTimer = RefreshIntervalSeconds;
+            visibilityDirty = false;
             ApplyVisibility(ShouldShowHealthBar());
         }
 
         public void NotifyDamaged()
         {
             damagedVisibleUntil = Time.time + recentlyDamagedDuration;
+            visibilityDirty = true;
         }
 
         public void EnableAlwaysShow()
         {
             alwaysShow = true;
+            visibilityDirty = true;
             ApplyVisibility(true);
         }
 
@@ -74,14 +88,16 @@ namespace Beavermania.NPC
             if (playerTransform == null)
                 return false;
 
-            float distance = Vector3.Distance(playerTransform.position, transform.position);
-            if (distance <= engageDistance)
+            float distanceSq = (playerTransform.position - transform.position).sqrMagnitude;
+            float engageDistanceSq = engageDistance * engageDistance;
+            if (distanceSq <= engageDistanceSq)
                 return true;
 
             if (wasp != null && wasp.PlayerDistance <= engageDistance)
                 return true;
 
-            return distance <= showDistance;
+            float showDistanceSq = showDistance * showDistance;
+            return distanceSq <= showDistanceSq;
         }
 
         void ApplyVisibility(bool visible)
@@ -89,8 +105,11 @@ namespace Beavermania.NPC
             if (healthBarCanvas == null)
                 return;
 
-            if (healthBarCanvas.enabled != visible)
-                healthBarCanvas.enabled = visible;
+            if (lastAppliedVisibility == visible && healthBarCanvas.enabled == visible)
+                return;
+
+            lastAppliedVisibility = visible;
+            healthBarCanvas.enabled = visible;
         }
     }
 }

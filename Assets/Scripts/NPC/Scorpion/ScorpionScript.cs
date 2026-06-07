@@ -12,6 +12,7 @@ namespace Beavermania.NPC
     public class ScorpionScript : MonoBehaviour, IEnemyDamageReceiver
     {
         const float LookRotationEpsilon = 0.0001f;
+        const float FarAiFixedUpdateDistance = 40f;
         const float ReverseSpeed = 5f;
         const float HitEffectDuration = 0.1f;
         const int BridgeComboOverride = 10;
@@ -153,6 +154,9 @@ namespace Beavermania.NPC
                 return;
 
             RefreshTargetContext();
+
+            if (ShouldThrottleFarIdleAi())
+                return;
 
             if (CurrentHealth <= 0)
             {
@@ -452,6 +456,14 @@ namespace Beavermania.NPC
 
             distanceToTarget = targetTransform.position - rbScorpion.position;
             currentDistance = distanceToTarget.magnitude;
+        }
+
+        bool ShouldThrottleFarIdleAi()
+        {
+            if (currentState != ScorpionState.Idle)
+                return false;
+
+            return currentDistance > FarAiFixedUpdateDistance && (Time.frameCount & 1) != 0;
         }
 
         void EnterState(ScorpionState nextState)

@@ -67,6 +67,9 @@ namespace Beavermania.Player
         public float CurrentStamina;
         readonly float StaminaClockInitial = 0.5f;
         float StaminaClock;
+        const float HudRefreshInterval = 0.1f;
+        float hudRefreshTimer;
+        int lastDisplayedLives = -1;
         public Health_Bar_Script HealthBar;
         public bool heal;
         public bool TouchShroom;
@@ -2378,34 +2381,47 @@ namespace Beavermania.Player
             }
             //Update UI
             {
-                HealthPercent = System.Math.Round((CurrentHealth / MaxHealth) * 100f, 1);
-                DebugText = HealthPercent + "%";
-                StaminaPercent = System.Math.Round((CurrentStamina / MaxStamina) * 100f, 1);
-                StaminaText = StaminaPercent + "%";
-                Wallet = Currency.ToString();
-                SeedText = NutCount.ToString();
-                AppleText = Apple.ToString();
-                GobletText = string.Empty;
-                ArrowText = arrowMunition.ToString();
-                if (ICON_1 != null || ICON_2 != null || ICON_3 != null)
+                hudRefreshTimer -= Time.deltaTime;
+                bool refreshHudValues = hudRefreshTimer <= 0f;
+                if (refreshHudValues)
+                    hudRefreshTimer = HudRefreshInterval;
+
+                if (refreshHudValues)
                 {
-                    if (Lives >= 3)
+                    HealthPercent = System.Math.Round((CurrentHealth / MaxHealth) * 100f, 1);
+                    DebugText = HealthPercent + "%";
+                    StaminaPercent = System.Math.Round((CurrentStamina / MaxStamina) * 100f, 1);
+                    StaminaText = StaminaPercent + "%";
+                    Wallet = Currency.ToString();
+                    SeedText = NutCount.ToString();
+                    AppleText = Apple.ToString();
+                    GobletText = string.Empty;
+                    ArrowText = arrowMunition.ToString();
+                }
+
+                if (refreshHudValues || lastDisplayedLives != Lives)
+                {
+                    lastDisplayedLives = Lives;
+                    if (ICON_1 != null || ICON_2 != null || ICON_3 != null)
                     {
-                        if (ICON_1 != null) ICON_1.SetActive(true);
-                        if (ICON_2 != null) ICON_2.SetActive(true);
-                        if (ICON_3 != null) ICON_3.SetActive(true);
-                    }
-                    else if (Lives == 2)
-                    {
-                        if (ICON_1 != null) ICON_1.SetActive(false);
-                        if (ICON_2 != null) ICON_2.SetActive(true);
-                        if (ICON_3 != null) ICON_3.SetActive(true);
-                    }
-                    else if (Lives == 1)
-                    {
-                        if (ICON_1 != null) ICON_1.SetActive(false);
-                        if (ICON_2 != null) ICON_2.SetActive(false);
-                        if (ICON_3 != null) ICON_3.SetActive(true);
+                        if (Lives >= 3)
+                        {
+                            if (ICON_1 != null) ICON_1.SetActive(true);
+                            if (ICON_2 != null) ICON_2.SetActive(true);
+                            if (ICON_3 != null) ICON_3.SetActive(true);
+                        }
+                        else if (Lives == 2)
+                        {
+                            if (ICON_1 != null) ICON_1.SetActive(false);
+                            if (ICON_2 != null) ICON_2.SetActive(true);
+                            if (ICON_3 != null) ICON_3.SetActive(true);
+                        }
+                        else if (Lives == 1)
+                        {
+                            if (ICON_1 != null) ICON_1.SetActive(false);
+                            if (ICON_2 != null) ICON_2.SetActive(false);
+                            if (ICON_3 != null) ICON_3.SetActive(true);
+                        }
                     }
                 }
             }

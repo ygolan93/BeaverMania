@@ -3,33 +3,11 @@ using UnityEngine;
 namespace Beavermania.Core.GameFlow
 {
     /// <summary>
-    /// Adds <see cref="TriggerVolumeVisualHider"/> to trigger colliders that still have debug renderers.
+    /// Previously scanned every collider at scene load to attach <see cref="TriggerVolumeVisualHider"/>.
+    /// That full-scene scan blocked Play Mode for ~20s on Level 1 Remastered.
+    /// Add <see cref="TriggerVolumeVisualHider"/> directly on debug trigger prefabs/scene objects instead.
     /// </summary>
     public static class GameplayTriggerVisualBootstrap
     {
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        static void HideDebugTriggerMeshes()
-        {
-            var colliders = Object.FindObjectsOfType<Collider>(true);
-            for (int i = 0; i < colliders.Length; i++)
-            {
-                Collider collider = colliders[i];
-                if (collider == null || !collider.isTrigger)
-                    continue;
-
-                if (collider.GetComponent<TriggerVolumeVisualHider>() != null)
-                    continue;
-
-                bool hasMesh = collider.GetComponent<MeshRenderer>() != null;
-                bool hasSprite = collider.GetComponent<SpriteRenderer>() != null;
-                if (!hasMesh && !hasSprite)
-                    continue;
-
-                if (collider.CompareTag("Life") || collider.CompareTag("Coin"))
-                    continue;
-
-                collider.gameObject.AddComponent<TriggerVolumeVisualHider>();
-            }
-        }
     }
 }

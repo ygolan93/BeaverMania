@@ -24,6 +24,10 @@ public class Destroy : MonoBehaviour
         if (destroySelfSuppressed)
             return;
 
+        var pooledDebris = GetComponentInParent<Beavermania.NPC.PooledDeathDebris>();
+        if (pooledDebris != null && pooledDebris.HandleLegacyDestroy(this))
+            return;
+
         if (effect != null)
             PooledOneShotVfx.Spawn(effect, transform.position, Quaternion.identity);
 

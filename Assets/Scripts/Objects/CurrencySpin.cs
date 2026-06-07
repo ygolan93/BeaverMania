@@ -35,22 +35,29 @@ namespace Beavermania.Objects
 
         public bool PullFromAnyDistance => pullFromAnyDistance;
 
-        void Start()
+        void OnEnable()
         {
-            GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-            if (playerObject == null)
-                return;
-
-            player = playerObject.GetComponent<BeaverPlayer>();
-            playerMagnet = playerObject.GetComponent<CoinMagnet>();
+            CurrencySpinDriver.Register(this);
         }
 
-        void Update()
+        void OnDisable()
+        {
+            CurrencySpinDriver.Unregister(this);
+        }
+
+        void Start()
+        {
+            player = PlayerReferenceCache.GetPlayer();
+            if (player != null)
+                playerMagnet = player.GetComponent<CoinMagnet>();
+        }
+
+        internal void ApplySpin(float zDegrees)
         {
             if (state == CoinState.Collected)
                 return;
 
-            transform.Rotate(0f, 0f, 170f * Time.deltaTime);
+            transform.Rotate(0f, 0f, zDegrees);
         }
 
         void LateUpdate()
@@ -176,11 +183,7 @@ namespace Beavermania.Objects
             Vector3 feedbackPosition = transform.position;
 
             if (player == null)
-            {
-                GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-                if (playerObject != null)
-                    player = playerObject.GetComponent<BeaverPlayer>();
-            }
+                player = PlayerReferenceCache.GetPlayer();
 
             if (player != null)
             {

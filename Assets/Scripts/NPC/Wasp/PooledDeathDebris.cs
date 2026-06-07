@@ -1,8 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Beavermania.Display;
 using UnityEngine;
 using UnityEngine.Pool;
+using UnityEngine.SceneManagement;
 
 namespace Beavermania.NPC
 {
@@ -26,6 +28,35 @@ namespace Beavermania.NPC
         bool released;
         bool overflowInstance;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void SubscribeSceneClear()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            ClearAllPools();
+        }
+
+        public static void ClearAllPools()
+        {
+            foreach (var entry in Pools)
+            {
+                try
+                {
+                    entry.Value?.Clear();
+                }
+                catch (Exception)
+                {
+                    // Pool may reference instances destroyed during scene unload.
+                }
+            }
+
+            Pools.Clear();
+        }
+
         public static GameObject Spawn(GameObject prefab, Vector3 position, Quaternion rotation)
         {
             if (prefab == null)
@@ -40,9 +71,41 @@ namespace Beavermania.NPC
             if (pool.CountActive >= MaxActiveInstances)
                 return SpawnOverflow(prefab, position, rotation);
 
-            var debris = pool.Get();
+            var debris = GetAliveFromPool(pool, prefab);
+            if (debris == null)
+                return SpawnOverflow(prefab, position, rotation);
+
             debris.Spawn(position, rotation, prefab.transform.localScale, false);
             return debris.gameObject;
+        }
+
+        static PooledDeathDebris GetAliveFromPool(ObjectPool<PooledDeathDebris> sourcePool, GameObject prefab)
+        {
+            for (int attempt = 0; attempt < 2; attempt++)
+            {
+                var debris = sourcePool.Get();
+                if (debris != null && debris.IsAlive())
+                    return debris;
+
+                if (Pools.TryGetValue(prefab, out var existing))
+                {
+                    try
+                    {
+                        existing.Clear();
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
+
+                    Pools.Remove(prefab);
+                }
+
+                sourcePool = CreatePool(prefab);
+                Pools[prefab] = sourcePool;
+            }
+
+            return null;
         }
 
         static ObjectPool<PooledDeathDebris> CreatePool(GameObject prefab)
@@ -52,18 +115,28 @@ namespace Beavermania.NPC
                 () => CreateInstance(prefab, pool),
                 debris =>
                 {
+                    if (debris == null || !debris.IsAlive())
+                        return;
+
                     debris.released = false;
                     debris.StopReturnRoutine();
                     debris.gameObject.SetActive(true);
                 },
                 debris =>
                 {
+                    if (debris == null || !debris.IsAlive())
+                        return;
+
                     debris.released = true;
                     debris.StopReturnRoutine();
                     debris.ResetRuntimeState(debris.transform.position, debris.transform.rotation, debris.defaultScale);
                     debris.gameObject.SetActive(false);
                 },
-                debris => Destroy(debris.gameObject),
+                debris =>
+                {
+                    if (debris != null && debris.gameObject != null)
+                        Destroy(debris.gameObject);
+                },
                 true,
                 DefaultPoolCapacity,
                 MaxActiveInstances);
@@ -119,6 +192,9 @@ namespace Beavermania.NPC
 
         void Spawn(Vector3 position, Quaternion rotation, Vector3 scale, bool isOverflowInstance)
         {
+            if (!IsAlive())
+                return;
+
             overflowInstance = isOverflowInstance;
             released = false;
             ResetRuntimeState(position, rotation, scale);
@@ -127,20 +203,34 @@ namespace Beavermania.NPC
 
         void ResetRuntimeState(Vector3 position, Quaternion rotation, Vector3 scale)
         {
+            if (!IsAlive())
+                return;
+
             transform.SetPositionAndRotation(position, rotation);
             transform.localScale = scale;
 
             for (var i = 0; i < rigidbodies.Length; i++)
             {
+                if (rigidbodies[i] == null)
+                    continue;
+
                 rigidbodies[i].velocity = Vector3.zero;
                 rigidbodies[i].angularVelocity = Vector3.zero;
             }
 
             for (var i = 0; i < colliders.Length; i++)
+            {
+                if (colliders[i] == null)
+                    continue;
+
                 colliders[i].enabled = true;
+            }
 
             for (var i = 0; i < lifetimeScripts.Length; i++)
             {
+                if (lifetimeScripts[i] == null)
+                    continue;
+
                 lifetimeScripts[i].time = lifetimeDurations[i];
                 lifetimeScripts[i].enabled = false;
             }
@@ -162,7 +252,7 @@ namespace Beavermania.NPC
 
         void OnCollisionEnter(Collision collision)
         {
-            if (released)
+            if (!IsAlive() || released)
                 return;
 
             if (!collision.gameObject.CompareTag("Player"))
@@ -197,7 +287,7 @@ namespace Beavermania.NPC
             if (destroy == null)
                 return false;
 
-            if (released)
+            if (!IsAlive() || released)
                 return true;
 
             ApplyDestroySelfForPool(destroy);
@@ -206,6 +296,9 @@ namespace Beavermania.NPC
 
         void ApplyDestroySelfForPool(global::Destroy destroy)
         {
+            if (!IsAlive())
+                return;
+
             if (destroy.effect != null)
                 PooledOneShotVfx.Spawn(destroy.effect, destroy.transform.position, Quaternion.identity);
 
@@ -231,26 +324,47 @@ namespace Beavermania.NPC
             destroy.gameObject.SetActive(false);
             var fragmentColliders = destroy.GetComponentsInChildren<Collider>(true);
             for (var i = 0; i < fragmentColliders.Length; i++)
+            {
+                if (fragmentColliders[i] == null)
+                    continue;
+
                 fragmentColliders[i].enabled = false;
+            }
         }
 
         IEnumerator ReturnAfterLifetime(float lifetime)
         {
             yield return new WaitForSeconds(lifetime);
             returnRoutine = null;
+
+            if (!IsAlive() || released)
+                yield break;
+
             Release();
         }
 
         void Release()
         {
-            if (released)
+            if (!IsAlive() || released)
                 return;
 
             released = true;
+            StopReturnRoutine();
 
             if (pool != null && !overflowInstance)
             {
-                pool.Release(this);
+                var activePool = pool;
+                pool = null;
+
+                try
+                {
+                    activePool.Release(this);
+                }
+                catch (MissingReferenceException)
+                {
+                    // Instance was destroyed during scene unload; pool is reset on next scene load.
+                }
+
                 return;
             }
 
@@ -264,6 +378,11 @@ namespace Beavermania.NPC
 
             StopCoroutine(returnRoutine);
             returnRoutine = null;
+        }
+
+        bool IsAlive()
+        {
+            return this != null && gameObject != null;
         }
     }
 }

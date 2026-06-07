@@ -1,23 +1,22 @@
 using System.Collections;
-using System.Collections.Generic;
 using Beavermania.Core.Input;
 using Beavermania.Data.NPC;
 using Beavermania.Display;
 using Beavermania.Objects;
+using Beavermania.Player;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 using UnityEngine;
 using UnityEngine.Serialization;
 
 namespace Beavermania.NPC
 {
-
-
     public class NPC_Basic : MonoBehaviour
     {
         const float LookRotationEpsilon = 0.0001f;
         const float AnotherWaspLookupCooldown = 1.0f;
         const float FarAiUpdateDistance = 40f;
         const float HitEffectVisibleDuration = 0.32f;
+
         [Header("Core References")]
         public Rigidbody NPC;
         [SerializeField] Animator Wasp;
@@ -42,11 +41,11 @@ namespace Beavermania.NPC
         float a;
         float b;
         float c;
-        //public WaspCourse course;
         Vector3 SpawnPos;
         bool deathHandled;
         EnemyHealthBarVisibility healthBarVisibility;
         Coroutine hitEffectHideRoutine;
+        Coroutine floatRoutine;
 
         [Header("Floating")]
         public Vector3 currentPos;
@@ -103,7 +102,18 @@ namespace Beavermania.NPC
         public GameObject Wing;
         public GameObject Leg;
         public GameObject Reward;
-        // Start is called before the first frame update    
+
+        void OnEnable()
+        {
+            ActiveWaspRegistry.Register(this);
+        }
+
+        void OnDisable()
+        {
+            ActiveWaspRegistry.Unregister(this);
+            StopFloatRoutine();
+        }
+
         public void Start()
         {
             SpawnPos = transform.position;
@@ -111,41 +121,46 @@ namespace Beavermania.NPC
             npcCollider = GetComponent<Collider>();
             CurrentHealth = MaxHealth;
             stunRecoveryClock = ActiveStats.stunRecovery;
-            PlayerTarget = GameObject.FindGameObjectWithTag("Player");
-            PlayerHealth = PlayerTarget.GetComponent<BeaverPlayer>();
+            PlayerHealth = PlayerReferenceCache.GetPlayer();
+            if (PlayerHealth != null)
+                PlayerTarget = PlayerHealth.gameObject;
+            if (PlayerTarget == null)
+                PlayerTarget = GameObject.FindGameObjectWithTag("Player");
             if (NPCHealthBar != null)
                 NPCHealthBar.SetMaxNPCHealth(MaxHealth);
             healthBarVisibility = GetComponent<EnemyHealthBarVisibility>();
             if (healthBarVisibility == null)
                 healthBarVisibility = gameObject.AddComponent<EnemyHealthBarVisibility>();
-            HitEffect.SetActive(false);
+            SetCombatEffectsActive(false);
             RandoMovement();
             NPC.velocity = Vector3.forward;
-            BuzzSource.SetActive(true);
+            if (BuzzSource != null)
+                BuzzSource.SetActive(true);
         }
 
-        // Update is called once per frame
         public void FixedUpdate()
         {
+            if (deathHandled || CurrentHealth <= 0 || PlayerTarget == null)
+                return;
+
             AnotherWaspLookupTimer -= Time.deltaTime;
-            Vector3 Distance = PlayerTarget.transform.position - transform.position;
-            PlayerDistance = Distance.magnitude;
+            Vector3 distanceToPlayer = PlayerTarget.transform.position - transform.position;
+            Distance = distanceToPlayer;
+            PlayerDistance = distanceToPlayer.magnitude;
             ChangeNav -= Time.deltaTime;
 
             bool throttleFarAi = PlayerDistance > FarAiUpdateDistance && (Time.frameCount & 1) != 0;
             if (throttleFarAi)
             {
-                if (!PlayerInputReader.IsPrimaryHeld() || PlayerDistance > 3)
-                {
-                    HitEffect.SetActive(false);
-                    SlashEffect.SetActive(false);
-                }
+                if (!PlayerInputReader.IsPrimaryHeld() || PlayerDistance > 3f)
+                    SetCombatEffectsActive(false);
+
                 return;
             }
 
             if (combo < hit2stun)
             {
-                if (floating == true)
+                if (floating)
                 {
                     Wasp.SetBool("Sting", false);
                     currentPos = transform.position;
@@ -153,14 +168,17 @@ namespace Beavermania.NPC
                 }
                 else
                 {
+                    StopFloatRoutine();
+
                     if (NPC.velocity.sqrMagnitude > LookRotationEpsilon)
                         rotGoal = Quaternion.LookRotation(NPC.velocity);
                     transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
-                    if (Distance.magnitude >= 50)
+                    if (distanceToPlayer.magnitude >= 50f)
                     {
-                        if (ChangeNav <= 0)
+                        if (ChangeNav <= 0f)
                         {
-                            BuzzSource.SetActive(true);
+                            if (BuzzSource != null)
+                                BuzzSource.SetActive(true);
                             Wasp.SetBool("Sting", false);
                             RandoMovement();
                         }
@@ -170,38 +188,37 @@ namespace Beavermania.NPC
                         }
                     }
 
-                    if (PlayerDistance < 50)
+                    if (PlayerDistance < 50f)
                     {
-                        if (Contact == false)
+                        if (!Contact)
                         {
-                            BuzzSource.SetActive(true);
+                            if (BuzzSource != null)
+                                BuzzSource.SetActive(true);
                             ChargeClock = 0.7f;
                             RefreshAnotherWaspCollider();
                             if (AnotherWaspCollider != null && npcCollider != null)
-                            {
                                 Physics.IgnoreCollision(AnotherWaspCollider, npcCollider);
-                            }
-                            NPC.velocity = (Distance.normalized * 50f);
+
+                            NPC.velocity = distanceToPlayer.normalized * 50f;
                             Wasp.SetBool("Sting", true);
-                            ChangeNav = 0;
+                            ChangeNav = 0f;
                         }
-                        if (Contact == true)
+                        else
                         {
                             Wasp.SetBool("Sting", false);
-                            NPC.AddForce(new Vector3(-Distance.x, 0.01f, -Distance.z).normalized * 0.1f);
-                            if (Distance.sqrMagnitude > LookRotationEpsilon)
-                                transform.rotation = (Quaternion.LookRotation(Distance));
+                            NPC.AddForce(new Vector3(-distanceToPlayer.x, 0.01f, -distanceToPlayer.z).normalized * 0.1f);
+                            if (distanceToPlayer.sqrMagnitude > LookRotationEpsilon)
+                                transform.rotation = Quaternion.LookRotation(distanceToPlayer);
                             ChargeClock -= Time.deltaTime;
-                            if (ChargeClock <= 0)
+                            if (ChargeClock <= 0f)
                                 Contact = false;
                         }
-                    
                     }
                 }
-
             }
             else
             {
+                StopFloatRoutine();
                 Stunned();
                 stunRecoveryClock -= Time.deltaTime;
                 if (stunRecoveryClock <= 0f)
@@ -211,153 +228,164 @@ namespace Beavermania.NPC
                 }
             }
 
-            if (!PlayerInputReader.IsPrimaryHeld() || PlayerDistance > 3)
-            {
-                HitEffect.SetActive(false);
-                SlashEffect.SetActive(false);
-            }
-        }
-        private void LateUpdate()
-        { 
-            if (!PlayerInputReader.IsPrimaryHeld() || Distance.magnitude > 6)
-            {
-                Wasp.SetBool("Beat", false);
-            }
-            if (CurrentHealth <= 0)
-            {
-                Death();
-            }
+            if (!PlayerInputReader.IsPrimaryHeld() || PlayerDistance > 3f)
+                SetCombatEffectsActive(false);
         }
 
-        private void RefreshAnotherWaspCollider()
+        void LateUpdate()
+        {
+            if (deathHandled)
+                return;
+
+            if (!PlayerInputReader.IsPrimaryHeld() || Distance.sqrMagnitude > 36f)
+                Wasp.SetBool("Beat", false);
+
+            if (CurrentHealth <= 0)
+                Death();
+        }
+
+        void RefreshAnotherWaspCollider()
         {
             if (AnotherWaspCollider != null && AnotherWasp != null && AnotherWasp != gameObject && AnotherWaspCollider.gameObject == AnotherWasp)
-            {
                 return;
-            }
 
-            if (AnotherWaspLookupTimer > 0)
-            {
+            if (AnotherWaspLookupTimer > 0f)
                 return;
-            }
 
             AnotherWaspLookupTimer = AnotherWaspLookupCooldown;
             AnotherWasp = null;
             AnotherWaspCollider = null;
 
-            GameObject[] npcs = GameObject.FindGameObjectsWithTag("NPC");
-            foreach (GameObject npc in npcs)
+            if (ActiveWaspRegistry.TryFindNearestOtherWaspCollider(this, out Collider nearestCollider, out GameObject nearestWasp))
             {
-                if (npc == null || npc == gameObject)
-                {
-                    continue;
-                }
-
-                Collider collider = npc.GetComponent<Collider>();
-                if (collider == null)
-                {
-                    continue;
-                }
-
-                AnotherWasp = npc;
-                AnotherWaspCollider = collider;
-                return;
+                AnotherWasp = nearestWasp;
+                AnotherWaspCollider = nearestCollider;
             }
         }
 
-        private void Death()
+        void Death()
         {
             if (deathHandled)
                 return;
 
             deathHandled = true;
+            StopFloatRoutine();
+            ActiveWaspRegistry.Unregister(this);
+
             if (PlayerHealth != null && PlayerHealth.BoostCharge != null)
                 PlayerHealth.BoostCharge.RegisterKill();
-            PlayerHealth.Plattering = "Gotcha!";
-            PlayerHealth.ChangeSpeech = 0.55f;
-            PooledOneShotVfx.Spawn(Explosion, transform.position + new Vector3(0, 1, 0), transform.rotation);
-            PooledDeathDebris.Spawn(Body, transform.position + new Vector3(0, 1, 0), transform.rotation);
-            PooledDeathDebris.Spawn(Head, transform.position + new Vector3(0, 1, 0), transform.rotation);
-            PooledDeathDebris.Spawn(Wing, transform.position + new Vector3(0, 1, 0), transform.rotation);
-            PooledDeathDebris.Spawn(Wing, transform.position + new Vector3(0, 1, 0), transform.rotation);
-            PooledDeathDebris.Spawn(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-            PooledDeathDebris.Spawn(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-            PooledDeathDebris.Spawn(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-            PooledDeathDebris.Spawn(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-            PooledDeathDebris.Spawn(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-            PooledDeathDebris.Spawn(Leg, transform.position + new Vector3(0, 1, 0), transform.rotation);
-            CurrencySpin.ConfigureEnemyDrop(Instantiate(Reward, transform.position + new Vector3(0, 7, 0), transform.rotation));
-            CurrencySpin.ConfigureEnemyDrop(Instantiate(Reward, transform.position + new Vector3(0, 7, 0), transform.rotation));
-            GameObject.Destroy(gameObject);
+
+            if (PlayerHealth != null)
+            {
+                PlayerHealth.Plattering = "Gotcha!";
+                PlayerHealth.ChangeSpeech = 0.55f;
+            }
+
+            PooledOneShotVfx.Spawn(Explosion, transform.position + new Vector3(0f, 1f, 0f), transform.rotation);
+            PooledDeathDebris.Spawn(Body, transform.position + new Vector3(0f, 1f, 0f), transform.rotation);
+            PooledDeathDebris.Spawn(Head, transform.position + new Vector3(0f, 1f, 0f), transform.rotation);
+            PooledDeathDebris.Spawn(Wing, transform.position + new Vector3(0f, 1f, 0f), transform.rotation);
+            PooledDeathDebris.Spawn(Wing, transform.position + new Vector3(0f, 1f, 0f), transform.rotation);
+            PooledDeathDebris.Spawn(Leg, transform.position + new Vector3(0f, 1f, 0f), transform.rotation);
+            PooledDeathDebris.Spawn(Leg, transform.position + new Vector3(0f, 1f, 0f), transform.rotation);
+            PooledDeathDebris.Spawn(Leg, transform.position + new Vector3(0f, 1f, 0f), transform.rotation);
+            PooledDeathDebris.Spawn(Leg, transform.position + new Vector3(0f, 1f, 0f), transform.rotation);
+            PooledDeathDebris.Spawn(Leg, transform.position + new Vector3(0f, 1f, 0f), transform.rotation);
+            PooledDeathDebris.Spawn(Leg, transform.position + new Vector3(0f, 1f, 0f), transform.rotation);
+            CurrencySpin.ConfigureEnemyDrop(Instantiate(Reward, transform.position + new Vector3(0f, 7f, 0f), transform.rotation));
+            CurrencySpin.ConfigureEnemyDrop(Instantiate(Reward, transform.position + new Vector3(0f, 7f, 0f), transform.rotation));
+            Destroy(gameObject);
         }
 
-        private void OnCollisionEnter(Collision OBJ)
+        void OnCollisionEnter(Collision OBJ)
         {
+            if (deathHandled)
+                return;
+
             if (OBJ.gameObject == PlayerTarget)
             {
                 if (combo < hit2stun)
-                {
                     Sting();
-                }
+
                 Contact = true;
-                if (PlayerHealth.isParried== true)
+                if (PlayerHealth != null && PlayerHealth.isParried)
                 {
                     TakeDamage(ActiveStats.parryDamage);
                     combo += 10;
                 }
             }
+
             if (OBJ.gameObject.CompareTag("Strike"))
             {
                 Death();
+                return;
             }
+
             if (OBJ.gameObject.CompareTag("Damage"))
             {
                 Wasp.SetBool("Beat", true);
                 TakeDamage(ActiveStats.weaponHitDamage);
-                Sound.Beat();
+                if (Sound != null)
+                    Sound.Beat();
                 combo = hit2stun;
             }
+
             if (OBJ.gameObject.CompareTag("Isle"))
             {
                 Contact = true;
-                NPC.velocity += new Vector3(Random.Range(-1, 1), 1, Random.Range(-1,1));
-            }
-        }
-        public void TurnBack()
-        {
-            BuzzSource.SetActive(true);
-            Wasp.SetBool("Sting", false);
-            if ((transform.position - SpawnPos).magnitude > 30)
-            {
-                NPC.velocity = (SpawnPos - transform.position).normalized * 10;
+                NPC.velocity += new Vector3(Random.Range(-1f, 1f), 1f, Random.Range(-1f, 1f));
             }
         }
 
+        public void TurnBack()
+        {
+            if (BuzzSource != null)
+                BuzzSource.SetActive(true);
+            Wasp.SetBool("Sting", false);
+            if ((transform.position - SpawnPos).magnitude > 30f)
+                NPC.velocity = (SpawnPos - transform.position).normalized * 10f;
+        }
 
         void FloatOnAir(Vector3 initialPosition)
         {
-            StartCoroutine(FloatObject(initialPosition));
+            if (floatRoutine != null)
+                return;
+
+            floatRoutine = StartCoroutine(FloatObject(initialPosition));
         }
-        private IEnumerator FloatObject(Vector3 initialPosition)
+
+        void StopFloatRoutine()
         {
-            float direction = -1.0f;
-            while (true)
+            if (floatRoutine == null)
+                return;
+
+            StopCoroutine(floatRoutine);
+            floatRoutine = null;
+        }
+
+        IEnumerator FloatObject(Vector3 initialPosition)
+        {
+            float direction = -1f;
+            while (floating && !deathHandled)
             {
-                float newY = initialPosition.y + Mathf.Sin(Time.time * floatSpeed) * floatDistance+1;
+                float newY = initialPosition.y + Mathf.Sin(Time.time * floatSpeed) * floatDistance + 1f;
                 transform.position = new Vector3(transform.position.x, newY, transform.position.z);
                 float tiltAngle = direction * maxTiltAngle * Mathf.Sin(Time.time * floatSpeed);
-                transform.rotation = Quaternion.Euler(tiltAngle, transform.rotation.eulerAngles.y, 0);
+                transform.rotation = Quaternion.Euler(tiltAngle, transform.rotation.eulerAngles.y, 0f);
                 if (newY >= initialPosition.y + floatDistance || newY <= initialPosition.y - floatDistance)
-                {
-                    direction *= 1.0f;
-                }
+                    direction *= 1f;
 
                 yield return null;
             }
+
+            floatRoutine = null;
         }
-       public void Stunned()
+
+        public void Stunned()
         {
-            BuzzSource.SetActive(false);
+            StopFloatRoutine();
+            if (BuzzSource != null)
+                BuzzSource.SetActive(false);
             floating = false;
             NPC.constraints = RigidbodyConstraints.None;
             NPC.useGravity = true;
@@ -367,102 +395,96 @@ namespace Beavermania.NPC
 
         void Recovered()
         {
-            BuzzSource.SetActive(true);
+            StopFloatRoutine();
+            if (BuzzSource != null)
+                BuzzSource.SetActive(true);
             floating = false;
             Wasp.SetBool("Stunned", false);
             stunRecoveryClock = ActiveStats.stunRecovery;
             NPC.constraints = RigidbodyConstraints.FreezeRotation;
             NPC.useGravity = false;
         }
+
         public void Sting()
         {
             floating = false;
             Recovered();
-            if (PlayerHealth.isParried == false && PlayerHealth.Rolling == false)
+            if (PlayerHealth != null && !PlayerHealth.isParried && !PlayerHealth.Rolling)
             {
-                Sound.Sting();
+                if (Sound != null)
+                    Sound.Sting();
                 PlayerHealth.TakeDamage(Damage2Player);
             }
+
             Wasp.SetBool("Sting", false);
-            if (PlayerHealth.isParried == true)
+            if (PlayerHealth != null && PlayerHealth.isParried)
             {
                 PlayerHealth.TakeDamage(0.01f);
                 TakeDamage(1);
                 combo = 3;
             }
-
         }
 
         public void RandoMovement()
         {
-            BuzzSource.SetActive(true);
-            if ((SpawnPos - transform.position).magnitude < 20)
+            if (BuzzSource != null)
+                BuzzSource.SetActive(true);
+            if ((SpawnPos - transform.position).magnitude < 20f)
             {
                 Recovered();
-                a = Random.Range(-1, 1);
+                a = Random.Range(-1f, 1f);
                 b = Random.Range(-0.1f, 0.1f);
-                c = Random.Range(-1, 1);
+                c = Random.Range(-1f, 1f);
                 NPC.velocity = new Vector3(a, b, c);
                 ChangeNav = 5f;
             }
-            else 
-                NPC.velocity = (SpawnPos - transform.position).normalized * 5;
+            else
+            {
+                NPC.velocity = (SpawnPos - transform.position).normalized * 5f;
+            }
         }
 
         public void TakeDamage(int Damage)
         {
-            BuzzSource.SetActive(false);
+            if (deathHandled || Damage <= 0)
+                return;
+
+            if (BuzzSource != null)
+                BuzzSource.SetActive(false);
+
             Vector3 towardPlayer = PlayerTarget != null ? PlayerTarget.transform.position - transform.position : Distance;
             if (towardPlayer.sqrMagnitude > LookRotationEpsilon)
             {
                 rotGoal = Quaternion.LookRotation(towardPlayer);
                 transform.rotation = rotGoal;
             }
+
             NPC.useGravity = true;
             Wasp.SetBool("Beat", true);
             Wasp.SetBool("Sting", false);
             CurrentHealth -= Damage;
-            var playerArsenal = PlayerHealth.Arsenal;
-            var currentWeapon = PlayerHealth.arsenalBrowser;
-            switch (playerArsenal[currentWeapon])
+
+            if (PlayerHealth != null)
             {
-                case "Bare Hands":
-                    {
-                        HitEffect.SetActive(true);
-                        Sound.Beat();
+                var playerArsenal = PlayerHealth.Arsenal;
+                var currentWeapon = PlayerHealth.arsenalBrowser;
+                switch (playerArsenal[currentWeapon])
+                {
+                    case "Bare Hands":
+                    case "Hammers":
+                    case "Bow":
+                        SetHitEffectActive(true);
+                        if (Sound != null)
+                            Sound.Beat();
                         break;
-                    }
-                case "Hammers":
-                    {
-                        HitEffect.SetActive(true);
-                        Sound.Beat();
+                    case "ArmorSet":
+                        SetSlashEffectActive(true);
+                        if (Sound != null)
+                            Sound.LiteSwordDamage();
                         break;
-                    }
-                case "Bow":
-                    {
-                        HitEffect.SetActive(true);
-                        Sound.Beat();
-                        break;
-                    }
-                case "ArmorSet":
-                    {
-                        SlashEffect.SetActive(true);
-                        Sound.LiteSwordDamage();
-                        //var playerAnimator = PlayerTarget.GetComponent<BeaverPlayer>().Otter;
-                        //var currentClip = playerAnimator.GetComponent<AnimationClip>().ToString();
-                        //if (currentClip=="Sword1" || currentClip == "Sword2")
-                        //{
-                        //    HitEffect.SetActive(true);
-                        //    Sound.LiteSwordDamage();
-                        //}
-                        //if(currentClip=="NewSwordJump")
-                        //{
-                        //    Sound.HeavySwordDamage();
-                        //    //Sound.Beat();
-                        //}
-                        break;
-                    }
+                }
             }
+
             combo++;
             if (NPCHealthBar != null)
                 NPCHealthBar.SetNPCHealth(CurrentHealth);
@@ -476,12 +498,30 @@ namespace Beavermania.NPC
                 PlayerHealth.BoostCharge.RegisterHit(Damage);
         }
 
+        void SetCombatEffectsActive(bool active)
+        {
+            SetHitEffectActive(active);
+            SetSlashEffectActive(active);
+        }
+
+        void SetHitEffectActive(bool active)
+        {
+            if (HitEffect != null && HitEffect.activeSelf != active)
+                HitEffect.SetActive(active);
+        }
+
+        void SetSlashEffectActive(bool active)
+        {
+            if (SlashEffect != null && SlashEffect.activeSelf != active)
+                SlashEffect.SetActive(active);
+        }
+
         void ShowHitEffectBriefly()
         {
             if (HitEffect == null)
                 return;
 
-            HitEffect.SetActive(true);
+            SetHitEffectActive(true);
             if (hitEffectHideRoutine != null)
                 StopCoroutine(hitEffectHideRoutine);
             hitEffectHideRoutine = StartCoroutine(HideHitEffectAfterDelay());
@@ -491,7 +531,7 @@ namespace Beavermania.NPC
         {
             yield return new WaitForSeconds(HitEffectVisibleDuration);
             if (HitEffect != null)
-                HitEffect.SetActive(false);
+                SetHitEffectActive(false);
             hitEffectHideRoutine = null;
         }
 

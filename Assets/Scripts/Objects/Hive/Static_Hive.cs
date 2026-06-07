@@ -1,69 +1,113 @@
 using System.Collections;
-using System.Collections.Generic;
 using Beavermania.Audio;
 using UnityEngine;
 using Beavermania.NPC;
 
 namespace Beavermania.Objects
 {
-
-
     public class Static_Hive : MonoBehaviour
     {
+        const int MaxTotalWaspsOnDeath = 30;
+        const int WaspsPerSpawnBatch = 6;
+        const float WaspSpawnBatchInterval = 0.12f;
+
         public int MaxHealth = 10000;
         public int CurrentHealth;
         public NPC_Health HiveBar;
         public GameObject Hive;
         [SerializeField] GameObject[] SpawnedObjects;
-        //public Transform Log1;
-        //public Transform Log2;
-        //public Transform Log3;
-        //public Transform Log4;
-        //public Transform Log5;
-        //public Transform Log6;
         public Transform Wasp;
         public GameObject Explosion;
         public AudioSource Sound;
         public GameObject HitEffect;
 
-        //Start is called before the first frame update
+        bool deathHandled;
+
         public void Start()
         {
             CurrentHealth = MaxHealth;
-            Explosion.SetActive(false);
+            if (Explosion != null)
+                Explosion.SetActive(false);
         }
-        private void LateUpdate()
+
+        void LateUpdate()
         {
-            HitEffect.SetActive(false);
+            if (deathHandled)
+                return;
+
+            if (HitEffect != null)
+                HitEffect.SetActive(false);
+
             if (CurrentHealth <= 0)
-            {
                 Death();
-            }
         }
 
         public void Death()
         {
-            Explosion.SetActive(true);
-            Explosion.transform.parent = null;
-            foreach (var OBJ in SpawnedObjects)
-            {
-                Instantiate(OBJ, gameObject.transform.position, Quaternion.identity);
+            if (deathHandled)
+                return;
 
-            }
-            for (int i = 0; i < 30; i++)
+            deathHandled = true;
+
+            if (Explosion != null)
             {
-                Instantiate(Wasp, gameObject.transform.position, Quaternion.identity);
+                Explosion.SetActive(true);
+                Explosion.transform.parent = null;
             }
-            Destroy(Hive);
+
+            if (SpawnedObjects != null)
+            {
+                for (int i = 0; i < SpawnedObjects.Length; i++)
+                {
+                    GameObject spawnedObject = SpawnedObjects[i];
+                    if (spawnedObject == null)
+                        continue;
+
+                    Instantiate(spawnedObject, transform.position, Quaternion.identity);
+                }
+            }
+
+            if (Wasp != null)
+                StartCoroutine(SpawnWaspsStaggered());
+
+            if (Hive != null)
+                Destroy(Hive);
+        }
+
+        IEnumerator SpawnWaspsStaggered()
+        {
+            int spawned = 0;
+            Vector3 spawnPosition = transform.position;
+
+            while (spawned < MaxTotalWaspsOnDeath)
+            {
+                int batchCount = Mathf.Min(WaspsPerSpawnBatch, MaxTotalWaspsOnDeath - spawned);
+                for (int i = 0; i < batchCount; i++)
+                {
+                    Instantiate(Wasp, spawnPosition, Quaternion.identity);
+                    spawned++;
+                }
+
+                if (spawned < MaxTotalWaspsOnDeath)
+                    yield return new WaitForSeconds(WaspSpawnBatchInterval);
+            }
         }
 
         public void TakeDamage(int Damage)
         {
-            HitEffect.SetActive(true);
+            if (deathHandled || Damage <= 0)
+                return;
+
+            if (HitEffect != null)
+                HitEffect.SetActive(true);
+
             CurrentHealth -= Damage;
+
             if (Sound != null && Sound.clip != null)
                 GameplayAudio.TryPlayOneShot(Sound, Sound.clip, "HiveHit", 0.1f, 1f, 1f);
-            HiveBar.SetNPCHealth(CurrentHealth);
+
+            if (HiveBar != null)
+                HiveBar.SetNPCHealth(CurrentHealth);
         }
     }
 }

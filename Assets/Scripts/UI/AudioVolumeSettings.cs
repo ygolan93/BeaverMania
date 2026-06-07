@@ -60,10 +60,10 @@ namespace Beavermania.Audio
             if (Instance != this || audioMixer == null)
                 return;
 
-            ApplyAllFromPlayerPrefs();
+            ApplyAllFromPlayerPrefs(logVolumes: false);
         }
 
-        public void ApplyAllFromPlayerPrefs()
+        public void ApplyAllFromPlayerPrefs(bool logVolumes = true)
         {
             if (audioMixer == null)
                 return;
@@ -71,7 +71,8 @@ namespace Beavermania.Audio
             ApplyMasterVolume(GetSavedMaster(), false);
             ApplyMusicVolume(GetSavedMusic(), false);
             ApplySfxVolume(GetSavedSfx(), false);
-            LogAppliedMixerVolumes();
+            if (logVolumes)
+                LogAppliedMixerVolumes();
         }
 
         public static float GetSavedMaster()

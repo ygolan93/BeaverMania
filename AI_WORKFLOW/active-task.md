@@ -1,49 +1,73 @@
 # Active Task
 
 ## Task title
-- Demo Settlement Layout Pass (Island 1 Village + Island 2 Forward Camp)
+- Level 1 FPS Pass 2 — Area Hotspots to 60 FPS
 
 ## Type
-- Mixed (Unity scene layout + user Play Mode verification)
+- Mixed (profiling + scripts + ProjectSettings + scene/prefab + Editor tools)
 
 ## Owner
-- **Cursor** — scene hierarchy, prefab placement, markers, light probes (complete)
-- **User** — terrain sculpt/paint, NavMesh bake, Play Mode validation
+- **Cursor** — implementation complete pending Unity verification
+- **User** — Play Mode + Standalone build validation on target PC
 
 ## Current phase
-- Layout pass complete; **placement correction pass complete (2026-06-06)** — awaiting user Play Mode + terrain follow-up
+- Pass 2D — **Needs Unity Play Mode verification**
 
 ## Goal
-- Narrative settlement/layout pass for 30–40 min demo flow: village hub → bridge objective → forward camp → hive escalation → red boss.
+- Sustained ≥60 FPS across Level 1 Remastered demo route.
 
-## Scene
-- **Edited:** `Assets/Scenes/Level 1 - Remastered - Steam.unity`
-- **Backup:** `Assets/Scenes/BackUp Scene/Level 1 - Remastered - Steam - LD Backup 2026-06-06.unity`
+## Zone cost map (Pass 2A)
 
-## Constraints preserved
-- `PlayerPack-Drop and Play`, `Market/Trader`, `Camp/Camp Trader` not moved
-- Checkpoints, bosses, hives untouched
-- No gameplay script changes
+| Zone | Bottleneck class | Baseline metrics | Pass 2 target |
+|------|------------------|------------------|---------------|
+| **Global** | GPU draw calls | 2,802 draw / 2,594 batches / ~10.9M tris | ≥30% draw-call reduction in village |
+| **P0 Village/market** | Static batching + materials | Markets non-static | Static prefabs + scene instances |
+| **P1 Open terrain** | Trees/detail/basemap | tree 5000 / detail 80 / splat 1000 | tree 2500 / detail 40 / splat 600 |
+| **Hive/wasp** | CPU Instantiate burst | 30 wasps same frame | 6 per batch, 0.12s interval |
+| **Boss arenas** | Shadows + skinned meshes | Medium shadows 2 cascades | 1 cascade, 2 pixel lights |
+| **Spawn/coins** | Script Update/GC | ~25 KB GC/frame (Pass 1 mitigated) | Maintain Pass 1 wins |
 
-## Branch
-- `feature/demo-settlement-layout-pass`
+### Top 3 ranked zones
+1. **P0 Village/market** — GPU draw calls (static batching underused)
+2. **P1 Open terrain** — foliage/detail distance
+3. **P2 Global occlusion/LOD** — occlusion data not baked (`m_OcclusionCullingData: {fileID: 0}`)
 
-## Placement correction pass (2026-06-06, Cursor-owned)
-- Downscaled oversized props: `PRP_I1_Cart_01` (0.35), `PRP_I1_FarmSack_01` (0.38), `PRP_I1_CrateCluster_03` (0.4), dock crates/barrel (0.55–0.6), blacksmith anvil/hammer (0.45)
-- Disabled white placeholder `pPlane1` child on farm sack instance
-- Repositioned cart off bridge path; bridge dressing scaled/side-offset
-- Moved path markers (`MRK_I1/I2_MainPath_A`, `INT_I2_HiveTrigger_01`) off walk lanes
-- Rescaled/repositioned I2 dead trees, fences, barricades to path edges
-- Marked corrected props Static
-- **Needs Unity Play Mode verification**
+## Pass 2 deliverables (implemented)
 
-## Manual follow-up (user)
-- [ ] Terrain pad flatten + path texture paint (dock, village paths, hive/boss approach)
-- [ ] Rebake light probes (empty groups placed — run Generate Lighting or manual probe placement)
-- [ ] NavMesh rebake if enemy pathing breaks
-- [ ] Play Mode: trader prompts, bridge build colliders near `PRP_I1_BridgePart_*`, boss arena clearance
-- [ ] Verify decorative `NewBridgePart` instances do not block bridge gameplay
+### Pass 2B — Scripts / settings
+- `PerformanceBootstrap.cs` — Medium GPU tuning at runtime, dev low-FPS logging (draw calls in Editor), quality fallback to Fast after 4s <45 FPS
+- `TerrainPerformanceBootstrap.cs` — runtime terrain distance cap on all tiles
+- `Static_Hive.cs` — staggered wasp spawn (6/batch, 0.12s, max 30)
+- `GameplayTriggerVisualBootstrap.cs` — spread trigger mesh hide across frames (96/frame)
+- `QualitySettings.asset` — Medium: pixel lights 2, shadow cascades 1, softVegetation off
+
+### Pass 2C — Scene / prefab
+- **P0:** Marked static on market prefabs (`Bakery_market_with_food`, `Fish_market_with_sections`, `Meat_market_with_objects`, `lamp_post`) — all `m_StaticEditorFlags: 2147483647`
+- **P1:** Scene terrain tuning on 33 tiles (tree/detail/basemap/heightmap pixel error)
+- **P2:** `LevelPerformanceEditorTools.cs` — menu items for village static pass, terrain tune, occlusion bake, LOD candidate report
+
+### Pass 2D — Verification status
+- Unity MCP reprofile **blocked** (Editor busy/timeouts during occlusion bake attempt)
+- `dotnet build .ci/BeaverMania.CI.csproj` **failed locally** (Unity managed assemblies unavailable — environment issue)
+- **Needs user Play Mode** on demo route + Standalone Windows build smoke test
+
+## Manual Unity steps (required)
+
+1. Let Unity finish reimport/compile after pull.
+2. Open `Level 1 - Remastered - Steam.unity` and **Save** (terrain + prefab static changes).
+3. Run **Beavermania → Performance → Mark Village Environment Static** (Eden fence/wall instances in scene).
+4. Run **Beavermania → Performance → Bake Occlusion Culling** (Edit Mode; wait for bake; save scene).
+5. Run **Beavermania → Performance → Report Large Props Missing LOD** — add LODGroups manually for logged props.
+6. Play Mode: walk spawn → village → bridge → camp → hive → bosses; confirm FPS ≥60 and no regressions.
+
+## Play Mode checklist
+- [ ] Spawn 3 min: FPS ≥60
+- [ ] Village/market: FPS ≥60; shadows/LOD OK
+- [ ] Bridge + camp: FPS ≥60
+- [ ] Hive destruction: no multi-second freeze
+- [ ] Boss arenas: FPS ≥60 in combat
+- [ ] Trader open/close: FPS ≥60
+- [ ] Standalone build at Medium quality matches Editor
 
 ## Result
-- **Layout pass: complete (Needs Unity Play Mode verification)**
-- **Placement correction pass: complete (Needs Unity Play Mode verification)**
+- **Implementation complete; acceptance criteria pending user Play Mode + build verification**

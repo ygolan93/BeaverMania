@@ -10,6 +10,7 @@ namespace Beavermania.NPC
     public sealed class ShadowRevenantController : MonoBehaviour, IEnemyDamageReceiver, ILightBreakReactive
     {
         const float DirectionEpsilon = 0.0001f;
+        const float DormantAiUpdateDistance = 45f;
 
         static readonly int PhasedHash = Animator.StringToHash("Phased");
         static readonly int AttackHash = Animator.StringToHash("Attack");
@@ -99,6 +100,9 @@ namespace Beavermania.NPC
         void Update()
         {
             if (state == ShadowRevenantState.Dead || deathHandled)
+                return;
+
+            if (ShouldThrottleDormantAi())
                 return;
 
             TickCooldowns();
@@ -245,6 +249,22 @@ namespace Beavermania.NPC
             }
 
             target = ShadowRevenantTargetResolver.ResolveFromTransform(targetTransform, this);
+        }
+
+        bool ShouldThrottleDormantAi()
+        {
+            if (state != ShadowRevenantState.Dormant)
+                return false;
+
+            if (targetTransform == null)
+                return (Time.frameCount & 3) != 0;
+
+            float distanceSq = (targetTransform.position - transform.position).sqrMagnitude;
+            float maxDistanceSq = DormantAiUpdateDistance * DormantAiUpdateDistance;
+            if (distanceSq > maxDistanceSq)
+                return (Time.frameCount & 1) != 0;
+
+            return false;
         }
 
         void TickCooldowns()

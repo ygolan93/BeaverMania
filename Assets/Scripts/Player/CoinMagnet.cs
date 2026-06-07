@@ -69,7 +69,8 @@ namespace Beavermania.Player
                 if (col == null)
                     continue;
 
-                CurrencySpin coin = col.GetComponentInParent<CurrencySpin>();
+                if (!col.TryGetComponent(out CurrencySpin coin))
+                    coin = col.GetComponentInParent<CurrencySpin>();
                 if (coin == null || coin.PullFromAnyDistance)
                     continue;
 

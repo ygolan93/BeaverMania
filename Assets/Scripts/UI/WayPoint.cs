@@ -35,22 +35,53 @@ namespace Beavermania.UI.Objectives
                 Debug.LogError("[WayPoint] Locations is still invalid after Awake.", this);
                 return;
             }
-            for (int index = 0; index < Locations.Length; index++)
+
+            if (!AdvanceToIndex(i))
+                Debug.LogError("[WayPoint] Index i is out of bounds.", this);
+        }
+
+        public bool AdvanceToNext()
+        {
+            return AdvanceToIndex(i + 1);
+        }
+
+        public bool AdvanceToIndex(int index)
+        {
+            if (Locations == null || Locations.Length == 0)
             {
-                if (index != i && index != 21 && index != 22 && Locations[index] != null)
-                {
-                    Locations[index].gameObject.SetActive(false);
-                }
+                Debug.LogWarning("[WayPoint] Cannot advance: Locations is invalid.", this);
+                return false;
             }
-            if (i >= 0 && i < Locations.Length && Locations[i] != null)
+
+            if (index < 0 || index >= Locations.Length)
             {
-                Locations[i].gameObject.SetActive(true);
-                target = Locations[i];
+                Debug.LogWarning($"[WayPoint] Cannot advance to index {index}; valid range is 0..{Locations.Length - 1}.", this);
+                return false;
             }
-            else
+
+            if (Locations[index] == null)
             {
-                Debug.LogError("Index i is out of bounds.");
+                Debug.LogWarning($"[WayPoint] Cannot advance to index {index}; Locations[{index}] is null.", this);
+                return false;
             }
+
+            if (i == index && target == Locations[index])
+                return false;
+
+            for (int locationIndex = 0; locationIndex < Locations.Length; locationIndex++)
+            {
+                if (Locations[locationIndex] == null)
+                    continue;
+
+                if (locationIndex == 21 || locationIndex == 22)
+                    continue;
+
+                Locations[locationIndex].gameObject.SetActive(locationIndex == index);
+            }
+
+            i = index;
+            target = Locations[index];
+            return true;
         }
 
         void Update()
@@ -100,28 +131,18 @@ namespace Beavermania.UI.Objectives
 
         private void OnTriggerEnter(Collider OBJ)
         {
-            if (OBJ.gameObject.CompareTag("WayPoint"))
-            {
-                OBJ.gameObject.SetActive(false);
+            if (!OBJ.gameObject.CompareTag("WayPoint"))
+                return;
 
-                if (int.TryParse(OBJ.gameObject.name, out int newIndex))
-                {
-                    i = newIndex;
-                    if (Locations != null && i >= 0 && i < Locations.Length && Locations[i] != null)
-                    {
-                        Locations[i].gameObject.SetActive(true);
-                        target = Locations[i];
-                    }
-                    else
-                    {
-                        Debug.LogWarning("Parsed index is out of bounds: " + i);
-                    }
-                }
-                else
-                {
-                    Debug.LogWarning("Failed to parse waypoint name: " + OBJ.gameObject.name);
-                }
+            OBJ.gameObject.SetActive(false);
+
+            if (!int.TryParse(OBJ.gameObject.name, out int newIndex))
+            {
+                Debug.LogWarning("Failed to parse waypoint name: " + OBJ.gameObject.name, this);
+                return;
             }
+
+            AdvanceToIndex(newIndex);
         }
 
         void EnsureLocationTransforms()

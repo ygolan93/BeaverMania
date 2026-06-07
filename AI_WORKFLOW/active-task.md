@@ -1,54 +1,38 @@
 # Active Task
 
 ## Task title
-- Weapon ScriptableObject refactor
+- Hive objective / waypoint progression fix
 
 ## Type
-- Mixed (ScriptableObject + scripts + player prefab wiring + Play Mode verification)
+- Mixed (scripts + prefab/scene hive wiring + Play Mode verification)
 
 ## Owner
-- **Cursor** — implementation complete
-- **User** — Play Mode parity verification
+- **Cursor** — script + prefab/scene wiring complete
+- **User** — Play Mode verification in Level 1 Remastered - Steam
 
 ## Current phase
-- Scripts, WeaponData assets, and Player.prefab wiring complete; CI build blocked locally (UnityEngine refs unavailable in this environment)
+- Implementation complete; awaiting Play Mode confirmation
 
 ## Goal
-- Migrate per-weapon combat stats from `PlayerCombatBalanceData` / string arsenal switches into `WeaponData` SO + `Weapon` runtime component without gameplay changes.
+- After destroying the first hive, advance WayPoint index 0→1 and HUD objective to "Talk to the trader". Per-hive configured advancement for second nest hive (→ index 8).
 
-## Changes made (2026-06-06)
+## Changes made
 
-### New types
-- `Assets/Scripts/Data/Combat/WeaponData.cs` — weapon stats, category enum, legacy ID, capability flags
-- `Assets/Scripts/Player/Combat/Weapon.cs` — owned loadout, equip/cycle, legacy bootstrap
+### Scripts
+- `Assets/Scripts/UI/WayPoint.cs` — `AdvanceToIndex(int)`, `AdvanceToNext()`; `OnTriggerEnter` refactored
+- `Assets/Scripts/Player/ObjectiveUI.cs` — `UpdateObjective()` advances via WayPoint; cached references
+- `Assets/Scripts/Objects/Hive/Static_Hive.cs` — per-hive `advancesObjectiveOnDeath`, `advanceToObjectiveIndex`, `deathHandled` guard
 
-### Default assets
-- `Assets/Data/Combat/Weapons/*_Default.asset` (Bare Hands, Bow, Hammers, Armor Set)
-- `Assets/Resources/Beavermania/Combat/Weapons/*_Default.asset` (runtime fallback)
-
-### Integrations
-- `BeaverPlayerBehaviour` — `weaponLoadout` ref, `EquippedWeaponData`, `ApplyEquippedWeaponVisuals`, legacy `Arsenal` sync preserved; removed dead `GroundAttack` field
-- `AnimatedAttack` — ground/air damage from equipped `WeaponData`; roll attack stays on combat balance
-- `SwordEffects` — fire breath + swing trails gated on weapon capability/category
-- `PlayerCombatBalanceData` — weapon fields removed (keeps roll attack, health/stamina, non-weapon tuning)
-
-### Prefab
-- `Assets/Prefabs/Player/Otter_Shapekeys/Player.prefab` — `Weapon` component + catalog SO refs + `weaponLoadout` wired
+### Prefabs / scene
+- `Assets/Prefabs/Hive/NewHive.prefab` — default objective fields (disabled by default)
+- `Assets/Prefabs/Player/PlayerPack-Drop and Play.prefab` — `ObjectiveUI.i` override 12 → 0
+- `Assets/Scenes/Level 1 - Remastered - Steam.unity`:
+  - **NewHive** (waypoint location 0): `advancesObjectiveOnDeath=true`, `advanceToObjectiveIndex=1`
+  - **NewHive (1)** (waypoint location 7): `advancesObjectiveOnDeath=true`, `advanceToObjectiveIndex=8`
 
 ## Manual Play Mode validation checklist
-- [ ] Bare hands ground (50) / air kick (20) vs wasps unchanged
-- [ ] Hammer melee (~700, 2m radius)
-- [ ] Bow melee + arrow shot stamina (30)
-- [ ] Armor set ground slash (200) + hurricane kick air (350)
-- [ ] Fire breath HP cost + sword glare armor-only
-- [ ] Shop pickup + arsenal browse cycles; legacy string `Arsenal` still populated
-- [ ] Wasp hit VFX/SFX still correct per weapon
-- [ ] Roll attack still 200 dmg
-
-## Result
-- Script/data/prefab integration: **Pass (pending Unity compile in Editor)**
-- Full combat feel: **Needs user Play Mode verification**
-
-## Out of scope
-- Shop.cs / NPC_Basic.cs string API changes
-- UI, save system, animation clip edits
+- [ ] Start: objective "Clear the wasp nest", compass → first hive / WASPS A
+- [ ] Destroy first hive: objective → "Talk to the trader", `WayPoint.i == 1`, compass → Trader
+- [ ] Trader dialogue still advances objectives via `UpdateObjective()`
+- [ ] Destroy second-nest hive (NewHive (1)): objective → "Defeat Shadow Revenant", index 8
+- [ ] No double-advance on hive death; no Console errors

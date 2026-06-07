@@ -3,7 +3,6 @@ using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 
 namespace Beavermania.UI.Objectives
 {
-
     public class ObjectiveUI : MonoBehaviour
     {
         public BeaverPlayer Player;
@@ -12,42 +11,47 @@ namespace Beavermania.UI.Objectives
         public WayPoint currentPoint;
         public string Instruction;
 
+        WayPoint cachedWayPoint;
+
         void Awake()
         {
             if (currentPoint == null)
                 currentPoint = GetComponent<WayPoint>();
+
+            cachedWayPoint = currentPoint != null ? currentPoint : GetComponent<WayPoint>();
+            if (Player == null)
+                Player = GetComponent<BeaverPlayer>();
         }
 
         public void Update()
         {
-            WayPoint wp = currentPoint != null ? currentPoint : GetComponent<WayPoint>();
+            WayPoint wp = cachedWayPoint != null ? cachedWayPoint : ResolveWayPoint();
             if (wp == null)
                 return;
+
             i = wp.i;
             if (Objective == null || i < 0 || i >= Objective.Length)
                 return;
-            Player = transform.GetComponent<BeaverPlayer>();
+
             Instruction = Objective[i];
         }
 
         public void UpdateObjective()
         {
-            i++;
+            WayPoint wp = cachedWayPoint != null ? cachedWayPoint : ResolveWayPoint();
+            if (wp == null)
+                return;
+
+            wp.AdvanceToNext();
         }
 
-        //public void OnTriggerStay(Collider GameObjective) 
-        //{
-        //    if (GameObjective.CompareTag("Objective"))
-        //    {
-        //        i = GameObjective.GetComponent<ChangeOBJ>().ObjectiveNum;
-        //    }
-        //}
-        //public void /*OnTriggerExit*/(Collider GameObjective)
-        //{
-        //    if (GameObjective.CompareTag("Objective"))
-        //    {
-        //        i = 0;
-        //    }
-        //}
+        WayPoint ResolveWayPoint()
+        {
+            if (currentPoint == null)
+                currentPoint = GetComponent<WayPoint>();
+
+            cachedWayPoint = currentPoint;
+            return cachedWayPoint;
+        }
     }
 }

@@ -84,9 +84,9 @@ MonoBehaviour:
   m_HandleRect: {fileID: 0}
   m_Direction: 1
   m_MinValue: 0
-  m_MaxValue: 20000
+  m_MaxValue: 8000
   m_WholeNumbers: 1
-  m_Value: 20000
+  m_Value: 8000
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -454,15 +454,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a6eaff1e39e0fcd4ab1f66c26dac2ffe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MaxHealth: 20000
+  MaxHealth: 8000
   CurrentHealth: 0
   HiveBar: {fileID: 4619415292314880598}
   Hive: {fileID: 7115676670349774032}
   SpawnedObjects:
   - {fileID: 2657320476707681433, guid: 06f9d786657c1ad4da503fca33b8ce6b, type: 3}
   - {fileID: 2657320476707681433, guid: 06f9d786657c1ad4da503fca33b8ce6b, type: 3}
-  - {fileID: 2657320476707681433, guid: 06f9d786657c1ad4da503fca33b8ce6b, type: 3}
-  - {fileID: 2657320476707681433, guid: 06f9d786657c1ad4da503fca33b8ce6b, type: 3}
   - {fileID: 7679416759401954559, guid: 9f5cfb054d2b7174882402aae5da7193, type: 3}
   - {fileID: 7679416759401954559, guid: 9f5cfb054d2b7174882402aae5da7193, type: 3}
   - {fileID: 7679416759401954559, guid: 9f5cfb054d2b7174882402aae5da7193, type: 3}
@@ -473,14 +471,13 @@ MonoBehaviour:
   - {fileID: 7679416759401954559, guid: 9f5cfb054d2b7174882402aae5da7193, type: 3}
   - {fileID: 7679416759401954559, guid: 9f5cfb054d2b7174882402aae5da7193, type: 3}
   - {fileID: 7679416759401954559, guid: 9f5cfb054d2b7174882402aae5da7193, type: 3}
-  - {fileID: 3526704139367780906, guid: eaa13f35cba9d5d489238caa90e5a05e, type: 3}
-  - {fileID: 6003487228124988382, guid: 682f968f2809b284bb73b6ad4c710af0, type: 3}
-  - {fileID: 6003487228124988382, guid: 682f968f2809b284bb73b6ad4c710af0, type: 3}
   - {fileID: 6003487228124988382, guid: 682f968f2809b284bb73b6ad4c710af0, type: 3}
   Wasp: {fileID: 2484960784144947122, guid: 6418a51a4bd5c1f46bb8507bd8627f51, type: 3}
   Explosion: {fileID: 5339181585990677648}
   Sound: {fileID: 5834629351513488892}
   HitEffect: {fileID: 7810621778169316528}
+  advancesObjectiveOnDeath: 0
+  advanceToObjectiveIndex: 1
 --- !u!114 &4619415292314880598
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -510,7 +507,7 @@ MonoBehaviour:
   Hive: {fileID: 6443574327426712235}
   Player: {fileID: 0}
   Distance: {x: 0, y: 0, z: 0}
-  SpawnDistance: 0
+  SpawnDistance: 20
   WaspCounter: 3
   SpawnClock: 15
   RealClock: 0

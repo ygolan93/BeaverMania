@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Beavermania.Core.Input;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,7 +10,6 @@ namespace Beavermania.UI.Objectives
     public class WayPoint : MonoBehaviour
     {
         const float LookRotationEpsilon = 0.0001f;
-        const int DefaultLocationCount = 21;
         static bool s_loggedMarkCanvasIssue;
 
         public Image Mark;
@@ -18,11 +18,18 @@ namespace Beavermania.UI.Objectives
         public Transform Arrow;
         public int i;
         Camera cachedMainCamera;
+        ObjectiveUI cachedObjectiveUi;
+        Beavermania.Player.PlayerHudState cachedHudState;
+        readonly HashSet<int> loggedMissingTargetIndices = new();
+
+        public Transform CurrentTarget => target;
 
         void Awake()
         {
-            EnsureLocationTransforms();
+            EnsureLocationArrayInitialized();
             TryResolveMarkFromCanvas();
+            cachedObjectiveUi = GetComponent<ObjectiveUI>();
+            cachedHudState = GetComponent<Beavermania.Player.PlayerHudState>();
         }
 
         void Start()
@@ -30,62 +37,142 @@ namespace Beavermania.UI.Objectives
             cachedMainCamera = Camera.main;
             if (Arrow != null)
                 Arrow.gameObject.SetActive(false);
-            if (Locations == null || Locations.Length == 0)
+
+            if (!TryGetLocationTarget(i, out Transform initialTarget))
             {
-                Debug.LogError("[WayPoint] Locations is still invalid after Awake.", this);
+                Debug.LogWarning($"[WayPoint] Failed to resolve initial waypoint target for index {i}.", this);
                 return;
             }
 
-            if (!AdvanceToIndex(i))
-                Debug.LogError("[WayPoint] Index i is out of bounds.", this);
+            ApplyObjectiveIndexDirect(i, initialTarget);
+            MirrorLocalObjectiveState(i);
         }
 
         public bool AdvanceToNext()
         {
-            return AdvanceToIndex(i + 1);
+            var objectiveService = Beavermania.Core.GameFlow.ObjectiveSyncService.Instance;
+            if (objectiveService != null)
+            {
+                bool advanced = objectiveService.TryAdvanceObjective(1, Beavermania.Core.GameFlow.ObjectiveAdvanceReason.LegacyWaypointAdvanceRequest);
+                if (advanced || !objectiveService.ShouldUseLegacyObjectiveFallback())
+                    return advanced;
+            }
+
+            return TryAdvanceToNextDirect();
         }
 
         public bool AdvanceToIndex(int index)
         {
-            if (Locations == null || Locations.Length == 0)
+            var objectiveService = Beavermania.Core.GameFlow.ObjectiveSyncService.Instance;
+            if (objectiveService != null)
             {
-                Debug.LogWarning("[WayPoint] Cannot advance: Locations is invalid.", this);
-                return false;
+                bool advanced = objectiveService.TrySetObjectiveIndex(index, Beavermania.Core.GameFlow.ObjectiveAdvanceReason.LegacyWaypointAdvanceRequest);
+                if (advanced || !objectiveService.ShouldUseLegacyObjectiveFallback())
+                    return advanced;
             }
 
-            if (index < 0 || index >= Locations.Length)
-            {
-                Debug.LogWarning($"[WayPoint] Cannot advance to index {index}; valid range is 0..{Locations.Length - 1}.", this);
-                return false;
-            }
+            return TryApplyObjectiveIndexDirect(index);
+        }
 
-            if (Locations[index] == null)
-            {
-                Debug.LogWarning($"[WayPoint] Cannot advance to index {index}; Locations[{index}] is null.", this);
-                return false;
-            }
+        internal bool TryAdvanceToNextDirect()
+        {
+            return TryApplyObjectiveIndexDirect(i + 1);
+        }
 
-            if (i == index && target == Locations[index])
+        internal bool TryApplyObjectiveIndexDirect(int index)
+        {
+            if (!TryGetLocationTarget(index, out Transform nextTarget))
                 return false;
 
-            for (int locationIndex = 0; locationIndex < Locations.Length; locationIndex++)
-            {
-                if (Locations[locationIndex] == null)
-                    continue;
+            if (i == index && target == nextTarget)
+                return true;
 
-                if (locationIndex == 21 || locationIndex == 22)
-                    continue;
-
-                Locations[locationIndex].gameObject.SetActive(locationIndex == index);
-            }
-
-            i = index;
-            target = Locations[index];
+            ApplyObjectiveIndexDirect(index, nextTarget);
+            MirrorLocalObjectiveState(index);
             return true;
+        }
+
+        internal bool TryGetLocationTarget(int index, out Transform nextTarget)
+        {
+            nextTarget = null;
+            if (index < 0)
+            {
+                Debug.LogWarning($"[WayPoint] Cannot advance to index {index}; index must be non-negative.", this);
+                return false;
+            }
+
+            EnsureLocationSlotCapacity(index + 1);
+            if (Locations == null || index >= Locations.Length)
+            {
+                LogMissingTarget(index, $"[WayPoint] Cannot advance to index {index}; waypoint storage is unavailable.");
+                return false;
+            }
+
+            Transform location = Locations[index];
+            if (!IsActiveLocationReference(location))
+            {
+                Locations[index] = null;
+                if (TryResolveSceneWaypointTarget(index, out Transform resolvedTarget))
+                    Locations[index] = resolvedTarget;
+
+                location = Locations[index];
+            }
+
+            if (!IsActiveLocationReference(location))
+            {
+                LogMissingTarget(index, $"[WayPoint] Cannot advance to index {index}; no scene waypoint target named '{index}' was found.");
+                return false;
+            }
+
+            nextTarget = location;
+            return true;
+        }
+
+        void ApplyObjectiveIndexDirect(int index, Transform nextTarget)
+        {
+            i = index;
+            target = nextTarget;
+        }
+
+        void RefreshActiveWaypointTarget()
+        {
+            if (IsActiveLocationReference(target))
+                return;
+
+            target = null;
+            if (TryGetLocationTarget(i, out Transform resolvedTarget))
+                target = resolvedTarget;
+        }
+
+        static bool IsActiveLocationReference(Transform location)
+        {
+            return location;
+        }
+
+        void MirrorLocalObjectiveState(int index)
+        {
+            if (cachedObjectiveUi == null)
+                cachedObjectiveUi = GetComponent<ObjectiveUI>();
+
+            if (cachedHudState == null)
+                cachedHudState = GetComponent<Beavermania.Player.PlayerHudState>();
+
+            if (cachedObjectiveUi == null)
+                return;
+
+            string objectiveText = string.Empty;
+            if (cachedObjectiveUi.TryGetObjectiveText(index, out string resolvedObjectiveText))
+                objectiveText = resolvedObjectiveText ?? string.Empty;
+
+            cachedObjectiveUi.ApplyObjectiveMirror(index, objectiveText);
+            if (cachedHudState != null)
+                cachedHudState.SetObjectiveText(objectiveText);
         }
 
         void Update()
         {
+            RefreshActiveWaypointTarget();
+
             if (Arrow != null)
             {
                 if (PlayerInputReader.IsWaypointCompassHeld())
@@ -142,31 +229,61 @@ namespace Beavermania.UI.Objectives
                 return;
             }
 
-            AdvanceToIndex(newIndex);
+            var objectiveService = Beavermania.Core.GameFlow.ObjectiveSyncService.Instance;
+            if (objectiveService != null)
+            {
+                bool advanced = objectiveService.TrySetObjectiveIndex(newIndex, Beavermania.Core.GameFlow.ObjectiveAdvanceReason.WaypointTrigger);
+                if (advanced || !objectiveService.ShouldUseLegacyObjectiveFallback())
+                    return;
+            }
+
+            TryApplyObjectiveIndexDirect(newIndex);
         }
 
-        void EnsureLocationTransforms()
+        void EnsureLocationArrayInitialized()
         {
-            if (Locations == null || Locations.Length < DefaultLocationCount)
+            if (Locations == null)
+                Locations = Array.Empty<Transform>();
+        }
+
+        void EnsureLocationSlotCapacity(int requiredLength)
+        {
+            EnsureLocationArrayInitialized();
+            if (requiredLength <= Locations.Length)
+                return;
+
+            Array.Resize(ref Locations, requiredLength);
+        }
+
+        bool TryResolveSceneWaypointTarget(int index, out Transform resolvedTarget)
+        {
+            resolvedTarget = null;
+            string targetName = index.ToString();
+            var sceneWaypoints = FindObjectsOfType<Transform>(true);
+            for (int sceneIndex = 0; sceneIndex < sceneWaypoints.Length; sceneIndex++)
             {
-                var prev = Locations;
-                Locations = new Transform[DefaultLocationCount];
-                if (prev != null)
-                {
-                    for (int c = 0; c < prev.Length && c < DefaultLocationCount; c++)
-                        Locations[c] = prev[c];
-                }
-            }
-            for (int idx = 0; idx < Locations.Length; idx++)
-            {
-                if (Locations[idx] != null)
+                Transform sceneWaypoint = sceneWaypoints[sceneIndex];
+                if (sceneWaypoint == null)
                     continue;
-                var holder = new GameObject($"WaypointTarget_{idx}");
-                float yaw = (360f / DefaultLocationCount) * idx;
-                Vector3 offset = Quaternion.Euler(0f, yaw, 0f) * Vector3.forward * 3f;
-                holder.transform.SetPositionAndRotation(transform.position + offset, Quaternion.identity);
-                Locations[idx] = holder.transform;
+
+                GameObject sceneWaypointObject = sceneWaypoint.gameObject;
+                if (sceneWaypointObject == null || !sceneWaypointObject.CompareTag("WayPoint"))
+                    continue;
+
+                if (!string.Equals(sceneWaypointObject.name, targetName, StringComparison.Ordinal))
+                    continue;
+
+                resolvedTarget = sceneWaypoint;
+                return true;
             }
+
+            return false;
+        }
+
+        void LogMissingTarget(int index, string message)
+        {
+            if (loggedMissingTargetIndices.Add(index))
+                Debug.LogWarning(message, this);
         }
 
         void TryResolveMarkFromCanvas()

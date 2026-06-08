@@ -150,8 +150,14 @@ namespace Beavermania.UI
         public void EndConversation()
         {
             bool shouldAdvanceObjective = dialogueData == null || dialogueData.advanceObjectiveOnEnd;
-            if (shouldAdvanceObjective && PlayerObjective != null)
-                PlayerObjective.UpdateObjective();
+            if (shouldAdvanceObjective)
+            {
+                var objectiveService = Beavermania.Core.GameFlow.ObjectiveSyncService.Instance;
+                if (objectiveService != null)
+                    objectiveService.TryAdvanceObjective(1, EffectiveIsBoss ? Beavermania.Core.GameFlow.ObjectiveAdvanceReason.BossDialogueCompleted : Beavermania.Core.GameFlow.ObjectiveAdvanceReason.DialogueCompleted);
+                else if (PlayerObjective != null)
+                    PlayerObjective.UpdateObjective();
+            }
 
             if (EffectiveIsBoss)
             {
@@ -173,9 +179,6 @@ namespace Beavermania.UI
 
         public void EndBossDialogue()
         {
-            if (PlayerObjective != null)
-                PlayerObjective.UpdateObjective();
-
             if (Player != null)
             {
                 var bossFlow = Player.GetComponent<IBossDialogueSkippable>();

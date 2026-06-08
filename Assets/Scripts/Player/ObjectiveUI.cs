@@ -21,28 +21,41 @@ namespace Beavermania.UI.Objectives
             cachedWayPoint = currentPoint != null ? currentPoint : GetComponent<WayPoint>();
             if (Player == null)
                 Player = GetComponent<BeaverPlayer>();
-        }
-
-        public void Update()
-        {
-            WayPoint wp = cachedWayPoint != null ? cachedWayPoint : ResolveWayPoint();
-            if (wp == null)
-                return;
-
-            i = wp.i;
-            if (Objective == null || i < 0 || i >= Objective.Length)
-                return;
-
-            Instruction = Objective[i];
+            SyncMirrorFromWayPoint();
         }
 
         public void UpdateObjective()
         {
+            var objectiveService = Beavermania.Core.GameFlow.ObjectiveSyncService.Instance;
+            if (objectiveService != null)
+            {
+                bool advanced = objectiveService.TryAdvanceObjective(1, Beavermania.Core.GameFlow.ObjectiveAdvanceReason.DialogueCompleted);
+                if (advanced || !objectiveService.ShouldUseLegacyObjectiveFallback())
+                    return;
+            }
+
             WayPoint wp = cachedWayPoint != null ? cachedWayPoint : ResolveWayPoint();
             if (wp == null)
                 return;
 
-            wp.AdvanceToNext();
+            if (wp.TryAdvanceToNextDirect())
+                SyncMirrorFromWayPoint();
+        }
+
+        internal bool TryGetObjectiveText(int index, out string objectiveText)
+        {
+            objectiveText = null;
+            if (Objective == null || index < 0 || index >= Objective.Length)
+                return false;
+
+            objectiveText = Objective[index];
+            return true;
+        }
+
+        internal void ApplyObjectiveMirror(int index, string instruction)
+        {
+            i = index;
+            Instruction = instruction ?? string.Empty;
         }
 
         WayPoint ResolveWayPoint()
@@ -52,6 +65,17 @@ namespace Beavermania.UI.Objectives
 
             cachedWayPoint = currentPoint;
             return cachedWayPoint;
+        }
+
+        void SyncMirrorFromWayPoint()
+        {
+            WayPoint wp = cachedWayPoint != null ? cachedWayPoint : ResolveWayPoint();
+            if (wp == null)
+                return;
+
+            i = wp.i;
+            if (TryGetObjectiveText(i, out string objectiveText))
+                Instruction = objectiveText;
         }
     }
 }

@@ -52,8 +52,10 @@ namespace Beavermania.UI
             if (PlayerHudState == null)
             {
                 PlayerHudState = Player.gameObject.AddComponent<PlayerHudState>();
-                var objective = ResolvePlayerObjective();
-                PlayerHudState.CopyFrom(Player, objective != null, objective != null ? objective.Instruction : null);
+                PlayerHudState.CopyPlayerStatsFrom(Player);
+                var objectiveService = Beavermania.Core.GameFlow.ObjectiveSyncService.Instance;
+                if (objectiveService != null)
+                    objectiveService.RefreshBindingsAndReapply();
             }
         }
 
@@ -78,13 +80,7 @@ namespace Beavermania.UI
 
             if (Player != null)
             {
-                if (PlayerHudState.ObjectiveTextOverrideActive)
-                    PlayerHudState.CopyFrom(Player, false, null);
-                else
-                {
-                    var objective = ResolvePlayerObjective();
-                    PlayerHudState.CopyFrom(Player, objective != null, objective != null ? objective.Instruction : null);
-                }
+                PlayerHudState.CopyPlayerStatsFrom(Player);
             }
 
             SetObjectiveText(

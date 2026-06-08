@@ -1,5 +1,6 @@
 namespace Beavermania.Core.GameFlow
 {
+    // Legacy semantic phases kept only as an adapter for older gameplay callers.
     public enum GameProgressionStage
     {
         TalkToTrader = 0,

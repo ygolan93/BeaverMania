@@ -23,12 +23,13 @@ namespace Beavermania.Player
         public string AppleText;
         public string ArrowText;
 
-        /// <param name="hasObjective">When true, <see cref="ObjectiveText"/> is set to <paramref name="objectiveInstruction"/> (which may be null). When false, objective HUD text is unchanged.</param>
-        public void CopyFrom(BeaverPlayer player, bool hasObjective, string objectiveInstruction)
+        public void SetObjectiveText(string objectiveText)
         {
-            if (hasObjective)
-                ObjectiveText = objectiveInstruction;
+            ObjectiveText = objectiveText ?? string.Empty;
+        }
 
+        public void CopyPlayerStatsFrom(BeaverPlayer player)
+        {
             if (player == null)
                 return;
 
@@ -41,6 +42,14 @@ namespace Beavermania.Player
             GobletText = player.GobletText;
             AppleText = player.AppleText;
             ArrowText = player.ArrowText;
+        }
+
+        public void CopyFrom(BeaverPlayer player, bool hasObjective, string objectiveInstruction)
+        {
+            if (hasObjective)
+                SetObjectiveText(objectiveInstruction);
+
+            CopyPlayerStatsFrom(player);
         }
     }
 }

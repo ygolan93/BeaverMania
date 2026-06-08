@@ -1,4 +1,5 @@
 using Beavermania.Audio;
+using Beavermania.Core.GameFlow;
 using Beavermania.UI.Objectives;
 using UnityEngine;
 using Beavermania.NPC;
@@ -67,6 +68,14 @@ namespace Beavermania.Objects
             if (!advancesObjectiveOnDeath)
                 return;
 
+            var objectiveService = ObjectiveSyncService.Instance;
+            if (objectiveService != null)
+            {
+                if (!objectiveService.TrySetObjectiveIndex(advanceToObjectiveIndex, ObjectiveAdvanceReason.HiveDestroyed))
+                    Debug.LogWarning($"[Static_Hive] Objective advance to index {advanceToObjectiveIndex} did not apply.", this);
+                return;
+            }
+
             var playerObject = GameObject.FindGameObjectWithTag("Player");
             if (playerObject == null)
             {
@@ -81,7 +90,7 @@ namespace Beavermania.Objects
                 return;
             }
 
-            if (!wayPoint.AdvanceToIndex(advanceToObjectiveIndex))
+            if (!wayPoint.TryApplyObjectiveIndexDirect(advanceToObjectiveIndex))
                 Debug.LogWarning($"[Static_Hive] Objective advance to index {advanceToObjectiveIndex} did not apply.", this);
         }
 

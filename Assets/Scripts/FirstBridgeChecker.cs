@@ -12,6 +12,7 @@ namespace Beavermania.Objects
         public ObjectiveUI Player;
         WayPoint wp;
         Carry playerLoad;
+        int appliedLegacyFallbackIndex = -1;
         // Start is called before the first frame update
         void Start()
         {
@@ -23,37 +24,28 @@ namespace Beavermania.Objects
         // Update is called once per frame
         void Update()
         {
+            if (Bridge == null)
+                return;
+
             if (Bridge.isLocked == true)
             {
+                int carriedLogs = playerLoad != null ? playerLoad.i : 0;
                 if (ObjectiveSyncService.Instance != null)
                 {
                     ObjectiveSyncService.Instance.OnBridgeConstructionLocked();
-                    if (playerLoad.i > 0)
+                    if (carriedLogs > 0)
                         ObjectiveSyncService.Instance.OnBridgeCompleted();
                 }
-                else if (playerLoad.i == 0)
+                else if (wp != null)
                 {
-                    Player.i = 3;
-                    wp.i = 3;
-                    wp.Locations[2].gameObject.SetActive(false);
-                    wp.Locations[3].gameObject.SetActive(true);
-                }
-                else
-                {
-                    Player.i = 4;
-                    wp.i = 4;
-                    wp.Locations[3].gameObject.SetActive(false);
-                    wp.Locations[4].gameObject.SetActive(true);
+                    int fallbackIndex = carriedLogs > 0 ? 4 : 3;
+                    if (fallbackIndex != appliedLegacyFallbackIndex && wp.TryApplyObjectiveIndexDirect(fallbackIndex))
+                        appliedLegacyFallbackIndex = fallbackIndex;
                 }
 
-                if (playerLoad.i > 0)
+                if (carriedLogs > 0)
                     Destroy(gameObject);
             }
-            //if (Bridge.transform==null)
-            //{
-            //    Player.i = 1;
-            //    wp.i = 1;
-            //}
         }
     }
 }

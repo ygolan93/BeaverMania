@@ -44,10 +44,10 @@ namespace Beavermania.Tests.EditMode.Core.GameFlow
             Type logSpawnerType = ResolveRuntimeType("Beavermania.Objects.LogSpawner");
 
             Component wayPoint = playerPack.GetComponentInChildren(wayPointType, true);
-            Component objectiveUi = playerPack.GetComponentInChildren(objectiveUiType, true);
-
             Assert.That(wayPoint, Is.Not.Null, "PlayerPack is missing nested WayPoint.");
-            Assert.That(objectiveUi, Is.Not.Null, "PlayerPack is missing nested ObjectiveUI.");
+
+            Component objectiveUi = wayPoint.GetComponent(objectiveUiType);
+            Assert.That(objectiveUi, Is.Not.Null, "Player root is missing ObjectiveUI bound to ObjectiveSyncService.");
 
             string[] objectives = GetFieldValue<string[]>(objectiveUi, "Objective");
             Transform[] locations = GetFieldValue<Transform[]>(wayPoint, "Locations");

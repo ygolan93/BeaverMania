@@ -108,16 +108,23 @@ namespace Beavermania.UI.Objectives
                 return false;
             }
 
-            if (Locations[index] == null && TryResolveSceneWaypointTarget(index, out Transform resolvedTarget))
-                Locations[index] = resolvedTarget;
+            Transform location = Locations[index];
+            if (!IsActiveLocationReference(location))
+            {
+                Locations[index] = null;
+                if (TryResolveSceneWaypointTarget(index, out Transform resolvedTarget))
+                    Locations[index] = resolvedTarget;
 
-            if (Locations[index] == null)
+                location = Locations[index];
+            }
+
+            if (!IsActiveLocationReference(location))
             {
                 LogMissingTarget(index, $"[WayPoint] Cannot advance to index {index}; no scene waypoint target named '{index}' was found.");
                 return false;
             }
 
-            nextTarget = Locations[index];
+            nextTarget = location;
             return true;
         }
 
@@ -125,6 +132,21 @@ namespace Beavermania.UI.Objectives
         {
             i = index;
             target = nextTarget;
+        }
+
+        void RefreshActiveWaypointTarget()
+        {
+            if (IsActiveLocationReference(target))
+                return;
+
+            target = null;
+            if (TryGetLocationTarget(i, out Transform resolvedTarget))
+                target = resolvedTarget;
+        }
+
+        static bool IsActiveLocationReference(Transform location)
+        {
+            return location;
         }
 
         void MirrorLocalObjectiveState(int index)
@@ -149,6 +171,8 @@ namespace Beavermania.UI.Objectives
 
         void Update()
         {
+            RefreshActiveWaypointTarget();
+
             if (Arrow != null)
             {
                 if (PlayerInputReader.IsWaypointCompassHeld())

@@ -1,4 +1,5 @@
 using System;
+using Beavermania.Objects;
 using Beavermania.Player;
 using Beavermania.UI.Objectives;
 using UnityEngine;
@@ -16,8 +17,12 @@ namespace Beavermania.Core.GameFlow
         [SerializeField] bool allowLegacyObjectiveFallback = true;
         [SerializeField] bool mirrorLegacyFields = true;
 
+        const float ChopZoneMarkerRadius = 35f;
+
         readonly ObjectiveProgressionState objectiveState = new();
         ObjectiveStateSnapshot currentSnapshot;
+
+        bool loggedChopZoneFallback;
 
         BeaverPlayer player;
         WayPoint wayPoint;
@@ -94,6 +99,27 @@ namespace Beavermania.Core.GameFlow
         public bool OnLogCollected()
         {
             return TryAdvanceResolvedLegacyStage(GameProgressionStage.CollectLogs, ObjectiveAdvanceReason.LogCollected);
+        }
+
+        public bool OnChopTreeDestroyed(Transform choppedTree)
+        {
+            EnsureStateInitialized();
+
+            if (!TryResolveObjectiveText(CurrentObjectiveIndex, out string objectiveText)
+                || !IsChopTreeObjective(objectiveText))
+                return false;
+
+            if (choppedTree == null)
+                return false;
+
+            Transform expectedTarget = CurrentWaypointTarget;
+            if (expectedTarget == null && wayPoint != null)
+                wayPoint.TryGetLocationTarget(CurrentObjectiveIndex, out expectedTarget);
+
+            if (expectedTarget != null && !DoesChoppedTreeMatchWaypointTarget(choppedTree, expectedTarget))
+                return false;
+
+            return TryAdvanceObjective(1, ObjectiveAdvanceReason.ObjectiveTargetDestroyed);
         }
 
         public bool OnPlayerNearBridgeFrame()
@@ -370,6 +396,57 @@ namespace Beavermania.Core.GameFlow
         {
             return ContainsKeyword(objectiveText, "log")
                 && !IsBridgeCarryObjective(objectiveText);
+        }
+
+        static bool IsChopTreeObjective(string objectiveText)
+        {
+            return ContainsKeyword(objectiveText, "chop")
+                && ContainsKeyword(objectiveText, "tree");
+        }
+
+        bool DoesChoppedTreeMatchWaypointTarget(Transform choppedTree, Transform expectedTarget)
+        {
+            if (choppedTree == expectedTarget)
+                return true;
+
+            if (!IsWaypointChopZoneMarker(expectedTarget))
+                return false;
+
+            if (!HasLogSpawner(choppedTree))
+                return false;
+
+            float distance = Vector3.Distance(choppedTree.position, expectedTarget.position);
+            if (distance > ChopZoneMarkerRadius)
+                return false;
+
+            if (!loggedChopZoneFallback)
+            {
+                loggedChopZoneFallback = true;
+                Debug.Log(
+                    $"[{nameof(ObjectiveSyncService)}] Accepted nearby chop tree '{choppedTree.name}' for zone marker '{expectedTarget.name}' ({distance:F1}m).",
+                    this);
+            }
+
+            return true;
+        }
+
+        static bool HasLogSpawner(Transform transform)
+        {
+            return transform != null && transform.GetComponent<LogSpawner>() != null;
+        }
+
+        static bool IsWaypointChopZoneMarker(Transform target)
+        {
+            if (target == null || HasLogSpawner(target))
+                return false;
+
+            if (target.CompareTag("Objective"))
+                return true;
+
+            string name = target.name;
+            return name.IndexOf("TreesToCut", StringComparison.OrdinalIgnoreCase) >= 0
+                || name.IndexOf("WP", StringComparison.OrdinalIgnoreCase) >= 0
+                || name.IndexOf("Cliff", StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         static bool IsBridgeProgressionObjective(string objectiveText)

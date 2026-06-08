@@ -115,6 +115,80 @@ namespace Beavermania.Tests.PlayMode.Core.GameFlow
         }
 
         [UnityTest]
+        public IEnumerator OnChopTreeDestroyed_AdvancesWhenZoneMarkerTargetsNearbyTree()
+        {
+            var harness = CreateHarness(
+                initialObjectiveIndex: 3,
+                objectives: new[]
+                {
+                    "Clear the wasp nest",
+                    "Talk to the trader",
+                    "Buy weapons",
+                    "Chop the first tree",
+                    "Chop the second tree",
+                    "Chop the third tree"
+                });
+
+            yield return null;
+
+            Transform[] locations = harness.GetWayPointLocations();
+            GameObject zoneMarker = Spawn("TreesToCut");
+            zoneMarker.tag = "Objective";
+            zoneMarker.transform.position = Vector3.zero;
+            locations[3] = zoneMarker.transform;
+
+            GameObject nearbyTree = Spawn("NearbyChopTree");
+            nearbyTree.AddComponent(ResolveRuntimeType("Beavermania.Objects.LogSpawner"));
+            nearbyTree.transform.position = new Vector3(12f, 0f, 0f);
+
+            GameObject distantTree = Spawn("DistantChopTree");
+            distantTree.AddComponent(ResolveRuntimeType("Beavermania.Objects.LogSpawner"));
+            distantTree.transform.position = new Vector3(200f, 0f, 0f);
+
+            harness.InvokeServiceVoid("RefreshBindingsAndReapply");
+
+            yield return null;
+
+            bool distantTreeAdvance = harness.InvokeServiceBool("OnChopTreeDestroyed", distantTree.transform);
+            bool nearbyTreeAdvance = harness.InvokeServiceBool("OnChopTreeDestroyed", nearbyTree.transform);
+
+            Assert.That(distantTreeAdvance, Is.False);
+            Assert.That(nearbyTreeAdvance, Is.True);
+            Assert.That(harness.GetServiceInt("CurrentObjectiveIndex"), Is.EqualTo(4));
+            Assert.That(harness.GetServiceString("CurrentObjectiveText"), Is.EqualTo("Chop the second tree"));
+            Assert.That(harness.GetServiceTransform("CurrentWaypointTarget"), Is.SameAs(locations[4]));
+        }
+
+        [UnityTest]
+        public IEnumerator OnChopTreeDestroyed_AdvancesMatchingChopTreeObjectiveAndWaypoint()
+        {
+            var harness = CreateHarness(
+                initialObjectiveIndex: 3,
+                objectives: new[]
+                {
+                    "Clear the wasp nest",
+                    "Talk to the trader",
+                    "Buy weapons",
+                    "Chop the first tree",
+                    "Chop the second tree",
+                    "Chop the third tree"
+                });
+
+            yield return null;
+
+            Transform firstTree = harness.GetWayPointLocations()[3];
+            Transform wrongTree = Spawn("WrongTree").transform;
+            bool wrongTreeAdvance = harness.InvokeServiceBool("OnChopTreeDestroyed", wrongTree);
+            bool firstTreeAdvance = harness.InvokeServiceBool("OnChopTreeDestroyed", firstTree);
+
+            Assert.That(wrongTreeAdvance, Is.False);
+            Assert.That(firstTreeAdvance, Is.True);
+            Assert.That(harness.GetServiceInt("CurrentObjectiveIndex"), Is.EqualTo(4));
+            Assert.That(harness.GetServiceString("CurrentObjectiveText"), Is.EqualTo("Chop the second tree"));
+            Assert.That(harness.GetServiceTransform("CurrentWaypointTarget"), Is.SameAs(harness.GetWayPointLocations()[4]));
+        }
+
+        [UnityTest]
         public IEnumerator LegacyBridgeStageRequests_ResolveAgainstSceneAuthoredObjectiveSequence()
         {
             var harness = CreateHarness(

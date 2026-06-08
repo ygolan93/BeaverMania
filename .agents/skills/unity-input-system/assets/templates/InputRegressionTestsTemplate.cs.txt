@@ -1,0 +1,140 @@
+using System;
+using System.Collections;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.TestTools;
+using UnityEngine.TestTools.Utils;
+
+// Adjust bindings, action-map names, and expected values to match the real .inputactions asset.
+// This example assumes:
+// - Player.Move is a 2DVector bound to WASD
+// - Player.Look is bound to the right stick or another stable Vector2 control
+// - Player.Jump is bound to the space bar
+public sealed class GeneratedInputReaderTests : InputTestFixture
+{
+    private readonly Vector2EqualityComparer _vectorComparer = new Vector2EqualityComparer(0.0001f);
+
+    private Keyboard _keyboard;
+    private Gamepad _gamepad;
+    private GameObject _readerGameObject;
+    private GeneratedInputReader _reader;
+
+    public override void Setup()
+    {
+        base.Setup();
+        _keyboard = InputSystem.AddDevice<Keyboard>();
+        _gamepad = InputSystem.AddDevice<Gamepad>();
+    }
+
+    public override void TearDown()
+    {
+        if (_readerGameObject != null)
+        {
+            UnityEngine.Object.DestroyImmediate(_readerGameObject);
+            _readerGameObject = null;
+            _reader = null;
+        }
+
+        base.TearDown();
+    }
+
+    [UnityTest]
+    public IEnumerator Move_IsPolled_FromCurrentControlValue()
+    {
+        yield return CreateReader();
+
+        Press(_keyboard.wKey);
+        yield return null;
+        Assert.That(_reader.Move, Is.EqualTo(Vector2.up).Using(_vectorComparer));
+
+        Release(_keyboard.wKey);
+        yield return null;
+        Assert.That(_reader.Move, Is.EqualTo(Vector2.zero).Using(_vectorComparer));
+    }
+
+    [UnityTest]
+    public IEnumerator Look_IsPolled_AfterRightStickChanges()
+    {
+        yield return CreateReader();
+
+        Set(_gamepad.rightStick, new Vector2(0.25f, -0.5f));
+        yield return null;
+        Assert.That(_reader.Look, Is.EqualTo(new Vector2(0.25f, -0.5f)).Using(_vectorComparer));
+    }
+
+    [UnityTest]
+    public IEnumerator Jump_Fires_OnPerformed_And_Resets_OnCanceled()
+    {
+        yield return CreateReader();
+
+        var jumpCount = 0;
+        Action jumpHandler = () => jumpCount++;
+        _reader.JumpPressed += jumpHandler;
+
+        Press(_keyboard.spaceKey);
+        yield return null;
+        Assert.That(jumpCount, Is.EqualTo(1));
+        Assert.That(_reader.JumpHeld, Is.True);
+
+        Release(_keyboard.spaceKey);
+        yield return null;
+        Assert.That(_reader.JumpHeld, Is.False);
+
+        _reader.JumpPressed -= jumpHandler;
+    }
+
+    [UnityTest]
+    public IEnumerator Disable_StopsCallbacks_And_ClearsCachedState()
+    {
+        yield return CreateReader();
+
+        var jumpCount = 0;
+        Action jumpHandler = () => jumpCount++;
+        _reader.JumpPressed += jumpHandler;
+
+        Press(_keyboard.dKey);
+        yield return null;
+        Assert.That(_reader.Move, Is.EqualTo(Vector2.right).Using(_vectorComparer));
+
+        _reader.enabled = false;
+        yield return null;
+        Assert.That(_reader.Move, Is.EqualTo(Vector2.zero).Using(_vectorComparer));
+        Assert.That(_reader.JumpHeld, Is.False);
+
+        Press(_keyboard.spaceKey);
+        yield return null;
+        Assert.That(jumpCount, Is.EqualTo(0));
+
+        _reader.JumpPressed -= jumpHandler;
+
+        Release(_keyboard.dKey);
+        Release(_keyboard.spaceKey);
+        yield return null;
+    }
+
+    [UnityTest]
+    public IEnumerator Destroy_Runs_Teardown_Path_WithoutUnexpectedInputActivity()
+    {
+        yield return CreateReader();
+
+        Press(_keyboard.spaceKey);
+        yield return null;
+
+        UnityEngine.Object.Destroy(_readerGameObject);
+        _readerGameObject = null;
+        _reader = null;
+        yield return null;
+
+        Release(_keyboard.spaceKey);
+        yield return null;
+        LogAssert.NoUnexpectedReceived();
+    }
+
+    private IEnumerator CreateReader()
+    {
+        _readerGameObject = new GameObject(nameof(GeneratedInputReader));
+        _reader = _readerGameObject.AddComponent<GeneratedInputReader>();
+        yield return null;
+    }
+}

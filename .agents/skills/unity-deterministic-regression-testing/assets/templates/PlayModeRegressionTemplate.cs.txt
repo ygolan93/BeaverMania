@@ -1,0 +1,73 @@
+using System.Collections;
+using System.Collections.Generic;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.TestTools;
+
+// Replace the example names with the target production types.
+public sealed class ExampleCoroutineDriverPlayModeTests
+{
+    private readonly List<GameObject> _ownedObjects = new List<GameObject>();
+
+    [UnityTearDown]
+    public IEnumerator UnityTearDown()
+    {
+        for (var i = _ownedObjects.Count - 1; i >= 0; i--)
+        {
+            if (_ownedObjects[i] != null)
+            {
+                UnityEngine.Object.Destroy(_ownedObjects[i]);
+            }
+        }
+
+        _ownedObjects.Clear();
+        yield return null;
+    }
+
+    [UnityTest]
+    public IEnumerator RunSequence_CompletesWithinFrameBudget()
+    {
+        // Arrange
+        const int FrameBudget = 5;
+        var host = RegisterOwned(new GameObject("ExampleCoroutineDriverHost"));
+        var sut = host.AddComponent<ExampleCoroutineDriver>();
+
+        // Act
+        sut.Begin();
+
+        var completed = false;
+        for (var frame = 0; frame < FrameBudget && !completed; frame++)
+        {
+            yield return null;
+            completed = sut.IsComplete;
+        }
+
+        // Assert
+        Assert.That(completed, Is.True, "Operation exceeded the declared frame budget.");
+    }
+
+    [UnityTest]
+    public IEnumerator Disable_StopsFurtherProgressAfterNextFrame()
+    {
+        // Arrange
+        var host = RegisterOwned(new GameObject("ExampleCoroutineDriverHost"));
+        var sut = host.AddComponent<ExampleCoroutineDriver>();
+        sut.Begin();
+        yield return null;
+
+        // Act
+        var progressBeforeDisable = sut.Progress;
+        sut.enabled = false;
+        yield return null;
+
+        // Assert
+        Assert.That(sut.Progress, Is.EqualTo(progressBeforeDisable));
+        Assert.That(sut.IsComplete, Is.False);
+    }
+
+    private GameObject RegisterOwned(GameObject instance)
+    {
+        _ownedObjects.Add(instance);
+        return instance;
+    }
+}

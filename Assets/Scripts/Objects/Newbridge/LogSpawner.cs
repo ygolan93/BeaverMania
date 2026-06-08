@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Serialization;
+using Beavermania.Core.GameFlow;
 using Beavermania.Display;
 using Beavermania.Core.Input;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
@@ -106,6 +107,9 @@ namespace Beavermania.Objects
                     Instantiate(bonus, origin + new Vector3(0, stackIndex++, 0), Quaternion.Euler(0, 0, 90));
                 }
             }
+
+            if (ObjectiveSyncService.Instance != null)
+                ObjectiveSyncService.Instance.OnChopTreeDestroyed(transform);
 
             Destroy(gameObject);
         }

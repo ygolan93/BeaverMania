@@ -123,17 +123,6 @@ namespace Beavermania.UI.Objectives
 
         void ApplyObjectiveIndexDirect(int index, Transform nextTarget)
         {
-            for (int locationIndex = 0; locationIndex < Locations.Length; locationIndex++)
-            {
-                if (Locations[locationIndex] == null)
-                    continue;
-
-                if (locationIndex == 21 || locationIndex == 22)
-                    continue;
-
-                Locations[locationIndex].gameObject.SetActive(locationIndex == index);
-            }
-
             i = index;
             target = nextTarget;
         }

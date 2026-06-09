@@ -1,4 +1,5 @@
 using System;
+using Beavermania.Audio;
 using Beavermania.Data.NPC;
 using Beavermania.Display;
 using UnityEngine;
@@ -96,8 +97,11 @@ namespace Beavermania.NPC
                 shadeAudio = GetComponent<ShadowRevenantShadeAudio>();
                 if (shadeAudio == null)
                 {
-                    if (GetComponent<AudioSource>() == null)
-                        gameObject.AddComponent<AudioSource>();
+                    AudioSource audioSource = GetComponent<AudioSource>();
+                    if (audioSource == null)
+                        audioSource = gameObject.AddComponent<AudioSource>();
+
+                    AudioSourceRouting.EnsureRoute(audioSource, AudioSourceRoute.Enemy);
 
                     shadeAudio = gameObject.AddComponent<ShadowRevenantShadeAudio>();
                 }

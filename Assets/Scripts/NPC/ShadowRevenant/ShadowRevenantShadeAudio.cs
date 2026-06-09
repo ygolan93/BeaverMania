@@ -25,6 +25,8 @@ namespace Beavermania.NPC
             if (actionSource == null)
                 actionSource = GetComponent<AudioSource>();
 
+            AudioSourceRouting.EnsureRoute(actionSource, AudioSourceRoute.Enemy);
+
             if (actionSource != null && actionSource.outputAudioMixerGroup != null && AudioVolumeSettings.Instance == null)
             {
                 AudioMixer mixer = actionSource.outputAudioMixerGroup.audioMixer;
@@ -104,7 +106,7 @@ namespace Beavermania.NPC
 
         bool TryPlay(SfxEventDefinition definition, string channel)
         {
-            if (definition == null || actionSource == null)
+            if (definition == null || !AudioSourceRouting.EnsureRoute(actionSource, AudioSourceRoute.Enemy))
                 return false;
 
             return definition.TryPlay(actionSource, channel);

@@ -19,7 +19,13 @@ namespace Beavermania.Audio
         void Awake()
         {
             if (ShouldAbortAsDuplicateInstance())
+            {
                 enabled = false;
+                return;
+            }
+
+            ResolveMusicSource();
+            EnsureMusicRouting();
         }
 
         void Start()
@@ -27,12 +33,10 @@ namespace Beavermania.Audio
             if (!enabled || ShouldAbortAsDuplicateInstance())
                 return;
 
-            if (MusicSource == null)
-                MusicSource = GetComponent<AudioSource>();
-
-            if (MusicSource == null)
+            ResolveMusicSource();
+            if (MusicSource == null || !EnsureMusicRouting())
             {
-                LogPlaylistWarning("No AudioSource found on GameMusic.");
+                LogPlaylistWarning("GameMusic is missing a routed Music AudioSource.");
                 return;
             }
 
@@ -54,6 +58,20 @@ namespace Beavermania.Audio
             currentClipIndex = FindFirstValidClipIndex(0);
             PlayClipAtIndex(currentClipIndex);
             EnsurePlaylistLoopRunning();
+        }
+
+        void ResolveMusicSource()
+        {
+            if (MusicSource == null)
+                MusicSource = GetComponent<AudioSource>();
+        }
+
+        bool EnsureMusicRouting()
+        {
+            if (MusicSource == null)
+                return false;
+
+            return AudioSourceRouting.EnsureRoute(MusicSource, AudioSourceRoute.Music, overwriteExisting: true);
         }
 
         bool ShouldAbortAsDuplicateInstance()
@@ -177,7 +195,7 @@ namespace Beavermania.Audio
 
         void PlayClipAtIndex(int clipIndex)
         {
-            if (MusicSource == null || MusicClip == null || clipIndex < 0 || clipIndex >= MusicClip.Length)
+            if (MusicSource == null || !EnsureMusicRouting() || MusicClip == null || clipIndex < 0 || clipIndex >= MusicClip.Length)
                 return;
 
             AudioClip clip = MusicClip[clipIndex];

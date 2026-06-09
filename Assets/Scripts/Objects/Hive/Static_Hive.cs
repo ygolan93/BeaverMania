@@ -26,6 +26,7 @@ namespace Beavermania.Objects
         {
             CurrentHealth = MaxHealth;
             Explosion.SetActive(false);
+            AudioSourceRouting.EnsureRoute(Sound, AudioSourceRoute.Sfx);
         }
 
         void LateUpdate()
@@ -104,7 +105,7 @@ namespace Beavermania.Objects
 
             CurrentHealth -= Damage;
 
-            if (Sound != null && Sound.clip != null)
+            if (AudioSourceRouting.EnsureRoute(Sound, AudioSourceRoute.Sfx) && Sound.clip != null)
                 GameplayAudio.TryPlayOneShot(Sound, Sound.clip, "HiveHit", 0.1f, 1f, 1f);
 
             if (HiveBar != null)

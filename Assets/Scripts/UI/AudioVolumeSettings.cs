@@ -9,22 +9,41 @@ namespace Beavermania.Audio
         public const string MasterVolumePrefKey = "Beavermania.MasterVolume";
         public const string MusicVolumePrefKey = "Beavermania.MusicVolume";
         public const string SfxVolumePrefKey = "Beavermania.SfxVolume";
-        public const string MusicSfxBalancePrefKey = "Beavermania.MusicSfxBalance";
 
         const string MasterVolumeParam = "MasterVolume";
         const string MusicVolumeParam = "MusicVolume";
         const string SfxVolumeParam = "SfxVolume";
         const string EnemiesVolumeParam = "EnemiesVolume";
+        const string MusicGroupName = "Music";
+        const string SfxGroupName = "SFX";
+        const string EnemiesGroupName = "Enemies";
+        const string UiGroupName = "UI";
 
         public const float DefaultMasterLinear = 1f;
         public const float DefaultMusicLinear = 0.8f;
         public const float DefaultSfxLinear = 1f;
-        public const float DefaultMusicSfxBalance = 0.5f;
-        public const float MusicSfxBalanceSwing = 0.25f;
 
         [SerializeField] AudioMixer audioMixer;
+        [SerializeField] AudioMixerGroup musicGroup;
+        [SerializeField] AudioMixerGroup sfxGroup;
+        [SerializeField] AudioMixerGroup enemiesGroup;
+        [SerializeField] AudioMixerGroup uiGroup;
 
         public static AudioVolumeSettings Instance { get; private set; }
+
+        public AudioMixer Mixer => audioMixer;
+        public AudioMixerGroup MusicGroup => ResolveMixerGroup(ref musicGroup, MusicGroupName);
+        public AudioMixerGroup SfxGroup => ResolveMixerGroup(ref sfxGroup, SfxGroupName);
+        public AudioMixerGroup EnemiesGroup => ResolveMixerGroup(ref enemiesGroup, EnemiesGroupName);
+        public AudioMixerGroup UiGroup => ResolveMixerGroup(ref uiGroup, UiGroupName);
+
+        public static AudioVolumeSettings GetRoutingCatalog()
+        {
+            if (Instance != null)
+                return Instance;
+
+            return Object.FindObjectOfType<AudioVolumeSettings>();
+        }
 
         void Awake()
         {
@@ -35,6 +54,7 @@ namespace Beavermania.Audio
             }
 
             Instance = this;
+            EnsureMixerGroupsResolved();
             ApplyAllFromPlayerPrefs();
         }
 
@@ -55,11 +75,17 @@ namespace Beavermania.Audio
                 Instance = null;
         }
 
+        void OnValidate()
+        {
+            EnsureMixerGroupsResolved();
+        }
+
         void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             if (Instance != this || audioMixer == null)
                 return;
 
+            EnsureMixerGroupsResolved();
             ApplyAllFromPlayerPrefs();
         }
 
@@ -68,6 +94,7 @@ namespace Beavermania.Audio
             if (audioMixer == null)
                 return;
 
+            EnsureMixerGroupsResolved();
             ApplyMasterVolume(GetSavedMaster(), false);
             ApplyMusicVolume(GetSavedMusic(), false);
             ApplySfxVolume(GetSavedSfx(), false);
@@ -89,44 +116,6 @@ namespace Beavermania.Audio
             return GetSavedLinearVolume(SfxVolumePrefKey, DefaultSfxLinear);
         }
 
-        public static float GetSavedMusicSfxBalance()
-        {
-            return GetSavedLinearVolume(MusicSfxBalancePrefKey, DefaultMusicSfxBalance);
-        }
-
-        public static void GetLinearVolumesForBalance(float balance, out float musicLinear, out float sfxLinear)
-        {
-            balance = Mathf.Clamp01(balance);
-            float bias = (balance - DefaultMusicSfxBalance) * 2f;
-            musicLinear = Mathf.Clamp01(DefaultMusicLinear + bias * MusicSfxBalanceSwing);
-            sfxLinear = Mathf.Clamp01(DefaultSfxLinear - bias * MusicSfxBalanceSwing);
-        }
-
-        public void ApplyMusicSfxBalance(float balance, bool save = true)
-        {
-            balance = Mathf.Clamp01(balance);
-            GetLinearVolumesForBalance(balance, out float musicLinear, out float sfxLinear);
-            ApplyMusicVolume(musicLinear, false);
-            ApplySfxVolume(sfxLinear, false);
-
-            if (save)
-            {
-                PlayerPrefs.SetFloat(MusicSfxBalancePrefKey, balance);
-                PlayerPrefs.Save();
-            }
-        }
-
-        public void ApplyMusicSfxBalanceFromPrefs(bool save = false)
-        {
-            ApplyMusicSfxBalance(GetSavedMusicSfxBalance(), save);
-        }
-
-        public void ApplyMusicSfxBalanceFromMenu(float balance)
-        {
-            ApplyMusicSfxBalance(balance, true);
-            LogAppliedMixerVolumes();
-        }
-
         static float GetSavedLinearVolume(string prefKey, float defaultLinear)
         {
             if (!PlayerPrefs.HasKey(prefKey))
@@ -146,13 +135,17 @@ namespace Beavermania.Audio
             linearVolume = Mathf.Clamp01(linearVolume);
             SetMixerParameter(MasterVolumeParam, linearVolume);
 
-            if (save)
-            {
-                PlayerPrefs.SetFloat(MasterVolumePrefKey, linearVolume);
-                PlayerPrefs.Save();
-            }
+            if (!save)
+                return;
 
-            AudioListener.volume = linearVolume;
+            PlayerPrefs.SetFloat(MasterVolumePrefKey, linearVolume);
+            PlayerPrefs.Save();
+        }
+
+        public void ApplyMusicVolumeFromMenu(float linearVolume)
+        {
+            ApplyMusicVolume(linearVolume, true);
+            LogAppliedMixerVolumes();
         }
 
         public void ApplyMusicVolume(float linearVolume, bool save = true)
@@ -160,11 +153,11 @@ namespace Beavermania.Audio
             linearVolume = Mathf.Clamp01(linearVolume);
             SetMixerParameter(MusicVolumeParam, linearVolume);
 
-            if (save)
-            {
-                PlayerPrefs.SetFloat(MusicVolumePrefKey, linearVolume);
-                PlayerPrefs.Save();
-            }
+            if (!save)
+                return;
+
+            PlayerPrefs.SetFloat(MusicVolumePrefKey, linearVolume);
+            PlayerPrefs.Save();
         }
 
         public void ApplySfxVolume(float linearVolume, bool save = true)
@@ -172,11 +165,11 @@ namespace Beavermania.Audio
             linearVolume = Mathf.Clamp01(linearVolume);
             ApplySfxVolumesToMixer(audioMixer, linearVolume);
 
-            if (save)
-            {
-                PlayerPrefs.SetFloat(SfxVolumePrefKey, linearVolume);
-                PlayerPrefs.Save();
-            }
+            if (!save)
+                return;
+
+            PlayerPrefs.SetFloat(SfxVolumePrefKey, linearVolume);
+            PlayerPrefs.Save();
         }
 
         public static void ApplySfxVolumesToMixer(AudioMixer mixer, float linearVolume)
@@ -184,6 +177,8 @@ namespace Beavermania.Audio
             if (mixer == null)
                 return;
 
+            // SfxVolume and EnemiesVolume are exposed on sibling Master children (SFX vs Enemies).
+            // Both follow the single SFX menu slider, but each group is attenuated only once.
             float decibels = LinearToDecibels(linearVolume);
             mixer.SetFloat(SfxVolumeParam, decibels);
             mixer.SetFloat(EnemiesVolumeParam, decibels);
@@ -198,6 +193,35 @@ namespace Beavermania.Audio
         {
             ApplySfxVolume(linearVolume, true);
             LogAppliedMixerVolumes();
+        }
+
+        void EnsureMixerGroupsResolved()
+        {
+            _ = MusicGroup;
+            _ = SfxGroup;
+            _ = EnemiesGroup;
+            _ = UiGroup;
+        }
+
+        AudioMixerGroup ResolveMixerGroup(ref AudioMixerGroup configuredGroup, string groupName)
+        {
+            if (configuredGroup != null || audioMixer == null)
+                return configuredGroup;
+
+            AudioMixerGroup[] matches = audioMixer.FindMatchingGroups(groupName);
+            for (int i = 0; i < matches.Length; i++)
+            {
+                if (matches[i] != null && matches[i].name == groupName)
+                {
+                    configuredGroup = matches[i];
+                    return configuredGroup;
+                }
+            }
+
+            if (matches.Length > 0)
+                configuredGroup = matches[0];
+
+            return configuredGroup;
         }
 
         void SetMixerParameter(string parameterName, float linearVolume)

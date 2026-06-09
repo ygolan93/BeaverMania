@@ -6,28 +6,38 @@ namespace Beavermania.Audio
     public class Punch : MonoBehaviour
     {
         [SerializeField] AudioClip[] audioClip;
-        private AudioSource punch;
+        AudioSource punch;
 
-    
-
-        private void Awake()
+        void Awake()
         {
-             punch = GetComponent<AudioSource>();
+            punch = GetComponent<AudioSource>();
+            AudioSourceRouting.EnsureRoute(punch, AudioSourceRoute.Sfx);
         }
+
+        void OnEnable()
+        {
+            AudioSourceRouting.EnsureRoute(punch, AudioSourceRoute.Sfx);
+        }
+
         public void Hit()
         {
-                AudioClip clip = GetRandomClip();
-                punch.PlayOneShot(clip);
+            if (!AudioSourceRouting.EnsureRoute(punch, AudioSourceRoute.Sfx))
+                return;
+
+            AudioClip clip = GetRandomClip();
+            if (clip == null)
+                return;
+
+            punch.PlayOneShot(clip);
         }
 
-
-         AudioClip GetRandomClip()
+        AudioClip GetRandomClip()
         {
-                int index = Random.Range(0, audioClip.Length - 1);
-                return audioClip[index];
+            if (audioClip == null || audioClip.Length == 0)
+                return null;
 
+            int index = Random.Range(0, audioClip.Length);
+            return audioClip[index];
         }
-
-
     }
 }

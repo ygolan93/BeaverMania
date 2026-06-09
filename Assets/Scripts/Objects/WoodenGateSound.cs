@@ -9,11 +9,17 @@ namespace Beavermania.Objects
     {
         [SerializeField] AudioSource Gate;
 
+        void Awake()
+        {
+            Beavermania.Audio.AudioSourceRouting.EnsureRoute(Gate, Beavermania.Audio.AudioSourceRoute.Sfx);
+        }
+
         private void OnCollisionEnter(Collision OBJ)
         { 
           if (OBJ.gameObject.CompareTag("Player"))
             {
-                Gate.Play();
+                if (Beavermania.Audio.AudioSourceRouting.EnsureRoute(Gate, Beavermania.Audio.AudioSourceRoute.Sfx))
+                    Gate.Play();
             }
         }
     }

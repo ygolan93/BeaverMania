@@ -11,8 +11,6 @@ namespace Beavermania.UI.Menus
 {
     public class UIMenu : MonoBehaviour
     {
-        const string MasterVolumeKey = AudioVolumeSettings.MasterVolumePrefKey;
-
         [SerializeField] public GameObject PauseMenu;
         [SerializeField] public GameObject Question;
         [SerializeField] public BeaverPlayer Player;
@@ -88,9 +86,9 @@ namespace Beavermania.UI.Menus
             if (volumeSlider == null)
                 return;
 
-            float savedMaster = AudioVolumeSettings.GetSavedMaster();
-            volumeSlider.SetValueWithoutNotify(savedMaster);
-            ApplyMasterVolume(savedMaster);
+            float savedMusic = AudioVolumeSettings.GetSavedMusic();
+            volumeSlider.SetValueWithoutNotify(savedMusic);
+            ApplyMusicVolume(savedMusic);
         }
 
         void InitializeSfxVolumeSlider()
@@ -111,8 +109,6 @@ namespace Beavermania.UI.Menus
 
             Transform searchRoot = PauseMenu != null ? PauseMenu.transform : transform;
             Transform existing = searchRoot.Find("Sfx Volume SLIDER");
-            if (existing == null)
-                existing = searchRoot.Find("MusicSfx Balance SLIDER");
 
             if (existing != null)
             {
@@ -264,7 +260,7 @@ namespace Beavermania.UI.Menus
                 return;
 
             float value = Mathf.Clamp01(volumeSlider.value);
-            ApplyMasterVolume(value);
+            ApplyMusicVolume(value);
         }
 
         public void SfxVolume()
@@ -297,11 +293,11 @@ namespace Beavermania.UI.Menus
                 musicObject.SendMessage("ApplySfxVolume", linearVolume, SendMessageOptions.DontRequireReceiver);
         }
 
-        static void ApplyMasterVolume(float linearVolume)
+        static void ApplyMusicVolume(float linearVolume)
         {
             if (AudioVolumeSettings.Instance != null)
             {
-                AudioVolumeSettings.Instance.ApplyMasterVolumeFromMenu(linearVolume);
+                AudioVolumeSettings.Instance.ApplyMusicVolumeFromMenu(linearVolume);
                 return;
             }
 
@@ -309,7 +305,7 @@ namespace Beavermania.UI.Menus
             if (musicObject == null)
                 return;
 
-            musicObject.SendMessage("ApplyMasterVolumeFromMenu", linearVolume, SendMessageOptions.DontRequireReceiver);
+            musicObject.SendMessage("ApplyMusicVolumeFromMenu", linearVolume, SendMessageOptions.DontRequireReceiver);
         }
 
         void OnDisable()

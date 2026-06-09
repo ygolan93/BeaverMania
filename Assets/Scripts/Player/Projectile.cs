@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Beavermania.Audio;
 using Beavermania.Display;
 using Beavermania.NPC;
 using Beavermania.Objects;
@@ -325,6 +326,7 @@ namespace Beavermania.Player.Combat
             audioSources = GetComponentsInChildren<AudioSource>(true);
             defaultVolumes = new float[audioSources.Length];
             defaultPitches = new float[audioSources.Length];
+            EnsureAudioRoutes();
 
             for (var i = 0; i < audioSources.Length; i++)
             {
@@ -380,6 +382,7 @@ namespace Beavermania.Player.Combat
         void Launch(Vector3 position, Quaternion rotation, bool isOverflowInstance, Vector3? worldLaunchDirection, BeaverPlayer owner)
         {
             CacheDefaults();
+            EnsureAudioRoutes();
             EnforceProjectileTypeFlags();
 
             overflowInstance = isOverflowInstance;
@@ -521,6 +524,16 @@ namespace Beavermania.Player.Combat
                 audioSources[i].volume = defaultVolumes[i];
                 audioSources[i].pitch = defaultPitches[i];
             }
+        }
+
+        void EnsureAudioRoutes()
+        {
+            AudioSourceRouting.EnsureRoute(Sound, AudioSourceRoute.Sfx);
+            if (audioSources == null)
+                return;
+
+            for (var i = 0; i < audioSources.Length; i++)
+                AudioSourceRouting.EnsureRoute(audioSources[i], AudioSourceRoute.Sfx);
         }
 
         void ResetOwnerReference()
@@ -1013,7 +1026,7 @@ namespace Beavermania.Player.Combat
 
         void PlayImpactSound(float volume, float pitch)
         {
-            if (Sound == null || Sound.clip == null)
+            if (!AudioSourceRouting.EnsureRoute(Sound, AudioSourceRoute.Sfx) || Sound.clip == null)
                 return;
 
             Sound.volume = volume;

@@ -2426,7 +2426,7 @@ namespace Beavermania.Player
                     }
                     OnPlatform = false;
                     Player.velocity = new Vector3(Player.velocity.x, JumpForce, Player.velocity.z);
-                    Sound.Jump();
+                    Sound?.PlayPlayerJumpSfx();
                     levitation = 10;
                     Otter.speed = AnimSpeed;
                     JumpNum--;

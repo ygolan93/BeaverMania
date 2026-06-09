@@ -7,6 +7,17 @@ namespace Beavermania.Audio
     [RequireComponent(typeof(AudioSource))]
     public class AudioScript : MonoBehaviour
     {
+        const int JumpClipIndex = 0;
+        const string GenericJumpChannel = "sfx.jump";
+        const string PlayerJumpChannel = "player.jump";
+        const float GenericJumpCooldown = 0.2f;
+        const float GenericJumpVolumeScale = 0.55f;
+        const float GenericJumpPitch = 0.8f;
+        const float PlayerJumpCooldown = 0.16f;
+        const float PlayerJumpVolumeScale = 0.42f;
+        const float PlayerJumpPitchMin = 0.78f;
+        const float PlayerJumpPitchMax = 0.84f;
+
         [SerializeField] AudioClip[] audioClip;
         [SerializeField] AudioSource audioSource;
         [SerializeField] AudioSource audioEffects;
@@ -249,13 +260,16 @@ namespace Beavermania.Audio
 
         public void Jump()
         {
-            AudioSource source = ResolveEffectsSource();
-            if (source == null || !TryGetClip(0, out AudioClip clip))
-                return;
+            TryPlayJumpSfx(GenericJumpChannel, GenericJumpCooldown, GenericJumpVolumeScale, GenericJumpPitch);
+        }
 
-            source.clip = clip;
-            source.volume = 0.65f;
-            GameplayAudio.TryPlayOneShot(source, clip, "player.jump", 0.2f, 0.55f, 0.8f);
+        public bool PlayPlayerJumpSfx()
+        {
+            return TryPlayJumpSfx(
+                PlayerJumpChannel,
+                PlayerJumpCooldown,
+                PlayerJumpVolumeScale,
+                SamplePitch(PlayerJumpPitchMin, PlayerJumpPitchMax));
         }
 
         void EnsureRoutes()
@@ -291,6 +305,22 @@ namespace Beavermania.Audio
 
             clip = audioClip[index];
             return clip != null;
+        }
+
+        bool TryPlayJumpSfx(string channel, float minInterval, float volumeScale, float pitch)
+        {
+            AudioSource source = ResolveEffectsSource();
+            if (source == null || !TryGetClip(JumpClipIndex, out AudioClip clip))
+                return false;
+
+            source.clip = clip;
+            source.volume = 1f;
+            return GameplayAudio.TryPlayOneShot(source, clip, channel, minInterval, volumeScale, pitch);
+        }
+
+        static float SamplePitch(float minPitch, float maxPitch)
+        {
+            return minPitch >= maxPitch ? minPitch : Random.Range(minPitch, maxPitch);
         }
     }
 }

@@ -108,6 +108,20 @@ namespace Beavermania.Tests.Audio
         }
 
         [Test]
+        public void WasChannelPlayedWithin_ReturnsTrueUntilWindowExpires()
+        {
+            AudioSource source = CreateRoutedSource("JumpSource", ref sourceAGameObject);
+
+            bool played = GameplayAudio.TryPlayOneShot(source, clip, PlayerJumpChannel, 0.16f, 0.42f, 0.8f);
+
+            Assert.That(played, Is.True);
+            Assert.That(GameplayAudio.WasChannelPlayedWithin(PlayerJumpChannel, 0.16f), Is.True);
+            Assert.That(GameplayAudio.WasChannelPlayedWithin("other.channel", 0.16f), Is.False);
+            GameplayAudio.ClearChannel(PlayerJumpChannel);
+            Assert.That(GameplayAudio.WasChannelPlayedWithin(PlayerJumpChannel, 0.16f), Is.False);
+        }
+
+        [Test]
         public void ClearChannel_AllowsImmediateReplayOfPlayerJump()
         {
             AudioSource source = CreateRoutedSource("JumpSource", ref sourceAGameObject);

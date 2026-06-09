@@ -46,6 +46,17 @@ namespace Beavermania.Audio
             return true;
         }
 
+        public static bool WasChannelPlayedWithin(string channel, float withinSeconds)
+        {
+            if (string.IsNullOrEmpty(channel) || withinSeconds <= 0f)
+                return false;
+
+            if (!LastPlayTimeByChannel.TryGetValue(channel, out float lastPlay))
+                return false;
+
+            return Time.unscaledTime - lastPlay < withinSeconds;
+        }
+
         public static void ClearChannel(string channel)
         {
             if (string.IsNullOrEmpty(channel))

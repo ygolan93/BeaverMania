@@ -8,15 +8,14 @@ namespace Beavermania.Audio
     public class AudioScript : MonoBehaviour
     {
         const int JumpClipIndex = 0;
-        const string GenericJumpChannel = "sfx.jump";
         const string PlayerJumpChannel = "player.jump";
-        const float GenericJumpCooldown = 0.2f;
-        const float GenericJumpVolumeScale = 0.55f;
-        const float GenericJumpPitch = 0.8f;
         const float PlayerJumpCooldown = 0.16f;
         const float PlayerJumpVolumeScale = 0.42f;
         const float PlayerJumpPitchMin = 0.78f;
         const float PlayerJumpPitchMax = 0.84f;
+        const float MovementSfxAfterJumpSuppression = 0.12f;
+
+        static int jumpMovementSuppressionFrame = -1;
 
         [SerializeField] AudioClip[] audioClip;
         [SerializeField] AudioSource audioSource;
@@ -163,6 +162,9 @@ namespace Beavermania.Audio
 
         public void Roll()
         {
+            if (ShouldSuppressMovementSfxAfterJump())
+                return;
+
             AudioSource source = ResolvePrimarySource();
             if (source == null || !TryGetClip(8, out AudioClip clip))
                 return;
@@ -248,6 +250,9 @@ namespace Beavermania.Audio
             if (footstepVfxEmitter != null)
                 footstepVfxEmitter.PlayStep();
 
+            if (ShouldSuppressMovementSfxAfterJump())
+                return;
+
             AudioSource source = ResolvePrimarySource();
             if (source == null || !TryGetClip(1, out AudioClip clip))
                 return;
@@ -260,16 +265,41 @@ namespace Beavermania.Audio
 
         public void Jump()
         {
-            TryPlayJumpSfx(GenericJumpChannel, GenericJumpCooldown, GenericJumpVolumeScale, GenericJumpPitch);
+            PlayPlayerJumpSfx();
         }
 
         public bool PlayPlayerJumpSfx()
         {
-            return TryPlayJumpSfx(
+            jumpMovementSuppressionFrame = Time.frameCount;
+
+            AudioSource source = ResolveEffectsSource();
+            if (source == null || !TryGetClip(JumpClipIndex, out AudioClip clip))
+                return false;
+
+            float dopplerLevel = source.dopplerLevel;
+            float spatialBlend = source.spatialBlend;
+            source.dopplerLevel = 0f;
+            source.spatialBlend = 0f;
+
+            bool played = GameplayAudio.TryPlayOneShot(
+                source,
+                clip,
                 PlayerJumpChannel,
                 PlayerJumpCooldown,
                 PlayerJumpVolumeScale,
                 SamplePitch(PlayerJumpPitchMin, PlayerJumpPitchMax));
+
+            source.dopplerLevel = dopplerLevel;
+            source.spatialBlend = spatialBlend;
+            return played;
+        }
+
+        static bool ShouldSuppressMovementSfxAfterJump()
+        {
+            if (Time.frameCount == jumpMovementSuppressionFrame)
+                return true;
+
+            return GameplayAudio.WasChannelPlayedWithin(PlayerJumpChannel, MovementSfxAfterJumpSuppression);
         }
 
         void EnsureRoutes()
@@ -305,17 +335,6 @@ namespace Beavermania.Audio
 
             clip = audioClip[index];
             return clip != null;
-        }
-
-        bool TryPlayJumpSfx(string channel, float minInterval, float volumeScale, float pitch)
-        {
-            AudioSource source = ResolveEffectsSource();
-            if (source == null || !TryGetClip(JumpClipIndex, out AudioClip clip))
-                return false;
-
-            source.clip = clip;
-            source.volume = 1f;
-            return GameplayAudio.TryPlayOneShot(source, clip, channel, minInterval, volumeScale, pitch);
         }
 
         static float SamplePitch(float minPitch, float maxPitch)

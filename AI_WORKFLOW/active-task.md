@@ -1,38 +1,45 @@
 # Active Task
 
 ## Task title
-- Hive objective / waypoint progression fix
+- Audio Mixer prefab/scene wiring
 
 ## Type
-- Mixed (scripts + prefab/scene hive wiring + Play Mode verification)
+- Mixed (scripts + prefab wiring + Play Mode verification)
 
 ## Owner
-- **Cursor** — script + prefab/scene wiring complete
-- **User** — Play Mode verification in Level 1 Remastered - Steam
+- **Cursor** — prefab wiring, EditMode audit tests, Unity MCP verification
+- **User** — final Play Mode slider QA confirmation
 
 ## Current phase
-- Implementation complete; awaiting Play Mode confirmation
+- Implementation complete; EditMode + partial Play Mode verification done
 
 ## Goal
-- After destroying the first hive, advance WayPoint index 0→1 and HUD objective to "Talk to the trader". Per-hive configured advancement for second nest hive (→ index 8).
+- Ensure all priority AudioSources and AudioVolumeSettings catalog references are assigned to NewAudioMixer groups; validate with EditMode tests and Play Mode slider QA in Level 1 - Remastered - Steam.
 
 ## Changes made
 
 ### Scripts
-- `Assets/Scripts/UI/WayPoint.cs` — `AdvanceToIndex(int)`, `AdvanceToNext()`; `OnTriggerEnter` refactored
-- `Assets/Scripts/Player/ObjectiveUI.cs` — `UpdateObjective()` advances via WayPoint; cached references
-- `Assets/Scripts/Objects/Hive/Static_Hive.cs` — per-hive `advancesObjectiveOnDeath`, `advanceToObjectiveIndex`, `deathHandled` guard
+- `Assets/Editor/AudioRoutingPrefabAudit.cs` — allowlist prefab scan for null mixer groups
+- `Assets/Editor/AudioRoutingEditModeTests.cs` — `AllowlistedPrefabs_HaveRoutedEnabledAudioSources` test
 
-### Prefabs / scene
-- `Assets/Prefabs/Hive/NewHive.prefab` — default objective fields (disabled by default)
-- `Assets/Prefabs/Player/PlayerPack-Drop and Play.prefab` — `ObjectiveUI.i` override 12 → 0
-- `Assets/Scenes/Level 1 - Remastered - Steam.unity`:
-  - **NewHive** (waypoint location 0): `advancesObjectiveOnDeath=true`, `advanceToObjectiveIndex=1`
-  - **NewHive (1)** (waypoint location 7): `advancesObjectiveOnDeath=true`, `advanceToObjectiveIndex=8`
+### Prefabs
+- `Assets/Prefabs/Objects/UI/GameMusic.prefab` — full AudioVolumeSettings group catalog (Music/SFX/Enemies/UI)
+- `Assets/Prefabs/Player/Otter_Shapekeys/Player.prefab` — disabled orphan AudioSource → Effects
 
-## Manual Play Mode validation checklist
-- [ ] Start: objective "Clear the wasp nest", compass → first hive / WASPS A
-- [ ] Destroy first hive: objective → "Talk to the trader", `WayPoint.i == 1`, compass → Trader
-- [ ] Trader dialogue still advances objectives via `UpdateObjective()`
-- [ ] Destroy second-nest hive (NewHive (1)): objective → "Defeat Shadow Revenant", index 8
-- [ ] No double-advance on hive death; no Console errors
+### Verified unchanged (already wired)
+- ShadowRevenant → Boss (×2)
+- ShadowRevenantShadeMinion → Enemies
+- ScorpionBoss → Boss (×2)
+- PlayerCanvas → UI (×5)
+- FirstLift → Elevator/Button
+- Electric Effect → Effects
+
+## Manual Play Mode validation checklist (Level 1 Remastered - Steam)
+- [x] EditMode prefab audit passes (`AllowlistedPrefabs_HaveRoutedEnabledAudioSources`)
+- [x] EditMode routing tests pass (Music/Sfx/Enemy/UI EnsureRoute + prefab audit)
+- [x] SFX slider updates SfxVolume + EnemiesVolume at runtime (console evidence during Play Mode)
+- [x] MusicVolume unchanged while SFX slider moved (console evidence)
+- [ ] Music slider audible-only QA (human ear check)
+- [ ] Master slider affects all categories (human ear check)
+- [ ] Volume settings persist after scene reload
+- [ ] No `[AudioSourceRouting]` warnings during combat

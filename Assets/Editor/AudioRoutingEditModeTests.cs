@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using System.Reflection;
 using Beavermania.Audio;
 using NUnit.Framework;
@@ -235,6 +236,20 @@ namespace Beavermania.Tests.Audio
             FieldInfo field = typeof(AudioVolumeSettings).GetField(InstanceBackingFieldName, BindingFlags.Static | BindingFlags.NonPublic);
             Assert.That(field, Is.Not.Null, "Expected AudioVolumeSettings instance backing field.");
             field.SetValue(null, instance);
+        }
+
+        [Test]
+        public void AllowlistedPrefabs_HaveRoutedEnabledAudioSources()
+        {
+            List<AudioRoutingPrefabAudit.AudioRoutingPrefabIssue> issues = AudioRoutingPrefabAudit.ScanAllowlist();
+
+            if (issues.Count > 0)
+            {
+                for (int i = 0; i < issues.Count; i++)
+                    Debug.LogError(issues[i].ToString(), AssetDatabase.LoadAssetAtPath<Object>(issues[i].PrefabPath));
+            }
+
+            Assert.That(issues, Is.Empty, "Expected zero audio routing issues in allowlisted prefabs.");
         }
     }
 }

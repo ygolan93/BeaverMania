@@ -3363,7 +3363,7 @@ namespace Beavermania.Player
                 BindHudState();
 
             if (PlayerHudState != null)
-                PlayerHudState.CopyFrom(this, PlayerObjective != null, PlayerObjective != null ? PlayerObjective.Instruction : null);
+                PlayerHudState.CopyPlayerStatsFrom(this);
         }
 
         public bool OwnsArsenalItem(string itemId)

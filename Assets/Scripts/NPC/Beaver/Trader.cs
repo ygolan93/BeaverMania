@@ -247,12 +247,21 @@ namespace Beavermania.NPC
             {
                 playerHudState.ObjectiveTextOverrideActive = false;
                 playerHudState.ObjectiveTextOverride = null;
-                if (hasStoredPreviousObjectiveText)
-                    playerHudState.ObjectiveText = previousObjectiveText;
             }
 
-            if (objectiveText != null && hasStoredPreviousObjectiveText)
-                objectiveText.text = previousObjectiveText ?? string.Empty;
+            var objectiveService = ObjectiveSyncService.Instance;
+            if (objectiveService != null)
+            {
+                objectiveService.RefreshBindingsAndReapply();
+            }
+            else
+            {
+                if (playerHudState != null && hasStoredPreviousObjectiveText)
+                    playerHudState.ObjectiveText = previousObjectiveText;
+
+                if (objectiveText != null && hasStoredPreviousObjectiveText)
+                    objectiveText.text = previousObjectiveText ?? string.Empty;
+            }
 
             hasStoredPreviousObjectiveText = false;
             isShowingInteractionPrompt = false;
@@ -498,25 +507,6 @@ namespace Beavermania.NPC
             SafeSetActive(Shop, false);
             if (Player != null)
                 Player.RestoreGameplayAfterTrader();
-
-            if (ObjectiveSyncService.Instance != null)
-                ObjectiveSyncService.Instance.OnTraderDialogueCompleted();
-            else
-                ApplyStageFallback(GameProgressionStage.CollectLogs);
-        }
-
-        static void ApplyStageFallback(GameProgressionStage stage)
-        {
-            var service = FindObjectOfType<ObjectiveSyncService>();
-            if (service == null)
-                return;
-
-            switch (stage)
-            {
-                case GameProgressionStage.CollectLogs:
-                    service.OnTraderDialogueCompleted();
-                    break;
-            }
         }
 
         public void CloseShop()

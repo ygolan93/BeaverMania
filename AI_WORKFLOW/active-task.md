@@ -11,7 +11,7 @@
 - **User** — final Play Mode slider QA confirmation
 
 ## Current phase
-- Implementation complete; EditMode + partial Play Mode verification done
+- Implementation complete; merged `origin/main` (objective flow). EditMode + partial Play Mode verification done.
 
 ## Goal
 - Ensure all priority AudioSources and AudioVolumeSettings catalog references are assigned to NewAudioMixer groups; validate with EditMode tests and Play Mode slider QA in Level 1 - Remastered - Steam.
@@ -43,3 +43,9 @@
 - [ ] Master slider affects all categories (human ear check)
 - [ ] Volume settings persist after scene reload
 - [ ] No `[AudioSourceRouting]` warnings during combat
+
+---
+
+## Merged from main (objective flow — complete, no code conflicts)
+
+Objective flow Remastered wiring landed via PR #175 and merged cleanly with audio routing (`BeaverPlayerBehaviour`, `Static_Hive` auto-merged). Status on main: complete with PlayMode tests passing.

@@ -1,3 +1,4 @@
+using Beavermania.Audio;
 using Beavermania.Data.NPC;
 using Beavermania.Display;
 using Beavermania.Objects;
@@ -158,8 +159,11 @@ namespace Beavermania.NPC
                 bossAudio = GetComponent<ShadowRevenantAudio>();
                 if (bossAudio == null)
                 {
-                    if (GetComponent<AudioSource>() == null)
-                        gameObject.AddComponent<AudioSource>();
+                    AudioSource audioSource = GetComponent<AudioSource>();
+                    if (audioSource == null)
+                        audioSource = gameObject.AddComponent<AudioSource>();
+
+                    AudioSourceRouting.EnsureRoute(audioSource, AudioSourceRoute.Enemy);
 
                     bossAudio = gameObject.AddComponent<ShadowRevenantAudio>();
                 }
@@ -1272,7 +1276,14 @@ namespace Beavermania.NPC
             {
                 bossAudio = GetComponent<ShadowRevenantAudio>();
                 if (bossAudio == null)
+                {
+                    AudioSource audioSource = GetComponent<AudioSource>();
+                    if (audioSource == null)
+                        audioSource = gameObject.AddComponent<AudioSource>();
+
+                    AudioSourceRouting.EnsureRoute(audioSource, AudioSourceRoute.Enemy);
                     bossAudio = gameObject.AddComponent<ShadowRevenantAudio>();
+                }
 
                 bossAudio.SetProfile(config.audioProfile);
             }

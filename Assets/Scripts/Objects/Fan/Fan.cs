@@ -19,6 +19,11 @@ namespace Beavermania.Objects
         [SerializeField] AudioClip clip;
         bool fanSoundPlaying;
 
+        void Awake()
+        {
+            Beavermania.Audio.AudioSourceRouting.EnsureRoute(sound, Beavermania.Audio.AudioSourceRoute.Sfx);
+        }
+
         private void Start()
         {
             initialCounter = counter;
@@ -29,7 +34,10 @@ namespace Beavermania.Objects
             if (turnON)
             {
                 rotor.SetBool("turnOn", true);
-                if (!fanSoundPlaying && sound != null && clip != null)
+                if (!fanSoundPlaying
+                    && sound != null
+                    && clip != null
+                    && Beavermania.Audio.AudioSourceRouting.EnsureRoute(sound, Beavermania.Audio.AudioSourceRoute.Sfx))
                 {
                     sound.clip = clip;
                     sound.loop = true;

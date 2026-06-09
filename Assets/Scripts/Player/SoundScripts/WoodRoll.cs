@@ -6,21 +6,37 @@ namespace Beavermania.Audio
     public class WoodRoll : MonoBehaviour
     {
         [SerializeField] AudioClip[] audioClip;
-        private AudioSource audioSource;
-        private void Awake()
+        AudioSource audioSource;
+
+        void Awake()
         {
             audioSource = GetComponent<AudioSource>();
+            AudioSourceRouting.EnsureRoute(audioSource, AudioSourceRoute.Sfx);
         }
-        private void Wood()
+
+        void OnEnable()
         {
+            AudioSourceRouting.EnsureRoute(audioSource, AudioSourceRoute.Sfx);
+        }
+
+        void Wood()
+        {
+            if (!AudioSourceRouting.EnsureRoute(audioSource, AudioSourceRoute.Sfx))
+                return;
+
             AudioClip clip = GetClip();
+            if (clip == null)
+                return;
+
             audioSource.PlayOneShot(clip);
         }
 
-        private AudioClip GetClip()
+        AudioClip GetClip()
         {
-            int index = 0;
-            return audioClip[index];
+            if (audioClip == null || audioClip.Length == 0)
+                return null;
+
+            return audioClip[0];
         }
     }
 }

@@ -16,6 +16,11 @@ namespace Beavermania.Objects
         private bool isMovingUp = true;  // Flag to track the elevator's direction.
         public bool isMoving = false;   // Flag to prevent multiple movements.
 
+        void Awake()
+        {
+            Beavermania.Audio.AudioSourceRouting.EnsureRoute(noise, Beavermania.Audio.AudioSourceRoute.Sfx);
+        }
+
         private void Update()
         {
             // Check if the elevator is not moving to prevent multiple movements.
@@ -24,7 +29,8 @@ namespace Beavermania.Objects
                 // Check if the player is in the elevator and pressing the elevator button.
                 if (Button1.isPushed==true || Button2.isPushed == true)
                 {
-                    noise.Play();
+                    if (Beavermania.Audio.AudioSourceRouting.EnsureRoute(noise, Beavermania.Audio.AudioSourceRoute.Sfx))
+                        noise.Play();
                     // Toggle the elevator direction.
                     isMovingUp = !isMovingUp;
                     // Start moving the elevator.

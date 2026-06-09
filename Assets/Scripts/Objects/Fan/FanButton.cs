@@ -20,6 +20,11 @@ namespace Beavermania.Objects
         [SerializeField] AudioClip clickClip;
         [SerializeField] GameObject pressedButton;
         // Start is called before the first frame update
+        void Awake()
+        {
+            Beavermania.Audio.AudioSourceRouting.EnsureRoute(click, Beavermania.Audio.AudioSourceRoute.Sfx);
+        }
+
         private void Start()
         {
             mat = pressedButton.GetComponent<Renderer>();
@@ -51,8 +56,11 @@ namespace Beavermania.Objects
         {
             if (OBJ.gameObject.CompareTag("Player"))
             {
-                click.clip = clickClip;
-                click.PlayOneShot(clickClip);
+                if (Beavermania.Audio.AudioSourceRouting.EnsureRoute(click, Beavermania.Audio.AudioSourceRoute.Sfx))
+                {
+                    click.clip = clickClip;
+                    click.PlayOneShot(clickClip);
+                }
                 isPushed = true;
                 if (Rotor.turnON==false)
                 {
@@ -64,8 +72,11 @@ namespace Beavermania.Objects
         {
             if (OBJ.gameObject.CompareTag("Damage"))
             {
-                click.clip = clickClip;
-                click.PlayOneShot(clickClip);
+                if (Beavermania.Audio.AudioSourceRouting.EnsureRoute(click, Beavermania.Audio.AudioSourceRoute.Sfx))
+                {
+                    click.clip = clickClip;
+                    click.PlayOneShot(clickClip);
+                }
                 isPushed = true;
                 if (Rotor.turnON == false)
                 {

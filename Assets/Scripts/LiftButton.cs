@@ -19,6 +19,11 @@ namespace Beavermania.Objects
         [SerializeField] AudioSource click;
         [SerializeField] GameObject pressedButton;
         // Start is called before the first frame update
+        private void Awake()
+        {
+            Beavermania.Audio.AudioSourceRouting.EnsureRoute(click, Beavermania.Audio.AudioSourceRoute.Sfx);
+        }
+
         private void Start()
         {
             mat = pressedButton.GetComponent<Renderer>();
@@ -48,7 +53,8 @@ namespace Beavermania.Objects
         {
             if (OBJ.gameObject.CompareTag("Player"))
             {
-                click.Play();
+                if (Beavermania.Audio.AudioSourceRouting.EnsureRoute(click, Beavermania.Audio.AudioSourceRoute.Sfx))
+                    click.Play();
                 isPushed = true;
             }
         }
@@ -56,7 +62,8 @@ namespace Beavermania.Objects
         {
             if (OBJ.gameObject.CompareTag("Damage"))
             {
-                click.Play();
+                if (Beavermania.Audio.AudioSourceRouting.EnsureRoute(click, Beavermania.Audio.AudioSourceRoute.Sfx))
+                    click.Play();
                 isPushed = true;
             }
         }

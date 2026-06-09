@@ -33,6 +33,9 @@ namespace Beavermania.Audio
             if (source == null || clip == null || string.IsNullOrEmpty(channel))
                 return false;
 
+            if (source.outputAudioMixerGroup == null)
+                return false;
+
             float now = Time.unscaledTime;
             if (LastPlayTimeByChannel.TryGetValue(channel, out float lastPlay) && now - lastPlay < minInterval)
                 return false;

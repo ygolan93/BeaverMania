@@ -62,6 +62,8 @@ namespace Beavermania.NPC
                     ambientLoopSource = loopChild.GetComponent<AudioSource>();
             }
 
+            EnsureRoutes();
+
             if (actionSource != null && actionSource.outputAudioMixerGroup != null && AudioVolumeSettings.Instance == null)
             {
                 AudioMixer mixer = actionSource.outputAudioMixerGroup.audioMixer;
@@ -76,7 +78,7 @@ namespace Beavermania.NPC
                 return;
 
             SfxEventDefinition definition = ResolveDefinition(audioEvent);
-            if (definition == null || actionSource == null)
+            if (definition == null || !EnsureActionRoute())
                 return;
 
             definition.TryPlay(actionSource, "shadowrevenant." + audioEvent);
@@ -85,6 +87,9 @@ namespace Beavermania.NPC
         public void PlayMinion(ShadowRevenantAudioEvent audioEvent, AudioSource minionSource)
         {
             if (profile == null || minionSource == null)
+                return;
+
+            if (!AudioSourceRouting.EnsureRoute(minionSource, AudioSourceRoute.Enemy))
                 return;
 
             SfxEventDefinition definition = ResolveDefinition(audioEvent);
@@ -96,7 +101,7 @@ namespace Beavermania.NPC
 
         public void StartAmbientLoop()
         {
-            if (ambientPlaying || ambientLoopSource == null || profile == null || profile.ambientLoopClip == null)
+            if (ambientPlaying || profile == null || profile.ambientLoopClip == null || !EnsureAmbientRoute())
                 return;
 
             ambientLoopSource.clip = profile.ambientLoopClip;
@@ -104,6 +109,22 @@ namespace Beavermania.NPC
             ambientLoopSource.loop = true;
             ambientLoopSource.Play();
             ambientPlaying = true;
+        }
+
+        void EnsureRoutes()
+        {
+            EnsureActionRoute();
+            EnsureAmbientRoute();
+        }
+
+        bool EnsureActionRoute()
+        {
+            return AudioSourceRouting.EnsureRoute(actionSource, AudioSourceRoute.Enemy);
+        }
+
+        bool EnsureAmbientRoute()
+        {
+            return AudioSourceRouting.EnsureRoute(ambientLoopSource, AudioSourceRoute.Enemy);
         }
 
         public void StopLoops()

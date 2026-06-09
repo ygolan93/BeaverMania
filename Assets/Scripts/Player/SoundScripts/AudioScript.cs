@@ -14,6 +14,8 @@ namespace Beavermania.Audio
 
         void Awake()
         {
+            EnsureRoutes();
+
             if (footstepVfxEmitter != null)
                 return;
 
@@ -26,162 +28,269 @@ namespace Beavermania.Audio
                 footstepVfxEmitter = player.gameObject.AddComponent<FootstepVfxEmitter>();
         }
 
+        void OnEnable()
+        {
+            EnsureRoutes();
+        }
+
         public void SwordSwing3()
         {
-            if (audioSource == null || audioClip == null || audioClip.Length <= 18)
+            AudioSource source = ResolvePrimarySource();
+            if (source == null || !TryGetClip(18, out AudioClip clip))
                 return;
 
-            audioSource.clip = audioClip[18];
-            audioSource.volume = 0.95f;
-            GameplayAudio.TryPlayOneShot(audioSource, audioClip[18], "player.swordswing", 0.12f, 0.95f, 1f);
+            source.clip = clip;
+            source.volume = 0.95f;
+            GameplayAudio.TryPlayOneShot(source, clip, "player.swordswing", 0.12f, 0.95f, 1f);
         }
+
         public void SwordSwing2()
         {
-            if (audioSource == null || audioClip == null || audioClip.Length <= 17)
+            AudioSource source = ResolvePrimarySource();
+            if (source == null || !TryGetClip(17, out AudioClip clip))
                 return;
 
-            audioSource.clip = audioClip[17];
-            audioSource.volume = 0.95f;
-            GameplayAudio.TryPlayOneShot(audioSource, audioClip[17], "player.swordswing", 0.12f, 0.95f, 1f);
+            source.clip = clip;
+            source.volume = 0.95f;
+            GameplayAudio.TryPlayOneShot(source, clip, "player.swordswing", 0.12f, 0.95f, 1f);
         }
+
         public void SwordSwing1()
         {
-            if (audioSource == null || audioClip == null || audioClip.Length <= 16)
+            AudioSource source = ResolvePrimarySource();
+            if (source == null || !TryGetClip(16, out AudioClip clip))
                 return;
 
-            audioSource.clip = audioClip[16];
-            audioSource.volume = 0.95f;
-            GameplayAudio.TryPlayOneShot(audioSource, audioClip[16], "player.swordswing", 0.12f, 0.95f, 1f);
-        }
-        public void Error()
-        {
-            audioEffects.clip = audioClip[15];
-            audioEffects.volume = 1f;
-            audioEffects.pitch = 1f;
-            audioEffects.PlayOneShot(audioClip[15]);
-        }
-        public void PickItem()
-        {
-            audioEffects.clip = audioClip[14];
-            audioEffects.volume = 1f;
-            audioEffects.pitch = 1f;
-            audioEffects.PlayOneShot(audioClip[14]);
-        }
-        public void SwitchItem()
-        {
-            audioSource.clip = audioClip[13];
-            audioSource.volume = 1f;
-            audioSource.pitch = 1f;
-            audioSource.PlayOneShot(audioClip[13]);
+            source.clip = clip;
+            source.volume = 0.95f;
+            GameplayAudio.TryPlayOneShot(source, clip, "player.swordswing", 0.12f, 0.95f, 1f);
         }
 
+        public void Error()
+        {
+            AudioSource source = ResolveEffectsSource();
+            if (source == null || !TryGetClip(15, out AudioClip clip))
+                return;
+
+            source.clip = clip;
+            source.volume = 1f;
+            source.pitch = 1f;
+            source.PlayOneShot(clip);
+        }
+
+        public void PickItem()
+        {
+            AudioSource source = ResolveEffectsSource();
+            if (source == null || !TryGetClip(14, out AudioClip clip))
+                return;
+
+            source.clip = clip;
+            source.volume = 1f;
+            source.pitch = 1f;
+            source.PlayOneShot(clip);
+        }
+
+        public void SwitchItem()
+        {
+            AudioSource source = ResolvePrimarySource();
+            if (source == null || !TryGetClip(13, out AudioClip clip))
+                return;
+
+            source.clip = clip;
+            source.volume = 1f;
+            source.pitch = 1f;
+            source.PlayOneShot(clip);
+        }
 
         public void ArrowShoot()
         {
-            audioEffects.clip = audioClip[12];
-            audioEffects.volume = 1f;
-            audioEffects.pitch = 1f;
-            audioEffects.PlayOneShot(audioClip[12]);
+            AudioSource source = ResolveEffectsSource();
+            if (source == null || !TryGetClip(12, out AudioClip clip))
+                return;
+
+            source.clip = clip;
+            source.volume = 1f;
+            source.pitch = 1f;
+            source.PlayOneShot(clip);
         }
+
         public void ArrowDraw()
         {
-            audioSource.clip = audioClip[11];
-            audioSource.volume = 1f;
-            audioSource.pitch = 1f;
-            audioSource.PlayOneShot(audioClip[11]);
+            AudioSource source = ResolvePrimarySource();
+            if (source == null || !TryGetClip(11, out AudioClip clip))
+                return;
+
+            source.clip = clip;
+            source.volume = 1f;
+            source.pitch = 1f;
+            source.PlayOneShot(clip);
         }
+
         public void Drink()
         {
-            audioSource.clip = audioClip[10];
-            audioSource.volume = 1f;
-            audioSource.pitch = 1f;
-            audioSource.PlayOneShot(audioClip[10]);
+            AudioSource source = ResolvePrimarySource();
+            if (source == null || !TryGetClip(10, out AudioClip clip))
+                return;
+
+            source.clip = clip;
+            source.volume = 1f;
+            source.pitch = 1f;
+            source.PlayOneShot(clip);
         }
+
         public void Eat()
         {
-            audioEffects.clip = audioClip[9];
-            audioEffects.volume = 1f;
-            audioEffects.pitch = 1f;
-            audioEffects.PlayOneShot(audioClip[9]);
+            AudioSource source = ResolveEffectsSource();
+            if (source == null || !TryGetClip(9, out AudioClip clip))
+                return;
+
+            source.clip = clip;
+            source.volume = 1f;
+            source.pitch = 1f;
+            source.PlayOneShot(clip);
         }
+
         public void Roll()
         {
-            audioSource.clip = audioClip[8];
-            audioSource.volume = 1f;
-            audioSource.pitch = 0.8f;
-            audioSource.PlayOneShot(audioClip[8]);
+            AudioSource source = ResolvePrimarySource();
+            if (source == null || !TryGetClip(8, out AudioClip clip))
+                return;
+
+            source.clip = clip;
+            source.volume = 1f;
+            source.pitch = 0.8f;
+            source.PlayOneShot(clip);
         }
+
         public void PickUp2()
         {
-            audioSource.clip = audioClip[7];
-            audioSource.volume = 1f;
-            audioSource.pitch = 1f;
-            audioSource.PlayOneShot(audioClip[7]);
+            AudioSource source = ResolvePrimarySource();
+            if (source == null || !TryGetClip(7, out AudioClip clip))
+                return;
+
+            source.clip = clip;
+            source.volume = 1f;
+            source.pitch = 1f;
+            source.PlayOneShot(clip);
         }
+
         public void PickUp1()
         {
-            audioSource.clip = audioClip[6];
-            audioSource.volume = 1f;
-            audioSource.pitch = 1f;
-            audioSource.PlayOneShot(audioClip[6]);
+            AudioSource source = ResolvePrimarySource();
+            if (source == null || !TryGetClip(6, out AudioClip clip))
+                return;
+
+            source.clip = clip;
+            source.volume = 1f;
+            source.pitch = 1f;
+            source.PlayOneShot(clip);
         }
+
         public void Coin()
         {
-            if (audioEffects == null || audioClip == null || audioClip.Length <= 5)
+            AudioSource source = ResolveEffectsSource();
+            if (source == null || !TryGetClip(5, out AudioClip clip))
                 return;
 
-            audioEffects.clip = audioClip[5];
-            audioEffects.volume = 1f;
-            GameplayAudio.TryPlayOneShot(audioEffects, audioClip[5], "player.coin", 0.08f, 1f, 1f);
+            source.clip = clip;
+            source.volume = 1f;
+            GameplayAudio.TryPlayOneShot(source, clip, "player.coin", 0.08f, 1f, 1f);
         }
+
         public void Heal()
         {
-            audioEffects.clip = audioClip[4];
-            audioEffects.volume = 1f;
-            audioEffects.pitch = 1f;
-            audioEffects.PlayOneShot(audioClip[4]);
-        }
-        public void Slide()
-        {
-            audioEffects.clip = audioClip[3];
-            audioEffects.volume = 1f;
-            audioEffects.pitch = 0.7f;
-            audioEffects.PlayOneShot(audioClip[3]);
-        }
-        public void Wind()
-        {
-            if (audioSource == null || audioClip == null || audioClip.Length <= 2)
+            AudioSource source = ResolveEffectsSource();
+            if (source == null || !TryGetClip(4, out AudioClip clip))
                 return;
 
-            audioSource.clip = audioClip[2];
-            audioSource.volume = 0.9f;
-            GameplayAudio.TryPlayOneShot(audioSource, audioClip[2], "player.wind", 0.15f, 0.9f, 1f);
+            source.clip = clip;
+            source.volume = 1f;
+            source.pitch = 1f;
+            source.PlayOneShot(clip);
         }
+
+        public void Slide()
+        {
+            AudioSource source = ResolveEffectsSource();
+            if (source == null || !TryGetClip(3, out AudioClip clip))
+                return;
+
+            source.clip = clip;
+            source.volume = 1f;
+            source.pitch = 0.7f;
+            source.PlayOneShot(clip);
+        }
+
+        public void Wind()
+        {
+            AudioSource source = ResolvePrimarySource();
+            if (source == null || !TryGetClip(2, out AudioClip clip))
+                return;
+
+            source.clip = clip;
+            source.volume = 0.9f;
+            GameplayAudio.TryPlayOneShot(source, clip, "player.wind", 0.15f, 0.9f, 1f);
+        }
+
         public void Step()
         {
             if (footstepVfxEmitter != null)
                 footstepVfxEmitter.PlayStep();
 
-            if (audioSource == null || audioClip == null || audioClip.Length <= 1)
+            AudioSource source = ResolvePrimarySource();
+            if (source == null || !TryGetClip(1, out AudioClip clip))
                 return;
 
-            audioSource.clip = audioClip[1];
-            audioSource.volume = 0.6f;
-            audioSource.pitch = 0.8f;
-            audioSource.PlayOneShot(audioClip[1]);
+            source.clip = clip;
+            source.volume = 0.6f;
+            source.pitch = 0.8f;
+            source.PlayOneShot(clip);
         }
 
         public void Jump()
         {
-            if (audioEffects == null || audioClip == null || audioClip.Length == 0)
+            AudioSource source = ResolveEffectsSource();
+            if (source == null || !TryGetClip(0, out AudioClip clip))
                 return;
 
-            audioEffects.clip = audioClip[0];
-            audioEffects.volume = 0.65f;
-            GameplayAudio.TryPlayOneShot(audioEffects, audioClip[0], "player.jump", 0.2f, 0.55f, 0.8f);
+            source.clip = clip;
+            source.volume = 0.65f;
+            GameplayAudio.TryPlayOneShot(source, clip, "player.jump", 0.2f, 0.55f, 0.8f);
         }
 
+        void EnsureRoutes()
+        {
+            AudioSourceRouting.EnsureRoute(ResolvePrimaryComponent(), AudioSourceRoute.Sfx);
+            AudioSourceRouting.EnsureRoute(audioEffects, AudioSourceRoute.Sfx);
+        }
 
+        AudioSource ResolvePrimarySource()
+        {
+            AudioSource source = ResolvePrimaryComponent();
+            return AudioSourceRouting.EnsureRoute(source, AudioSourceRoute.Sfx) ? source : null;
+        }
 
+        AudioSource ResolveEffectsSource()
+        {
+            return AudioSourceRouting.EnsureRoute(audioEffects, AudioSourceRoute.Sfx) ? audioEffects : null;
+        }
+
+        AudioSource ResolvePrimaryComponent()
+        {
+            if (audioSource == null)
+                audioSource = GetComponent<AudioSource>();
+
+            return audioSource;
+        }
+
+        bool TryGetClip(int index, out AudioClip clip)
+        {
+            clip = null;
+            if (audioClip == null || index < 0 || index >= audioClip.Length)
+                return false;
+
+            clip = audioClip[index];
+            return clip != null;
+        }
     }
 }

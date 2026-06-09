@@ -2051,10 +2051,7 @@ namespace Beavermania.Player
         }
         void PlayElectricEffectSoundOnce()
         {
-            if (ElectricEffect == null)
-                return;
-
-            var electricSource = ElectricEffect.GetComponent<AudioSource>();
+            AudioSource electricSource = ResolveElectricEffectSource();
             if (electricSource == null || electricSource.clip == null || electricSource.isPlaying)
                 return;
 
@@ -2063,14 +2060,20 @@ namespace Beavermania.Player
 
         void StopElectricEffectSound()
         {
-            if (ElectricEffect == null)
-                return;
-
-            var electricSource = ElectricEffect.GetComponent<AudioSource>();
+            AudioSource electricSource = ResolveElectricEffectSource();
             if (electricSource == null)
                 return;
 
             electricSource.Stop();
+        }
+
+        AudioSource ResolveElectricEffectSource()
+        {
+            if (ElectricEffect == null)
+                return null;
+
+            AudioSource electricSource = ElectricEffect.GetComponent<AudioSource>();
+            return AudioSourceRouting.EnsureRoute(electricSource, AudioSourceRoute.Sfx) ? electricSource : null;
         }
 
         public void ParryON()

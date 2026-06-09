@@ -178,6 +178,7 @@ namespace Beavermania.Display
             instance.transform.localScale = scale;
             var particleSystems = instance.GetComponentsInChildren<ParticleSystem>(true);
             var audioSources = instance.GetComponentsInChildren<AudioSource>(true);
+            EnsureSfxRoutes(audioSources);
             var lifetime = Mathf.Max(GetLifetime(particleSystems), GetLifetime(audioSources));
 
             Replay(particleSystems);
@@ -221,6 +222,7 @@ namespace Beavermania.Display
             pool = sourcePool;
             particleSystems = GetComponentsInChildren<ParticleSystem>(true);
             audioSources = GetComponentsInChildren<AudioSource>(true);
+            EnsureSfxRoutes(audioSources);
             defaultVolumes = new float[audioSources.Length];
             defaultPitches = new float[audioSources.Length];
             defaultPlayOnAwake = new bool[audioSources.Length];
@@ -249,6 +251,7 @@ namespace Beavermania.Display
 
             transform.SetPositionAndRotation(position, rotation);
             transform.localScale = scale;
+            EnsureSfxRoutes(audioSources);
 
             Replay(particleSystems);
             ResetAudioSources();
@@ -385,6 +388,9 @@ namespace Beavermania.Display
                     continue;
 
                 sources[i].Stop();
+                if (!AudioSourceRouting.EnsureRoute(sources[i], AudioSourceRoute.Sfx))
+                    continue;
+
                 if (!playOnAwake[i] || !sources[i].isActiveAndEnabled || sources[i].clip == null)
                     continue;
 
@@ -405,6 +411,15 @@ namespace Beavermania.Display
                 ResolveVfxMinInterval(clip),
                 primary.volume,
                 primary.pitch);
+        }
+
+        static void EnsureSfxRoutes(AudioSource[] sources)
+        {
+            if (sources == null)
+                return;
+
+            for (var i = 0; i < sources.Length; i++)
+                AudioSourceRouting.EnsureRoute(sources[i], AudioSourceRoute.Sfx);
         }
 
         static string ResolveVfxAudioChannel(AudioClip clip)

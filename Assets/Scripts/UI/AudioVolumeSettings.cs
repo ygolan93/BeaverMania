@@ -177,6 +177,8 @@ namespace Beavermania.Audio
             if (mixer == null)
                 return;
 
+            // SfxVolume and EnemiesVolume are exposed on sibling Master children (SFX vs Enemies).
+            // Both follow the single SFX menu slider, but each group is attenuated only once.
             float decibels = LinearToDecibels(linearVolume);
             mixer.SetFloat(SfxVolumeParam, decibels);
             mixer.SetFloat(EnemiesVolumeParam, decibels);

@@ -14,3 +14,9 @@ Steam release candidate stability.
 - FPS and rendering optimization.
 
 Large architecture work should be deferred unless it directly stabilizes the Steam release candidate.
+
+## Recent Branch Activity (`fix/player-jump-sfx-throttle`, as of 2026-06-11)
+
+- Jump SFX throttling and pitch-distortion fixes committed (`2ea52146`, `1a9fc660`); Play Mode QA pending.
+- Level 1 Remastered scene overrides, fence/otter materials, and an OtterAnim2 `Consume` transition condition committed (`232d5edd`).
+- A roll-animation pipeline (RollBall3.0 Blender export, import fixer, Shapekeys_Anim rewiring, airborne/inertia roll gameplay logic) was prototyped and then **fully reverted**; see `AI_WORKFLOW/active-task.md` for retained findings if revisited.

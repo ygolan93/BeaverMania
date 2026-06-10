@@ -1,58 +1,59 @@
 # Active Task
 
 ## Task title
-- Player jump audio pitch fix (strafe/roll → jump transitions)
+- No active task — branch stable after roll-animation work was reverted
 
-## Type
-- Mixed (script hardening + prefab verification + Play Mode audio QA)
-
-## Owner
-- **Codex/Cursor** — `AudioScript.cs` jump API unification, static prefab audit
-- **User** — Play Mode ear verification in Level 1 Remastered - Steam
+## Branch
+- `fix/player-jump-sfx-throttle` (pushed to `origin`)
 
 ## Current phase
-- Jump pitch transition fix implemented. Play Mode QA pending user ear check.
+- Idle. Last committed work awaiting final Play Mode QA (see checklists below).
 
-## Goal
-- Ensure jump SFX (`Leap.mp3`) plays once per jump input with no duplicate triggers from animation events or dual throttle channels.
+## Branch state (verified 2026-06-11)
 
-## Audit findings (static)
-- No player animation clips/events call `Jump`, `PlayJumpSound`, or similar.
-- Single live trigger: `BeaverPlayerBehaviour.Update` → `Sound.PlayPlayerJumpSfx()`.
-- `Jump.fbx` (Midair) has zero animation events.
-- `NewSwordJump.anim` has combat events only (misleading name).
+Working tree is clean. Committed work on this branch:
 
-## Changes made
+| Commit | Summary | Status |
+| --- | --- | --- |
+| `2ea52146` | Throttle player jump SFX | Committed |
+| `1a9fc660` | Fix jump SFX pitch distortion on strafe and roll transitions | Committed, Play Mode QA pending |
+| `232d5edd` | Level 1 scene overrides, fence/otter materials, OtterAnim2 Consume transition condition | Committed, Play Mode QA pending |
 
-### Scripts
-- `Assets/Scripts/Player/SoundScripts/AudioScript.cs` — unified jump API; jump plays 2D with doppler disabled during one-shot; suppresses `Step`/`Roll` SFX same frame and 0.12s after jump.
-- `Assets/Scripts/SceneScripts/GameplayAudio.cs` — `WasChannelPlayedWithin()` for movement/jump overlap guards.
-- `Assets/Editor/GameplayAudioThrottleTests.cs` — test for `WasChannelPlayedWithin`.
+## Reverted work (do not assume it exists)
 
-### Prefabs (verified, no edits required)
-- `Assets/Prefabs/Player/Otter_Shapekeys/Player.prefab`
-  - `AudioScript.audioClip[0]` = Leap.mp3
-  - `audioSource` → OTTER_ShapekeysIdle (Player mixer, clip empty, Play On Awake off)
-  - `audioEffects` → AudioEffects child (Effects mixer, clip empty, Play On Awake off)
-  - `HammerLeft` AudioSource disabled (orphan)
+The following was implemented in-session on 2026-06-10/11 and then **fully reverted by the user**. None of it is present on the branch:
 
-## Manual Play Mode jump audio checklist (Level 1 Remastered - Steam)
+- Inertia/airborne roll gameplay logic in `BeaverPlayerBehaviour.cs` (`PlayerInertiaRoll`, `PlayerAirborneRoll`, roll layer weights, landing-slide defer).
+- Roll SFX routing in `AudioScript.cs` (ground roll cooldown channel, airborne roll wind).
+- `RollBall3.0.fbx` animation export, `RollBall2.0.fbx`, and `Assets/SourceArt/BlenderScripts/export_rollball3.py`.
+- Editor tooling: `RollBallFbxImportFixer.cs`, `BallRollFbxImportFixer.cs`, `BallRollAnimationExporter.cs`, `ShapekeysAnimControllerMigrator.cs`.
+- `Shapekeys_Anim.controller` rewiring (RollBall3 motion on LowerBody Roll) and Roll-state transition normalization on LowerBody/UpperBody layers.
+
+### Knowledge worth keeping if roll work is revisited
+
+- `RollBall2.0.fbx` has a malformed armature: the armature object is named `mixamorig:Hips` with root-level bones and **no** `mixamorig:Hips` bone; avatar copy fails against it.
+- Working Blender pipeline: import `NewRoll.fbx` (clean hierarchy), retarget RollBall2's `BallRoll` action by **rotation-only** per-bone copy (hips location only), export with `bake_anim=False`, `apply_scale_options='FBX_SCALE_NONE'`, `apply_unit_scale=False`. Do **not** run `transform_apply` on the armature (bakes the 0.01 scale into bone lengths, ~100x rig errors).
+- Unity import: Humanoid, copy avatar from `Shapekeys_Model.fbx` (GUID `d49a26fadbee3d34ba8722eafdaf215a`), `motionNodeName = "Armature"`. This produced a warning-free import.
+- `ModelImporterClipAnimation` in Unity 2021.3 has no `loopBlendOrientation`/`loopBlendPositionY`/`loopBlendPositionXZ` properties; setting them is a compile error.
+
+## Pending Play Mode QA (committed work)
+
+### Jump SFX pitch fix (`1a9fc660`) — Level 1 Remastered - Steam
 - [ ] Single jump (Space once): exactly one Leap sound, no Console errors
 - [ ] Double jump: two sounds spaced by ~0.16s cooldown (expected)
 - [ ] Spam Space on ground: throttle prevents stack/clipping
-- [ ] Jump then air slash (`NewSwordJump`): jump once; sword/wind separate
+- [ ] Jump from strafe and from roll: no pitch distortion
 - [ ] SFX slider affects jump; music slider does not
-- [ ] Pause/resume: jump still single per press
-- [ ] Carry logs / goblet boost: jump still single per press
-- [ ] Console: no `AnimationEvent 'Jump' ... has no receiver` warnings
-- [ ] Console: no duplicate AudioListener warnings
 
-## Verification performed
-- Static scan of player `.anim` / FBX `.meta` animation events
-- Serialized prefab AudioSource + AudioScript wiring review
-- IDE linter: no issues on `AudioScript.cs`
-- `dotnet build .ci/BeaverMania.CI.csproj`: failed locally (UnityEngine refs missing in this shell — environment limitation)
-- Unity MCP: no Editor instance connected; Play Mode not run
+### Scene/animator commit (`232d5edd`)
+- [ ] Level 1 Remastered - Steam loads with no missing references
+- [ ] Camera FOV override (45 → 40) looks correct in Play Mode
+- [ ] OtterAnim2 transition gated by `Consume` condition behaves correctly (no unintended early exit)
+- [ ] Fence brick and otter eye/moustache materials render correctly
 
-## Risk
-- Low. Behavior change: `NewConstructor.Construction.Jump()` now shares `player.jump` throttle with player (prevents latent duplicate if both fired near-simultaneously on same AudioScript instance).
+## Ownership
+- **Cursor + Unity Editor** — Play Mode QA above
+- **Codex** — none pending
+
+## Notes
+- `Shapekeys_Anim.controller` and `Level 1 - Remastered - Steam.unity` are high-risk assets; any future edits need explicit scope and Play Mode verification.

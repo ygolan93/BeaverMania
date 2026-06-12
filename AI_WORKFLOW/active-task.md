@@ -2,7 +2,7 @@
 
 ## Task title
 
-- NPC Dialogue HUD Alignment — Phases 1 + 2 (Market Trader + Arms Dealer)
+- Shared NPC Prompt Presenter + repo-local skills
 
 ## Branch
 
@@ -10,68 +10,72 @@
 
 ## Ownership
 
-- **Cursor + Unity Editor** (mixed code + prefab task, executed via Unity MCP)
-- **Codex** — none pending
+- **Codex**: C# presenter flow, source interfaces/adapters, compatibility shims, workflow notes
+- **Cursor + Unity Editor**: `PlayerCanvas` hierarchy, `NPC_DialoguePanel` child structure, prefab/scene assignments, button wiring, Play Mode proof
 
 ## Current phase
 
-- Phases 1 and 2 complete and verified in automated Play Mode QA. Awaiting human Play Mode spot-check (see checklist) before commit/PR.
+- Code implementation is in place.
+- Unity hierarchy wiring and Play Mode verification are still pending in Cursor.
 
-## What changed (uncommitted)
+## Code changes made by Codex
 
-| File                                                       | Change                                                                                                                                                                                                                                                                                                    |
-| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Assets/Scripts/UI/NpcDialoguePresenter.cs` (new)          | Presenter on the shared panel root; on enable clears `Dialogue.Merchant` and restarts the dialogue so the panel serves any trader per session                                                                                                                                                             |
-| `Assets/Scripts/UI/Dialogue.cs`                            | Added `hasStarted` flag + public `RestartDialogue()` (no-op before `Start()` runs); no behavior change for legacy panels                                                                                                                                                                                  |
-| `Assets/Prefabs/Objects/UI/NPC_DialoguePanel.prefab` (new) | Shared HUD-styled dialogue panel: `name_bar2` bg, Bangers SDF text, Continue/Shop/Skip buttons in a HorizontalLayoutGroup, bottom-center anchors (860x150 canvas units, uniform scale 1), inactive by default                                                                                             |
-| `Assets/Prefabs/Objects/UI/PlayerCanvas.prefab`            | Nested `NPC_DialoguePanel` instance as direct child of root (sibling after `Dialogues`); wired button clicks to canvas `AudioSource.Play`; neutralized legacy `TraderPanel` instance (root Image disabled, `TraderDialogue`/Continue/Shop/Skip children deactivated; `Trader Shop Panel` child untouched) |
-| `Assets/Prefabs/Player/PlayerPack-Drop and Play.prefab`    | Market trader (`Trader`, the Benny/Ottis trader) `DialoguePanel` override repointed from legacy `TraderPanel` to `NPC_DialoguePanel`                                                                                                                                                                      |
+| File | Change |
+| --- | --- |
+| `.agents/skills/unity-ui-controller/SKILL.md` | Repo-local skill for shared Unity presenter/controller work where Cursor owns hierarchy and Codex owns code flow |
+| `.agents/skills/csharp-event-driven-ui/SKILL.md` | Repo-local skill for source-to-presenter interaction flow and single-owner UI state |
+| `.agents/skills/safe-refactor/SKILL.md` | Repo-local skill for serialized-safe refactors with compatibility shims |
+| `Assets/Scripts/UI/INpcDialogueInteractionSource.cs` | New interaction-source contract plus explicit session close reasons |
+| `Assets/Scripts/UI/NpcDialogueSessionContext.cs` | New runtime session payload carrying `TraderDialogueData` or legacy fallback dialogue content |
+| `Assets/Scripts/UI/NpcDialoguePresenter.cs` | Reworked into the single owner for shared prompt, dialogue, and shop session state on `PlayerCanvas` |
+| `Assets/Scripts/UI/Dialogue.cs` | Added runtime session binding, presenter callbacks for open/close/shop, and shared `ShopButton` handling |
+| `Assets/Scripts/NPC/Beaver/Trader.cs` | Converted trader flow to `INpcDialogueInteractionSource` while preserving legacy serialized fields and button-entry shims |
+| `Assets/Scripts/UI/ActivateDialogue.cs` | Converted legacy distance-based dialogue toggler into a non-shop interaction-source adapter |
+| `Assets/Scripts/Player/BossDialogueInteractionSource.cs` | New boss adapter so boss dialogue uses the shared presenter contract |
+| `Assets/Scripts/Player/BossHandler.cs` | Narrow boss chat flow to use the shared source/presenter path before combat starts |
+| `Assets/Scripts/Player/BeaverPlayerBehaviour.cs` | Removed trigger-time trader presentation re-entry so presenter-driven sessions are the source of truth |
+| `AI_WORKFLOW/active-task.md` | Updated mixed-ownership status and Unity follow-up requirements |
+| `AI_WORKFLOW/handoffs/codex-to-cursor.md` | Added explicit Codex-to-Cursor handoff for hierarchy wiring and Play Mode proof |
 
-Notes:
+## Event flow now implemented in code
 
-- The 7 inline panels (Guard, Survivor, Watchtower, Farmer, BeaverTown, Boss, Beavus-Final) are intentionally untouched; they migrate in later phases.
-- Known behavior change: closing the shop returns to the dialogue restarted from line 0 (legacy kept the last line frozen). Skip remains available.
+1. A dialogue-capable source (`Trader`, `ActivateDialogue`, boss adapter) reports availability to `NpcDialoguePresenter`.
+2. The presenter keeps a registered source list, chooses the nearest available source, and shows exactly one prompt.
+3. If a dedicated prompt widget is not wired, the presenter falls back to `PlayerHudState.ObjectiveTextOverride`.
+4. `PlayerInputReader.WasWorldInteractPressed()` is consumed centrally by the presenter.
+5. On interact, the presenter requests a `NpcDialogueSessionContext`, binds it into the shared `Dialogue`, shows the shared dialogue root, and starts the session.
+6. Source callbacks own NPC-specific side effects such as trader camera/cursor presentation or boss pre-fight setup.
+7. `Dialogue` routes shop open, shop close, and conversation end back through the presenter instead of directly driving scene panels.
+8. The presenter swaps between shared dialogue content and the source's shop content without allowing overlapping prompts or multiple active sessions.
+9. Leaving range, disabling the source, dialogue completion, skip, or external close all route through presenter cleanup plus a source close callback.
 
-## Phase 2 additions (Arms Dealer / Combat Panel, 2026-06-12)
+## Cursor follow-up required in Unity
 
-| File                                                    | Change                                                                                                                                                              |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Assets/Scripts/NPC/Beaver/Trader.cs`                   | Added `[SerializeField] TraderDialogueData dialogueData` + public `DialogueData` getter (additive only)                                                             |
-| `Assets/Scripts/UI/Dialogue.cs`                         | Added `SetDialogueData(TraderDialogueData)` so the shared panel can swap lines per trader                                                                           |
-| `Assets/Scripts/UI/NpcDialoguePresenter.cs`             | On enable: resolves the session-active trader, assigns it as `Merchant`, applies its `DialogueData`, then restarts the dialogue                                     |
-| `Assets/Prefabs/Player/PlayerPack-Drop and Play.prefab` | Arms Dealer `DialoguePanel` → `NPC_DialoguePanel`; `dialogueData` set on both traders (Arms Dealer → `MilitaryTraderDialogueData`, Market → `MarketTraderDialogue`) |
-| `Assets/Prefabs/Objects/UI/PlayerCanvas.prefab`         | Combat Panel instance neutralized like TraderPanel (root Image off, CampDialogue/Continue/Shop/Skip deactivated, `Combat Trader Shop Panel` untouched)              |
+- Add a dedicated prompt widget under `PlayerCanvas` and assign it to `NpcDialoguePresenter.promptRoot` and `NpcDialoguePresenter.promptText`.
+- Keep `NPC_DialoguePanel` as the shared session root and ensure dialogue content plus shop content are sibling branches so shop close returns to the same session without restarting from a legacy panel.
+- Wire shared `Continue`, `Skip`, `Shop`, and shop-close buttons to the shared `Dialogue` and presenter path only.
+- Repoint trader and NPC prefab/scene references so content/data feeds the shared presenter instead of each NPC toggling a scene-owned panel.
+- Keep legacy panels under `Dialogues` inactive until each NPC family is migrated and verified; do not delete them in the same pass.
 
-Phase 2 automated verification (in-editor Play Mode, single run):
+## Verification status
 
-- Arms Dealer opens shared panel with military lines ("Player: Excuse me"), merchant resolves to Arms Dealer.
-- Arms Market shop opens with no legacy bar visible; CloseShop returns to dialogue; Skip closes and re-locks cursor.
-- Market trader afterwards shows market lines (Benny intro) — per-trader data switching proven in one run.
-- GuardPanel/BossPanel/SurvivorPanel intact with Dialogue components (structural spot-check).
-- Console clean of compile and runtime errors.
+- `git diff --check` passed. Git reported line-ending normalization warnings only.
+- `dotnet build .ci/BeaverMania.CI.csproj` could not complete in this Windows environment because the Unity-managed assembly references expected by the CI project are not present here.
+- Code path review completed for the new presenter flow and the first-open shared dialogue lifecycle path was patched in `Dialogue.cs`.
 
-## Automated verification performed (2026-06-12, in-editor Play Mode)
+## Pending Play Mode checklist
 
-- Compile clean after script changes (no CS errors in Console).
-- Proximity prompt shows "Press E to interact" via HUD ObjectiveText.
-- `OpenInteraction` → shared panel opens, typewriter runs, `Dialogue.Merchant` resolves to "Trader".
-- Continue advances lines; Shop button opens Benny's Shop (shared panel hides, legacy container stays invisible — image off, dialogue children off); CloseShop returns to dialogue; Skip closes everything, cursor re-locked/hidden.
-- Second interaction session restarts dialogue cleanly (no frozen text, no double-typing).
-- Screenshots at free-aspect, 1366x768, and 3440x1440: panel bottom-centered, no clipping, buttons readable, HUD unobstructed.
-- Regression spot-check: Arms Dealer still opens legacy Combat Panel with CampDialogue.
+- Market trader prompt, dialogue, shop open/close, and skip path
+- Arms dealer prompt, dialogue, and correct shop content
+- One legacy non-shop NPC through `ActivateDialogue`
+- Boss prompt, dialogue, skip-to-combat path
+- Overlap case with two prompt sources competing
+- External close path such as `DoorShut`/guard disable
+- Prompt-widget-missing fallback through objective override
+- No legacy panel flicker and no `NullReferenceException`
 
-## Pending human Play Mode QA
+## Risks / limitations
 
-- [ ] Walk to the market trader and interact with the real E key (PlayerInputReader path; automated QA invoked `OpenInteraction` directly)
-- [ ] Walk to the Arms Dealer at the camp and interact with the real E key — military dialogue, Arms Market shop
-- [ ] Button click SFX audible on Continue/Shop/Skip
-- [ ] Trader camera transition and cursor behavior feel correct end-to-end for both traders
-- [ ] Buy/sell in Benny's Shop and Arms Market still works (coins/items/weapons)
-- [ ] Dialogue completion advances the objective exactly once per trader
-- [ ] Quick pass on one legacy NPC (e.g. Guard or Boss) to confirm no visual regression
-
-## Risks / follow-ups
-
-- `PlayerCanvas.prefab` and `PlayerPack-Drop and Play.prefab` are high-risk shared assets; changes were additive/override-only and the `Dialogues` container rect was not modified.
-- Shop-close now replays the trader dialogue from the start; if undesired, presenter can skip restart when the session is unchanged (small follow-up).
-- Phase 3+: migrate the 7 inline panels (Guard, Survivor, Watchtower, Farmer, BeaverTown, Boss, Beavus-Final) to the shared presenter, then delete legacy dialogue bars and restyle the shops.
+- `PlayerCanvas.prefab`, shared dialogue buttons, and per-NPC prefab assignments remain high-risk serialized follow-up and were intentionally left to Cursor.
+- Shared prompt selection and source arbitration are code-complete, but final correctness depends on Unity wiring to the shared `PlayerCanvas` hierarchy.
+- Needs Unity Play Mode verification.

@@ -380,6 +380,7 @@ MonoBehaviour:
   textComponent: {fileID: 2976579808084088288}
   ContinueButton: {fileID: 4031237144820884788}
   SkipButton: {fileID: 4583570097564505179}
+  ShopButton: {fileID: 8214705582506846511}
   panel: {fileID: 3574895517165622253}
   dialogueData: {fileID: 11400000, guid: fd19deed4727491b9e563df133c54d0e, type: 2}
   Merchant: {fileID: 0}
@@ -821,7 +822,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 5315662658462456607}
         m_TargetAssemblyTypeName: Beavermania.UI.Dialogue, Assembly-CSharp
-        m_MethodName: EndConversation
+        m_MethodName: SkipConversation
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

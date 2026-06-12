@@ -191,6 +191,31 @@ namespace Beavermania.UI
             }
         }
 
+        public void SkipConversation()
+        {
+            if (runtimePresenter != null && runtimeSource != null)
+            {
+                runtimePresenter.CloseCurrentSession(NpcDialogueSessionCloseReason.ExternalCancel);
+                return;
+            }
+
+            if (EffectiveIsBoss)
+            {
+                EndBossDialogue();
+                return;
+            }
+
+            TryResolveMerchant();
+
+            if (Merchant != null)
+                Merchant.activateSkip();
+            else if (!loggedMissingMerchant)
+            {
+                loggedMissingMerchant = true;
+                Debug.LogError($"{nameof(Dialogue)} on '{name}' has no {nameof(Merchant)}; cannot skip trader UI.", this);
+            }
+        }
+
         public void EndBossDialogue()
         {
             if (Player == null)

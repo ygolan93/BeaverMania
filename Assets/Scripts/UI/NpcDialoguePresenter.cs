@@ -29,7 +29,6 @@ namespace Beavermania.UI
         NpcDialogueSessionContext activeSession;
         PlayerHudState playerHudState;
         TextMeshProUGUI fallbackObjectiveText;
-        bool isShopOpen;
         bool isPromptVisible;
 
         public static NpcDialoguePresenter ResolveInstance()
@@ -77,7 +76,6 @@ namespace Beavermania.UI
                 return false;
 
             ShowShopView(activeSession.ShopContentRoot);
-            isShopOpen = true;
             activeSource.OnDialogueShopOpened();
             return true;
         }
@@ -88,7 +86,6 @@ namespace Beavermania.UI
                 return false;
 
             ShowDialogueView(activeSession.ShopContentRoot);
-            isShopOpen = false;
             activeSource.OnDialogueShopClosed();
             return true;
         }
@@ -113,7 +110,6 @@ namespace Beavermania.UI
             activeSource = null;
             activeSession = null;
             selectedSource = null;
-            isShopOpen = false;
 
             HidePrompt();
             HideSessionUi(session != null ? session.ShopContentRoot : null);
@@ -176,7 +172,6 @@ namespace Beavermania.UI
             activeSource = source;
             activeSession = session;
             selectedSource = null;
-            isShopOpen = false;
 
             HidePrompt();
             dialogue.BindRuntimeSession(session, source, this);

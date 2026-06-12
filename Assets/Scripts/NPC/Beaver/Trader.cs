@@ -22,7 +22,6 @@ namespace Beavermania.NPC
         public bool skipPressed = false;
         [SerializeField] bool Rotate;
         [SerializeField] float PanelPopUp;
-        [SerializeField] KeyCode interactKey = KeyCode.E;
         [SerializeField] GameObject playerCanvas;
         [SerializeField] TextMeshProUGUI objectiveText;
         [SerializeField] string interactionPromptMessage = DefaultInteractionPromptMessage;
@@ -48,7 +47,6 @@ namespace Beavermania.NPC
             && Merchant != null;
 
         bool isPlayerInRange;
-        bool traderOfferPresentationActive;
         bool isInteracting;
         bool isShopOpen;
         bool isRegisteredWithPresenter;
@@ -142,7 +140,6 @@ namespace Beavermania.NPC
         {
             isInteracting = true;
             isShopOpen = false;
-            traderOfferPresentationActive = true;
 
             if (Player != null)
                 Player.ApplyTraderOfferPresentation(InteractionLookTarget);
@@ -152,7 +149,6 @@ namespace Beavermania.NPC
         {
             isInteracting = true;
             isShopOpen = true;
-            traderOfferPresentationActive = true;
 
             if (Player != null)
                 Player.ShowCursor();
@@ -162,7 +158,6 @@ namespace Beavermania.NPC
         {
             isInteracting = true;
             isShopOpen = false;
-            traderOfferPresentationActive = true;
 
             if (Player != null)
                 Player.ShowCursor();
@@ -179,7 +174,6 @@ namespace Beavermania.NPC
 
             isInteracting = false;
             isShopOpen = false;
-            traderOfferPresentationActive = false;
             HideLegacyUi();
 
             if (Player != null)
@@ -212,7 +206,6 @@ namespace Beavermania.NPC
             skipPressed = true;
             isInteracting = false;
             isShopOpen = false;
-            traderOfferPresentationActive = false;
             HideLegacyUi();
 
             if (Player != null)
@@ -253,7 +246,6 @@ namespace Beavermania.NPC
             isPlayerInRange = false;
             isInteracting = false;
             isShopOpen = false;
-            traderOfferPresentationActive = false;
             HideLegacyUi();
 
             if (Player != null && Player.isAtTrader)
@@ -321,7 +313,6 @@ namespace Beavermania.NPC
             if (!isInteracting && !isShopOpen)
                 return;
 
-            traderOfferPresentationActive = true;
             if (Player != null)
                 Player.ApplyTraderOfferPresentation(InteractionLookTarget);
         }

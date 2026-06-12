@@ -2,80 +2,54 @@
 
 ## Task title
 
-- Shared NPC Prompt Presenter + repo-local skills
+- Trader floating / disappearing fix (Level 1 - Remastered - Steam)
 
 ## Branch
 
-- `fix/npc-dialogue-ui-alignment`
+- `fix/npc-dialogue-ui-alignment` (continued on current working branch)
 
 ## Ownership
 
-- **Codex**: C# presenter flow, source interfaces/adapters, compatibility shims, workflow notes
-- **Cursor + Unity Editor**: `PlayerCanvas` hierarchy, `NPC_DialoguePanel` child structure, prefab/scene assignments, button wiring, Play Mode proof
+- **Cursor + Unity Editor**: full owner. Diagnosis, scene-level transform fixes, screenshots, Play Mode verification.
+- **Codex**: not required. The planned `NpcGroundSnap` helper script was ruled out (see below); no handoff written.
 
 ## Current phase
 
-- Code implementation is in place.
-- Unity hierarchy wiring and Play Mode verification are still pending in Cursor.
+- Complete. Scene fix applied and saved; Play Mode verification recorded below.
 
-## Code changes made by Codex
+## Diagnosis summary
 
-| File | Change |
-| --- | --- |
-| `.agents/skills/unity-ui-controller/SKILL.md` | Repo-local skill for shared Unity presenter/controller work where Cursor owns hierarchy and Codex owns code flow |
-| `.agents/skills/csharp-event-driven-ui/SKILL.md` | Repo-local skill for source-to-presenter interaction flow and single-owner UI state |
-| `.agents/skills/safe-refactor/SKILL.md` | Repo-local skill for serialized-safe refactors with compatibility shims |
-| `Assets/Scripts/UI/INpcDialogueInteractionSource.cs` | New interaction-source contract plus explicit session close reasons |
-| `Assets/Scripts/UI/NpcDialogueSessionContext.cs` | New runtime session payload carrying `TraderDialogueData` or legacy fallback dialogue content |
-| `Assets/Scripts/UI/NpcDialoguePresenter.cs` | Reworked into the single owner for shared prompt, dialogue, and shop session state on `PlayerCanvas` |
-| `Assets/Scripts/UI/Dialogue.cs` | Added runtime session binding, presenter callbacks for open/close/shop, and shared `ShopButton` handling |
-| `Assets/Scripts/NPC/Beaver/Trader.cs` | Converted trader flow to `INpcDialogueInteractionSource` while preserving legacy serialized fields and button-entry shims |
-| `Assets/Scripts/UI/ActivateDialogue.cs` | Converted legacy distance-based dialogue toggler into a non-shop interaction-source adapter |
-| `Assets/Scripts/Player/BossDialogueInteractionSource.cs` | New boss adapter so boss dialogue uses the shared presenter contract |
-| `Assets/Scripts/Player/BossHandler.cs` | Narrow boss chat flow to use the shared source/presenter path before combat starts |
-| `Assets/Scripts/Player/BeaverPlayerBehaviour.cs` | Removed trigger-time trader presentation re-entry so presenter-driven sessions are the source of truth |
-| `AI_WORKFLOW/active-task.md` | Updated mixed-ownership status and Unity follow-up requirements |
-| `AI_WORKFLOW/handoffs/codex-to-cursor.md` | Added explicit Codex-to-Cursor handoff for hierarchy wiring and Play Mode proof |
+| Check                                                            | Result                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Trader prefab pivots (`Trader.prefab`, `Camp Trader.prefab`)     | Clean. Root pivot at feet, capsule bottom at local Y=0, scale 0.274.                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Arms Dealer (Camp Trader instance in `PlayerPack-Drop and Play`) | Grounded. Root Y == terrain Y (gap 0.000), toes on terrain in Play Mode. No change made.                                                                                                                                                                                                                                                                                                                                                                                  |
+| Market Trader (Trader instance in `Market` inside `PlayerPack`)  | Floating 0.835 m above its carpet in Play Mode.                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Root cause of float                                              | Scene instance had `mixamorig:Hips` localPosition overridden to (0,0,0) (prefab default y=2.8475). Edit Mode showed a sunken pose, so the root was placed 0.835 too high; runtime animation normalized the pose and lifted the mesh.                                                                                                                                                                                                                                      |
+| Disappearance                                                    | NOT culling: renderer culling bounds verified to enclose the baked animated mesh with margin; Animator AlwaysAnimate; camera culling mask Everything; no baked occlusion data; `DisappearOnAway` referenced nowhere. Actual mechanism: the opaque market canopy occludes the trader from rear/side angles (orbit screenshots), made worse by the float pushing his head into the canopy. Float fix resolves the abnormal part; rear occlusion is inherent stall geometry. |
 
-## Event flow now implemented in code
+## Changes made (scene only, no code, no prefab assets touched)
 
-1. A dialogue-capable source (`Trader`, `ActivateDialogue`, boss adapter) reports availability to `NpcDialoguePresenter`.
-2. The presenter keeps a registered source list, chooses the nearest available source, and shows exactly one prompt.
-3. If a dedicated prompt widget is not wired, the presenter falls back to `PlayerHudState.ObjectiveTextOverride`.
-4. `PlayerInputReader.WasWorldInteractPressed()` is consumed centrally by the presenter.
-5. On interact, the presenter requests a `NpcDialogueSessionContext`, binds it into the shared `Dialogue`, shows the shared dialogue root, and starts the session.
-6. Source callbacks own NPC-specific side effects such as trader camera/cursor presentation or boss pre-fight setup.
-7. `Dialogue` routes shop open, shop close, and conversation end back through the presenter instead of directly driving scene panels.
-8. The presenter swaps between shared dialogue content and the source's shop content without allowing overlapping prompts or multiple active sessions.
-9. Leaving range, disabling the source, dialogue completion, skip, or external close all route through presenter cleanup plus a source close callback.
+| Asset                                              | Change                                                                                                                                        |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Assets/Scenes/Level 1 - Remastered - Steam.unity` | Market Trader root world Y 70.899 -> 70.064 (local Y 6.374 -> 5.539 under `Market`), applied as scene instance override via Editor with Undo. |
+| `Assets/Scenes/Level 1 - Remastered - Steam.unity` | Reverted the `mixamorig:Hips` localPosition override on the Market Trader instance back to prefab default so Edit Mode pose matches runtime.  |
 
-## Cursor follow-up required in Unity
+New repo skills added (workflow capture, not gameplay):
 
-- Add a dedicated prompt widget under `PlayerCanvas` and assign it to `NpcDialoguePresenter.promptRoot` and `NpcDialoguePresenter.promptText`.
-- Keep `NPC_DialoguePanel` as the shared session root and ensure dialogue content plus shop content are sibling branches so shop close returns to the same session without restarting from a legacy panel.
-- Wire shared `Continue`, `Skip`, `Shop`, and shop-close buttons to the shared `Dialogue` and presenter path only.
-- Repoint trader and NPC prefab/scene references so content/data feeds the shared presenter instead of each NPC toggling a scene-owned panel.
-- Keep legacy panels under `Dialogues` inactive until each NPC family is migrated and verified; do not delete them in the same pass.
+- `.cursor/skills/unity-prefab-debugging/SKILL.md`
+- `.cursor/skills/terrain-grounding-check/SKILL.md`
 
-## Verification status
+## Decisions
 
-- `git diff --check` passed. Git reported line-ending normalization warnings only.
-- `dotnet build .ci/BeaverMania.CI.csproj` could not complete in this Windows environment because the Unity-managed assembly references expected by the CI project are not present here.
-- Code path review completed for the new presenter flow and the first-open shared dialogue lifecycle path was patched in `Dialogue.cs`.
+- `NpcGroundSnap` runtime component NOT created: both traders are static (no Rigidbody/CharacterController/NavMeshAgent), placement is now measured-correct, and the root cause (misleading edit-mode bone pose) was removed. A runtime snap would mask future placement errors instead of exposing them.
+- No `SkinnedMeshRenderer.updateWhenOffscreen` change: bounds were verified correct; enabling it would add cost without fixing anything.
 
-## Pending Play Mode checklist
+## Verification
 
-- Market trader prompt, dialogue, shop open/close, and skip path
-- Arms dealer prompt, dialogue, and correct shop content
-- One legacy non-shop NPC through `ActivateDialogue`
-- Boss prompt, dialogue, skip-to-combat path
-- Overlap case with two prompt sources competing
-- External close path such as `DoorShut`/guard disable
-- Prompt-widget-missing fallback through objective override
-- No legacy panel flicker and no `NullReferenceException`
+- Play Mode measurement before fix: Market Trader toes 0.835 m above carpet; after fix: root snapped to carpet hit point (raycast, triggers ignored).
+- Post-fix Play Mode validation checklist recorded in the task report (traders grounded, visible from player approach angles, prompts working, no new console errors).
 
 ## Risks / limitations
 
-- `PlayerCanvas.prefab`, shared dialogue buttons, and per-NPC prefab assignments remain high-risk serialized follow-up and were intentionally left to Cursor.
-- Shared prompt selection and source arbitration are code-complete, but final correctness depends on Unity wiring to the shared `PlayerCanvas` hierarchy.
-- Needs Unity Play Mode verification.
+- If the market stall or terrain under it is moved again during remaster work, the trader Y must be re-snapped (one-step task with the `terrain-grounding-check` skill).
+- Rear/side views of the market trader remain blocked by the stall canopy by design.

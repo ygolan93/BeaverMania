@@ -541,8 +541,6 @@ namespace Beavermania.Player
                 {
                     if (trader.skipPressed)
                         RestoreGameplayAfterTrader();
-                    else if (trader.IsTraderSessionActive())
-                        ApplyTraderOfferPresentation(OBJ.transform);
                 }
             }
             if (OBJ.gameObject.CompareTag("House"))

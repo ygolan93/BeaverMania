@@ -1119,19 +1119,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 67db9e8f0e2ae9c40bc1e2b64352a6b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!1 &1105702949010364755 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 196625868587206924, guid: e33166206a9c19842a1fdd668271b2f5, type: 3}
-  m_PrefabInstance: {fileID: 1000556503688958047}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &3677304036588087239 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4533673879514068888, guid: e33166206a9c19842a1fdd668271b2f5, type: 3}
-  m_PrefabInstance: {fileID: 1000556503688958047}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &4421709458237156485 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3512703831037426906, guid: e33166206a9c19842a1fdd668271b2f5, type: 3}
   m_PrefabInstance: {fileID: 1000556503688958047}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &4555904574512297020 stripped
@@ -1157,6 +1147,11 @@ AudioSource:
 --- !u!1 &4721837962555990631 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5505059328405336632, guid: e33166206a9c19842a1fdd668271b2f5, type: 3}
+  m_PrefabInstance: {fileID: 1000556503688958047}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &5697291183263698007 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4824033546109950984, guid: e33166206a9c19842a1fdd668271b2f5, type: 3}
   m_PrefabInstance: {fileID: 1000556503688958047}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &6253399296502007375 stripped
@@ -2000,13 +1995,17 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 3635493143600522712}
     - target: {fileID: 4274331681958210015, guid: 48fb87951c846d143ae64794be52e3d5, type: 3}
+      propertyPath: dialogueData
+      value: 
+      objectReference: {fileID: 11400000, guid: a5a95eef33b1469ba59db348a7494d62, type: 2}
+    - target: {fileID: 4274331681958210015, guid: 48fb87951c846d143ae64794be52e3d5, type: 3}
       propertyPath: playerCanvas
       value: 
       objectReference: {fileID: 6253399296502007375}
     - target: {fileID: 4274331681958210015, guid: 48fb87951c846d143ae64794be52e3d5, type: 3}
       propertyPath: DialoguePanel
       value: 
-      objectReference: {fileID: 1105702949010364755}
+      objectReference: {fileID: 5697291183263698007}
     - target: {fileID: 4274331681958210015, guid: 48fb87951c846d143ae64794be52e3d5, type: 3}
       propertyPath: objectiveText
       value: 
@@ -2090,13 +2089,17 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 3635493143600522712}
     - target: {fileID: 7360475859234496969, guid: d7315b2e30053404b9a55ff870ce1e8c, type: 3}
+      propertyPath: dialogueData
+      value: 
+      objectReference: {fileID: 11400000, guid: fd19deed4727491b9e563df133c54d0e, type: 2}
+    - target: {fileID: 7360475859234496969, guid: d7315b2e30053404b9a55ff870ce1e8c, type: 3}
       propertyPath: playerCanvas
       value: 
       objectReference: {fileID: 6253399296502007375}
     - target: {fileID: 7360475859234496969, guid: d7315b2e30053404b9a55ff870ce1e8c, type: 3}
       propertyPath: DialoguePanel
       value: 
-      objectReference: {fileID: 4421709458237156485}
+      objectReference: {fileID: 5697291183263698007}
     - target: {fileID: 7360475859234496969, guid: d7315b2e30053404b9a55ff870ce1e8c, type: 3}
       propertyPath: objectiveText
       value: 

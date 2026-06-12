@@ -2,6 +2,7 @@ using TMPro;
 using UnityEngine;
 using Beavermania.Core.GameFlow;
 using Beavermania.Core.Input;
+using Beavermania.Data.Dialogue;
 using Beavermania.Player;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
 
@@ -26,6 +27,9 @@ namespace Beavermania.NPC
         [SerializeField] GameObject playerCanvas;
         [SerializeField] TextMeshProUGUI objectiveText;
         [SerializeField] string interactionPromptMessage = DefaultInteractionPromptMessage;
+        [SerializeField] TraderDialogueData dialogueData;
+
+        public TraderDialogueData DialogueData => dialogueData;
 
         bool isPlayerInRange;
         bool wasPlayerInRange;

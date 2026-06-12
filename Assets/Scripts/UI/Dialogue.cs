@@ -40,8 +40,11 @@ namespace Beavermania.UI
 
         bool EffectiveIsBoss => dialogueData != null ? dialogueData.isBossDialogue : isBoss;
 
+        bool hasStarted;
+
         void Start()
         {
+            hasStarted = true;
             TryResolveMerchant();
 
             if (PlayerObjective == null && Player != null)
@@ -90,6 +93,35 @@ namespace Beavermania.UI
                 return;
             }
 
+            textComponent.text = string.Empty;
+            index = 0;
+            StartDialogue();
+        }
+
+        /// <summary>
+        /// Replaces the dialogue data so the shared panel can present a different
+        /// trader's lines. Call before <see cref="RestartDialogue"/>.
+        /// </summary>
+        public void SetDialogueData(TraderDialogueData data)
+        {
+            dialogueData = data;
+        }
+
+        /// <summary>
+        /// Restarts the dialogue from the first line. Safe to call every time the
+        /// owning panel is re-shown; before Start() has run it is a no-op because
+        /// Start() begins the dialogue itself.
+        /// </summary>
+        public void RestartDialogue()
+        {
+            if (!hasStarted || textComponent == null)
+                return;
+
+            var effectiveLines = EffectiveLines;
+            if (effectiveLines == null || effectiveLines.Length == 0)
+                return;
+
+            StopAllCoroutines();
             textComponent.text = string.Empty;
             index = 0;
             StartDialogue();

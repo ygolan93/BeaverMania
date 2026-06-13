@@ -19,22 +19,21 @@ namespace Beavermania.Player.Movement
 
         [Header("Movement affect factors")]
         public int i = 0;
-        public float WalkFactor = 0.07f;
-        public float RunFactor = 0.8f;
         public float JumpFactor = 0.3f;
-        public float SlowAnim = 0.1f;
         public bool CanCarry;
 
         [Header("Carried log weight tuning")]
-        [SerializeField] int logsCountThreshold = 1;
-        [SerializeField, Range(0f, 1f)] float maxWeightPenalty = 1f;
-        [SerializeField] float maxWalkPenalty = 0.63f;
-        [SerializeField] float maxRunPenalty = 7.2f;
+        [SerializeField, Range(0, MaxLogCount - 1)] int maxBalancedLogCount = 3;
+        [SerializeField, Range(0f, 1f)] float minMovementMultiplier = 0.5f;
+        [SerializeField, Range(0.75f, 0.85f)] float minAnimationMultiplier = 0.8f;
         [SerializeField] float maxJumpPenalty = 2.7f;
-        [SerializeField] float animationSpeedMultiplier = 1f;
-        [SerializeField] float maxAnimationSpeedPenalty = 0.9f;
-        [SerializeField] float minimumAnimationSpeed = 0.2f;
 
+        const int MaxLogCount = 9;
+        const string BuildHintText = "9/9  LCtrl+RMB to build";
+
+        int lastDisplayedLogCount = -1;
+        int lastPenaltyLogCount = -1;
+        bool lastDisplayedBuildHint;
         float appliedWalkPenalty;
         float appliedRunPenalty;
         float appliedJumpPenalty;
@@ -83,13 +82,12 @@ namespace Beavermania.Player.Movement
                 return;
 
             Vector3 SpawnPos = LogDrop.transform.position;
-            Goal.LogCount = i + "/9";
-            ApplyCarryWeightPenalty();
+            UpdateLogCountDisplay();
+            if (ShouldRefreshCarryWeightPenalty())
+                ApplyCarryWeightPenalty();
 
             if (Goal.grounded == true)
             {
-                if (i == 9)
-                    Goal.LogCount = "9/9  LCtrl+RMB to build";
                 if (PlayerInputReader.WasRollReleased() && i > 0)
                 {
                     i--;
@@ -143,44 +141,74 @@ namespace Beavermania.Player.Movement
             if (Goal == null)
                 return;
 
-            CurrentWeightPenalty01 = 0f;
-            float walkPenalty = CalculatePenalty(WalkFactor, maxWalkPenalty);
-            float runPenalty = CalculatePenalty(RunFactor, maxRunPenalty);
-            float jumpPenalty = CalculatePenalty(JumpFactor, maxJumpPenalty);
-            float animationPenalty = CalculatePenalty(SlowAnim * animationSpeedMultiplier, maxAnimationSpeedPenalty);
+            float load01 = CalculateLoad01();
+            float movementMultiplier = Mathf.Lerp(1f, minMovementMultiplier, load01);
+            float animationMultiplier = Mathf.Lerp(1f, minAnimationMultiplier, load01);
+            float jumpPenalty = Mathf.Min(i * Mathf.Max(0f, JumpFactor), Mathf.Max(0f, maxJumpPenalty));
+            CurrentWeightPenalty01 = load01;
 
             float baseWalk = ResolveBaseValue(Goal.Walk, lastAppliedWalkValue, appliedWalkPenalty);
             float baseRun = ResolveBaseValue(Goal.Run, lastAppliedRunValue, appliedRunPenalty);
             float baseJump = ResolveBaseValue(Goal.JumpForce, lastAppliedJumpValue, appliedJumpPenalty);
 
-            Goal.Walk = baseWalk - walkPenalty;
-            Goal.Run = baseRun - runPenalty;
+            Goal.Walk = baseWalk * movementMultiplier;
+            Goal.Run = baseRun * movementMultiplier;
             Goal.JumpForce = baseJump - jumpPenalty;
 
             if (Goal.Otter != null)
             {
                 float baseAnimationSpeed = ResolveBaseValue(Goal.Otter.speed, lastAppliedAnimationSpeed, appliedAnimationPenalty);
-                Goal.Otter.speed = Mathf.Max(minimumAnimationSpeed, baseAnimationSpeed - animationPenalty);
+                Goal.Otter.speed = baseAnimationSpeed * animationMultiplier;
                 appliedAnimationPenalty = baseAnimationSpeed - Goal.Otter.speed;
                 lastAppliedAnimationSpeed = Goal.Otter.speed;
             }
 
-            appliedWalkPenalty = walkPenalty;
-            appliedRunPenalty = runPenalty;
+            appliedWalkPenalty = baseWalk - Goal.Walk;
+            appliedRunPenalty = baseRun - Goal.Run;
             appliedJumpPenalty = jumpPenalty;
             lastAppliedWalkValue = Goal.Walk;
             lastAppliedRunValue = Goal.Run;
             lastAppliedJumpValue = Goal.JumpForce;
+            lastPenaltyLogCount = i;
             hasAppliedStats = true;
         }
 
-        float CalculatePenalty(float penaltyPerLog, float maxPenalty)
+        bool ShouldRefreshCarryWeightPenalty()
         {
-            int effectiveLogCount = Mathf.Max(0, i - Mathf.Max(1, logsCountThreshold) + 1);
-            float cappedMaxPenalty = Mathf.Max(0f, maxPenalty) * Mathf.Clamp01(maxWeightPenalty);
-            float penalty = Mathf.Min(effectiveLogCount * Mathf.Max(0f, penaltyPerLog), cappedMaxPenalty);
-            CurrentWeightPenalty01 = Mathf.Max(CurrentWeightPenalty01, cappedMaxPenalty > 0f ? penalty / cappedMaxPenalty : 0f);
-            return penalty;
+            if (i != lastPenaltyLogCount)
+                return true;
+
+            if (Goal == null)
+                return false;
+
+            if (!Mathf.Approximately(Goal.Walk, lastAppliedWalkValue))
+                return true;
+            if (!Mathf.Approximately(Goal.Run, lastAppliedRunValue))
+                return true;
+            if (!Mathf.Approximately(Goal.JumpForce, lastAppliedJumpValue))
+                return true;
+
+            if (Goal.Otter != null && !Mathf.Approximately(Goal.Otter.speed, lastAppliedAnimationSpeed))
+                return true;
+
+            return false;
+        }
+
+        float CalculateLoad01()
+        {
+            int balancedCount = Mathf.Clamp(maxBalancedLogCount, 0, MaxLogCount - 1);
+            return Mathf.Clamp01((i - balancedCount) / (float)(MaxLogCount - balancedCount));
+        }
+
+        void UpdateLogCountDisplay()
+        {
+            bool showBuildHint = Goal.grounded && i == MaxLogCount;
+            if (i == lastDisplayedLogCount && showBuildHint == lastDisplayedBuildHint)
+                return;
+
+            lastDisplayedLogCount = i;
+            lastDisplayedBuildHint = showBuildHint;
+            Goal.LogCount = showBuildHint ? BuildHintText : i + "/" + MaxLogCount;
         }
 
         float ResolveBaseValue(float currentValue, float lastAppliedValue, float appliedPenalty)

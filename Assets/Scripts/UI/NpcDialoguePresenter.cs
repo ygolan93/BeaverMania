@@ -16,6 +16,22 @@ namespace Beavermania.UI
     {
         static NpcDialoguePresenter instance;
         static NpcDialoguePresenterRuntimeHost runtimeHost;
+        static bool isShuttingDown;
+
+        const int IdleCleanupIntervalFrames = 30;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetShutdownGuard()
+        {
+            isShuttingDown = false;
+            Application.quitting -= OnApplicationQuitting;
+            Application.quitting += OnApplicationQuitting;
+        }
+
+        static void OnApplicationQuitting()
+        {
+            isShuttingDown = true;
+        }
 
         [SerializeField] Dialogue dialogue;
         [SerializeField] GameObject promptRoot;
@@ -30,6 +46,8 @@ namespace Beavermania.UI
         PlayerHudState playerHudState;
         TextMeshProUGUI fallbackObjectiveText;
         bool isPromptVisible;
+        bool hudFallbackBindingsResolved;
+        int idleTickCounter;
 
         public static NpcDialoguePresenter ResolveInstance()
         {
@@ -122,14 +140,31 @@ namespace Beavermania.UI
 
         internal void RuntimeTick()
         {
-            ResolveBindings();
-            CleanupDeadSourceReferences();
-
             if (activeSource != null)
             {
+                ResolveBindings();
+                CleanupDeadSourceReferences();
                 HidePrompt();
                 return;
             }
+
+            bool hasRegisteredSources = registeredSources.Count > 0;
+            if (!hasRegisteredSources)
+            {
+                if (isPromptVisible)
+                    HidePrompt();
+
+                idleTickCounter++;
+                if (idleTickCounter % IdleCleanupIntervalFrames != 0)
+                    return;
+            }
+            else
+            {
+                idleTickCounter = 0;
+            }
+
+            ResolveBindings();
+            CleanupDeadSourceReferences();
 
             selectedSource = SelectBestAvailableSource();
             UpdatePromptState(selectedSource);
@@ -188,7 +223,7 @@ namespace Beavermania.UI
             if (dialogueRoot == null)
                 dialogueRoot = gameObject;
 
-            if (playerHudState == null || fallbackObjectiveText == null)
+            if (!hudFallbackBindingsResolved)
                 ResolveHudFallbackBindings();
         }
 
@@ -214,6 +249,8 @@ namespace Beavermania.UI
                     break;
                 }
             }
+
+            hudFallbackBindingsResolved = true;
         }
 
         void CleanupDeadSourceReferences()
@@ -436,12 +473,18 @@ namespace Beavermania.UI
 
         static void EnsureRuntimeHost()
         {
-            if (!Application.isPlaying || runtimeHost != null)
+            if (!Application.isPlaying || isShuttingDown || runtimeHost != null)
                 return;
 
             var hostObject = new GameObject(nameof(NpcDialoguePresenterRuntimeHost));
             Object.DontDestroyOnLoad(hostObject);
             runtimeHost = hostObject.AddComponent<NpcDialoguePresenterRuntimeHost>();
+        }
+
+        internal static void ClearRuntimeHost(NpcDialoguePresenterRuntimeHost host)
+        {
+            if (ReferenceEquals(runtimeHost, host))
+                runtimeHost = null;
         }
     }
 
@@ -452,6 +495,11 @@ namespace Beavermania.UI
             var presenter = NpcDialoguePresenter.ResolveInstance();
             if (presenter != null)
                 presenter.RuntimeTick();
+        }
+
+        void OnDestroy()
+        {
+            NpcDialoguePresenter.ClearRuntimeHost(this);
         }
     }
 }

@@ -74,6 +74,13 @@ namespace Beavermania.Player
         public bool Rolling;
         double HealthPercent;
         double StaminaPercent;
+        int lastHudHealthTenths = -1;
+        int lastHudStaminaTenths = -1;
+        int lastHudCurrency = -1;
+        int lastHudNutCount = -1;
+        int lastHudApple = -1;
+        int lastHudArrowMunition = -1;
+        int lastHudLives = -1;
         public int Lives;
         public GameObject ICON_1;
         public GameObject ICON_2;
@@ -858,6 +865,7 @@ namespace Beavermania.Player
 
         void RefreshArrowHudText()
         {
+            lastHudArrowMunition = arrowMunition;
             ArrowText = "ARROWS (RM): " + arrowMunition;
             if (PlayerHudState != null)
                 PlayerHudState.ArrowText = ArrowText;
@@ -2299,6 +2307,80 @@ namespace Beavermania.Player
             Debug.LogError($"{nameof(BeaverPlayerBehaviour)} on '{name}' is missing required reference '{referenceName}'. Disabling this component to prevent repeated input-loop NullReferenceExceptions.", this);
         }
 
+        void UpdateHudDisplayStringsIfChanged()
+        {
+            HealthPercent = System.Math.Round((CurrentHealth / MaxHealth) * 100.0, 1);
+            int healthTenths = (int)(HealthPercent * 10.0);
+            if (healthTenths != lastHudHealthTenths)
+            {
+                lastHudHealthTenths = healthTenths;
+                DebugText = HealthPercent + "%";
+            }
+
+            StaminaPercent = System.Math.Round((CurrentStamina / MaxStamina) * 100.0, 1);
+            int staminaTenths = (int)(StaminaPercent * 10.0);
+            if (staminaTenths != lastHudStaminaTenths)
+            {
+                lastHudStaminaTenths = staminaTenths;
+                StaminaText = StaminaPercent + "%";
+            }
+
+            if (Currency != lastHudCurrency)
+            {
+                lastHudCurrency = Currency;
+                Wallet = Currency.ToString();
+            }
+
+            if (NutCount != lastHudNutCount)
+            {
+                lastHudNutCount = NutCount;
+                SeedText = NutCount.ToString();
+            }
+
+            if (Apple != lastHudApple)
+            {
+                lastHudApple = Apple;
+                AppleText = Apple.ToString();
+            }
+
+            if (arrowMunition != lastHudArrowMunition)
+            {
+                lastHudArrowMunition = arrowMunition;
+                ArrowText = arrowMunition.ToString();
+            }
+
+            UpdateLifeIconsIfChanged();
+        }
+
+        void UpdateLifeIconsIfChanged()
+        {
+            if (Lives == lastHudLives)
+                return;
+
+            lastHudLives = Lives;
+            if (ICON_1 == null && ICON_2 == null && ICON_3 == null)
+                return;
+
+            if (Lives >= 3)
+            {
+                if (ICON_1 != null) ICON_1.SetActive(true);
+                if (ICON_2 != null) ICON_2.SetActive(true);
+                if (ICON_3 != null) ICON_3.SetActive(true);
+            }
+            else if (Lives == 2)
+            {
+                if (ICON_1 != null) ICON_1.SetActive(false);
+                if (ICON_2 != null) ICON_2.SetActive(true);
+                if (ICON_3 != null) ICON_3.SetActive(true);
+            }
+            else if (Lives == 1)
+            {
+                if (ICON_1 != null) ICON_1.SetActive(false);
+                if (ICON_2 != null) ICON_2.SetActive(false);
+                if (ICON_3 != null) ICON_3.SetActive(true);
+            }
+        }
+
         [System.Obsolete]
         public void Update()
         {
@@ -2377,39 +2459,7 @@ namespace Beavermania.Player
                     CurrentStamina -= 0.001f;
                 }
             }
-            //Update UI
-            {
-                HealthPercent = System.Math.Round((CurrentHealth / MaxHealth) * 100f, 1);
-                DebugText = HealthPercent + "%";
-                StaminaPercent = System.Math.Round((CurrentStamina / MaxStamina) * 100f, 1);
-                StaminaText = StaminaPercent + "%";
-                Wallet = Currency.ToString();
-                SeedText = NutCount.ToString();
-                AppleText = Apple.ToString();
-                GobletText = string.Empty;
-                ArrowText = arrowMunition.ToString();
-                if (ICON_1 != null || ICON_2 != null || ICON_3 != null)
-                {
-                    if (Lives >= 3)
-                    {
-                        if (ICON_1 != null) ICON_1.SetActive(true);
-                        if (ICON_2 != null) ICON_2.SetActive(true);
-                        if (ICON_3 != null) ICON_3.SetActive(true);
-                    }
-                    else if (Lives == 2)
-                    {
-                        if (ICON_1 != null) ICON_1.SetActive(false);
-                        if (ICON_2 != null) ICON_2.SetActive(true);
-                        if (ICON_3 != null) ICON_3.SetActive(true);
-                    }
-                    else if (Lives == 1)
-                    {
-                        if (ICON_1 != null) ICON_1.SetActive(false);
-                        if (ICON_2 != null) ICON_2.SetActive(false);
-                        if (ICON_3 != null) ICON_3.SetActive(true);
-                    }
-                }
-            }
+            UpdateHudDisplayStringsIfChanged();
             if (!inputLocked)
             {
             //Jump action

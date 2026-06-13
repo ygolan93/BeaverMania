@@ -1,5 +1,11 @@
 # Bugfix Task Template
 
+## Ownership classification
+- [ ] Cursor-owned
+- [ ] Codex-owned
+- [ ] Mixed
+- [ ] User decision required
+
 ## Bug title
 - 
 
@@ -20,31 +26,51 @@
 - Console log:
 - User report:
 
-## Suspected systems
+## Likely cause
+- Primary failure path:
+- Evidence supporting it:
+- What is still uncertain:
+
+## Files / Areas to Inspect
+- Scripts:
+- Prefabs:
+- Scenes:
+- Out of scope:
+
+## Constraints
+- Preserve existing behavior unless explicitly changing it.
+- Apply the smallest safe fix.
+- Do not rewrite adjacent systems.
+- Do not hide broken wiring with silent guards.
+- Do not commit unless instructed.
+
+## Fix Requirements
+1.
+2.
+3.
+
+## Why this is safe
+- What surrounding behavior should remain unchanged:
+
+## Possible side effects
 - 
 
-## Codex investigation scope
-- 
-
-## Cursor investigation scope
-- 
-
-## Files/assets at risk
-- 
-
-## Minimal fix principle
-- Smallest safe change that resolves the repro without broad behavior shifts.
-
-## Regression checks
-- 
-
-## Verification checklist
+## Verify
 - [ ] Repro confirmed before fix.
+- [ ] Build / static validation run when available.
 - [ ] Fix validated on target path.
 - [ ] Related gameplay/UI/audio/input regressions checked.
 - [ ] Remaining risks documented.
 
-## Handoff checklist
-- [ ] Active owner + phase updated in `AI_WORKFLOW/active-task.md`.
-- [ ] Cursor→Codex handoff created when script issue is suspected from Unity debugging.
-- [ ] Codex→Cursor handoff created when Editor/Inspector/scene follow-up is required.
+## Workflow Tracking
+- `AI_WORKFLOW/active-task.md` update required: yes / no
+- Cursor -> Codex handoff required:
+- Codex -> Cursor handoff required:
+- Next owner:
+
+## Report Back
+- Cause
+- Files changed
+- Fix applied
+- Validation performed
+- Remaining risks / manual follow-up

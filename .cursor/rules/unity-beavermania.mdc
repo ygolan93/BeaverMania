@@ -1,14 +1,22 @@
 ---
-description: Unity C# conventions for BeaverProject (Beavermania)
+description: Unity implementation conventions for BeaverProject (Beavermania)
 alwaysApply: true
 ---
 
-# Beavermania Unity C#
+# Beavermania Unity Implementation Rules
+
+## Role
+
+- Cursor executes local implementation, Unity Editor wiring, and verification work.
+- Codex owns architecture direction, cross-system refactor judgment, risk review, and merge-readiness review.
+- Do not behave like the default architect unless the user explicitly reassigns that role.
 
 ## Scope
 
-- Edit only `Assets/Scripts/**` unless the user explicitly asks to change scenes, prefabs, or third-party assets.
+- Default code-edit scope: `Assets/Scripts/**`.
+- Scenes, prefabs, UI hierarchy, animation assets, and Inspector wiring are in scope only when the task explicitly requires them.
 - Do not modify `Assets/External Packages/**`, `Assets/Eden/**` sample/demo scripts, or other vendor code.
+- Do not edit generated Unity Input System files unless there is no safe alternative.
 
 ## Namespaces and layout
 
@@ -26,20 +34,33 @@ alwaysApply: true
 
 - Use `OnValidate()` on ScriptableObjects for range checks; log with `Debug.LogWarning(..., this)`.
 
-## Project systems (reuse, don't duplicate)
+## Project systems (reuse, do not duplicate)
 
 - **Input**: Read player input through `Beavermania.Core.Input.PlayerInputReader`, not scattered `Input.GetKey` calls in feature code.
 - **Pause / time scale**: Freeze gameplay via `GameTimeScaleGate.SetFreeze(token, true/false)`; never set `Time.timeScale` directly for pause menus or lose screens.
 - **Player**: Prefer `Beavermania.Player.BeaverPlayerBehaviour` APIs and existing combat/HUD types over new parallel player state.
 
-## Code style
+## Editing rules
 
+- Inspect nearby scripts, call sites, prefabs, and scenes before patching.
+- Keep diffs small and focused on the requested behavior.
 - Match surrounding files: explicit `using` statements, `SerializeField` for inspector wiring, minimal comments (only non-obvious logic).
 - Use meaningful null checks before dereferencing scene references; avoid silent empty `catch` blocks.
 - Remove dead code and unused usings in files you touch.
-- Keep diffs minimal: change only what the task requires.
+- Do not rename or remove public/serialized fields without checking references and migration impact.
+- Avoid allocations in `Update`, `FixedUpdate`, and `LateUpdate`.
+- Avoid repeated `GetComponent` calls in hot paths when a stable cached reference is available.
 
-## When unsure
+## Validation
 
-- Read nearby scripts in the same folder before adding types or patterns.
-- Ask before large refactors (e.g. splitting `BeaverPlayerBehaviour`) or cross-cutting input/time-scale changes.
+- For script changes, run `dotnet build .ci/BeaverMania.CI.csproj` when the environment supports it.
+- For scene/prefab/UI/animation/Inspector changes, list the exact manual Unity verification steps.
+- Report required serialized assignments explicitly instead of implying they were done.
+- Never claim Play Mode or Editor verification that was not actually performed.
+
+## Escalate to Codex when unsure
+
+- The task needs architecture or refactor decisions.
+- The safe fix touches multiple systems or public contracts.
+- The change risks serialized references, prefab bindings, or scene behavior.
+- The codebase contradicts the requested plan in a non-trivial way.

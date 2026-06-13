@@ -1,59 +1,57 @@
 # Feature Task Template
 
-## Feature name
-- 
+## Ownership classification
+- [ ] Cursor-owned
+- [ ] Codex-owned
+- [ ] Mixed
+- [ ] User decision required
 
-## Player-facing goal
-- 
+## Goal
+- Exact outcome:
 
-## Gameplay behavior
+## Context
+- Why this change is needed:
+- Behavior that must remain unchanged:
 - Trigger conditions:
 - In-game outcomes:
 - Failure/edge behavior:
 
-## Systems touched
-- Input:
-- Player/combat:
-- NPC/AI:
-- UI:
-- Audio:
-- Data/ScriptableObjects:
-- Scene/prefab integration:
+## Files / Areas to Inspect
+- Scripts:
+- Prefabs:
+- Scenes:
+- Data / ScriptableObjects:
+- Out of scope:
 
-## Script work expected from Codex
-- 
+## Constraints
+- Preserve existing behavior unless explicitly listed.
+- Keep changes minimal and reviewable.
+- Do not reformat unrelated files.
+- Do not rename public APIs without checking references.
+- Do not commit unless instructed.
+- Do not touch unrelated systems.
+- Report uncertainty instead of guessing.
 
-## Unity integration expected from Cursor
-- 
+## Required Changes
+1.
+2.
+3.
 
-## Data / ScriptableObject needs
-- 
+## Acceptance Criteria
+- [ ]
 
-## UI needs
-- 
+## Validation
+- Command checks:
+- Manual Unity / Play Mode checks:
+- Regression checks:
 
-## Animation/VFX/SFX needs
-- 
+## Workflow Tracking
+- `AI_WORKFLOW/active-task.md` update required: yes / no
+- Handoff file required:
+- Next owner:
 
-## Prefab/scene needs
-- 
-
-## Acceptance criteria
-- [ ] 
-
-## Verification checklist
-- [ ] Code compiles / static checks complete.
-- [ ] Required Inspector assignments applied.
-- [ ] Play Mode behavior matches acceptance criteria.
-- [ ] No critical regressions in related flows.
-
-## Handoff checklist
-- [ ] Ownership boundary documented in `AI_WORKFLOW/active-task.md`.
-- [ ] Required handoff file created if ownership changes.
-- [ ] Next owner and next action explicitly recorded.
-
-## Merge readiness checklist
-- [ ] Scope matches task intent.
-- [ ] Risks and limitations documented.
-- [ ] Verification evidence recorded.
-- [ ] User/Product Owner approval requested.
+## Report Back
+- Files changed
+- Summary of changes
+- Validation performed
+- Risks / manual follow-up

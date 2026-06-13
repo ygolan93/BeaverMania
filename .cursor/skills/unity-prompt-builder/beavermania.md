@@ -2,6 +2,12 @@
 
 When the workspace is **BeaverProject** / BeaverMania, include these in the prompt **Constraints** section (adjust if the user narrows scope).
 
+## Role split
+
+- Codex is the senior architect, reviewer, and risk gatekeeper.
+- Cursor is the implementation engineer: inspect, patch, validate, and report.
+- If the task becomes architecture-sensitive, multi-system, or refactor-heavy, tell Cursor to stop and hand off to Codex.
+
 ## Scope
 
 - Default code edits: `Assets/Scripts/**` only.
@@ -12,17 +18,20 @@ When the workspace is **BeaverProject** / BeaverMania, include these in the prom
 
 | System | Rule |
 |--------|------|
-| **Input** | `Beavermania.Core.Input.PlayerInputReader` — no scattered `Input.GetKey` in feature code |
-| **Pause / time** | `GameTimeScaleGate.SetFreeze(token, true/false)` — never set `Time.timeScale` directly for pause/lose |
+| **Input** | `Beavermania.Core.Input.PlayerInputReader` - no scattered `Input.GetKey` in feature code |
+| **Pause / time** | `GameTimeScaleGate.SetFreeze(token, true/false)` - never set `Time.timeScale` directly for pause/lose |
 | **Player** | Prefer `Beavermania.Player.BeaverPlayerBehaviour` and existing combat/HUD APIs |
 | **Data** | Tunables in `ScriptableObject` under `Assets/Scripts/Data/` with `Beavermania/<Category>/<Name>` menu |
-| **Namespaces** | `Beavermania.<Area>` — Core, Data, Player, NPC, Objects, UI, Audio, Display |
+| **Namespaces** | `Beavermania.<Area>` - Core, Data, Player, NPC, Objects, UI, Audio, Display |
 
 ## Style
 
 - Small `MonoBehaviour` components; avoid growing god scripts.
 - Match surrounding files; explicit `using`; `[SerializeField]` for inspector wiring.
 - Meaningful null checks; `Debug.LogWarning(..., this)` when wiring missing; no silent empty `catch`.
+- Inspect relevant files before editing.
+- Keep diffs minimal and reviewable.
+- Do not commit, push, or merge unless the user explicitly asks.
 - Ask before splitting `BeaverPlayerBehaviour` or cross-cutting input/time-scale changes.
 
 ## Migration
@@ -34,7 +43,12 @@ When the workspace is **BeaverProject** / BeaverMania, include these in the prom
 
 - **Plan**: prefab/scene YAML, animation parameters, Input Actions assets, trader/shop/dialogue flow, multi-system bugs.
 - **Agent**: single-script fix with known file and clear repro.
-- **Multitask**: rare — only when areas are file/prefab disjoint.
+- **Multitask**: rare - only when areas are file/prefab disjoint.
+
+## Model preference
+
+- Default to the strongest available model for multi-file, risky, or architecture-sensitive implementation work.
+- Use lighter/faster models only for trivial search, formatting, or isolated text edits.
 
 ## Cross-agent workflow prompts
 
@@ -46,7 +60,11 @@ When a prompt involves multi-step feature work, bugfixes crossing code + Unity s
   - `AI_WORKFLOW/handoffs/cursor-to-codex.md`
   - `AI_WORKFLOW/handoffs/codex-to-cursor.md`
 - Which tool owns the next step (Codex, Cursor, or User).
-
+- What Cursor must report back:
+  - files changed
+  - validation performed
+  - remaining risks
+  - required Unity follow-up
 
 ## AI_WORKFLOW default assumption
 

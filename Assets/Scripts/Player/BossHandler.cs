@@ -1,5 +1,5 @@
 using System.Collections;
-using System.Collections.Generic;
+using Beavermania.Core.GameFlow;
 using Beavermania.NPC;
 using Beavermania.Player;
 using BeaverPlayer = Beavermania.Player.BeaverPlayerBehaviour;
@@ -16,24 +16,47 @@ namespace Beavermania.Player.Combat
         public GameObject ChatCollider;
         public GameObject BossBar;
         public GameObject BossPanel;
+        public GameObject VictoryScreen;
         //public GameObject BossContinueButton;
         //public GameObject BossSkipButton;
         BossDialogueInteractionSource dialogueInteractionSource;
+        Coroutine victorySequenceCoroutine;
+        ScorpionScript subscribedBoss;
+        bool victorySequenceStarted;
 
+        void Awake()
+        {
+            ResolvePlayerReference();
+            EnsureDialogueSource();
+        }
+
+        void OnEnable()
+        {
+            RefreshBossSubscription();
+        }
 
         void Start()
         {
-            player = GetComponent<BeaverPlayer>();
-            var bossObject = GameObject.Find("ScorpionBoss");
-            if (bossObject != null)
-                Boss = bossObject.GetComponent<ScorpionScript>();
+            ResolvePlayerReference();
+            ResolveBossReference();
             EnsureDialogueSource();
+            RefreshBossSubscription();
             if (BossBar != null)
                 BossBar.SetActive(false);
         }
 
+        void OnDisable()
+        {
+            StopVictorySequence();
+            UnsubscribeFromBoss();
+        }
+
         void Update()
         {
+            ResolvePlayerReference();
+            ResolveBossReference();
+            RefreshBossSubscription();
+
             if (Boss == null)
             {
                 if (BossBar != null && BossBar.activeSelf)
@@ -137,6 +160,120 @@ namespace Beavermania.Player.Combat
                 dialogueInteractionSource = ChatCollider.AddComponent<BossDialogueInteractionSource>();
 
             dialogueInteractionSource.Configure(this);
+        }
+
+        void ResolvePlayerReference()
+        {
+            if (player == null)
+                player = GetComponent<BeaverPlayer>();
+        }
+
+        void ResolveBossReference()
+        {
+            if (Boss != null)
+                return;
+
+            var bossObject = GameObject.Find("ScorpionBoss");
+            if (bossObject != null)
+                Boss = bossObject.GetComponent<ScorpionScript>();
+        }
+
+        void RefreshBossSubscription()
+        {
+            if (subscribedBoss == Boss)
+                return;
+
+            UnsubscribeFromBoss();
+
+            if (Boss == null)
+                return;
+
+            Boss.Defeated += OnBossDefeated;
+            subscribedBoss = Boss;
+        }
+
+        void UnsubscribeFromBoss()
+        {
+            if (subscribedBoss == null)
+                return;
+
+            subscribedBoss.Defeated -= OnBossDefeated;
+            subscribedBoss = null;
+        }
+
+        void OnBossDefeated(ScorpionScript defeatedBoss)
+        {
+            if (victorySequenceStarted)
+                return;
+
+            victorySequenceStarted = true;
+            if (BossBar != null)
+                BossBar.SetActive(false);
+            if (BossPanel != null)
+                BossPanel.SetActive(false);
+            if (ChatCollider != null)
+                ChatCollider.SetActive(false);
+            if (dialogueInteractionSource != null)
+                dialogueInteractionSource.SetInteractionAvailable(false);
+
+            StopVictorySequence();
+            victorySequenceCoroutine = StartCoroutine(TriggerVictoryAfterDelay(defeatedBoss != null ? defeatedBoss.VictoryDelay : 0f));
+        }
+
+        IEnumerator TriggerVictoryAfterDelay(float delaySeconds)
+        {
+            if (delaySeconds > 0f)
+                yield return new WaitForSecondsRealtime(delaySeconds);
+
+            victorySequenceCoroutine = null;
+            if (IsLoseScreenActive())
+                yield break;
+
+            TriggerVictory();
+        }
+
+        void TriggerVictory()
+        {
+            GameTimeScaleGate.SetFreeze(GameTimeScaleGate.FreezeToken.VictoryScreen, true);
+
+            if (player != null)
+            {
+                if (player.Music != null)
+                    player.Music.StopMusic();
+
+                player.isAtTrader = false;
+                player.ShowCursor();
+
+                if (player.FreeLook != null)
+                    player.FreeLook.enabled = false;
+                if (player.CamForTraders != null)
+                    player.CamForTraders.enabled = false;
+
+                player.enabled = false;
+            }
+
+            if (BossBar != null)
+                BossBar.SetActive(false);
+            if (BossPanel != null)
+                BossPanel.SetActive(false);
+            if (VictoryScreen != null)
+                VictoryScreen.SetActive(true);
+        }
+
+        bool IsLoseScreenActive()
+        {
+            return player != null
+                && player.LooseScreen != null
+                && player.LooseScreen.activeSelf;
+        }
+
+        void StopVictorySequence()
+        {
+            if (victorySequenceCoroutine == null)
+                return;
+
+            StopCoroutine(victorySequenceCoroutine);
+            victorySequenceCoroutine = null;
         }
 
 

@@ -1,3 +1,4 @@
+using System;
 using Beavermania.Data.NPC;
 using Beavermania.Objects;
 using Beavermania.Player.Combat;
@@ -78,10 +79,12 @@ namespace Beavermania.NPC
         float minimumChargeTimeRemaining;
         float hitEffectTimer;
         bool deathHandled;
+        [SerializeField] float victoryDelay = 2f;
 
         public ScorpionState State => currentState;
         public ScorpionStatsData StatsData => ActiveStats;
         public int MaxHealth => ActiveStats.maxHealth;
+        public float VictoryDelay => Mathf.Max(0f, victoryDelay);
         public int comboLimit => ActiveStats.comboLimit;
         public float StunnedClock => currentState == ScorpionState.Stunned ? stateTimer : 0f;
         public float chargeSpeed => ActiveStats.chargeSpeed;
@@ -94,6 +97,7 @@ namespace Beavermania.NPC
         public int StingDamageAmount => ActiveStats.stingDamage;
         public float rotationSpeed => ActiveStats.rotationSpeed;
         public float recoveryDuration => ActiveStats.recoveryDuration;
+        public event Action<ScorpionScript> Defeated;
         bool IsAggressive => combo >= Mathf.Max(0, comboLimit - 5);
         float ReverseDistanceThreshold => Mathf.Max(0f, chargeDistance - 10f);
         ScorpionStatsData ActiveStats => statsData != null ? statsData : ResolveFallbackStats();
@@ -397,6 +401,7 @@ namespace Beavermania.NPC
                 }
             }
 
+            Defeated?.Invoke(this);
             gameObject.SetActive(false);
         }
 

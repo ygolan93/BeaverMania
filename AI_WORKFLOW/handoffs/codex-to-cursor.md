@@ -1,5 +1,121 @@
 # Codex to Cursor Handoff
 
+> **Status (2026-06-13):** Active mixed-task handoff is now the **Scorpion boss delayed victory flow** on branch `fix/scorpion-boss-victory-flow`. The older FPS and dialogue sections below remain historical context.
+
+## Active implementation handoff - Scorpion boss delayed victory flow
+
+### What Codex changed
+
+- Updated `Assets/Scripts/NPC/Scorpion/ScorpionScript.cs`
+  - added serialized `victoryDelay`
+  - exposed clamped `VictoryDelay`
+  - added one-shot `Defeated` event raised from `Death()`
+- Updated `Assets/Scripts/Player/BossHandler.cs`
+  - added `VictoryScreen`
+  - subscribed to `ScorpionScript.Defeated`
+  - added one-shot delayed victory coroutine
+  - hides boss UI immediately on defeat
+  - aborts delayed victory if lose screen is already active when the delay ends
+  - freezes gameplay, unlocks cursor, disables player gameplay control, and shows `VictoryScreen`
+- Updated `Assets/Scripts/Core/GameFlow/GameTimeScaleGate.cs`
+  - added `FreezeToken.VictoryScreen`
+- Added `Assets/Tests/PlayMode/Core/GameFlow/ScorpionBossVictoryFlowPlayModeTests.cs`
+  - coverage for defeat-once, delayed victory, boss-bar hide, and lose-precedence
+
+### Runtime flow now expected
+
+1. `ScorpionScript.ReceiveDamage()` reaches `CurrentHealth <= 0`.
+2. `ScorpionScript.Death()` exits early if `deathHandled` is already set, otherwise marks dead, applies drops/VFX, raises `Defeated`, and deactivates the boss object.
+3. `BossHandler` receives `Defeated`, hides `BossBar` / `BossPanel`, disables the boss chat trigger, and starts one realtime delay coroutine.
+4. After `Boss.VictoryDelay`, `BossHandler` checks `player.LooseScreen`.
+5. If lose is already active, victory is skipped.
+6. Otherwise `BossHandler` freezes through `GameTimeScaleGate.FreezeToken.VictoryScreen`, stops music if available, shows the cursor, disables player cameras/control, and activates `VictoryScreen`.
+
+### What Cursor must wire in Unity
+
+1. Inspect the Scorpion boss scene instance / prefab and the active `BossHandler`.
+2. Assign `BossHandler.VictoryScreen` to the correct dedicated victory panel on `PlayerCanvas`.
+3. Verify `BossHandler.BossBar`, `BossHandler.BossPanel`, and `BossHandler.ChatCollider` still point at the intended scene/prefab objects after the script change.
+4. Check these assets/scenes specifically:
+   - `Assets/Prefabs/Objects/UI/PlayerCanvas.prefab`
+   - `Assets/Scenes/Level 1.unity`
+   - `Assets/Scenes/BackUp Scene/BossDemo.unity`
+   - `Assets/Scenes/Level 1 - Remastered - Steam.unity`
+5. Use `GameMaster` terminology in scene inspection; there is no `GameManager` script in this repo.
+
+### Codex static preflight before Unity wiring
+
+- Unity MCP was not connected in the Codex session, so no Inspector assignments or Play Mode checks were performed.
+- Added local embedded skill files for this handoff:
+  - `.agents/skills/unity-scene-reference-check/SKILL.md`
+  - `.agents/skills/victory-ui-wiring/SKILL.md`
+  - `.agents/skills/playmode-boss-smoke-test/SKILL.md`
+- Static scan found `ScorpionBoss` prefab usage in:
+  - `Assets/Prefabs/Scorpion/ScorpionBoss.prefab`
+  - `Assets/Scenes/Level 1.unity`
+  - `Assets/Scenes/BackUp Scene/BossDemo.unity`
+  - `Assets/Scenes/Level 1 - Remastered - Steam.unity`
+- Static scan found existing `BossHandler` scene overrides for `Boss`, `BossBar`, `BossPanel`, and `ChatCollider` in `Assets/Scenes/Level 1.unity`.
+- Static scan found existing boss-related scene overrides for `Boss`, `BossBar`, and `BossPanel` in `Assets/Scenes/BackUp Scene/BossDemo.unity`; re-check `ChatCollider` in the Editor because the text scan did not show the same field there.
+- Static scan did not find a `VictoryScreen` serialized override in `Level 1`, `BossDemo`, or `Level 1 - Remastered - Steam`.
+- Static scan of `Assets/Scenes/Level 1 - Remastered - Steam.unity` only found the `ScorpionBoss` prefab instance by name; it did not show `PlayerCanvas`, `GameMaster`, or `BossHandler` boss/UI overrides by text search. Treat remastered boss/UI wiring as unverified until inspected in Unity.
+- `Assets/Prefabs/Objects/UI/PlayerCanvas.prefab` contains `Loose Menu Panel`, `BossPanel`, and `Boss HP Panel`, but the text scan did not identify a clearly named dedicated victory panel. In Unity, choose the actual dedicated victory/end-game UI object; do not wire `VictoryScreen` to `Loose Menu Panel`, `BossPanel`, `Boss HP Panel`, or the root `PlayerCanvas`.
+
+### Codex retry wiring and Play Mode result
+
+- Unity MCP retry connected to `BeaverProject@d3b470b190d10be0` with active scene `Assets/Scenes/Level 1 - Remastered - Steam.unity`.
+- The remastered scene had `ScorpionBoss`, `PlayerCanvas`, and `GameMaster`, but no `BossHandler` component before wiring.
+- Added `BossHandler` to the remastered scene's `Player` instance and assigned:
+  - `player` -> `Player`
+  - `Boss` -> `ScorpionBoss`
+  - `BossBar` -> `PlayerCanvas/Boss HP Panel`
+  - `BossPanel` -> `PlayerCanvas/Dialogues/BossPanel`
+  - `VictoryScreen` -> `PlayerCanvas/Finish Game Panel `
+  - `ChatCollider` left null because no boss chat trigger/source object was present in the remastered scene inspection.
+- Saved the active scene through Unity `File/Save`.
+- Play Mode smoke tested the remastered scene by calling `ScorpionScript.TakeDamage(999999999)` on `ScorpionBoss`.
+- Immediate post-kill sample:
+  - `delay=2`
+  - victory panel was hidden before death and still hidden immediately after death
+  - boss object became inactive
+  - boss health became `0`
+  - boss HP panel remained hidden
+  - `Time.timeScale` remained `1` immediately after death
+- Post-delay sample:
+  - exactly one `Finish Game Panel ` existed and exactly one was active
+  - `Loose Menu Panel` was inactive
+  - `Time.timeScale=0`
+  - cursor visible and unlocked
+  - `BeaverPlayerBehaviour.enabled=false`
+  - `FreeLook.enabled=false`
+  - Unity Console had no warnings or errors after the smoke run.
+- `GameMaster` exists in the remastered scene as `PlayerPack-Drop and Play/GameMaster`, but is tagged `Music`, not `GM`. Codex did not change this because the player already has its `GM` reference assigned and retagging could affect legacy music-tag assumptions.
+- `git diff --check` currently reports Unity-generated trailing whitespace on empty YAML scalar lines in `Level 1 - Remastered - Steam.unity`; Codex left those untouched to avoid manual YAML churn.
+
+### Play Mode validation Cursor owns
+
+- Force Scorpion boss health to zero.
+- Confirm the configured delay is respected before victory appears.
+- Confirm `BossBar` hides immediately on death and does not reappear.
+- Confirm controls stop after victory.
+- Confirm cursor becomes visible and unlocked.
+- Confirm the victory UI appears once only.
+- Confirm if the player lose screen is already active when the delay ends, victory does not appear.
+- Re-verify the remastered scene explicitly; static scan did not show the same boss/UI override evidence there as clearly as `Level 1` and `BossDemo`.
+
+### Verification completed by Codex
+
+- Static code review of the death path, boss handler, lose flow, and time-scale ownership.
+- `git diff --check` passed aside from existing Git line-ending warnings on touched files.
+- Detached-worktree Unity batch import confirmed the new PlayMode test no longer violates the test asmdef boundary pattern; remaining batch verification is blocked by unrelated Input System package compilation failures in the detached worktree environment.
+- Direct batch run against the live project remains blocked while another Unity instance has the project open.
+
+### Verification still blocked / limited
+
+- No clean Play Mode pass was completed end-to-end from Codex in this session.
+- The detached worktree currently fails on unrelated baseline compile errors under `Assets/Scripts/Core/Input/*` because `UnityEngine.InputSystem` did not resolve in that temporary import.
+- Needs Unity Play Mode verification.
+
 > **Status (2026-06-13 rollback):** Branch `fix/log-carry-animation-load` was reset to `0da224eb`. Removed player prefab commits `8f0ed3cb` and `38596429`; shared player camera prefabs match merge-base again. `Carry.cs` script changes from `d636a525` remain, but prefab serialized carry tuning is deferred. Remote branch force-pushed to match.
 
 > **Status (2026-06-13):** Codex implemented the scene-local canopy mitigation pass for `Level 1 - Remastered - Steam`. Cursor now owns Unity-side hierarchy verification, locked-route performance proof, and gameplay sanity checks on the supported minimum-spec machine.
@@ -269,3 +385,89 @@ No serialized or public fields were removed in this pass.
 - Prompt and shared panel behavior are code-complete but not Unity-verified yet.
 - Legacy traders and NPCs still depend on prefab/scene references being repointed to the shared `PlayerCanvas` structure.
 - Needs Unity Play Mode verification.
+
+---
+
+# Codex Follow-up - Scorpion Boss Victory Review Blockers
+
+Date: 2026-06-13 16:34 +03:00
+
+Status: Codex took over because Cursor was unavailable. The file-level review blockers below were handled directly in the workspace. The remaining manual item is Unity Play Mode validation of the normal player-to-boss encounter route.
+
+## Goal
+
+Make the Scorpion Boss delayed victory-flow branch safe to merge by removing unrelated serialized asset churn, fixing merge hygiene issues, and validating the real Level 1 Remastered gameplay path.
+
+## Context
+
+Codex reviewed branch `fix/scorpion-boss-victory-flow` after the Level 1 Remastered wiring pass. The forced boss-death Play Mode smoke test passed: after killing `ScorpionBoss`, the configured delay elapsed, the finish panel appeared once, controls/camera froze, cursor was visible and unlocked, lose panel stayed inactive, and Unity Console showed no warnings/errors.
+
+Review originally found unrelated prefab churn and whitespace check failures. Those file-level blockers are fixed in the working tree. The smoke test and focused PlayMode tests use forced damage, so the real player-to-boss encounter path still needs manual Unity verification before merge.
+
+## Files / Areas to Inspect
+
+- `Assets/Prefabs/Objects/Bridge/StairsBridge.prefab`
+- `Assets/Scenes/Level 1 - Remastered - Steam.unity`
+- `Assets/Tests/PlayMode/Core/GameFlow/ScorpionBossVictoryFlowPlayModeTests.cs.meta`
+- `Assets/Scripts/Player/BossHandler.cs`
+- `Assets/Scripts/NPC/Scorpion/ScorpionScript.cs`
+
+## Constraints
+
+- Keep changes minimal.
+- Do not reformat unrelated Unity YAML.
+- Do not rename prefab-bound scripts, fields, GameObjects, or scene objects.
+- Do not change gameplay feel outside the Scorpion Boss victory-flow scope.
+- Do not retag `GameMaster` unless you confirm the tag change is safe for the music/game-flow systems.
+- Do not commit until the branch passes the validation below.
+
+## Required Fixes
+
+1. Revert or explicitly justify the unrelated `StairsBridge.prefab` rotation change.
+   - Review reference: `Assets/Prefabs/Objects/Bridge/StairsBridge.prefab:452`
+   - The current branch changes `m_LocalRotation` on a bridge prefab. This is outside the boss victory scope and should not ship in this PR unless separately validated and documented.
+   - Codex result: reverted to match `origin/main`.
+
+2. Fix `git diff --check origin/main...HEAD` failures.
+   - Current failures are trailing whitespace in `Assets/Scenes/Level 1 - Remastered - Steam.unity` and `Assets/Tests/PlayMode/Core/GameFlow/ScorpionBossVictoryFlowPlayModeTests.cs.meta`.
+   - Prefer a minimal Unity-safe cleanup. Do not normalize the whole scene or create broad YAML churn.
+   - Codex result: fixed in the working tree. `git diff --check origin/main` passes with only Git LF/CRLF warnings.
+
+3. Verify the real Level 1 Remastered boss encounter path.
+   - `BossHandler.ChatCollider` is currently null in the remastered scene wiring: `Assets/Scenes/Level 1 - Remastered - Steam.unity:9463`.
+   - If that is intentional, document why no chat collider is needed for this scene.
+   - If the encounter depends on boss dialogue/proximity before combat, wire the correct scene object and validate the path.
+   - Codex result: left null intentionally after Unity scene inspection. The remastered scene has no `Arena`/`BossFight` trigger or chat/dialogue object to assign, and assigning `ScorpionBoss` or `Player` would be unsafe because `BossHandler.SkipBossChat` deactivates `ChatCollider`. The victory path does not require this reference; it only affects optional boss dialogue prompt registration.
+
+## Validation
+
+- Run:
+  - `git diff --check origin/main`
+- In Unity Play Mode using `Assets/Scenes/Level 1 - Remastered - Steam.unity`:
+  - Start from the normal player route, not only an execute-code forced kill.
+  - Reach or trigger the Scorpion Boss encounter.
+  - Confirm boss UI appears at the correct time.
+  - Kill the boss normally or force health to zero after the encounter has started.
+  - Confirm the configured delay occurs before victory.
+  - Confirm controls/camera freeze or transition correctly.
+  - Confirm cursor is visible and unlocked on victory.
+  - Confirm exactly one finish/victory UI appears.
+  - Confirm lose UI does not appear at the same time.
+  - Confirm Unity Console has no new warnings/errors.
+
+## Report Back
+
+List:
+
+- Files changed
+- Whether `StairsBridge.prefab` was reverted or justified
+- Whether `ChatCollider` was intentionally left null or wired
+- `git diff --check` result
+- Play Mode validation result
+- Any remaining merge risk
+
+## Codex Validation Completed
+
+- `ScorpionBossVictoryFlowPlayModeTests`: passed 3/3 in Unity Play Mode.
+- `git diff --check origin/main`: passed; only Git LF/CRLF warnings remain.
+- `StairsBridge.prefab`: no longer differs from `origin/main`.

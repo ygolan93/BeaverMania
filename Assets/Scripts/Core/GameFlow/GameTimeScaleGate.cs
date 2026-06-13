@@ -15,6 +15,7 @@ namespace Beavermania.Core.GameFlow
             None = 0,
             PauseMenu = 1 << 0,
             LooseScreen = 1 << 1,
+            VictoryScreen = 1 << 2,
         }
 
         const float FrozenScale = 0f;

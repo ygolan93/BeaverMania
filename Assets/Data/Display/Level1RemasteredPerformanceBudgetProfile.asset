@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8c7be557ad24d1c8a0a56ee9a8d6b41, type: 3}
+  m_Name: Level1RemasteredPerformanceBudgetProfile
+  m_EditorClassIdentifier: 
+  startingTierIndex: 1
+  rollingWindowSize: 60
+  degradeAverageFrameTimeMs: 17.2
+  degradeConsecutiveFrames: 45
+  recoverAverageFrameTimeMs: 14.9
+  recoverConsecutiveFrames: 300
+  tierChangeCooldownSeconds: 1
+  tiers:
+  - label: High
+    qualityLevelName: Medium
+    highClusterEnabled: 1
+    proxyClusterEnabled: 0
+    treeDistance: 200
+    billboardDistance: 30
+    treeMaximumFullLodCount: 25
+    detailObjectDistance: 20
+    detailObjectDensity: 1
+    heightmapPixelError: 5
+    splatMapDistance: 600
+    shadowDistance: 40
+  - label: Balanced
+    qualityLevelName: Medium
+    highClusterEnabled: 0
+    proxyClusterEnabled: 1
+    treeDistance: 180
+    billboardDistance: 28
+    treeMaximumFullLodCount: 16
+    detailObjectDistance: 12
+    detailObjectDensity: 0.75
+    heightmapPixelError: 8
+    splatMapDistance: 500
+    shadowDistance: 30
+  - label: Fast
+    qualityLevelName: Fast
+    highClusterEnabled: 0
+    proxyClusterEnabled: 1
+    treeDistance: 140
+    billboardDistance: 22
+    treeMaximumFullLodCount: 10
+    detailObjectDistance: 4
+    detailObjectDensity: 0.5
+    heightmapPixelError: 12
+    splatMapDistance: 400
+    shadowDistance: 18
+  - label: CanopySafe
+    qualityLevelName: Fast
+    highClusterEnabled: 0
+    proxyClusterEnabled: 0
+    treeDistance: 110
+    billboardDistance: 18
+    treeMaximumFullLodCount: 6
+    detailObjectDistance: 0
+    detailObjectDensity: 0.25
+    heightmapPixelError: 15
+    splatMapDistance: 300
+    shadowDistance: 12

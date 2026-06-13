@@ -15,12 +15,15 @@
 
 ## Problem summary
 
+
 | Issue                   | Symptom                                                             | Status                                                               |
 | ----------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | Global terrain overdraw | ~100M tris, ~10–15 FPS at bad ref coords                            | **Improved** (~34–39 FPS, ~5–21M tris at ref coords, 2026-06-12 MCP) |
 | Canopy-facing fill-rate | Severe FPS in Edit + Play when camera faces giant canopy / open sky | **Open** — Codex hypothesis: `TheGivingTree` alpha-cutout overdraw   |
 
+
 ## Current scene diff — terrain (all 33 tiles, verified in YAML)
+
 
 | Setting                     | Original | Current working diff |
 | --------------------------- | -------- | -------------------- |
@@ -33,27 +36,30 @@
 | `m_SplatMapDistance`        | 1000     | **600**              |
 | `m_DrawInstanced`           | 0        | **1**                |
 
+
 **Decorative foliage (bad bbox X 115–145, Y 70–79, Z 220–340):** `m_CastShadows: 0` on 52+ hand-placed renderers. No gameplay objects removed.
 
 ## Reference-coordinate before / after (MCP, 2026-06-12)
+
 
 | Zone                    | FPS before | Tris before | FPS after | Tris after |
 | ----------------------- | ---------- | ----------- | --------- | ---------- |
 | Bad (119.6, 72, 266.1)  | ~10.5–14.9 | ~80–105M    | ~34–39    | ~5–21M     |
 | Good (149.1, 70, 167.5) | ~72–83     | —           | ~72       | ~14M       |
 
+
 Does **not** certify the canopy-facing repro — that remains user-reported open.
 
 ## Prior script work on same branch (for Codex review)
 
-1. **`Carry.cs`** — independent movement vs animation multipliers; gated penalty refresh
-2. **`NpcDialoguePresenter.cs`** — shutdown guard; idle tick throttle
-3. **`BeaverPlayerBehaviour.cs`** — HUD / life-icon string caching
+1. `**Carry.cs`** — independent movement vs animation multipliers; gated penalty refresh
+2. `**NpcDialoguePresenter.cs`** — shutdown guard; idle tick throttle
+3. `**BeaverPlayerBehaviour.cs**` — HUD / life-icon string caching
 
 ## What Codex should do
 
 - [x] Static review of canopy shader/material path (done — see `codex-to-cursor.md`)
-- [ ] Optional: diff review of three scripts above when preparing merge
+- [x] Optional: diff review of three scripts above when preparing merge
 - [ ] Run `dotnet build .ci/BeaverMania.CI.csproj` if Unity managed refs available
 - [ ] PR summary after Cursor completes pass 2 A/B
 

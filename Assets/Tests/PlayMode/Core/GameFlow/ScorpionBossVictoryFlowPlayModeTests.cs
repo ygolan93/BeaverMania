@@ -117,6 +117,11 @@ namespace Beavermania.Tests.PlayMode.Core.GameFlow
             SetFieldValue(player, "Otter", playerAnimator);
             SetFieldValue(player, "HoneyJar", Spawn("HoneyJar"));
             SetFieldValue(player, "GoldBrick", Spawn("GoldBrick"));
+            SetFieldValue(player, "HologramedBridge", Spawn("HologramedBridge"));
+            SetFieldValue(player, "AttackPoint", Spawn("AttackPoint").transform);
+            SetFieldValue(player, "PlacedGold", Spawn("PlacedGold"));
+            SetFieldValue(player, "HealLight", Spawn("HealLight").AddComponent<Light>());
+            SetFieldValue(player, "HurtLight", Spawn("HurtLight").AddComponent<Light>());
 
             GameObject loseScreen = Spawn("LoseScreen");
             loseScreen.SetActive(false);
@@ -144,6 +149,7 @@ namespace Beavermania.Tests.PlayMode.Core.GameFlow
             bossObject.AddComponent<Rigidbody>();
             Component boss = bossObject.AddComponent(ResolveRuntimeType("Beavermania.NPC.ScorpionScript"));
             SetFieldValue(boss, "victoryDelay", victoryDelay);
+            ((Behaviour)boss).enabled = false;
             SetFieldValue(handler, "Boss", boss);
 
             return new BossHarness(player, handler, boss, bossBar, victoryScreen, loseScreen);

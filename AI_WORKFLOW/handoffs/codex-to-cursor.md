@@ -385,3 +385,89 @@ No serialized or public fields were removed in this pass.
 - Prompt and shared panel behavior are code-complete but not Unity-verified yet.
 - Legacy traders and NPCs still depend on prefab/scene references being repointed to the shared `PlayerCanvas` structure.
 - Needs Unity Play Mode verification.
+
+---
+
+# Codex Follow-up - Scorpion Boss Victory Review Blockers
+
+Date: 2026-06-13 16:34 +03:00
+
+Status: Codex took over because Cursor was unavailable. The file-level review blockers below were handled directly in the workspace. The remaining manual item is Unity Play Mode validation of the normal player-to-boss encounter route.
+
+## Goal
+
+Make the Scorpion Boss delayed victory-flow branch safe to merge by removing unrelated serialized asset churn, fixing merge hygiene issues, and validating the real Level 1 Remastered gameplay path.
+
+## Context
+
+Codex reviewed branch `fix/scorpion-boss-victory-flow` after the Level 1 Remastered wiring pass. The forced boss-death Play Mode smoke test passed: after killing `ScorpionBoss`, the configured delay elapsed, the finish panel appeared once, controls/camera froze, cursor was visible and unlocked, lose panel stayed inactive, and Unity Console showed no warnings/errors.
+
+Review originally found unrelated prefab churn and whitespace check failures. Those file-level blockers are fixed in the working tree. The smoke test and focused PlayMode tests use forced damage, so the real player-to-boss encounter path still needs manual Unity verification before merge.
+
+## Files / Areas to Inspect
+
+- `Assets/Prefabs/Objects/Bridge/StairsBridge.prefab`
+- `Assets/Scenes/Level 1 - Remastered - Steam.unity`
+- `Assets/Tests/PlayMode/Core/GameFlow/ScorpionBossVictoryFlowPlayModeTests.cs.meta`
+- `Assets/Scripts/Player/BossHandler.cs`
+- `Assets/Scripts/NPC/Scorpion/ScorpionScript.cs`
+
+## Constraints
+
+- Keep changes minimal.
+- Do not reformat unrelated Unity YAML.
+- Do not rename prefab-bound scripts, fields, GameObjects, or scene objects.
+- Do not change gameplay feel outside the Scorpion Boss victory-flow scope.
+- Do not retag `GameMaster` unless you confirm the tag change is safe for the music/game-flow systems.
+- Do not commit until the branch passes the validation below.
+
+## Required Fixes
+
+1. Revert or explicitly justify the unrelated `StairsBridge.prefab` rotation change.
+   - Review reference: `Assets/Prefabs/Objects/Bridge/StairsBridge.prefab:452`
+   - The current branch changes `m_LocalRotation` on a bridge prefab. This is outside the boss victory scope and should not ship in this PR unless separately validated and documented.
+   - Codex result: reverted to match `origin/main`.
+
+2. Fix `git diff --check origin/main...HEAD` failures.
+   - Current failures are trailing whitespace in `Assets/Scenes/Level 1 - Remastered - Steam.unity` and `Assets/Tests/PlayMode/Core/GameFlow/ScorpionBossVictoryFlowPlayModeTests.cs.meta`.
+   - Prefer a minimal Unity-safe cleanup. Do not normalize the whole scene or create broad YAML churn.
+   - Codex result: fixed in the working tree. `git diff --check origin/main` passes with only Git LF/CRLF warnings.
+
+3. Verify the real Level 1 Remastered boss encounter path.
+   - `BossHandler.ChatCollider` is currently null in the remastered scene wiring: `Assets/Scenes/Level 1 - Remastered - Steam.unity:9463`.
+   - If that is intentional, document why no chat collider is needed for this scene.
+   - If the encounter depends on boss dialogue/proximity before combat, wire the correct scene object and validate the path.
+   - Codex result: left null intentionally after Unity scene inspection. The remastered scene has no `Arena`/`BossFight` trigger or chat/dialogue object to assign, and assigning `ScorpionBoss` or `Player` would be unsafe because `BossHandler.SkipBossChat` deactivates `ChatCollider`. The victory path does not require this reference; it only affects optional boss dialogue prompt registration.
+
+## Validation
+
+- Run:
+  - `git diff --check origin/main`
+- In Unity Play Mode using `Assets/Scenes/Level 1 - Remastered - Steam.unity`:
+  - Start from the normal player route, not only an execute-code forced kill.
+  - Reach or trigger the Scorpion Boss encounter.
+  - Confirm boss UI appears at the correct time.
+  - Kill the boss normally or force health to zero after the encounter has started.
+  - Confirm the configured delay occurs before victory.
+  - Confirm controls/camera freeze or transition correctly.
+  - Confirm cursor is visible and unlocked on victory.
+  - Confirm exactly one finish/victory UI appears.
+  - Confirm lose UI does not appear at the same time.
+  - Confirm Unity Console has no new warnings/errors.
+
+## Report Back
+
+List:
+
+- Files changed
+- Whether `StairsBridge.prefab` was reverted or justified
+- Whether `ChatCollider` was intentionally left null or wired
+- `git diff --check` result
+- Play Mode validation result
+- Any remaining merge risk
+
+## Codex Validation Completed
+
+- `ScorpionBossVictoryFlowPlayModeTests`: passed 3/3 in Unity Play Mode.
+- `git diff --check origin/main`: passed; only Git LF/CRLF warnings remain.
+- `StairsBridge.prefab`: no longer differs from `origin/main`.

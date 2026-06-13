@@ -55,10 +55,10 @@ Direction-specific FPS cliff when viewing **giant `TheGivingTree` canopies again
 
 Ground-snapped teleport, **8s settle** — valid for the **original** hotspot pass; may not cover the **canopy-facing** repro:
 
-| Zone | Position | FPS (before) | Tris (before) | FPS (after pass 1) | Tris (after pass 1) |
-|------|----------|--------------|---------------|--------------------|-----------------------|
-| **Bad ref** | (119.6, 72.0, 266.1) | ~10.5–14.9 | ~80–105M | **~34–39** | **~5–21M** |
-| **Good ref** | (149.1, 70.0, 167.5) | ~72–83 (user) | — | **~72** | **~14M** |
+| Zone         | Position             | FPS (before)  | Tris (before) | FPS (after pass 1) | Tris (after pass 1) |
+| ------------ | -------------------- | ------------- | ------------- | ------------------ | ------------------- |
+| **Bad ref**  | (119.6, 72.0, 266.1) | ~10.5–14.9    | ~80–105M      | **~34–39**         | **~5–21M**          |
+| **Good ref** | (149.1, 70.0, 167.5) | ~72–83 (user) | —             | **~72**            | **~14M**            |
 
 **Pass 1 acceptance (reference coords only):** bad ≥30 FPS ✓ | bad tris <50M ✓ | good ≥70 FPS ✓
 
@@ -68,16 +68,16 @@ Ground-snapped teleport, **8s settle** — valid for the **original** hotspot pa
 
 Applied to **all 33 Terrain** components (verified in scene YAML):
 
-| Setting | Original | Current working diff |
-|---------|----------|-------------------|
-| `m_TreeDistance` | 5000 | **200** |
-| `m_TreeBillboardDistance` | 50 | **30** |
-| `m_TreeMaximumFullLODCount` | 50 | **25** |
-| `m_DetailObjectDistance` | 80 | **20** |
-| `m_DetailObjectDensity` | 1 | **1** (unchanged) |
-| `m_HeightmapPixelError` | 5 | **5** (unchanged) |
-| `m_SplatMapDistance` | 1000 | **600** |
-| `m_DrawInstanced` | 0 | **1** |
+| Setting                     | Original | Current working diff |
+| --------------------------- | -------- | -------------------- |
+| `m_TreeDistance`            | 5000     | **200**              |
+| `m_TreeBillboardDistance`   | 50       | **30**               |
+| `m_TreeMaximumFullLODCount` | 50       | **25**               |
+| `m_DetailObjectDistance`    | 80       | **20**               |
+| `m_DetailObjectDensity`     | 1        | **1** (unchanged)    |
+| `m_HeightmapPixelError`     | 5        | **5** (unchanged)    |
+| `m_SplatMapDistance`        | 1000     | **600**              |
+| `m_DrawInstanced`           | 0        | **1**                |
 
 **Bad-zone decorative foliage (X 115–145, Y 70–79, Z 220–340):** `m_CastShadows: 0` on **52+** decorative `MeshRenderer` instances (including `TheGivingTree` clusters). No gameplay objects removed.
 

@@ -34,12 +34,12 @@
 
 ### Tier values implemented
 
-| Tier | Quality | High cluster | Proxy cluster | treeDistance | billboardDistance | max full LOD | detail distance | detail density | pixel error | splat distance | shadow distance |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| High | Medium | on | off | 200 | 30 | 25 | 20 | 1.0 | 5 | 600 | 40 |
-| Balanced | Medium | off | on | 180 | 28 | 16 | 12 | 0.75 | 8 | 500 | 30 |
-| Fast | Fast | off | on | 140 | 22 | 10 | 4 | 0.5 | 12 | 400 | 18 |
-| CanopySafe | Fast | off | off | 110 | 18 | 6 | 0 | 0.25 | 15 | 300 | 12 |
+| Tier       | Quality | High cluster | Proxy cluster | treeDistance | billboardDistance | max full LOD | detail distance | detail density | pixel error | splat distance | shadow distance |
+| ---------- | ------- | ------------ | ------------- | ------------ | ----------------- | ------------ | --------------- | -------------- | ----------- | -------------- | --------------- |
+| High       | Medium  | on           | off           | 200          | 30                | 25           | 20              | 1.0            | 5           | 600            | 40              |
+| Balanced   | Medium  | off          | on            | 180          | 28                | 16           | 12              | 0.75           | 8           | 500            | 30              |
+| Fast       | Fast    | off          | on            | 140          | 22                | 10           | 4               | 0.5            | 12          | 400            | 18              |
+| CanopySafe | Fast    | off          | off           | 110          | 18                | 6            | 0               | 0.25           | 15          | 300            | 12              |
 
 ### Decorative canopy cluster Codex targeted
 

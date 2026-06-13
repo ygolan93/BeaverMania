@@ -4,6 +4,7 @@
 
 - **Level 1 Remastered — north forest hotspot FPS fix** on branch `fix/log-carry-animation-load`.
 - **Status:** Pass 1 (terrain + shadow overrides) improved reference-coordinate metrics; **task reopened (2026-06-13)** for a direction-specific **canopy fill-rate** cliff. See `codex-to-cursor.md` for Codex static review and Cursor A/B steps.
+- **Branch rollback (2026-06-13):** tip reset to `0da224eb`; removed player prefab commits `8f0ed3cb` / `38596429`. Remote force-pushed. Carry prefab serialization still pending.
 
 ## Unity context
 

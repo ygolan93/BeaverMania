@@ -1,5 +1,7 @@
 # Codex to Cursor Handoff
 
+> **Status (2026-06-13 rollback):** Branch `fix/log-carry-animation-load` was reset to `0da224eb`. Removed player prefab commits `8f0ed3cb` and `38596429`; shared player camera prefabs match merge-base again. `Carry.cs` script changes from `d636a525` remain, but prefab serialized carry tuning is deferred. Remote branch force-pushed to match.
+
 > **Status (2026-06-13):** Codex implemented the scene-local canopy mitigation pass for `Level 1 - Remastered - Steam`. Cursor now owns Unity-side hierarchy verification, locked-route performance proof, and gameplay sanity checks on the supported minimum-spec machine.
 
 ## Active implementation handoff — Level 1 Remastered 60 FPS floor pass

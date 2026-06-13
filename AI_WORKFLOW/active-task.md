@@ -14,6 +14,16 @@
 
 ## Current phase
 
+### 2026-06-13 branch rollback
+
+- Branch tip reset locally and on remote to `0da224eb` (`Refresh BeaverMania workflow and Cursor guidance docs`).
+- Removed commits:
+  - `8f0ed3cb` — player prefab carry serialization + camera lens edits
+  - `38596429` — camera prefab revert follow-up
+- **In scope on branch now:** `ce591d28` (Level 1 performance/canopy), `d636a525` (carry/presenter script hot-path), `0da224eb` (workflow docs).
+- **Out of scope again until revisited:** `Player.prefab` / `PlayerPack-Drop and Play.prefab` edits. `Carry.cs` script migration remains; prefab serialized tuning still needs a dedicated Unity pass.
+- Draft PR #180 updated to match the rolled-back branch history.
+
 ### 2026-06-13 implementation update
 
 - Codex implemented the scene-local canopy pass: `PerformanceBudgetProfile`, `FrameBudgetGovernor`, `Level1RemasteredPerformanceController`, a Beavermania-owned culled leaves shader/material, and a decorative `TheGivingTree` proxy prefab.
@@ -75,7 +85,7 @@ Applied to **all 33 Terrain** components (verified in scene YAML):
 
 ## Prior script work on same branch
 
-- Carry animation multiplier fix (`Carry.cs`)
+- Carry animation multiplier fix (`Carry.cs`) — script only; prefab serialization not applied after rollback
 - Dialogue host teardown fix (`NpcDialoguePresenter.cs`)
 - FPS script quick wins (`BeaverPlayerBehaviour`, `Carry`, `NpcDialoguePresenter`)
 
@@ -109,7 +119,7 @@ Applied to **all 33 Terrain** components (verified in scene YAML):
 - Selective grass re-enable on play tile only (detail distance 15–25)
 - Occlusion bake for open-vista directions
 - Decorative canopy proxy / LOD variant / culling-friendly leaf material
-- Carry-animation feel pass (after FPS stable)
+- Carry prefab serialization alignment + feel pass (after FPS stable; rolled back with `8f0ed3cb`)
 
 ## Handoff files
 

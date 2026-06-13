@@ -1,16 +1,22 @@
 # Unity Verification Template
 
-## Scene to test
+## Verification owner
+- Cursor / User
+
+## Goal
+- What this verification must prove:
+
+## Scene(s) to test
 - 
 
-## Prefab(s) to inspect
+## Prefab(s) / object(s) to inspect
 - 
 
 ## Inspector references to verify
 - 
 
 ## Play Mode checks
-- 
+1.
 
 ## UI checks
 - 
@@ -32,6 +38,15 @@
 
 ## Result
 - Pass / Fail / Needs follow-up
+- Evidence:
 
-## Notes for Codex or Cursor
+## Remaining risks / follow-up
 - 
+
+## Next owner
+- Codex / Cursor / User
+
+## Report Back
+- What was verified
+- What was not verified
+- Blocking issues or manual follow-up

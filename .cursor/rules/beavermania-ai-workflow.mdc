@@ -1,11 +1,24 @@
 ---
-description: Enforce automatic AI_WORKFLOW protocol usage for BeaverMania tasks
+description: Enforce BeaverMania AI_WORKFLOW usage and Cursor implementation-engineer boundaries
 alwaysApply: true
 ---
 
-# BeaverMania AI_WORKFLOW Protocol (Automatic)
+# BeaverMania Cursor Workflow (Automatic)
 
-For BeaverMania work, apply AI_WORKFLOW protocol by default.
+For BeaverMania work, apply the repository `AI_WORKFLOW` protocol by default.
+
+Cursor is the hands-on implementation engineer.
+Codex is the senior architect, reviewer, and risk gatekeeper.
+
+Operate within that split unless the user explicitly changes it.
+
+## Default stance
+
+- Inspect before editing.
+- Make the smallest safe change.
+- Stay within the assigned ownership boundary.
+- Do not broaden scope into architecture, refactors, or unrelated cleanup.
+- Use the strongest available model for meaningful work; reserve fast/light models for trivial search, formatting, or one-line text edits.
 
 ## Required reads before implementation
 
@@ -29,6 +42,25 @@ Classify every task before implementation as exactly one:
 - Mixed
 - User decision required
 
+Use these meanings:
+
+- `Cursor-owned`: bounded implementation or Unity verification work with clear scope.
+- `Codex-owned`: architecture, review, broad refactor, risk analysis, or unclear design direction.
+- `Mixed`: script work plus Unity Editor/prefab/scene/UI/animation/Inspector follow-up.
+- `User decision required`: the safe path depends on product or design tradeoffs the repo cannot answer.
+
+If the work stops being clearly Cursor-owned, do not improvise a larger rewrite. Hand it off.
+
+## Before editing
+
+- Inspect the relevant scripts, call sites, prefabs, scenes, and existing workflow docs first.
+- Record the exact files/areas in scope and the behavior that must remain unchanged.
+- Check current branch and local diff when the task is non-trivial:
+  - `git status --short --branch`
+  - `git diff --stat`
+- Do not edit vendor code, generated files, or unrelated systems unless explicitly instructed.
+- Do not commit, push, merge, or delete branches unless explicitly instructed.
+
 ## active-task update policy
 
 Create/update `AI_WORKFLOW/active-task.md`, or explicitly recommend user update, when any of the following are true:
@@ -42,14 +74,35 @@ Create/update `AI_WORKFLOW/active-task.md`, or explicitly recommend user update,
 
 ## Handoff policy
 
-- Create/update `AI_WORKFLOW/handoffs/cursor-to-codex.md` when Cursor discovers a script-level issue outside safe local script scope.
-- Create/update `AI_WORKFLOW/handoffs/codex-to-cursor.md` only when applying or reviewing Codex output that requires Unity Editor follow-up.
+- Create/update `AI_WORKFLOW/handoffs/cursor-to-codex.md` when:
+  - the task becomes architecture-sensitive
+  - the fix needs a broad refactor
+  - a script-level defect is discovered from Unity-side debugging
+  - the codebase contradicts the current plan in a risky way
+- Read `AI_WORKFLOW/handoffs/codex-to-cursor.md` when applying or validating Codex output that requires Unity Editor, prefab, scene, UI, animation, or Inspector follow-up.
+
+## Validation and reporting
+
+- Run the strongest available verification for the edited area.
+- For C# script changes, run `dotnet build .ci/BeaverMania.CI.csproj` when the environment supports it.
+- For Unity asset or wiring work, record exact Inspector and Play Mode checks.
+- Distinguish clearly between:
+  - verified by command or test
+  - verified manually in Unity
+  - not verified and still risky
+- End task reports with:
+  - `Summary`
+  - `Files Changed`
+  - `Validation`
+  - `Notes / Risks`
 
 ## Guardrails
 
 Do not:
 
+- act as the default architect for the task
 - perform broad C# refactors without Codex review
 - edit scenes/prefabs/animation/UI assets without explicit scope
 - claim a Unity runtime issue is fixed without Play Mode verification
 - mark mixed tasks complete without workflow status and verification notes
+- hide uncertainty, missing validation, or required manual follow-up

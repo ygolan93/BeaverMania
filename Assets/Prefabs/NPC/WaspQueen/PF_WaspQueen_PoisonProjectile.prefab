@@ -15,9 +15,9 @@ GameObject:
   - component: {fileID: 4942941148852503402}
   - component: {fileID: 7995632332297848886}
   - component: {fileID: 6625110933801570253}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: PF_WaspQueen_PoisonProjectile
-  m_TagString: Untagged
+  m_TagString: Boss
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -141,6 +141,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 527d4f4a739d43c8aef9ae4b1d106af2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  body: {fileID: 0}
-  projectileCollider: {fileID: 0}
+  body: {fileID: 7995632332297848886}
+  projectileCollider: {fileID: 2289931049423789509}
   impactVfxPrefab: {fileID: 0}

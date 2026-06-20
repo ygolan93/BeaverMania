@@ -1,65 +1,98 @@
 # Active Task
 
-> **Status (2026-06-13):** Active branch for this mixed task is `fix/scorpion-boss-victory-flow`. Codex implemented the runtime delayed-victory flow for the Scorpion boss. Cursor completed Unity wiring and Play Mode smoke validation for production scenes except the broken `BossDemo` backup scene.
+> **Status (2026-06-20):** Active branch for this mixed task is `feature/Wasp-Queen`. Codex owns the Wasp Queen C# foundation and test coverage. Cursor owns prefab, scene, animator, collider, audio/VFX asset, and Play Mode wiring.
 
 ## Current mixed task
 
-- Scorpion boss delayed victory flow after boss death
+- Wasp Queen boss foundation for Level 1 combat scenes
 
 ## Current owner split
 
-- **Mixed.** Codex: script-level defeat event, delayed victory trigger, time-scale token, and PlayMode coverage scaffold. Cursor: scene/prefab reference wiring plus Unity Play Mode validation. User: final acceptance on end-of-fight behavior.
+- **Codex:** new Wasp Queen runtime scripts, config asset type, local hazard/minion lifecycle, generic boss-victory contract, `BossHandler` compatibility, Scorpion compatibility shim, and automated test coverage.
+- **Cursor:** create and assign the real `WaspQueenConfig.asset`, wire prefab/scene references, assign spawn points and hazard prefabs, confirm animator triggers, assign audio clips/VFX, wire `BossHandler.bossVictorySourceBehaviour`, and run Unity Play Mode validation.
+- **User:** accept combat tuning and scene-level integration after Unity verification.
 
-## Current phase
+## Codex scope completed
 
-- **Cursor wiring + smoke validation complete (2026-06-13).** Awaiting user acceptance in-editor on the real boss encounter path.
+- Added `Assets/Scripts/Data/NPC/WaspQueen/WaspQueenConfig.cs`.
+- Added `Assets/Scripts/NPC/IBossVictorySource.cs`.
+- Added `Assets/Scripts/NPC/WaspQueen/` runtime foundation:
+  - `WaspQueenAbility.cs`
+  - `WaspQueenState.cs`
+  - `WaspQueenDecisionPlanner.cs`
+  - `WaspQueenChargeAttack.cs`
+  - `WaspQueenProjectile.cs`
+  - `WaspQueenPoisonZone.cs`
+  - `WaspQueenBoss.cs`
+- Updated `Assets/Scripts/Player/BossHandler.cs` for optional generic boss victory sources while preserving the legacy `ScorpionScript Boss` path.
+- Updated `Assets/Scripts/NPC/Scorpion/ScorpionScript.cs` to implement the new generic victory contract without changing the existing Scorpion-specific event path.
+- Added/extended tests:
+  - `Assets/Tests/EditMode/NPC/WaspQueen/WaspQueenDecisionPlannerTests.cs`
+  - `Assets/Tests/PlayMode/NPC/WaspQueen/WaspQueenBossPlayModeTests.cs`
+  - `Assets/Tests/PlayMode/Core/GameFlow/ScorpionBossVictoryFlowPlayModeTests.cs`
 
-## Wiring completed by Cursor
+## Runtime scope now implemented
 
-| Scene / asset                                      | BossHandler                                                                    | VictoryScreen                                     | BossBar / BossPanel  | ChatCollider                             | Play Mode smoke                                                                          |
-| -------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------- | -------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `Assets/Scenes/Level 1 - Remastered - Steam.unity` | Added on `Player` (scene instance)                                             | `PlayerCanvas/Finish Game Panel `                 | Wired                | Left null (no boss chat source in scene) | **Pass** — delay 2s, victory once, freeze/cursor/control                                 |
-| `Assets/Scenes/Level 1.unity`                      | Added on `Player` (prefab instance; old prefab BossHandler override was stale) | `PlayerCanvas/Finish Game Panel `                 | Preserved / verified | `BossFight` (inactive Arena trigger)     | **Pass**                                                                                 |
-| `Assets/Scenes/BackUp Scene/BossDemo.unity`        | Not wired                                                                      | Not wired                                         | Stale overrides only | Unknown                                  | **Blocked** — `BlinkingPlayer` and `PlayerCanvas` prefab instances are missing in Editor |
-| `Assets/Prefabs/Objects/UI/PlayerCanvas.prefab`    | Not modified                                                                   | `Finish Game Panel ` exists (inactive by default) | Unchanged            | N/A                                      | N/A                                                                                      |
+- Wasp Queen is a new boss controller under `Assets/Scripts/NPC/WaspQueen/`.
+- Decision selection is gated by cooldown, distance, summon cap, and anti-repeat behavior.
+- Phase thresholds queue at `<= 70%` and `<= 30%` health and transition once after the current action resolves.
+- Summons use the existing `LVL1 Wasp` prefab and are tracked locally by the boss controller.
+- Projectile and poison cloud hazards are local Wasp Queen hazards, not player projectile reuse and not a new global poison-status system.
+- Boss death now supports the generic `IBossVictorySource` flow so `BossHandler` can trigger delayed victory from Wasp Queen without breaking current Scorpion scenes/tests.
 
-## Play Mode evidence (Cursor / Unity MCP)
+## Cursor Unity work required next
 
-### Remastered + Level 1 (forced `handler.Boss.TakeDamage(999999999)`)
+- Create and assign the real `WaspQueenConfig.asset`.
+- Assign:
+  - `Config.waspPrefab` to the existing `LVL1 Wasp` prefab
+  - `Config.poisonProjectilePrefab`
+  - `Config.poisonZonePrefab`
+  - `Config.deathExplosionPrefab`
+  - `Config.fragmentPrefabs`
+- Wire boss scene/prefab references:
+  - `Body`
+  - `Animator`
+  - `HealthBar`
+  - `ProjectileSpawnPoint`
+  - `AoeOrigin`
+  - `WaspSpawnPoints`
+  - `ChargeHitbox` if used
+  - optional audio clips
+- Confirm animator triggers exist:
+  - `RangedAttack`
+  - `PoisonAoE`
+  - `Charge`
+  - `Summon`
+  - `PhaseTransition`
+  - `Die`
+- Wire `BossHandler.bossVictorySourceBehaviour` to `WaspQueenBoss` in the test/production scene that should use the new boss victory flow.
+- Keep boss dialogue / `ChatCollider` / `BossPanel` intro reuse out of scope for this task unless a separate dialogue task is opened.
 
-- Immediate: boss HP `0`, boss object inactive, boss bar hidden, `Time.timeScale = 1`, victory panel hidden.
-- After `VictoryDelay = 2s`: exactly one `Finish Game Panel ` active, `Loose Menu Panel` inactive, `Time.timeScale = 0`, cursor visible/unlocked, `BeaverPlayerBehaviour.enabled = false`, `FreeLook.enabled = false`.
-- Lose precedence (remastered): with `LooseScreen` active before delay end, victory stayed hidden.
-- Console: no errors during smoke runs.
+## Manual Unity verification required
 
-### Smoke-test note
+- Place Wasp Queen in a test scene and confirm inactive/idle behavior does not spam null warnings.
+- Verify far prefers ranged, near prefers poison AoE, and mid-range prefers charge.
+- Verify summon caps and summon counts by phase:
+  - phase 1: cap `3`, summon `1`
+  - phase 2: cap `5`, summon `2`
+  - phase 3: cap `7`, summon `3`
+- Verify charge locks direction at the start and does not home after telegraph completion.
+- Verify poison AoE damages on its configured tick interval, not every frame.
+- Verify boss death fires the delayed victory once only through `BossHandler.bossVictorySourceBehaviour`.
+- Verify surviving summoned wasps are cleaned up on boss death/reset, but player-killed summons still use their normal death/drop flow.
+- Confirm Unity Console has no missing animation-event or null-reference spam during the fight.
 
-- Use `BossHandler.Boss`, not `FindObjectOfType<ScorpionScript>()`. Remastered scene has additional non-boss `ScorpionScript` instances; killing the wrong one does not trigger victory.
+## Verification status
 
-## Manual Unity verification still recommended (user)
+- Codex added static code and test coverage only.
+- Local `dotnet build .ci/BeaverMania.CI.csproj` remains blocked in this Windows environment by missing Unity-managed assembly references.
+- No Unity Editor or Play Mode verification was performed by Codex in this session.
+- Needs Unity Play Mode verification.
 
-- [ ] Reach the Scorpion boss through normal gameplay in `Level 1 - Remastered - Steam` and confirm the delayed victory feels correct in context (dialogue skip, arena entry, music stop, UI timing).
-- [ ] Repeat once in `Level 1.unity` if that scene remains a supported boss route.
-- [ ] Confirm boss dialogue trigger still works in `Level 1` with `ChatCollider -> BossFight`.
-- [ ] Skip `BossDemo` unless missing prefab GUIDs are repaired first.
+## Explicitly out of scope in this branch
 
-## Deferred / out of scope on this branch
-
-- `BossDemo.unity` repair (missing prefab GUIDs `b922004aea0ae754c917e6abedafb749`, `d6e224836b570c644b9ae086cef28f39`).
-- Level 1 Remastered FPS / canopy work (separate branch `fix/log-carry-animation-load`).
-- NPC presenter wiring (historical handoff section in `codex-to-cursor.md`).
-
-## Handoff files
-
-- Codex → Cursor: `AI_WORKFLOW/handoffs/codex-to-cursor.md`
-- Cursor → Codex: `AI_WORKFLOW/handoffs/cursor-to-codex.md` (FPS task; not updated for this boss flow)
-
-## Suggested commit message (when user approves)
-
-```
-Wire Scorpion boss victory UI and validate delayed end-game flow
-
-Assign BossHandler.VictoryScreen to Finish Game Panel in Level 1 and
-Remastered scenes, restore Level 1 boss handler wiring, and verify
-delayed victory, lose precedence, and control freeze in Play Mode.
-```
+- Boss dialogue/panel intro generalization.
+- `BossDialogueInteractionSource` reuse for Wasp Queen.
+- Scene/prefab YAML hand edits.
+- New shared poison/debuff systems.
+- ShadowRevenant pool-hub reuse or broader boss framework refactors.

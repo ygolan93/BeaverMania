@@ -100,7 +100,30 @@ namespace Beavermania.Tests.PlayMode.Core.GameFlow
             Assert.That(Time.timeScale, Is.EqualTo(0f));
         }
 
-        BossHarness CreateHarness(float victoryDelay)
+        [UnityTest]
+        public IEnumerator VictoryFlow_UsesGenericBossVictorySource_WhenConfigured()
+        {
+            BossHarness harness = CreateHarness(
+                victoryDelay: 0.1f,
+                assignLegacyBoss: false,
+                assignGenericBossSource: true,
+                bossObjectName: "WaspQueenProxyBoss");
+
+            yield return null;
+
+            harness.BossBar.SetActive(true);
+            KillBoss(harness.Boss);
+            yield return new WaitForSecondsRealtime(0.15f);
+
+            Assert.That(harness.VictoryScreen.activeSelf, Is.True);
+            Assert.That(harness.BossBar.activeSelf, Is.False);
+        }
+
+        BossHarness CreateHarness(
+            float victoryDelay,
+            bool assignLegacyBoss = true,
+            bool assignGenericBossSource = false,
+            string bossObjectName = "ScorpionBoss")
         {
             GameObject cameraObject = Spawn("Main Camera");
             cameraObject.tag = "MainCamera";
@@ -145,12 +168,17 @@ namespace Beavermania.Tests.PlayMode.Core.GameFlow
             SetFieldValue(handler, "BossPanel", bossPanel);
             SetFieldValue(handler, "VictoryScreen", victoryScreen);
 
-            GameObject bossObject = Spawn("ScorpionBoss");
+            GameObject bossObject = Spawn(bossObjectName);
             bossObject.AddComponent<Rigidbody>();
             Component boss = bossObject.AddComponent(ResolveRuntimeType("Beavermania.NPC.ScorpionScript"));
             SetFieldValue(boss, "victoryDelay", victoryDelay);
             ((Behaviour)boss).enabled = false;
-            SetFieldValue(handler, "Boss", boss);
+
+            if (assignLegacyBoss)
+                SetFieldValue(handler, "Boss", boss);
+
+            if (assignGenericBossSource)
+                SetFieldValue(handler, "bossVictorySourceBehaviour", boss);
 
             return new BossHarness(player, handler, boss, bossBar, victoryScreen, loseScreen);
         }

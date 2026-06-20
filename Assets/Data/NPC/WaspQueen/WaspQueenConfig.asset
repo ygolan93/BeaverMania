@@ -1,0 +1,154 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efea6f7b7b234904844827024ab41955, type: 3}
+  m_Name: WaspQueenConfig
+  m_EditorClassIdentifier: 
+  maxHealth: 350000
+  phaseTwoHealthThresholdNormalized: 0.7
+  phaseThreeHealthThresholdNormalized: 0.3
+  victoryDelay: 2
+  activateRange: 25
+  introDuration: 0.75
+  idleDecisionDelay: 0.55
+  phaseTransitionDuration: 0.9
+  closeRange: 4
+  mediumRange: 9
+  farRange: 18
+  chargeMinRange: 5
+  chargeMaxRange: 11
+  stingMinRange: 6
+  stingMaxRange: 16
+  stingTelegraphDuration: 0.55
+  stingActiveDuration: 0.9
+  stingRecoveryDuration: 0.7
+  stingHomingStrength: 0.5
+  stingRetreatSpeed: 18
+  stingRetreatDuration: 1.2
+  hoverHeight: 1.5
+  groundCheckStartHeight: 10
+  groundCheckDistance: 24
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 4294966267
+  chargeObstructionMask:
+    serializedVersion: 2
+    m_Bits: 0
+  maxActiveProjectiles: 4
+  maxActivePoisonZones: 2
+  waspPrefab: {fileID: 2969994238874094856, guid: 6418a51a4bd5c1f46bb8507bd8627f51, type: 3}
+  poisonProjectilePrefab: {fileID: 6625110933801570253, guid: d887762e9b140e44490fd598c051f4ce, type: 3}
+  poisonZonePrefab: {fileID: 7437149189997659980, guid: 0de47fc80d411e34a8699c80ad1bdcf8, type: 3}
+  deathExplosionPrefab: {fileID: 2433282508537954060, guid: 9cfe40900aead6b46be69d2c02675f7e, type: 3}
+  fragmentPrefabs:
+  - {fileID: 3724478295433116455, guid: 7a893927e808bf64082005bcae3b4f22, type: 3}
+  - {fileID: 4554149956192257749, guid: 449680e7642839640acb0b771194ee9b, type: 3}
+  - {fileID: 8956572691331247483, guid: 5d9e03612385e4843bf7e18348a81546, type: 3}
+  - {fileID: 8780894494686982430, guid: a9033b1178bcea14db0934d547c5b242, type: 3}
+  phase1:
+    maxActiveSummonedWasps: 3
+    waspsPerSummon: 1
+    summonCooldown: 9
+    summonTelegraphDuration: 0.9
+    summonRecoveryDuration: 0.6
+    rangedCooldown: 4.5
+    rangedTelegraphDuration: 0.85
+    rangedRecoveryDuration: 0.6
+    rangedDamage: 14
+    projectileSpeed: 15
+    aoeCooldown: 7
+    aoeTelegraphDuration: 1.1
+    aoeRecoveryDuration: 0.75
+    aoeRadius: 6
+    aoeDamage: 10
+    aoeDuration: 4
+    aoeTickRate: 0.6
+    chargeCooldown: 8
+    chargeTelegraphDuration: 0.95
+    chargeSpeed: 16
+    chargeDuration: 0.4
+    chargeDamage: 18
+    chargeRecoveryDuration: 0.95
+    stingCooldown: 7
+    stingSpeed: 22
+    stingDamage: 16
+    rangedWeight: 4
+    aoeWeight: 1
+    chargeWeight: 2
+    summonWeight: 3
+    stingWeight: 2.5
+    sameAbilityPenalty: 1.5
+  phase2:
+    maxActiveSummonedWasps: 5
+    waspsPerSummon: 2
+    summonCooldown: 7.5
+    summonTelegraphDuration: 0.75
+    summonRecoveryDuration: 0.5
+    rangedCooldown: 3.25
+    rangedTelegraphDuration: 0.65
+    rangedRecoveryDuration: 0.5
+    rangedDamage: 18
+    projectileSpeed: 17
+    aoeCooldown: 5.5
+    aoeTelegraphDuration: 0.8
+    aoeRecoveryDuration: 0.55
+    aoeRadius: 9
+    aoeDamage: 12
+    aoeDuration: 6
+    aoeTickRate: 0.5
+    chargeCooldown: 6.5
+    chargeTelegraphDuration: 0.75
+    chargeSpeed: 18
+    chargeDuration: 0.45
+    chargeDamage: 22
+    chargeRecoveryDuration: 0.8
+    stingCooldown: 5.5
+    stingSpeed: 26
+    stingDamage: 20
+    rangedWeight: 3.5
+    aoeWeight: 3
+    chargeWeight: 3
+    summonWeight: 4
+    stingWeight: 3
+    sameAbilityPenalty: 1.75
+  phase3:
+    maxActiveSummonedWasps: 7
+    waspsPerSummon: 3
+    summonCooldown: 6
+    summonTelegraphDuration: 0.65
+    summonRecoveryDuration: 0.45
+    rangedCooldown: 2.6
+    rangedTelegraphDuration: 0.55
+    rangedRecoveryDuration: 0.45
+    rangedDamage: 20
+    projectileSpeed: 19
+    aoeCooldown: 4.5
+    aoeTelegraphDuration: 0.7
+    aoeRecoveryDuration: 0.5
+    aoeRadius: 13
+    aoeDamage: 14
+    aoeDuration: 8
+    aoeTickRate: 0.45
+    chargeCooldown: 5.5
+    chargeTelegraphDuration: 0.65
+    chargeSpeed: 20
+    chargeDuration: 0.5
+    chargeDamage: 25
+    chargeRecoveryDuration: 0.7
+    stingCooldown: 4.5
+    stingSpeed: 30
+    stingDamage: 24
+    rangedWeight: 3
+    aoeWeight: 4
+    chargeWeight: 4
+    summonWeight: 4.5
+    stingWeight: 3.5
+    sameAbilityPenalty: 2

@@ -1,473 +1,133 @@
 # Codex to Cursor Handoff
 
-> **Status (2026-06-13):** Active mixed-task handoff is now the **Scorpion boss delayed victory flow** on branch `fix/scorpion-boss-victory-flow`. The older FPS and dialogue sections below remain historical context.
+> **Status (2026-06-20):** Active mixed-task handoff is the **Wasp Queen boss foundation** on branch `feature/Wasp-Queen`. Codex completed the script-side foundation and tests. Cursor now owns Unity wiring and Play Mode proof.
 
-## Active implementation handoff - Scorpion boss delayed victory flow
+## What Codex changed
 
-### What Codex changed
+### New runtime/data files
 
-- Updated `Assets/Scripts/NPC/Scorpion/ScorpionScript.cs`
-  - added serialized `victoryDelay`
-  - exposed clamped `VictoryDelay`
-  - added one-shot `Defeated` event raised from `Death()`
-- Updated `Assets/Scripts/Player/BossHandler.cs`
-  - added `VictoryScreen`
-  - subscribed to `ScorpionScript.Defeated`
-  - added one-shot delayed victory coroutine
-  - hides boss UI immediately on defeat
-  - aborts delayed victory if lose screen is already active when the delay ends
-  - freezes gameplay, unlocks cursor, disables player gameplay control, and shows `VictoryScreen`
-- Updated `Assets/Scripts/Core/GameFlow/GameTimeScaleGate.cs`
-  - added `FreezeToken.VictoryScreen`
-- Added `Assets/Tests/PlayMode/Core/GameFlow/ScorpionBossVictoryFlowPlayModeTests.cs`
-  - coverage for defeat-once, delayed victory, boss-bar hide, and lose-precedence
+- `Assets/Scripts/NPC/IBossVictorySource.cs`
+- `Assets/Scripts/Data/NPC/WaspQueen/WaspQueenConfig.cs`
+- `Assets/Scripts/NPC/WaspQueen/WaspQueenAbility.cs`
+- `Assets/Scripts/NPC/WaspQueen/WaspQueenState.cs`
+- `Assets/Scripts/NPC/WaspQueen/WaspQueenDecisionPlanner.cs`
+- `Assets/Scripts/NPC/WaspQueen/WaspQueenChargeAttack.cs`
+- `Assets/Scripts/NPC/WaspQueen/WaspQueenProjectile.cs`
+- `Assets/Scripts/NPC/WaspQueen/WaspQueenPoisonZone.cs`
+- `Assets/Scripts/NPC/WaspQueen/WaspQueenBoss.cs`
 
-### Runtime flow now expected
+### Compatibility / shared boss-victory changes
 
-1. `ScorpionScript.ReceiveDamage()` reaches `CurrentHealth <= 0`.
-2. `ScorpionScript.Death()` exits early if `deathHandled` is already set, otherwise marks dead, applies drops/VFX, raises `Defeated`, and deactivates the boss object.
-3. `BossHandler` receives `Defeated`, hides `BossBar` / `BossPanel`, disables the boss chat trigger, and starts one realtime delay coroutine.
-4. After `Boss.VictoryDelay`, `BossHandler` checks `player.LooseScreen`.
-5. If lose is already active, victory is skipped.
-6. Otherwise `BossHandler` freezes through `GameTimeScaleGate.FreezeToken.VictoryScreen`, stops music if available, shows the cursor, disables player cameras/control, and activates `VictoryScreen`.
-
-### What Cursor must wire in Unity
-
-1. Inspect the Scorpion boss scene instance / prefab and the active `BossHandler`.
-2. Assign `BossHandler.VictoryScreen` to the correct dedicated victory panel on `PlayerCanvas`.
-3. Verify `BossHandler.BossBar`, `BossHandler.BossPanel`, and `BossHandler.ChatCollider` still point at the intended scene/prefab objects after the script change.
-4. Check these assets/scenes specifically:
-   - `Assets/Prefabs/Objects/UI/PlayerCanvas.prefab`
-   - `Assets/Scenes/Level 1.unity`
-   - `Assets/Scenes/BackUp Scene/BossDemo.unity`
-   - `Assets/Scenes/Level 1 - Remastered - Steam.unity`
-5. Use `GameMaster` terminology in scene inspection; there is no `GameManager` script in this repo.
-
-### Codex static preflight before Unity wiring
-
-- Unity MCP was not connected in the Codex session, so no Inspector assignments or Play Mode checks were performed.
-- Added local embedded skill files for this handoff:
-  - `.agents/skills/unity-scene-reference-check/SKILL.md`
-  - `.agents/skills/victory-ui-wiring/SKILL.md`
-  - `.agents/skills/playmode-boss-smoke-test/SKILL.md`
-- Static scan found `ScorpionBoss` prefab usage in:
-  - `Assets/Prefabs/Scorpion/ScorpionBoss.prefab`
-  - `Assets/Scenes/Level 1.unity`
-  - `Assets/Scenes/BackUp Scene/BossDemo.unity`
-  - `Assets/Scenes/Level 1 - Remastered - Steam.unity`
-- Static scan found existing `BossHandler` scene overrides for `Boss`, `BossBar`, `BossPanel`, and `ChatCollider` in `Assets/Scenes/Level 1.unity`.
-- Static scan found existing boss-related scene overrides for `Boss`, `BossBar`, and `BossPanel` in `Assets/Scenes/BackUp Scene/BossDemo.unity`; re-check `ChatCollider` in the Editor because the text scan did not show the same field there.
-- Static scan did not find a `VictoryScreen` serialized override in `Level 1`, `BossDemo`, or `Level 1 - Remastered - Steam`.
-- Static scan of `Assets/Scenes/Level 1 - Remastered - Steam.unity` only found the `ScorpionBoss` prefab instance by name; it did not show `PlayerCanvas`, `GameMaster`, or `BossHandler` boss/UI overrides by text search. Treat remastered boss/UI wiring as unverified until inspected in Unity.
-- `Assets/Prefabs/Objects/UI/PlayerCanvas.prefab` contains `Loose Menu Panel`, `BossPanel`, and `Boss HP Panel`, but the text scan did not identify a clearly named dedicated victory panel. In Unity, choose the actual dedicated victory/end-game UI object; do not wire `VictoryScreen` to `Loose Menu Panel`, `BossPanel`, `Boss HP Panel`, or the root `PlayerCanvas`.
-
-### Codex retry wiring and Play Mode result
-
-- Unity MCP retry connected to `BeaverProject@d3b470b190d10be0` with active scene `Assets/Scenes/Level 1 - Remastered - Steam.unity`.
-- The remastered scene had `ScorpionBoss`, `PlayerCanvas`, and `GameMaster`, but no `BossHandler` component before wiring.
-- Added `BossHandler` to the remastered scene's `Player` instance and assigned:
-  - `player` -> `Player`
-  - `Boss` -> `ScorpionBoss`
-  - `BossBar` -> `PlayerCanvas/Boss HP Panel`
-  - `BossPanel` -> `PlayerCanvas/Dialogues/BossPanel`
-  - `VictoryScreen` -> `PlayerCanvas/Finish Game Panel `
-  - `ChatCollider` left null because no boss chat trigger/source object was present in the remastered scene inspection.
-- Saved the active scene through Unity `File/Save`.
-- Play Mode smoke tested the remastered scene by calling `ScorpionScript.TakeDamage(999999999)` on `ScorpionBoss`.
-- Immediate post-kill sample:
-  - `delay=2`
-  - victory panel was hidden before death and still hidden immediately after death
-  - boss object became inactive
-  - boss health became `0`
-  - boss HP panel remained hidden
-  - `Time.timeScale` remained `1` immediately after death
-- Post-delay sample:
-  - exactly one `Finish Game Panel ` existed and exactly one was active
-  - `Loose Menu Panel` was inactive
-  - `Time.timeScale=0`
-  - cursor visible and unlocked
-  - `BeaverPlayerBehaviour.enabled=false`
-  - `FreeLook.enabled=false`
-  - Unity Console had no warnings or errors after the smoke run.
-- `GameMaster` exists in the remastered scene as `PlayerPack-Drop and Play/GameMaster`, but is tagged `Music`, not `GM`. Codex did not change this because the player already has its `GM` reference assigned and retagging could affect legacy music-tag assumptions.
-- `git diff --check` currently reports Unity-generated trailing whitespace on empty YAML scalar lines in `Level 1 - Remastered - Steam.unity`; Codex left those untouched to avoid manual YAML churn.
-
-### Play Mode validation Cursor owns
-
-- Force Scorpion boss health to zero.
-- Confirm the configured delay is respected before victory appears.
-- Confirm `BossBar` hides immediately on death and does not reappear.
-- Confirm controls stop after victory.
-- Confirm cursor becomes visible and unlocked.
-- Confirm the victory UI appears once only.
-- Confirm if the player lose screen is already active when the delay ends, victory does not appear.
-- Re-verify the remastered scene explicitly; static scan did not show the same boss/UI override evidence there as clearly as `Level 1` and `BossDemo`.
-
-### Verification completed by Codex
-
-- Static code review of the death path, boss handler, lose flow, and time-scale ownership.
-- `git diff --check` passed aside from existing Git line-ending warnings on touched files.
-- Detached-worktree Unity batch import confirmed the new PlayMode test no longer violates the test asmdef boundary pattern; remaining batch verification is blocked by unrelated Input System package compilation failures in the detached worktree environment.
-- Direct batch run against the live project remains blocked while another Unity instance has the project open.
-
-### Verification still blocked / limited
-
-- No clean Play Mode pass was completed end-to-end from Codex in this session.
-- The detached worktree currently fails on unrelated baseline compile errors under `Assets/Scripts/Core/Input/*` because `UnityEngine.InputSystem` did not resolve in that temporary import.
-- Needs Unity Play Mode verification.
-
-> **Status (2026-06-13 rollback):** Branch `fix/log-carry-animation-load` was reset to `0da224eb`. Removed player prefab commits `8f0ed3cb` and `38596429`; shared player camera prefabs match merge-base again. `Carry.cs` script changes from `d636a525` remain, but prefab serialized carry tuning is deferred. Remote branch force-pushed to match.
-
-> **Status (2026-06-13):** Codex implemented the scene-local canopy mitigation pass for `Level 1 - Remastered - Steam`. Cursor now owns Unity-side hierarchy verification, locked-route performance proof, and gameplay sanity checks on the supported minimum-spec machine.
-
-## Active implementation handoff — Level 1 Remastered 60 FPS floor pass
-
-### What Codex changed
-
-- Added `Assets/Scripts/Data/Display/PerformanceBudgetProfile.cs`
-- Added `Assets/Scripts/Display/FrameBudgetGovernor.cs`
-- Added `Assets/Scripts/Display/Level1RemasteredPerformanceController.cs`
-- Added `Assets/Data/Display/Level1RemasteredPerformanceBudgetProfile.asset`
-- Added edit-mode coverage in `Assets/Tests/EditMode/Core/GameFlow/FrameBudgetGovernorEditModeTests.cs`
-- Added play-mode lifecycle coverage in `Assets/Tests/PlayMode/Core/GameFlow/Level1RemasteredPerformanceControllerPlayModeTests.cs`
-- Added Beavermania-owned canopy assets:
-  - `Assets/Materials/TheGivingTree/BeavermaniaVegetationCulled.shader`
-  - `Assets/Materials/TheGivingTree/TheGivingTree_Leaves_Culled.mat`
-  - `Assets/Prefabs/Objects/ENV_TheGivingTree_PerfProxy.prefab`
-- Updated `Assets/Scenes/Level 1 - Remastered - Steam.unity` with:
-  - `Perf_CanopyCluster_High`
-  - `Perf_CanopyCluster_Proxy`
-  - `Level1RemasteredPerformanceController`
-  - eight decorative `TheGivingTree` full instances reparented under the high cluster
-  - eight matching proxy instances under the proxy cluster
-
-### Controller/runtime design now in scene
-
-- `PerformanceBudgetProfile` is scene-local config with a 60-frame rolling window, `17.2 ms` degrade threshold, `14.9 ms` recover threshold, and `1.0 s` tier cooldown.
-- `FrameBudgetGovernor` is the pure C# tier-state core.
-- `Level1RemasteredPerformanceController` snapshots incoming quality/terrain state, starts at `Balanced`, applies the ordered tiers, and restores previous global settings on disable/destroy.
-- The controller now also handles programmatic setup safely before first enable so the lifecycle tests and runtime-injected setups do not restore zeroed terrain data.
-
-### Tier values implemented
-
-| Tier       | Quality | High cluster | Proxy cluster | treeDistance | billboardDistance | max full LOD | detail distance | detail density | pixel error | splat distance | shadow distance |
-| ---------- | ------- | ------------ | ------------- | ------------ | ----------------- | ------------ | --------------- | -------------- | ----------- | -------------- | --------------- |
-| High       | Medium  | on           | off           | 200          | 30                | 25           | 20              | 1.0            | 5           | 600            | 40              |
-| Balanced   | Medium  | off          | on            | 180          | 28                | 16           | 12              | 0.75           | 8           | 500            | 30              |
-| Fast       | Fast    | off          | on            | 140          | 22                | 10           | 4               | 0.5            | 12          | 400            | 18              |
-| CanopySafe | Fast    | off          | off           | 110          | 18                | 6            | 0               | 0.25           | 15          | 300            | 12              |
-
-### Decorative canopy cluster Codex targeted
-
-Only skyline/decorative full `TheGivingTree` instances in the failing sightline were moved into the high/proxy swap path:
-
-- `TheGivingTree (12)` at `(120.46, 74.75, 300.71)`
-- `TheGivingTree (3)` at `(129.05, 73.40, 290.68)`
-- `TheGivingTree (1)` at `(131.38, 74.75, 275.44)`
-- `TheGivingTree` at `(132.98, 70.02, 252.57)`
-- `TheGivingTree (8)` at `(137.42, 69.81, 246.45)`
-- `TheGivingTree (9)` at `(142.10, 71.00, 260.50)`
-- `TheGivingTree (2)` at `(148.11, 69.57, 243.81)`
-- `TheGivingTree (10)` at `(153.32, 69.59, 250.37)`
-
-### What Cursor must verify in Unity
-
-1. Open `Level 1 - Remastered - Steam` and confirm the new root objects exist and the eight full trees / eight proxies are parented to the expected clusters.
-2. Confirm `Level1RemasteredPerformanceController` has:
-   - the new profile asset assigned
-   - the terrain cache populated
-   - `Perf_CanopyCluster_High` and `Perf_CanopyCluster_Proxy` wired
-3. Use the locked acceptance route only:
-   - hold 5 seconds at the good ref `(149.1, 70.0, 167.5)`
-   - hold 5 seconds at the bad ref `(119.6, 72.0, 266.1)`
-   - hold 5 seconds at the exact canopy-facing screenshot repro transform
-   - traverse south-to-north through the hotspot for 20 seconds with normal movement
-4. Pass only if Play Mode never drops below `60 FPS` on the three holds and never sustains below `58 FPS` during traversal.
-5. Re-run gameplay sanity after the pass:
-   - trader camp visibility
-   - log pickup/build route
-   - bridge zone
-   - clean Play Mode exit
-
-### Risks / limitations
-
-- Codex could not use Unity MCP in this session; the scene-side verification route still belongs to Cursor/Unity.
-- `dotnet build .ci/BeaverMania.CI.csproj` is blocked on this Windows machine because the project references `/opt/unity/...` assemblies that are not present here.
-- The scene YAML now contains the intended proxy/high-cluster structure, but Unity Editor should be treated as the source of truth for hierarchy reconstruction and serialized binding.
-- Needs Unity Play Mode verification.
-
-> **Status (2026-06-13):** Reopening the **Level 1 forest FPS fix** task. Cursor's 2026-06-12 terrain/shadow pass improved the original hotspot, but the user still reports a severe FPS drop in both Edit Mode and Play Mode when the camera faces the giant canopy / open-sky direction from the latest screenshot. The diagnostic handoff below is the active item. The NPC presenter refactor section is historical context only.
-
-## Active diagnostic handoff — Level 1 Remastered canopy-facing FPS drop
-
-### What Codex reviewed
-
-- `AI_WORKFLOW/active-task.md`
-- `AI_WORKFLOW/handoffs/cursor-to-codex.md`
-- Current working diff for `Assets/Scenes/Level 1 - Remastered - Steam.unity`
-- `Assets/Prefabs/Objects/Interactable/TheGivingTree.prefab`
-- `Assets/Prefabs/Objects/ENV_TheGivingTree_TerrainTree.prefab`
-- `Assets/Materials/TheGivingTree/TheGivingTree_Leaves.mat`
-- `Assets/Materials/TheGivingTree/TheGivingTree_Bark.mat`
-- `Assets/Eden/Assets/PolygonNatureBiomes/PNB_Core/Shaders/SyntyStudios_VegitationShader.shader`
-
-### Static findings
-
-1. **Current working scene diff** (verified in YAML; also recorded in `active-task.md` and `cursor-to-codex.md`):
-   - all 33 terrains: `m_TreeDistance: 200`, `m_TreeMaximumFullLODCount: 25`, `m_DetailObjectDistance: 20`
-   - unchanged from original: `m_DetailObjectDensity: 1`, `m_HeightmapPixelError: 5`
-   - an intermediate Cursor pass briefly used `15` / `0` for max LOD / detail distance; that is **not** what the working diff contains
-
-2. `TheGivingTree` canopy materials are on **`SyntyStudios/VegitationShader`**, which is:
-   - `TransparentCutout`
-   - `Cull Off`
-   - wind-deformed in the vertex stage
-   - shadow-capable
-
-3. `Level 1 - Remastered - Steam.unity` still has **no baked occlusion data** (`m_OcclusionCullingData: {fileID: 0}`).
-
-4. The current scene diff already adds many `m_CastShadows: 0` overrides on decorative instances, including `TheGivingTree` renderers. If the camera-facing FPS cliff still reproduces, that pushes suspicion away from shadow-map cost and toward **main-pass canopy overdraw / fill-rate**.
-
-### Root-cause hypothesis
-
-The unresolved hotspot is most likely **screen-space overdraw from giant `TheGivingTree` canopies against the bright sky**, not scripts and not the already-disabled shadow pass. The screenshot direction is consistent with a canopy-dominant fill problem: large alpha-cutout leaf coverage, double-sided rendering, open sky behind it, and no baked occlusion.
-
-### What Cursor should A/B next
-
-- Reproduce at the reported facing direction and watch Stats/Profiler.
-- Temporarily disable the nearest giant `TheGivingTree` renderer(s) in that sightline.
-  - If FPS jumps immediately, the canopy is the dominant cost.
-- Repeat once with Scene View **Effects** off.
-  - If Scene View recovers mostly with Effects off, split post-processing/sky from geometry cost.
-- If the canopy A/B is positive, prefer a **decorative proxy fix** over more global terrain tuning:
-  - simpler decorative prefab or LOD variant for the skyline trees
-  - leaf material/proxy that uses backface culling
-  - fewer overlapping giant canopies in the exact bad sightline
-
-### What Codex is not recommending yet
-
-- No more script work unless Profiler shows CPU/script time.
-- No global vegetation shader edit yet; `Cull Off` is suspicious, but changing the shader without a tight A/B is too broad for this repo.
-- No broad scene retune based only on the older 2026-06-12 handoff values; those values are stale relative to the current working scene diff.
-
-## Task
-
-- Shared NPC prompt presenter and dialogue-session refactor for trader, legacy NPC dialogue, and boss dialogue flows
-
-## Codex scope completed
-
-- Added repo-local embedded skills:
-  - `.agents/skills/unity-ui-controller/SKILL.md`
-  - `.agents/skills/csharp-event-driven-ui/SKILL.md`
-  - `.agents/skills/safe-refactor/SKILL.md`
-- Added `INpcDialogueInteractionSource` and `NpcDialogueSessionContext` so NPCs report availability and session payloads to a shared presenter.
-- Reworked `NpcDialoguePresenter` into the single runtime owner for prompt selection, interact handling, dialogue binding, shop swapping, and cleanup.
-- Updated `Dialogue` so shared buttons route through the presenter and legacy `Trader` lookup is only a fallback path.
-- Migrated `Trader` to the shared presenter contract while preserving public/serialized compatibility shims such as `DialoguePanel`, `Shop`, and `activateSkip()`.
-- Converted `ActivateDialogue` into a legacy-content adapter that no longer toggles scene UI directly.
-- Added `BossDialogueInteractionSource` and narrowed `BossHandler` so boss dialogue enters the same shared presenter flow before combat starts.
-- Narrowed trader camera/presentation re-entry in `BeaverPlayerBehaviour` so the presenter path is authoritative.
-
-## Files changed by Codex
-
-- `AI_WORKFLOW/active-task.md`
-- `AI_WORKFLOW/handoffs/codex-to-cursor.md`
-- `.agents/skills/unity-ui-controller/SKILL.md`
-- `.agents/skills/csharp-event-driven-ui/SKILL.md`
-- `.agents/skills/safe-refactor/SKILL.md`
-- `Assets/Scripts/UI/INpcDialogueInteractionSource.cs`
-- `Assets/Scripts/UI/NpcDialogueSessionContext.cs`
-- `Assets/Scripts/UI/NpcDialoguePresenter.cs`
-- `Assets/Scripts/UI/Dialogue.cs`
-- `Assets/Scripts/NPC/Beaver/Trader.cs`
-- `Assets/Scripts/UI/ActivateDialogue.cs`
-- `Assets/Scripts/Player/BossDialogueInteractionSource.cs`
 - `Assets/Scripts/Player/BossHandler.cs`
-- `Assets/Scripts/Player/BeaverPlayerBehaviour.cs`
+  - added optional `bossVictorySourceBehaviour`
+  - keeps legacy `ScorpionScript Boss` field
+  - subscribes to `IBossVictorySource` when configured
+  - preserves current delayed-victory flow and lose-screen precedence behavior
+- `Assets/Scripts/NPC/Scorpion/ScorpionScript.cs`
+  - now also implements `IBossVictorySource`
+  - preserves the existing `Action<ScorpionScript> Defeated` path for current scenes/tests
 
-## New or changed serialized fields
+### Test coverage added or extended
 
-- `NpcDialoguePresenter`
-  - `dialogue`
-  - `promptRoot`
-  - `promptText`
-  - `dialogueRoot`
-- `Dialogue`
-  - `ShopButton`
-- `Trader`
-  - existing fields preserved
-  - additive `dialogueData`
-  - additive `interactionPromptMessage`
-- `ActivateDialogue`
-  - additive `interactionPromptMessage`
-  - additive `interactionRange`
-- `BossDialogueInteractionSource`
-  - `bossHandler`
-  - `legacyBossPanel`
-  - `promptMessage`
+- `Assets/Tests/EditMode/NPC/WaspQueen/WaspQueenDecisionPlannerTests.cs`
+  - far prefers ranged
+  - near prefers AoE
+  - mid prefers charge
+  - summon blocked at cap
+  - cooldown suppression
+  - anti-repeat behavior
+- `Assets/Tests/PlayMode/NPC/WaspQueen/WaspQueenBossPlayModeTests.cs`
+  - phase 2/3 transitions happen once
+  - defeat signal fires once
+  - charge locks direction
+  - poison AoE ticks by interval
+- `Assets/Tests/PlayMode/Core/GameFlow/ScorpionBossVictoryFlowPlayModeTests.cs`
+  - extended generic boss-victory-source path while preserving Scorpion flow coverage
 
-No serialized or public fields were removed in this pass.
+## Runtime design now expected
 
-## Unity wiring Cursor owns
+1. `WaspQueenBoss` activates either when explicitly triggered or when the player enters `Config.activateRange`.
+2. `Update()` owns state progression, cooldowns, phase checks, and decision selection.
+3. `FixedUpdate()` is limited to hover maintenance and active charge movement.
+4. Threshold crossings at `<= 70%` and `<= 30%` queue one pending phase transition each.
+5. The planner filters illegal actions first, then chooses the highest weighted legal action while discouraging repeats.
+6. Summons instantiate the existing `LVL1 Wasp` prefab from configured spawn points and are tracked locally by the boss.
+7. Projectile and poison hazards damage `BeaverPlayerBehaviour` directly, respect `Rolling` / `isParried`, and clean themselves up locally.
+8. On death, Wasp Queen raises the generic boss defeat contract, clears surviving hazards/summons, and reuses `PooledOneShotVfx` / `PooledDeathDebris` for death presentation.
 
-- `PlayerCanvas.prefab`
-  - Add a dedicated prompt widget under the HUD.
-  - Assign the prompt widget root to `NpcDialoguePresenter.promptRoot`.
-  - Assign the prompt text label to `NpcDialoguePresenter.promptText`.
-  - Keep `NPC_DialoguePanel` as the shared session root.
-  - Inside `NPC_DialoguePanel`, keep dialogue content and shop content as sibling branches so closing shop returns to the same shared session path.
-- Shared dialogue buttons
-  - `Continue` -> shared `Dialogue.Continue`
-  - `Skip` -> shared `Dialogue.EndConversation` or the existing shared close path
-  - `Shop` -> shared `Dialogue.OpenShop`
-  - shop close button -> shared `Dialogue.CloseShop`
-  - Remove per-NPC panel/button routing where the shared panel is now authoritative.
-- NPC prefab and scene references
-  - Trader-family NPCs should point `DialoguePanel` and optional `Shop` references at shared `PlayerCanvas` children, not scene-owned inline bars.
-  - Legacy non-shop NPCs using `ActivateDialogue` can keep their old dialogue object only as a content source until fully migrated.
-  - Boss flow should keep the old boss dialogue content as source data only; do not leave direct panel-open behavior active in parallel.
+## What Cursor must wire in Unity
 
-## Expected runtime flow after wiring
+### Create/configure assets
 
-1. Source enters range and registers with `NpcDialoguePresenter`.
-2. Presenter selects the nearest available source and shows a single prompt.
-3. Interact input is consumed centrally by the presenter.
-4. Presenter binds a `NpcDialogueSessionContext` into the shared `Dialogue`.
-5. Source callback applies NPC-specific camera/cursor presentation.
-6. Shared buttons drive continue, shop open, shop close, and end/skip through the presenter only.
-7. Leaving range, disabling the source, skip, dialogue completion, or external close all go through presenter cleanup and source callbacks.
+1. Create a real `WaspQueenConfig.asset`.
+2. Seed or verify the intended per-phase defaults:
+   - phase 1 summon cap/count `3 / 1`
+   - phase 2 summon cap/count `5 / 2`
+   - phase 3 summon cap/count `7 / 3`
+3. Assign:
+   - `waspPrefab` -> existing `LVL1 Wasp`
+   - `poisonProjectilePrefab`
+   - `poisonZonePrefab`
+   - `deathExplosionPrefab`
+   - `fragmentPrefabs`
 
-## What Cursor should test in Play Mode
+### Wire boss prefab / scene instance
 
-- Market trader:
-  - one prompt only
-  - interact opens shared panel
-  - shop opens and closes without switching back to a legacy inline panel
-  - skip restores cursor and camera cleanly
-- Arms dealer:
-  - same shared prompt path
-  - correct dialogue content
-  - correct shop content
-- One legacy non-shop NPC using `ActivateDialogue`:
-  - shared prompt
-  - shared panel opens with legacy lines
-  - no shop button shown
-- Boss dialogue:
-  - shared prompt/session opens
-  - skip or completion still transitions into boss combat correctly
-- Overlap case:
-  - two NPC sources in range still show exactly one prompt, with nearest source winning
-- External close case:
-  - guard disable or `DoorShut` path closes the session cleanly with no orphaned UI
-- Fallback case:
-  - missing prompt widget still uses objective override
-  - missing dialogue data logs once and fails closed with no null refs
+1. Add `WaspQueenBoss` to the intended boss object if not already present.
+2. Assign:
+   - `Config`
+   - `Body`
+   - `Animator`
+   - `HealthBar`
+   - `ProjectileSpawnPoint`
+   - `AoeOrigin`
+   - `WaspSpawnPoints`
+   - `ChargeHitbox` if used
+   - optional telegraph / attack / hit / death clips
+3. Confirm `AudioSource` is present and routed correctly at runtime.
+4. Confirm the animator contains triggers:
+   - `RangedAttack`
+   - `PoisonAoE`
+   - `Charge`
+   - `Summon`
+   - `PhaseTransition`
+   - `Die`
+
+### Wire generic victory flow
+
+1. On the intended scene `BossHandler`, assign `bossVictorySourceBehaviour` to the `WaspQueenBoss` component.
+2. Leave legacy `BossHandler.Boss` usage intact for existing Scorpion scenes unless you are intentionally testing Wasp Queen.
+3. Do not widen this task into `BossPanel`, `BossDialogueInteractionSource`, or `ChatCollider` intro wiring.
+
+## Play Mode validation Cursor owns
+
+- Confirm boss activation and idle state produce no null or missing-reference spam.
+- Verify each attack telegraph and action resolves once per decision.
+- Verify summon limits by phase: `3 / 5 / 7`.
+- Verify summon counts by phase: `1 / 2 / 3`.
+- Verify charge direction locks at dash start and does not re-home mid-charge.
+- Verify poison zone damage ticks by configured interval, not every frame.
+- Verify boss death triggers delayed victory exactly once through `bossVictorySourceBehaviour`.
+- Verify lose-screen precedence still beats victory when the delay overlaps a lose state.
+- Verify surviving summoned wasps are despawned on boss death/reset.
+- Verify player-killed summons still use their normal kill/drop behavior.
+- Verify Console has no missing animation-event warnings.
+
+## Constraints to preserve
+
+- Do not hand-edit scene or prefab YAML unless absolutely necessary.
+- Do not remove or rename serialized Scorpion boss fields while wiring Wasp Queen.
+- Do not expand this pass into boss dialogue generalization.
+- Do not replace `LVL1 Wasp` AI with a new summon-specific controller in this task.
+- Report any inspector references that code cannot safely infer instead of patching around them in C#.
 
 ## Verification completed by Codex
 
-- `git diff --check` passed aside from line-ending normalization warnings from Git.
-- Manual code-path review completed for presenter registration, session binding, shop swap, compatibility shims, and first-open shared dialogue initialization.
+- Static code review of the new boss controller, local hazards, summon ownership, and generic boss victory path.
+- Added automated tests for decision planning, boss runtime behavior, and generic `BossHandler` victory-source handling.
 
 ## Verification blocked in this environment
 
-- `dotnet build .ci/BeaverMania.CI.csproj` is blocked on this Windows machine because the Unity-managed assembly references expected by the CI project are not available here.
-- No Unity Editor or Play Mode proof was performed by Codex.
-
-## Constraints Cursor should preserve
-
-- Do not remove legacy panels or serialized fields in the same pass as wiring.
-- Do not rename `MonoBehaviour` classes or move prefab-bound scripts.
-- Keep `activateSkip()` and other legacy button-entry shims alive until each migrated NPC family is verified in Play Mode.
-- Keep Cursor as owner of prefab, scene, button, and serialized-reference changes.
-
-## Known limitations
-
-- Prompt and shared panel behavior are code-complete but not Unity-verified yet.
-- Legacy traders and NPCs still depend on prefab/scene references being repointed to the shared `PlayerCanvas` structure.
+- `dotnet build .ci/BeaverMania.CI.csproj` is blocked here by missing Unity-managed assembly references on this Windows machine.
+- No Unity Play Mode or serialized-reference verification was performed by Codex.
 - Needs Unity Play Mode verification.
-
----
-
-# Codex Follow-up - Scorpion Boss Victory Review Blockers
-
-Date: 2026-06-13 16:34 +03:00
-
-Status: Codex took over because Cursor was unavailable. The file-level review blockers below were handled directly in the workspace. The remaining manual item is Unity Play Mode validation of the normal player-to-boss encounter route.
-
-## Goal
-
-Make the Scorpion Boss delayed victory-flow branch safe to merge by removing unrelated serialized asset churn, fixing merge hygiene issues, and validating the real Level 1 Remastered gameplay path.
-
-## Context
-
-Codex reviewed branch `fix/scorpion-boss-victory-flow` after the Level 1 Remastered wiring pass. The forced boss-death Play Mode smoke test passed: after killing `ScorpionBoss`, the configured delay elapsed, the finish panel appeared once, controls/camera froze, cursor was visible and unlocked, lose panel stayed inactive, and Unity Console showed no warnings/errors.
-
-Review originally found unrelated prefab churn and whitespace check failures. Those file-level blockers are fixed in the working tree. The smoke test and focused PlayMode tests use forced damage, so the real player-to-boss encounter path still needs manual Unity verification before merge.
-
-## Files / Areas to Inspect
-
-- `Assets/Prefabs/Objects/Bridge/StairsBridge.prefab`
-- `Assets/Scenes/Level 1 - Remastered - Steam.unity`
-- `Assets/Tests/PlayMode/Core/GameFlow/ScorpionBossVictoryFlowPlayModeTests.cs.meta`
-- `Assets/Scripts/Player/BossHandler.cs`
-- `Assets/Scripts/NPC/Scorpion/ScorpionScript.cs`
-
-## Constraints
-
-- Keep changes minimal.
-- Do not reformat unrelated Unity YAML.
-- Do not rename prefab-bound scripts, fields, GameObjects, or scene objects.
-- Do not change gameplay feel outside the Scorpion Boss victory-flow scope.
-- Do not retag `GameMaster` unless you confirm the tag change is safe for the music/game-flow systems.
-- Do not commit until the branch passes the validation below.
-
-## Required Fixes
-
-1. Revert or explicitly justify the unrelated `StairsBridge.prefab` rotation change.
-   - Review reference: `Assets/Prefabs/Objects/Bridge/StairsBridge.prefab:452`
-   - The current branch changes `m_LocalRotation` on a bridge prefab. This is outside the boss victory scope and should not ship in this PR unless separately validated and documented.
-   - Codex result: reverted to match `origin/main`.
-
-2. Fix `git diff --check origin/main...HEAD` failures.
-   - Current failures are trailing whitespace in `Assets/Scenes/Level 1 - Remastered - Steam.unity` and `Assets/Tests/PlayMode/Core/GameFlow/ScorpionBossVictoryFlowPlayModeTests.cs.meta`.
-   - Prefer a minimal Unity-safe cleanup. Do not normalize the whole scene or create broad YAML churn.
-   - Codex result: fixed in the working tree. `git diff --check origin/main` passes with only Git LF/CRLF warnings.
-
-3. Verify the real Level 1 Remastered boss encounter path.
-   - `BossHandler.ChatCollider` is currently null in the remastered scene wiring: `Assets/Scenes/Level 1 - Remastered - Steam.unity:9463`.
-   - If that is intentional, document why no chat collider is needed for this scene.
-   - If the encounter depends on boss dialogue/proximity before combat, wire the correct scene object and validate the path.
-   - Codex result: left null intentionally after Unity scene inspection. The remastered scene has no `Arena`/`BossFight` trigger or chat/dialogue object to assign, and assigning `ScorpionBoss` or `Player` would be unsafe because `BossHandler.SkipBossChat` deactivates `ChatCollider`. The victory path does not require this reference; it only affects optional boss dialogue prompt registration.
-
-## Validation
-
-- Run:
-  - `git diff --check origin/main`
-- In Unity Play Mode using `Assets/Scenes/Level 1 - Remastered - Steam.unity`:
-  - Start from the normal player route, not only an execute-code forced kill.
-  - Reach or trigger the Scorpion Boss encounter.
-  - Confirm boss UI appears at the correct time.
-  - Kill the boss normally or force health to zero after the encounter has started.
-  - Confirm the configured delay occurs before victory.
-  - Confirm controls/camera freeze or transition correctly.
-  - Confirm cursor is visible and unlocked on victory.
-  - Confirm exactly one finish/victory UI appears.
-  - Confirm lose UI does not appear at the same time.
-  - Confirm Unity Console has no new warnings/errors.
-
-## Report Back
-
-List:
-
-- Files changed
-- Whether `StairsBridge.prefab` was reverted or justified
-- Whether `ChatCollider` was intentionally left null or wired
-- `git diff --check` result
-- Play Mode validation result
-- Any remaining merge risk
-
-## Codex Validation Completed
-
-- `ScorpionBossVictoryFlowPlayModeTests`: passed 3/3 in Unity Play Mode.
-- `git diff --check origin/main`: passed; only Git LF/CRLF warnings remain.
-- `StairsBridge.prefab`: no longer differs from `origin/main`.

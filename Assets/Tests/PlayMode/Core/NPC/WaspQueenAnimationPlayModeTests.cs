@@ -14,6 +14,7 @@ namespace Beavermania.Tests.PlayMode.Core.NPC
     public sealed class WaspQueenAnimationPlayModeTests
     {
         const string PrefabPath = "Assets/Prefabs/WaspQueen/WaspQueen.prefab";
+        const string BossPrefabPath = "Assets/Prefabs/NPC/WaspQueen/PF_WaspQueen_Boss.prefab";
         readonly List<GameObject> spawned = new();
 
         [TearDown]
@@ -54,12 +55,32 @@ namespace Beavermania.Tests.PlayMode.Core.NPC
             return (anim, probe);
         }
 
+        (Animator anim, EventProbe probe) SpawnBoss()
+        {
+            var prefab = LoadPrefab(BossPrefabPath);
+            Assert.That(prefab, Is.Not.Null, "WaspQueen boss prefab not found at " + BossPrefabPath);
+            var inst = UnityEngine.Object.Instantiate(prefab);
+            spawned.Add(inst);
+            var anim = inst.GetComponentInChildren<Animator>();
+            Assert.That(anim, Is.Not.Null, "WaspQueen boss prefab has no Animator");
+            Assert.That(anim.runtimeAnimatorController, Is.Not.Null, "Boss Animator has no controller");
+            anim.logWarnings = false;
+            anim.applyRootMotion = false;
+            var probe = anim.gameObject.AddComponent<EventProbe>();
+            return (anim, probe);
+        }
+
         static GameObject LoadPrefab()
+        {
+            return LoadPrefab(PrefabPath);
+        }
+
+        static GameObject LoadPrefab(string prefabPath)
         {
             Type adb = ResolveType("UnityEditor.AssetDatabase");
             if (adb == null) return null;
             MethodInfo m = adb.GetMethod("LoadAssetAtPath", new[] { typeof(string), typeof(Type) });
-            return (GameObject)m.Invoke(null, new object[] { PrefabPath, typeof(GameObject) });
+            return (GameObject)m.Invoke(null, new object[] { prefabPath, typeof(GameObject) });
         }
 
         static Type ResolveType(string fullName)
@@ -100,14 +121,18 @@ namespace Beavermania.Tests.PlayMode.Core.NPC
         }
 
         [UnityTest]
-        public IEnumerator Charge_BracketsHitbox_EnableThenDisableOnce()
+        public IEnumerator BossCharge_StaysInLoopedDash_AndDoesNotDisableHitboxFromDashLoop()
         {
-            var (anim, probe) = Spawn();
+            var (anim, probe) = SpawnBoss();
             yield return null;
             anim.SetTrigger("Charge");
-            yield return WaitUntil(() => probe.Get("DisableChargeHitbox") >= 1, 5f);
-            Assert.That(probe.Get("EnableChargeHitbox"), Is.EqualTo(1), "EnableChargeHitbox once");
-            Assert.That(probe.Get("DisableChargeHitbox"), Is.EqualTo(1), "DisableChargeHitbox once");
+            yield return WaitUntil(() => anim.GetCurrentAnimatorStateInfo(0).IsName("Charge_Dash") && probe.Get("EnableChargeHitbox") >= 1, 5f);
+            yield return new WaitForSeconds(1f);
+            AnimatorStateInfo info = anim.GetCurrentAnimatorStateInfo(0);
+            Assert.That(info.IsName("Charge_Dash"), Is.True, "Boss charge should stay in Charge_Dash until code explicitly starts recovery");
+            Assert.That(info.loop, Is.True, "Charge_Dash should be imported as a looping clip");
+            Assert.That(probe.Get("EnableChargeHitbox"), Is.GreaterThanOrEqualTo(1), "EnableChargeHitbox should fire from Charge_Dash");
+            Assert.That(probe.Get("DisableChargeHitbox"), Is.EqualTo(0), "Charge_Dash should not disable the hitbox from a loop event");
         }
 
         [UnityTest]

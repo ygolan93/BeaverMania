@@ -1,5 +1,24 @@
 # Cursor → Codex Handoff
 
+## WaspQueen charge verification — failing tests (2026-06-27, branch `feature/Wasp-Queen`)
+
+Cursor completed Unity-side animation/charge wiring verification (Unity 2021.3.3f1). The charge animation sync is verified: production controller rebuilt with the correct charge chain (`Charge_Telegraph -> Charge_Dash` @0.95, `Charge_Dash` no exits, code forces `Charge_Recovery`), `WQ_Charge_Dash` loops with only `EnableChargeHitbox`, prefab/EventSink/controller runtime-confirmed, audit `OK: 0 issues`, and the critical `BossCharge_StaysInLoopedDash_AndDoesNotDisableHitboxFromDashLoop` PlayMode test PASSES.
+
+Four PlayMode tests fail. None are caused by Unity wiring or the controller rebuild (the failing tests build their own harness or use the auxiliary display prefab). These are script/test-expectation items Codex owns:
+
+| Test                                                                 | Result                                     | Likely cause                                                                                                                                                                                                                                                                                                                                 |
+| -------------------------------------------------------------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `WaspQueenAnimationPlayModeTests.DefaultState_IsIdleCombat_AndLoops` | Expected state name `Idle_Combat`, was not | Uses the auxiliary display prefab `Assets/Prefabs/WaspQueen/WaspQueen.prefab` / display controller (`2 Build Controller`, not rebuilt this pass). Production boss state is named `Idle`. Test expectation or display controller naming is stale.                                                                                             |
+| `WaspQueenBossPlayModeTests.Charge_LocksDirectionAtStart`            | angle 90 vs `<0.01`                        | Test captures `CurrentChargeDirection` at charge-state entry, but the desync fix locks direction at dash start (`BeginChargeActive`). The 90° = fallback `transform.forward` (before lock) vs locked `-X` (after player moved). Code matches intended design ("lock at dash start, face during telegraph"); test asserts the pre-fix timing. |
+| `WaspQueenBossPlayModeTests.PhaseTransitions_HappenOncePerThreshold` | `CurrentPhaseNumber` 2 vs 3                | Phase-progression timing/logic; no animator dependency.                                                                                                                                                                                                                                                                                      |
+| `WaspQueenBossPlayModeTests.PoisonAoe_TicksAtConfiguredInterval`     | player health 100 vs 90                    | Poison first-tick timing vs `aoeTickRate`; no animator dependency.                                                                                                                                                                                                                                                                           |
+
+Requested: Codex decide whether to update the stale test expectations (`DefaultState`, `Charge_LocksDirectionAtStart`) to match the shipped charge design, and whether `PhaseTransitions` / `PoisonAoe` reflect a real logic bug or test timing. Cursor did not modify boss C# (charge logic verified correct) per task scope.
+
+Minor scene note (not blocking): `Assets/Scenes/ShadowRevenantTestArena.unity` has no `AudioVolumeSettings`, so boss SFX log `[AudioSourceRouting] Could not resolve Enemy mixer group`; `PF_WaspQueen_Boss` `WaspSpawnPoints` has a single entry (summons stack at one point).
+
+---
+
 ## Task
 
 - **Level 1 Remastered — north forest hotspot FPS fix** on branch `fix/log-carry-animation-load`.
@@ -15,15 +34,12 @@
 
 ## Problem summary
 
-
 | Issue                   | Symptom                                                             | Status                                                               |
 | ----------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | Global terrain overdraw | ~100M tris, ~10–15 FPS at bad ref coords                            | **Improved** (~34–39 FPS, ~5–21M tris at ref coords, 2026-06-12 MCP) |
 | Canopy-facing fill-rate | Severe FPS in Edit + Play when camera faces giant canopy / open sky | **Open** — Codex hypothesis: `TheGivingTree` alpha-cutout overdraw   |
 
-
 ## Current scene diff — terrain (all 33 tiles, verified in YAML)
-
 
 | Setting                     | Original | Current working diff |
 | --------------------------- | -------- | -------------------- |
@@ -36,24 +52,21 @@
 | `m_SplatMapDistance`        | 1000     | **600**              |
 | `m_DrawInstanced`           | 0        | **1**                |
 
-
 **Decorative foliage (bad bbox X 115–145, Y 70–79, Z 220–340):** `m_CastShadows: 0` on 52+ hand-placed renderers. No gameplay objects removed.
 
 ## Reference-coordinate before / after (MCP, 2026-06-12)
-
 
 | Zone                    | FPS before | Tris before | FPS after | Tris after |
 | ----------------------- | ---------- | ----------- | --------- | ---------- |
 | Bad (119.6, 72, 266.1)  | ~10.5–14.9 | ~80–105M    | ~34–39    | ~5–21M     |
 | Good (149.1, 70, 167.5) | ~72–83     | —           | ~72       | ~14M       |
 
-
 Does **not** certify the canopy-facing repro — that remains user-reported open.
 
 ## Prior script work on same branch (for Codex review)
 
-1. `**Carry.cs`** — independent movement vs animation multipliers; gated penalty refresh
-2. `**NpcDialoguePresenter.cs`** — shutdown guard; idle tick throttle
+1. `**Carry.cs`\*\* — independent movement vs animation multipliers; gated penalty refresh
+2. `**NpcDialoguePresenter.cs`\*\* — shutdown guard; idle tick throttle
 3. `**BeaverPlayerBehaviour.cs**` — HUD / life-icon string caching
 
 ## What Codex should do

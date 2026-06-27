@@ -10,6 +10,8 @@ namespace Beavermania.Tests.PlayMode.NPC.WaspQueen
 {
     public sealed class WaspQueenBossPlayModeTests
     {
+        const string BossControllerPath = "Assets/Prefabs/NPC/WaspQueen/WaspQueen.controller";
+
         readonly Dictionary<string, Type> cachedRuntimeTypes = new(StringComparer.Ordinal);
         readonly List<UnityEngine.Object> spawnedObjects = new();
         readonly List<ScriptableObject> createdAssets = new();
@@ -81,6 +83,26 @@ namespace Beavermania.Tests.PlayMode.NPC.WaspQueen
             Assert.That(defeatEvents, Is.EqualTo(1));
 
             defeatedEvent.RemoveEventHandler(harness.Boss, defeatedHandler);
+        }
+
+        [UnityTest]
+        public IEnumerator Intro_TriggersAnimatorIntroState_WhenBossActivates()
+        {
+            BossHarness harness = CreateHarness();
+            SetFieldValue(harness.Config, "introDuration", 1f);
+
+            GameObject visual = CreateChildGameObject(((Component)harness.Boss).transform, "AnimatorVisual");
+            Animator animator = visual.AddComponent<Animator>();
+            animator.runtimeAnimatorController = LoadController(BossControllerPath);
+            Assert.That(animator.runtimeAnimatorController, Is.Not.Null, "Production Wasp Queen boss controller should load");
+            animator.logWarnings = false;
+            animator.applyRootMotion = false;
+            SetFieldValue(harness.Boss, "Animator", animator);
+
+            InvokeMethod(harness.Boss, "ActivateBoss");
+            yield return WaitUntil(() => animator.GetCurrentAnimatorStateInfo(0).IsName("Intro"), 1f);
+
+            Assert.That(animator.GetCurrentAnimatorStateInfo(0).IsName("Intro"), Is.True, "Activating the boss should trigger the intro animation");
         }
 
         [UnityTest]
@@ -304,9 +326,26 @@ namespace Beavermania.Tests.PlayMode.NPC.WaspQueen
             return Enum.Parse(ResolveRuntimeType("Beavermania.NPC.EnemyDamageType"), enumName);
         }
 
+        static RuntimeAnimatorController LoadController(string controllerPath)
+        {
+            Type adb = ResolveLoadedType("UnityEditor.AssetDatabase");
+            MethodInfo methodInfo = adb.GetMethod("LoadAssetAtPath", new[] { typeof(string), typeof(Type) });
+            return (RuntimeAnimatorController)methodInfo.Invoke(null, new object[] { controllerPath, typeof(RuntimeAnimatorController) });
+        }
+
         Transform CreateChildTransform(Transform parent, string name)
         {
             return CreateChildGameObject(parent, name).transform;
+        }
+
+        static IEnumerator WaitUntil(Func<bool> condition, float timeout)
+        {
+            float elapsed = 0f;
+            while (!condition() && elapsed < timeout)
+            {
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
         }
 
         GameObject CreateChildGameObject(Transform parent, string name)

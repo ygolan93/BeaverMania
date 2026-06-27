@@ -33,7 +33,7 @@ namespace BeavermaniaEditor
             {
                 case "WQ_Ranged_Fire": specs.Add(("FireProjectile", 0.45f)); break;
                 case "WQ_AoE_Release": specs.Add(("ActivateAoE", 0.48f)); break;
-                case "WQ_Charge_Dash": specs.Add(("EnableChargeHitbox", 0.08f)); specs.Add(("DisableChargeHitbox", 0.92f)); break;
+                case "WQ_Charge_Dash": specs.Add(("EnableChargeHitbox", 0.08f)); break;
                 case "WQ_Summon_Release": specs.Add(("SummonWasps", 0.55f)); break;
                 case "WQ_Phase_Transition": specs.Add(("PhasePulse", 0.50f)); break;
                 case "WQ_Death": specs.Add(("ExplodeFragments", 0.87f)); break;
@@ -64,7 +64,7 @@ namespace BeavermaniaEditor
                 var c = d;
                 string logical = Logical(d.name);
                 c.name = logical;
-                c.loopTime = (logical == "WQ_Idle_Combat");
+                c.loopTime = (logical == "WQ_Idle_Combat" || logical == "WQ_Charge_Dash");
                 c.events = EventsFor(logical);
                 list.Add(c);
             }
@@ -188,7 +188,7 @@ namespace BeavermaniaEditor
             Trig(idle, intro, "Intro"); Chain(intro, idle, 0.92f);
             Trig(idle, rTel, "RangedAttack"); Chain(rTel, rFire, 0.95f); Chain(rFire, idle, 0.9f);
             Trig(idle, aTel, "PoisonAoE"); Chain(aTel, aRel, 0.95f); Chain(aRel, idle, 0.9f);
-            Trig(idle, cTel, "Charge"); Chain(cTel, cDash, 0.95f); Chain(cDash, cRec, 0.95f); Chain(cRec, idle, 0.9f);
+            Trig(idle, cTel, "Charge"); Chain(cTel, cDash, 0.95f); Chain(cRec, idle, 0.9f);
             Trig(idle, sTel, "Summon"); Chain(sTel, sRel, 0.95f); Chain(sRel, idle, 0.9f);
             Trig(idle, phase, "PhaseTransition"); Chain(phase, idle, 0.95f);
             Trig(idle, sting, "Sting"); Chain(sting, idle, 0.9f);

@@ -36,6 +36,19 @@ namespace Beavermania.NPC
         static readonly int DieHash = Animator.StringToHash("Die");
         static readonly int StingHash = Animator.StringToHash("Sting");
         static readonly int HitHash = Animator.StringToHash("Hit");
+        static readonly int IntroHash = Animator.StringToHash("Intro");
+        static readonly Dictionary<int, string> AnimatorTriggerNamesByHash = new Dictionary<int, string>
+        {
+            { RangedAttackHash, "RangedAttack" },
+            { PoisonAoeHash, "PoisonAoE" },
+            { ChargeHash, "Charge" },
+            { SummonHash, "Summon" },
+            { PhaseTransitionHash, "PhaseTransition" },
+            { DieHash, "Die" },
+            { StingHash, "Sting" },
+            { HitHash, "Hit" },
+            { IntroHash, "Intro" }
+        };
 
         const float LookRotationEpsilon = 0.0001f;
         const float PlayerResolveRetryDelay = 1f;
@@ -87,6 +100,7 @@ namespace Beavermania.NPC
         readonly List<WaspQueenProjectile> activeProjectiles = new List<WaspQueenProjectile>(4);
         readonly List<WaspQueenPoisonZone> activePoisonZones = new List<WaspQueenPoisonZone>(4);
         readonly float[] lastAudioPlayTimes = new float[11];
+        readonly HashSet<int> missingAnimatorTriggerWarnings = new HashSet<int>();
 
         EnemyHealthBarVisibility healthBarVisibility;
         Action<IBossVictorySource> genericDefeated;
@@ -1160,6 +1174,7 @@ namespace Beavermania.NPC
             switch (nextState)
             {
                 case WaspQueenState.Intro:
+                    TriggerAnimator(IntroHash);
                     PlayClip(introClip, AudioCue.Intro, 0.25f);
                     break;
                 case WaspQueenState.RangedPoisonShot:
@@ -1593,8 +1608,48 @@ namespace Beavermania.NPC
 
         void TriggerAnimator(int triggerHash)
         {
-            if (Animator != null)
-                Animator.SetTrigger(triggerHash);
+            if (Animator == null)
+                return;
+
+            if (!HasAnimatorTrigger(triggerHash))
+            {
+                if (missingAnimatorTriggerWarnings.Add(triggerHash))
+                {
+                    Debug.LogWarning(
+                        $"WaspQueenBoss: Animator controller missing trigger parameter '{AnimatorTriggerName(triggerHash)}'.",
+                        this);
+                }
+
+                return;
+            }
+
+            Animator.SetTrigger(triggerHash);
+        }
+
+        bool HasAnimatorTrigger(int triggerHash)
+        {
+            if (Animator.runtimeAnimatorController == null)
+                return false;
+
+            AnimatorControllerParameter[] parameters = Animator.parameters;
+            for (int index = 0; index < parameters.Length; index++)
+            {
+                if (parameters[index].type == AnimatorControllerParameterType.Trigger
+                    && parameters[index].nameHash == triggerHash)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        static string AnimatorTriggerName(int triggerHash)
+        {
+            string triggerName;
+            return AnimatorTriggerNamesByHash.TryGetValue(triggerHash, out triggerName)
+                ? triggerName
+                : triggerHash.ToString();
         }
 
         void PlayClip(AudioClip clip, AudioCue cue, float minInterval, float volume = 1f)

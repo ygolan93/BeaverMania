@@ -96,18 +96,29 @@
 **Root cause:** Charge FSM could start `WaspQueenChargeAttack` movement from its telegraph fallback timer while the Animator was still in `Idle` (or another non-charge clip). The `Charge` trigger only transitions from `Idle`, so entering charge during recovery/another attack left the trigger unused until later — movement and hitbox activation were not gated on `Charge_Dash`.
 
 **Code fix (Cursor):** `WaspQueenBoss.cs` now:
+
 - Starts the charge animator sequence via `EnsureChargeSequenceStarted()` (`Idle` → trigger, otherwise hard-play `Charge_Telegraph`).
 - Defers dash movement until `Charge_Dash` is playing (`IsChargeDashAnimPlaying()` gate in `FixedUpdate`).
 - Starts dash from animation sync (`Charge_Dash` state or `EnableChargeHitbox` event) before FSM timer fallback.
 - Forces `Charge_Recovery` on charge end if the autonomous chain did not advance.
 
 **Manual Unity verification still required:**
+
 - Charge lunge always shows Telegraph → Dash → Recovery (never idle during dash).
 - `EnableChargeHitbox` / `DisableChargeHitbox` still bracket the active window.
 - Interrupted charge cleans up hitbox/movement.
 
 **Status:** C# updated; Play Mode not verified in this session.
 
+**Unity verification (Cursor, 2026-06-27, Unity 2021.3.3f1):**
+
+- Ran `1 Configure Importer`, `4 Build Boss Controller`, `Verify Clips`, `Audit Prefabs`.
+- Clip flags confirmed: `WQ_Idle_Combat` loop, `WQ_Charge_Dash` loop, `WQ_Death` no-loop; `WQ_Charge_Dash` carries only `EnableChargeHitbox@0.053s` (no `DisableChargeHitbox`).
+- Production controller `Assets/Prefabs/NPC/WaspQueen/WaspQueen.controller` rebuilt: 15 states, 9 triggers; `Charge_Telegraph -> Charge_Dash` @0.95, `Charge_Dash` has zero outgoing transitions, `Charge_Recovery -> Idle` @0.9, `Any State -> Death` (no exit).
+- `PF_WaspQueen_Boss.prefab` runtime-verified: Visual child uses the production controller, `applyRootMotion=false`, `WaspQueenAnimationEventSink` on the Animator GameObject, `ChargeHitbox` collider starts disabled. Audit: `OK: 0 issues`. Model not stale, so `5 Swap Boss Model` not run.
+- PlayMode tests: critical `BossCharge_StaysInLoopedDash_AndDoesNotDisableHitboxFromDashLoop` PASS, plus `RangedAttack`, `Die`, `DeathEvent`, `Intro` PASS. Live scene play: boss activates, animates, summons, repositions, damages player; no NullReference and no "AnimationEvent has no receiver" warnings.
+- Pre-existing/unrelated test failures (not Unity wiring, not caused by this pass): `DefaultState_IsIdleCombat_AndLoops` (auxiliary display prefab expects state named `Idle_Combat`), `Charge_LocksDirectionAtStart` (asserts lock at charge-state entry, but the desync fix locks at dash start), `PhaseTransitions_HappenOncePerThreshold` (2 vs 3), `PoisonAoe_TicksAtConfiguredInterval` (100 vs 90). Charge animation sync verified; these four are Codex-owned logic/test-expectation items — see handoff.
+- Minor scene note: `ShadowRevenantTestArena` lacks `AudioVolumeSettings`, so boss SFX log `[AudioSourceRouting] Could not resolve Enemy mixer group` (audio-only, not charge); prefab `WaspSpawnPoints` has a single entry.
 
 - Boss dialogue/panel intro generalization.
 - `BossDialogueInteractionSource` reuse for Wasp Queen.

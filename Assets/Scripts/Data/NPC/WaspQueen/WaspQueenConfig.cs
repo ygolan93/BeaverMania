@@ -31,6 +31,8 @@ namespace Beavermania.Data.NPC
             public float aoeDamage = 10f;
             public float aoeDuration = 3f;
             public float aoeTickRate = 0.5f;
+            [Tooltip("Ground warning-ring time the poison zone shows before it starts dealing damage.")]
+            public float aoeGroundTelegraphTime = 0.5f;
 
             [Header("Charge")]
             public float chargeCooldown = 7f;
@@ -94,6 +96,22 @@ namespace Beavermania.Data.NPC
         [Min(1)] public int maxActiveProjectiles = 4;
         [Min(1)] public int maxActivePoisonZones = 2;
 
+        [Header("Arena / Leash")]
+        [Tooltip("Soft arena radius around arenaCenter; drifting past it makes the boss recenter.")]
+        [Min(0f)] public float arenaRadius = 22f;
+        [Tooltip("If the player gets farther than this, the boss disengages and returns to center. 0 disables.")]
+        [Min(0f)] public float leashRange = 32f;
+        [Tooltip("Player distance at which the boss re-engages once it has returned to the arena.")]
+        [Min(0f)] public float reengageRange = 20f;
+        [Min(0f)] public float recenterSpeed = 14f;
+
+        [Header("Reposition")]
+        [Range(0f, 1f)] public float repositionChance = 0.5f;
+        [Min(0f)] public float repositionDuration = 0.6f;
+        [Min(0f)] public float repositionSpeed = 9f;
+        [Min(0.5f)] public float repositionTooCloseRange = 4f;
+        [Min(0.5f)] public float repositionStep = 4f;
+
         [Header("Prefabs")]
         public GameObject waspPrefab;
         public WaspQueenProjectile poisonProjectilePrefab;
@@ -118,6 +136,7 @@ namespace Beavermania.Data.NPC
             aoeDamage = 10f,
             aoeDuration = 2.5f,
             aoeTickRate = 0.6f,
+            aoeGroundTelegraphTime = 0.5f,
             chargeCooldown = 8f,
             chargeTelegraphDuration = 0.95f,
             chargeSpeed = 16f,
@@ -154,6 +173,7 @@ namespace Beavermania.Data.NPC
             aoeDamage = 12f,
             aoeDuration = 3f,
             aoeTickRate = 0.5f,
+            aoeGroundTelegraphTime = 0.45f,
             chargeCooldown = 6.5f,
             chargeTelegraphDuration = 0.75f,
             chargeSpeed = 18f,
@@ -190,6 +210,7 @@ namespace Beavermania.Data.NPC
             aoeDamage = 14f,
             aoeDuration = 3.5f,
             aoeTickRate = 0.45f,
+            aoeGroundTelegraphTime = 0.4f,
             chargeCooldown = 5.5f,
             chargeTelegraphDuration = 0.65f,
             chargeSpeed = 20f,

@@ -14,6 +14,8 @@ namespace Beavermania.NPC
         Recovery = 9,
         Death = 10,
         StingLunge = 11,
-        StingRetreat = 12
+        StingRetreat = 12,
+        Reposition = 13,
+        Returning = 14
     }
 }

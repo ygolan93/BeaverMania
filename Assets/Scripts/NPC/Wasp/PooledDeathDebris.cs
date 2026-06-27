@@ -74,6 +74,11 @@ namespace Beavermania.NPC
 
         public static GameObject Spawn(GameObject prefab, Vector3 position, Quaternion rotation)
         {
+            return Spawn(prefab, position, rotation, -1f);
+        }
+
+        public static GameObject Spawn(GameObject prefab, Vector3 position, Quaternion rotation, float lifetimeOverride)
+        {
             if (prefab == null)
                 return null;
 
@@ -84,13 +89,13 @@ namespace Beavermania.NPC
             }
 
             if (pool.CountActive >= MaxActiveInstances)
-                return SpawnOverflow(prefab, position, rotation);
+                return SpawnOverflow(prefab, position, rotation, lifetimeOverride);
 
             var debris = GetAliveFromPool(pool, prefab);
             if (debris == null)
                 return null;
 
-            debris.Spawn(position, rotation, prefab.transform.localScale, false);
+            debris.Spawn(position, rotation, prefab.transform.localScale, false, lifetimeOverride);
             return debris.gameObject;
         }
 
@@ -181,7 +186,7 @@ namespace Beavermania.NPC
             return debris;
         }
 
-        static GameObject SpawnOverflow(GameObject prefab, Vector3 position, Quaternion rotation)
+        static GameObject SpawnOverflow(GameObject prefab, Vector3 position, Quaternion rotation, float lifetimeOverride)
         {
             var instance = Instantiate(prefab, position, rotation);
             var debris = instance.GetComponent<PooledDeathDebris>();
@@ -189,7 +194,7 @@ namespace Beavermania.NPC
                 debris = instance.AddComponent<PooledDeathDebris>();
 
             debris.Bind(null, prefab.transform.localScale, true);
-            debris.Spawn(position, rotation, prefab.transform.localScale, true);
+            debris.Spawn(position, rotation, prefab.transform.localScale, true, lifetimeOverride);
             return instance;
         }
 
@@ -237,7 +242,7 @@ namespace Beavermania.NPC
             }
         }
 
-        void Spawn(Vector3 position, Quaternion rotation, Vector3 scale, bool isOverflowInstance)
+        void Spawn(Vector3 position, Quaternion rotation, Vector3 scale, bool isOverflowInstance, float lifetimeOverride = -1f)
         {
             if (!IsAlive())
                 return;
@@ -245,7 +250,8 @@ namespace Beavermania.NPC
             overflowInstance = isOverflowInstance;
             released = false;
             ResetRuntimeState(position, rotation, scale);
-            returnRoutine = StartCoroutine(ReturnAfterLifetime(safeLifetime));
+            float lifetime = lifetimeOverride > 0f ? lifetimeOverride : safeLifetime;
+            returnRoutine = StartCoroutine(ReturnAfterLifetime(lifetime));
         }
 
         void ResetRuntimeState(Vector3 position, Quaternion rotation, Vector3 scale)

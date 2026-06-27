@@ -71,6 +71,18 @@ namespace Beavermania.NPC
         [SerializeField] GameObject hitEffect;
         [SerializeField] float hitEffectVisibleDuration = 0.2f;
 
+        [Header("Death")]
+        [Tooltip("Seconds to keep the body active so WQ_Death can play before disabling. 0 = use the death clip length.")]
+        [SerializeField] float deathDisableDelay = 0f;
+
+        [Header("Flinch")]
+        [SerializeField] float minFlinchInterval = 0.5f;
+        [SerializeField] bool suppressFlinchDuringAttacks = true;
+
+        [Header("Arena")]
+        [Tooltip("Optional arena anchor. If unassigned, the boss captures its spawn position as the arena center.")]
+        [SerializeField] Transform arenaCenter;
+
         readonly List<GameObject> activeSummonedWasps = new List<GameObject>(8);
         readonly List<WaspQueenProjectile> activeProjectiles = new List<WaspQueenProjectile>(4);
         readonly List<WaspQueenPoisonZone> activePoisonZones = new List<WaspQueenPoisonZone>(4);
@@ -95,7 +107,24 @@ namespace Beavermania.NPC
         Vector3 stingReturnPosition;
         bool deathHandled;
         bool stateActionExecuted;
+        bool explosionSpawned;
+        float lastFlinchTime = -999f;
+        Vector3 capturedArenaCenter;
+        bool arenaCenterCaptured;
+        Vector3 repositionTarget;
         Coroutine hitEffectHideRoutine;
+        Coroutine deathRoutine;
+
+        const float ReleaseFallbackExtra = 1.25f;
+        const float DefaultDeathClipLength = 1.8f;
+        const string ChargeTelegraphStateName = "Charge_Telegraph";
+        const string ChargeDashStateName = "Charge_Dash";
+        const string ChargeRecoveryStateName = "Charge_Recovery";
+        const string IdleStateName = "Idle";
+        static readonly int ChargeTelegraphStateHash = Animator.StringToHash(ChargeTelegraphStateName);
+        static readonly int ChargeDashStateHash = Animator.StringToHash(ChargeDashStateName);
+        static readonly int ChargeRecoveryStateHash = Animator.StringToHash(ChargeRecoveryStateName);
+        static readonly int IdleStateHash = Animator.StringToHash(IdleStateName);
 
         public event Action<WaspQueenBoss> Defeated;
         event Action<IBossVictorySource> IBossVictorySource.Defeated
@@ -159,6 +188,12 @@ namespace Beavermania.NPC
             }
 
             UpdatePendingPhaseTransition();
+
+            if (IsLeashInterruptible(state) && ShouldLeash())
+            {
+                EnterState(WaspQueenState.Returning, 0f);
+            }
+
             TickState();
         }
 
@@ -169,6 +204,9 @@ namespace Beavermania.NPC
 
             if (state == WaspQueenState.Charge && stateActionExecuted)
             {
+                if (!IsChargeDashAnimPlaying())
+                    return;
+
                 if (ChargeAttack != null)
                 {
                     bool blocked = ChargeAttack.TickMovement(
@@ -220,6 +258,18 @@ namespace Beavermania.NPC
                 if (MoveTowardReturnPosition(Config != null ? Config.stingRetreatSpeed : 18f))
                     stateTimer = 0f;
 
+                return;
+            }
+
+            if (state == WaspQueenState.Returning)
+            {
+                MoveTowardPosition(ArenaCenterPosition(), Config != null ? Config.recenterSpeed : 14f);
+                return;
+            }
+
+            if (state == WaspQueenState.Reposition)
+            {
+                MoveTowardPosition(repositionTarget, Config != null ? Config.repositionSpeed : 9f);
                 return;
             }
 
@@ -277,13 +327,37 @@ namespace Beavermania.NPC
             {
                 HandleDeath();
             }
-            else
+            else if (CanFlinch())
             {
-                // Cosmetic flinch only on surviving hits; the lethal blow plays the death animation instead.
+                // Cosmetic flinch only on surviving hits; gated so rapid melee cannot stunlock the boss
+                // or interrupt readable attack/telegraph animations. The lethal blow plays Death instead.
+                lastFlinchTime = Time.time;
                 TriggerAnimator(HitHash);
             }
 
             return true;
+        }
+
+        bool CanFlinch()
+        {
+            if (deathHandled || currentHealth <= 0)
+                return false;
+
+            if (Time.time - lastFlinchTime < minFlinchInterval)
+                return false;
+
+            if (!suppressFlinchDuringAttacks)
+                return true;
+
+            switch (state)
+            {
+                case WaspQueenState.Idle:
+                case WaspQueenState.Decision:
+                case WaspQueenState.Recovery:
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         void TickState()
@@ -335,8 +409,21 @@ namespace Beavermania.NPC
                             return;
                         }
 
+                        if (ShouldReposition())
+                        {
+                            EnterReposition();
+                            return;
+                        }
+
                         EnterState(WaspQueenState.Idle, Config != null ? Config.idleDecisionDelay : 0f);
                     });
+                    break;
+                case WaspQueenState.Reposition:
+                    FacePlayer();
+                    TickTimedState(() => EnterState(WaspQueenState.Idle, Config != null ? Config.idleDecisionDelay : 0f));
+                    break;
+                case WaspQueenState.Returning:
+                    TickReturning();
                     break;
                 case WaspQueenState.Death:
                     return;
@@ -374,17 +461,17 @@ namespace Beavermania.NPC
             switch (ability)
             {
                 case WaspQueenAbility.RangedPoisonShot:
-                    EnterState(WaspQueenState.RangedPoisonShot, CurrentPhase().rangedTelegraphDuration);
+                    EnterState(WaspQueenState.RangedPoisonShot, CurrentPhase().rangedTelegraphDuration + ReleaseFallbackExtra);
                     break;
                 case WaspQueenAbility.PoisonAoE:
                     cachedAoeTargetPosition = ResolveAoeTargetPosition();
-                    EnterState(WaspQueenState.PoisonAoE, CurrentPhase().aoeTelegraphDuration);
+                    EnterState(WaspQueenState.PoisonAoE, CurrentPhase().aoeTelegraphDuration + ReleaseFallbackExtra);
                     break;
                 case WaspQueenAbility.SummonWasps:
-                    EnterState(WaspQueenState.SummonWasps, CurrentPhase().summonTelegraphDuration);
+                    EnterState(WaspQueenState.SummonWasps, CurrentPhase().summonTelegraphDuration + ReleaseFallbackExtra);
                     break;
                 case WaspQueenAbility.Charge:
-                    EnterState(WaspQueenState.Charge, CurrentPhase().chargeTelegraphDuration);
+                    EnterState(WaspQueenState.Charge, CurrentPhase().chargeTelegraphDuration + ReleaseFallbackExtra);
                     break;
                 case WaspQueenAbility.StingLunge:
                     EnterState(WaspQueenState.StingLunge, Config.stingTelegraphDuration);
@@ -398,34 +485,69 @@ namespace Beavermania.NPC
         void TickRangedAttack()
         {
             FacePlayer();
-            TickTelegraphedState(() =>
-            {
-                FireProjectile();
-                rangedCooldownRemaining = CurrentPhase().rangedCooldown;
-                EnterRecovery(WaspQueenAbility.RangedPoisonShot, CurrentPhase().rangedRecoveryDuration);
-            });
+            if (stateActionExecuted)
+                return;
+
+            stateTimer -= Time.deltaTime;
+            if (stateTimer <= 0f)
+                ExecuteRangedRelease();
         }
 
         void TickPoisonAoe()
         {
             FacePlayer();
-            TickTelegraphedState(() =>
-            {
-                SpawnPoisonZone();
-                aoeCooldownRemaining = CurrentPhase().aoeCooldown;
-                EnterRecovery(WaspQueenAbility.PoisonAoE, CurrentPhase().aoeRecoveryDuration);
-            });
+            if (stateActionExecuted)
+                return;
+
+            stateTimer -= Time.deltaTime;
+            if (stateTimer <= 0f)
+                ExecuteAoeRelease();
         }
 
         void TickSummon()
         {
             FacePlayer();
-            TickTelegraphedState(() =>
-            {
-                SpawnSummonedWasps();
-                summonCooldownRemaining = CurrentPhase().summonCooldown;
-                EnterRecovery(WaspQueenAbility.SummonWasps, CurrentPhase().summonRecoveryDuration);
-            });
+            if (stateActionExecuted)
+                return;
+
+            stateTimer -= Time.deltaTime;
+            if (stateTimer <= 0f)
+                ExecuteSummonRelease();
+        }
+
+        // Release points are normally driven by clip animation events (AnimEvent_*); the timer above is a
+        // safety fallback so the boss can never soft-lock if an event is missing.
+        void ExecuteRangedRelease()
+        {
+            if (state != WaspQueenState.RangedPoisonShot || stateActionExecuted)
+                return;
+
+            stateActionExecuted = true;
+            FireProjectile();
+            rangedCooldownRemaining = CurrentPhase().rangedCooldown;
+            EnterRecovery(WaspQueenAbility.RangedPoisonShot, CurrentPhase().rangedRecoveryDuration);
+        }
+
+        void ExecuteAoeRelease()
+        {
+            if (state != WaspQueenState.PoisonAoE || stateActionExecuted)
+                return;
+
+            stateActionExecuted = true;
+            SpawnPoisonZone();
+            aoeCooldownRemaining = CurrentPhase().aoeCooldown;
+            EnterRecovery(WaspQueenAbility.PoisonAoE, CurrentPhase().aoeRecoveryDuration);
+        }
+
+        void ExecuteSummonRelease()
+        {
+            if (state != WaspQueenState.SummonWasps || stateActionExecuted)
+                return;
+
+            stateActionExecuted = true;
+            SpawnSummonedWasps();
+            summonCooldownRemaining = CurrentPhase().summonCooldown;
+            EnterRecovery(WaspQueenAbility.SummonWasps, CurrentPhase().summonRecoveryDuration);
         }
 
         void TickCharge()
@@ -433,7 +555,21 @@ namespace Beavermania.NPC
             if (!stateActionExecuted)
             {
                 FacePlayer();
-                TickTelegraphedState(BeginChargeActive);
+                EnsureChargeSequenceStarted();
+
+                if (IsChargeDashAnimPlaying())
+                {
+                    BeginChargeActive();
+                    return;
+                }
+
+                stateTimer -= Time.deltaTime;
+                if (stateTimer <= 0f)
+                {
+                    EnsureChargeDashAnimation();
+                    BeginChargeActive();
+                }
+
                 return;
             }
 
@@ -446,11 +582,15 @@ namespace Beavermania.NPC
 
             SetChargeHitboxEnabled(false);
             chargeCooldownRemaining = CurrentPhase().chargeCooldown;
+            EnsureChargeRecoveryAnimation();
             EnterRecovery(WaspQueenAbility.Charge, CurrentPhase().chargeRecoveryDuration);
         }
 
         void BeginChargeActive()
         {
+            if (stateActionExecuted)
+                return;
+
             if (ChargeAttack != null && Player != null)
             {
                 Vector3 toPlayer = Player.transform.position - transform.position;
@@ -461,6 +601,120 @@ namespace Beavermania.NPC
             stateTimer = CurrentPhase().chargeDuration;
             SetChargeHitboxEnabled(true);
             PlayClip(chargeDashClip, AudioCue.ChargeDash, 0.08f);
+            EnsureChargeDashAnimation();
+        }
+
+        // The Charge trigger only transitions from Idle. If the boss enters charge while another clip is
+        // still playing, the trigger can sit unused and the FSM timer would start movement in Idle.
+        void EnsureChargeSequenceStarted()
+        {
+            if (Animator == null || Animator.runtimeAnimatorController == null)
+                return;
+
+            if (IsInChargeAnimatorSequence())
+                return;
+
+            if (IsIdleAnimPlaying())
+            {
+                TriggerAnimator(ChargeHash);
+                return;
+            }
+
+            if (!Animator.HasState(0, ChargeTelegraphStateHash))
+            {
+                Debug.LogWarning($"WaspQueenBoss: Animator controller has no '{ChargeTelegraphStateName}' state on layer 0; charge may desync.", this);
+                return;
+            }
+
+            Animator.ResetTrigger(ChargeHash);
+            Animator.Play(ChargeTelegraphStateHash, 0, 0f);
+        }
+
+        bool IsIdleAnimPlaying()
+        {
+            if (Animator == null)
+                return false;
+
+            AnimatorStateInfo current = Animator.GetCurrentAnimatorStateInfo(0);
+            if (current.shortNameHash == IdleStateHash)
+                return true;
+
+            return Animator.IsInTransition(0) && Animator.GetNextAnimatorStateInfo(0).shortNameHash == IdleStateHash;
+        }
+
+        bool IsInChargeAnimatorSequence()
+        {
+            if (Animator == null)
+                return false;
+
+            int currentHash = Animator.GetCurrentAnimatorStateInfo(0).shortNameHash;
+            if (currentHash == ChargeTelegraphStateHash
+                || currentHash == ChargeDashStateHash
+                || currentHash == ChargeRecoveryStateHash)
+            {
+                return true;
+            }
+
+            if (!Animator.IsInTransition(0))
+                return false;
+
+            int nextHash = Animator.GetNextAnimatorStateInfo(0).shortNameHash;
+            return nextHash == ChargeTelegraphStateHash
+                || nextHash == ChargeDashStateHash
+                || nextHash == ChargeRecoveryStateHash;
+        }
+
+        bool IsChargeDashAnimPlaying()
+        {
+            if (Animator == null)
+                return true;
+
+            AnimatorStateInfo current = Animator.GetCurrentAnimatorStateInfo(0);
+            if (current.shortNameHash == ChargeDashStateHash)
+                return true;
+
+            return Animator.IsInTransition(0) && Animator.GetNextAnimatorStateInfo(0).shortNameHash == ChargeDashStateHash;
+        }
+
+        // Guarantees Charge_Dash is playing before code-driven movement runs. No-op when the autonomous
+        // telegraph -> dash chain is already active so animation events keep their timing.
+        void EnsureChargeDashAnimation()
+        {
+            if (Animator == null || Animator.runtimeAnimatorController == null)
+            {
+                Debug.LogWarning("WaspQueenBoss: Animator/controller missing; the code-driven charge dash will move with no Charge_Dash animation.", this);
+                return;
+            }
+
+            if (IsChargeDashAnimPlaying())
+                return;
+
+            if (!Animator.HasState(0, ChargeDashStateHash))
+            {
+                Debug.LogWarning($"WaspQueenBoss: Animator controller has no '{ChargeDashStateName}' state on layer 0; the charge dash will move with no dash animation.", this);
+                return;
+            }
+
+            Animator.ResetTrigger(ChargeHash);
+            Animator.Play(ChargeDashStateHash, 0, 0f);
+        }
+
+        void EnsureChargeRecoveryAnimation()
+        {
+            if (Animator == null || Animator.runtimeAnimatorController == null)
+                return;
+
+            if (Animator.GetCurrentAnimatorStateInfo(0).shortNameHash == ChargeRecoveryStateHash)
+                return;
+
+            if (Animator.IsInTransition(0) && Animator.GetNextAnimatorStateInfo(0).shortNameHash == ChargeRecoveryStateHash)
+                return;
+
+            if (!Animator.HasState(0, ChargeRecoveryStateHash))
+                return;
+
+            Animator.ResetTrigger(ChargeHash);
+            Animator.Play(ChargeRecoveryStateHash, 0, 0f);
         }
 
         void TickStingLunge()
@@ -519,6 +773,193 @@ namespace Beavermania.NPC
                 Body.position = resolved;
 
             return step >= distance;
+        }
+
+        bool MoveTowardPosition(Vector3 target, float speed)
+        {
+            if (Body == null)
+                return true;
+
+            Vector3 current = transform.position;
+            Vector3 horizontal = new Vector3(target.x - current.x, 0f, target.z - current.z);
+            float distance = horizontal.magnitude;
+            const float reachThreshold = 0.75f;
+            if (distance <= reachThreshold)
+            {
+                MaintainHoverHeight();
+                return true;
+            }
+
+            float step = Mathf.Max(0f, speed) * Time.fixedDeltaTime;
+            Vector3 next = step >= distance
+                ? new Vector3(target.x, current.y, target.z)
+                : current + horizontal.normalized * step;
+
+            Vector3 resolved = ResolveHoverPosition(next);
+            if (Body.isKinematic)
+                Body.MovePosition(resolved);
+            else
+                Body.position = resolved;
+
+            return step >= distance;
+        }
+
+        Vector3 ArenaCenterPosition()
+        {
+            return arenaCenter != null ? arenaCenter.position : capturedArenaCenter;
+        }
+
+        float DistanceFromArenaCenter()
+        {
+            Vector3 center = ArenaCenterPosition();
+            Vector3 offset = new Vector3(transform.position.x - center.x, 0f, transform.position.z - center.z);
+            return offset.magnitude;
+        }
+
+        bool IsLeashInterruptible(WaspQueenState current)
+        {
+            switch (current)
+            {
+                case WaspQueenState.Idle:
+                case WaspQueenState.Decision:
+                case WaspQueenState.Recovery:
+                case WaspQueenState.Reposition:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        bool ShouldLeash()
+        {
+            if (Config == null)
+                return false;
+
+            if (Config.leashRange > 0f && DistanceToPlayer() > Config.leashRange)
+                return true;
+
+            if (Config.arenaRadius > 0f && DistanceFromArenaCenter() > Config.arenaRadius)
+                return true;
+
+            return false;
+        }
+
+        void TickReturning()
+        {
+            FacePlayer();
+            bool nearCenter = DistanceFromArenaCenter() <= Mathf.Max(1f, (Config != null ? Config.arenaRadius : 22f) * 0.5f);
+            if (!nearCenter)
+                return;
+
+            bool playerInRange = Player != null && DistanceToPlayer() <= (Config != null ? Config.reengageRange : 20f);
+            if (playerInRange || Player == null)
+                EnterState(WaspQueenState.Idle, Config != null ? Config.idleDecisionDelay : 0f);
+        }
+
+        bool ShouldReposition()
+        {
+            if (Config == null)
+                return false;
+
+            if (DistanceFromArenaCenter() > Config.arenaRadius * 0.6f)
+                return true;
+
+            if (Player != null && DistanceToPlayer() < Config.repositionTooCloseRange)
+                return true;
+
+            return UnityEngine.Random.value < Config.repositionChance;
+        }
+
+        void EnterReposition()
+        {
+            repositionTarget = ClampToArena(ResolveRepositionTarget());
+            EnterState(WaspQueenState.Reposition, Config != null ? Config.repositionDuration : 0.6f);
+        }
+
+        Vector3 ResolveRepositionTarget()
+        {
+            float step = Config != null ? Config.repositionStep : 4f;
+
+            if (Config != null && DistanceFromArenaCenter() > Config.arenaRadius * 0.6f)
+                return ArenaCenterPosition();
+
+            if (Player != null && Config != null && DistanceToPlayer() < Config.repositionTooCloseRange)
+            {
+                Vector3 away = transform.position - Player.transform.position;
+                away.y = 0f;
+                if (away.sqrMagnitude < LookRotationEpsilon)
+                    away = -transform.forward;
+                return transform.position + away.normalized * step;
+            }
+
+            Vector3 toPlayer = Player != null ? Player.transform.position - transform.position : transform.forward;
+            Vector3 flatToPlayer = new Vector3(toPlayer.x, 0f, toPlayer.z);
+            Vector3 perpendicular = Vector3.Cross(Vector3.up, flatToPlayer.sqrMagnitude > LookRotationEpsilon ? flatToPlayer.normalized : transform.forward);
+            float direction = UnityEngine.Random.value < 0.5f ? 1f : -1f;
+            return transform.position + perpendicular * direction * step;
+        }
+
+        Vector3 ClampToArena(Vector3 position)
+        {
+            if (Config == null || Config.arenaRadius <= 0f)
+                return position;
+
+            Vector3 center = ArenaCenterPosition();
+            Vector3 offset = new Vector3(position.x - center.x, 0f, position.z - center.z);
+            float maxRadius = Mathf.Max(1f, Config.arenaRadius);
+            if (offset.magnitude > maxRadius)
+            {
+                Vector3 clamped = center + offset.normalized * maxRadius;
+                return new Vector3(clamped.x, position.y, clamped.z);
+            }
+
+            return position;
+        }
+
+        public void AnimEvent_FireProjectile()
+        {
+            ExecuteRangedRelease();
+        }
+
+        public void AnimEvent_ActivateAoE()
+        {
+            ExecuteAoeRelease();
+        }
+
+        public void AnimEvent_SummonWasps()
+        {
+            ExecuteSummonRelease();
+        }
+
+        public void AnimEvent_EnableChargeHitbox()
+        {
+            if (state != WaspQueenState.Charge || stateActionExecuted)
+                return;
+
+            EnsureChargeDashAnimation();
+            BeginChargeActive();
+        }
+
+        public void AnimEvent_DisableChargeHitbox()
+        {
+            if (state == WaspQueenState.Charge && stateActionExecuted)
+                SetChargeHitboxEnabled(false);
+        }
+
+        public void AnimEvent_PhasePulse()
+        {
+            // Cosmetic phase-pulse hook; gameplay phase change is timer-driven by the PhaseTransition state.
+        }
+
+        public void AnimEvent_QueenScream()
+        {
+            // Optional intro SFX cue; safe no-op if unused.
+        }
+
+        public void AnimEvent_ExplodeFragments()
+        {
+            if (deathHandled)
+                SpawnDeathExplosionOnce();
         }
 
         void BeginStingActive()
@@ -614,7 +1055,7 @@ namespace Beavermania.NPC
             poisonZone.Activate(
                 cachedAoeTargetPosition,
                 CurrentPhase().aoeRadius,
-                0f,
+                CurrentPhase().aoeGroundTelegraphTime,
                 CurrentPhase().aoeDuration,
                 CurrentPhase().aoeDamage,
                 CurrentPhase().aoeTickRate,
@@ -642,8 +1083,20 @@ namespace Beavermania.NPC
                     : transform.rotation;
 
                 GameObject wasp = Instantiate(Config.waspPrefab, position, rotation);
+                ConfigureSummonedWasp(wasp);
                 activeSummonedWasps.Add(wasp);
             }
+        }
+
+        void ConfigureSummonedWasp(GameObject wasp)
+        {
+            if (wasp == null)
+                return;
+
+            // Marker makes NPC_Basic.Death() spawn a couple of short-lived debris and no currency drop,
+            // so the arena does not fill with corpses. World wasps are unaffected.
+            if (wasp.GetComponent<BossSummonedWasp>() == null)
+                wasp.AddComponent<BossSummonedWasp>();
         }
 
         Transform ResolveWaspSpawnPoint(int index)
@@ -718,9 +1171,9 @@ namespace Beavermania.NPC
                     PlayClip(aoeTelegraphClip, AudioCue.AoeTelegraph, 0.08f);
                     break;
                 case WaspQueenState.Charge:
-                    TriggerAnimator(ChargeHash);
                     PlayClip(chargeTelegraphClip, AudioCue.ChargeTelegraph, 0.08f);
                     SetChargeHitboxEnabled(false);
+                    EnsureChargeSequenceStarted();
                     break;
                 case WaspQueenState.StingLunge:
                     stingReturnPosition = transform.position;
@@ -736,6 +1189,12 @@ namespace Beavermania.NPC
                     TriggerAnimator(PhaseTransitionHash);
                     PlayClip(phaseTransitionClip, AudioCue.PhaseTransition, 0.12f);
                     SetChargeHitboxEnabled(false);
+                    break;
+                case WaspQueenState.Returning:
+                    SetChargeHitboxEnabled(false);
+                    if (ChargeAttack != null)
+                        ChargeAttack.EndCharge();
+                    CleanupRuntimeObjects();   // minions disengage / hazards cleared while leashing home
                     break;
                 case WaspQueenState.Death:
                     TriggerAnimator(DieHash);
@@ -771,15 +1230,62 @@ namespace Beavermania.NPC
                 return;
 
             deathHandled = true;
+            explosionSpawned = false;
             StopMovement();
             HideHitEffects();
+            SetChargeHitboxEnabled(false);
+            if (ChargeAttack != null)
+                ChargeAttack.EndCharge();
+
             state = WaspQueenState.Death;
-            OnStateEntered(WaspQueenState.Death);
-            CleanupRuntimeObjects();
-            SpawnDeathPresentation();
+            OnStateEntered(WaspQueenState.Death);   // triggers Die + plays WQ_Death
+            CleanupRuntimeObjects();                 // clear summons + hazards immediately
             Defeated?.Invoke(this);
             genericDefeated?.Invoke(this);
+
+            if (isActiveAndEnabled)
+            {
+                deathRoutine = StartCoroutine(DeathSequence());
+            }
+            else
+            {
+                // Cannot run the death animation while disabled; present and disable immediately.
+                SpawnDeathExplosionOnce();
+                gameObject.SetActive(false);
+            }
+        }
+
+        IEnumerator DeathSequence()
+        {
+            float disableDelay = deathDisableDelay > 0f ? deathDisableDelay : DefaultDeathClipLength;
+            if (Config != null)
+                disableDelay = Mathf.Max(disableDelay, Config.victoryDelay);
+
+            // The explosion normally fires from AnimEvent_ExplodeFragments (~87% of WQ_Death). This is the
+            // safety fallback so fragments still spawn once if that event is missing.
+            float explosionFallback = Mathf.Max(0f, disableDelay - 0.2f);
+            float elapsed = 0f;
+            while (elapsed < disableDelay)
+            {
+                if (!explosionSpawned && elapsed >= explosionFallback)
+                    SpawnDeathExplosionOnce();
+
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+
+            SpawnDeathExplosionOnce();
+            deathRoutine = null;
             gameObject.SetActive(false);
+        }
+
+        void SpawnDeathExplosionOnce()
+        {
+            if (explosionSpawned)
+                return;
+
+            explosionSpawned = true;
+            SpawnDeathPresentation();
         }
 
         void CleanupRuntimeObjects()
@@ -890,6 +1396,7 @@ namespace Beavermania.NPC
             stateTimer = 0f;
             stateActionExecuted = false;
             deathHandled = false;
+            explosionSpawned = false;
             ApplyHealthBarState();
         }
 
@@ -990,6 +1497,12 @@ namespace Beavermania.NPC
         {
             if (Body == null)
                 Body = GetComponent<Rigidbody>();
+
+            if (!arenaCenterCaptured)
+            {
+                capturedArenaCenter = arenaCenter != null ? arenaCenter.position : transform.position;
+                arenaCenterCaptured = true;
+            }
 
             if (Animator == null)
                 Animator = GetComponentInChildren<Animator>();

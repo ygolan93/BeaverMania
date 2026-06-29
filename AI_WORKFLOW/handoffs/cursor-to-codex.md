@@ -17,6 +17,27 @@ Requested: Codex decide whether to update the stale test expectations (`DefaultS
 
 Minor scene note (not blocking): `Assets/Scenes/ShadowRevenantTestArena.unity` has no `AudioVolumeSettings`, so boss SFX log `[AudioSourceRouting] Could not resolve Enemy mixer group`; `PF_WaspQueen_Boss` `WaspSpawnPoints` has a single entry (summons stack at one point).
 
+### Resolution (2026-06-30, test-only fixes — VERIFIED GREEN in Unity Test Runner)
+
+All failures were addressed in the test files only; no `WaspQueenBoss` gameplay logic changed (charge logic was verified correct). Verified live via Unity MCP against `BeaverProject@d3b470b190d10be0` (Unity 2021.3.3f1): **PlayMode 9/9 passed, EditMode 7/7 passed** (full Wasp Queen suite = 16/16).
+
+PlayMode (the original 4 + confirmations):
+
+- `DefaultState_IsIdleCombat_AndLoops` -> renamed `DefaultState_IsIdle_AndLoops`. The display prefab `Assets/Prefabs/WaspQueen/WaspQueen.prefab` actually references the production boss controller (guid `db574f27880baf040b9210f7bc0f8b0b`, default state `Idle`), not the display controller (`bec1f8b9...`, default state `Idle_Combat`). The expectation was genuinely stale; updated to `Idle` and made the state read wait robustly. `WQ_Idle_Combat` keeps `loopTime`, so the loop assertion still holds. PASS.
+- `Charge_LocksDirectionAtStart` -> now waits for `ChargeAttack.IsActive` (dash start) before capturing the locked direction, matching the shipped "face during telegraph, lock at dash start" design, then moves the player to prove the dash does not re-home. It also disables `stingWeight` so the planner deterministically picks Charge (sting lunge shares `ChargeAttack` and re-homes by design; the first run picked sting and produced the 21.6 deg = 180 deg x one-FixedUpdate sting steer). PASS.
+- `PhaseTransitions_HappenOncePerThreshold` -> transitions are queued and applied after the current action resolves, so the test now disables every ability (out-of-range player + `maxActiveSummonedWasps = 0` + `stingWeight = 0`) and disables leash/arena, keeping the boss in a fast Idle->Decision loop so each queued threshold change is applied promptly. PASS.
+- `PoisonAoe_TicksAtConfiguredInterval` -> the zone has a ground warning-ring delay (`aoeGroundTelegraphTime`, default 0.5s) before the first tick; the test now zeroes it to isolate `aoeTickRate`. PASS.
+
+EditMode (`WaspQueenDecisionPlannerTests`, found broken during the run — were erroring, not in the original list):
+
+- All 6 threw `MissingMethodException` because `CreateContext` built `WaspQueenDecisionContext` via reflection with the pre-sting 9-arg signature; the struct gained `stingCooldownRemaining`. Added that arg in the correct position. The two "expect Idle" tests (`SkipsSummon`, `SkipsAbilitiesOnCooldown`) now also pass `stingCooldownRemaining` on cooldown so sting cannot be chosen.
+- `ChooseAbility_ReturnsCharge_WhenPlayerAtMediumRange` then revealed that summon narrowly out-scores charge at distance 7 with equal weights (summon urgency boost when no minions are out: 6.25 vs 6.2). Parked summon on cooldown in that test to isolate the medium-range melee choice. PASS. (Note for Codex: this is intended planner behavior, not a bug, but worth a glance if charge-vs-summon balance at equal weights matters.)
+- `WaspQueenPrefabReferenceAuditTests.WaspQueenPrefabs_HaveNoBrokenReferences` PASS (confirms the production prefab refs).
+
+### Level 1 final boss (scope note, 2026-06-30)
+
+Per product direction, the Level 1 final boss remains the **Scorpion**. Swapping Level 1 to the Wasp Queen (wiring `BossHandler.bossVictorySourceBehaviour`, objective/dialogue text, scene boss instance) is intentionally **out of scope for `feature/Wasp-Queen`** and will be handled on a separate branch. The Wasp Queen ships here as a self-contained boss package validated in `ShadowRevenantTestArena`.
+
 ---
 
 ## Task

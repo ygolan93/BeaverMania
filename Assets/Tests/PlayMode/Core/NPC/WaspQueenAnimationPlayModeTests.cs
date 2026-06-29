@@ -100,14 +100,15 @@ namespace Beavermania.Tests.PlayMode.Core.NPC
         }
 
         [UnityTest]
-        public IEnumerator DefaultState_IsIdleCombat_AndLoops()
+        public IEnumerator DefaultState_IsIdle_AndLoops()
         {
+            // WaspQueen.prefab drives the production boss controller (Assets/Prefabs/NPC/WaspQueen/WaspQueen.controller),
+            // whose looping idle state is named "Idle". Its motion (WQ_Idle_Combat) is imported with loopTime on.
             var (anim, _) = Spawn();
-            yield return null;
-            yield return null;
+            yield return WaitUntil(() => anim.GetCurrentAnimatorStateInfo(0).IsName("Idle"), 2f);
             var info = anim.GetCurrentAnimatorStateInfo(0);
-            Assert.That(info.IsName("Idle_Combat"), Is.True, "Default state should be Idle_Combat");
-            Assert.That(info.loop, Is.True, "Idle_Combat should loop");
+            Assert.That(info.IsName("Idle"), Is.True, "Default state should be Idle");
+            Assert.That(info.loop, Is.True, "Idle should loop");
         }
 
         [UnityTest]

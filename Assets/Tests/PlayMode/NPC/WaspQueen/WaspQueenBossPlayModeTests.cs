@@ -42,6 +42,17 @@ namespace Beavermania.Tests.PlayMode.NPC.WaspQueen
         public IEnumerator PhaseTransitions_HappenOncePerThreshold()
         {
             BossHarness harness = CreateHarness();
+
+            // Phase changes are queued and applied once the current action resolves. Keep the boss in a tight
+            // Idle -> Decision loop (no attacks) so each queued transition is applied promptly and the test
+            // measures the "one change per threshold" contract rather than attack-state durations.
+            SetFieldValue(harness.Config, "leashRange", 0f);
+            SetFieldValue(harness.Config, "arenaRadius", 0f);
+            DisableAbilityChoices(GetFieldValue<object>(harness.Config, "phase1"));
+            DisableAbilityChoices(GetFieldValue<object>(harness.Config, "phase2"));
+            DisableAbilityChoices(GetFieldValue<object>(harness.Config, "phase3"));
+            harness.PlayerTransform.position = new Vector3(20f, 0f, 0f);
+
             InvokeMethod(harness.Boss, "ActivateBoss");
             yield return null;
 
@@ -113,15 +124,23 @@ namespace Beavermania.Tests.PlayMode.NPC.WaspQueen
             SetFieldValue(phase1, "rangedWeight", 0f);
             SetFieldValue(phase1, "aoeWeight", 0f);
             SetFieldValue(phase1, "summonWeight", 0f);
+            // Sting lunge shares ChargeAttack and re-homes by design; disable it so this test deterministically
+            // exercises Charge, which locks its direction and must not re-home.
+            SetFieldValue(phase1, "stingWeight", 0f);
             SetFieldValue(phase1, "chargeWeight", 10f);
             SetFieldValue(phase1, "chargeTelegraphDuration", 0f);
             SetFieldValue(phase1, "chargeDuration", 0.4f);
             SetFieldValue(phase1, "chargeRecoveryDuration", 1f);
             harness.PlayerTransform.position = new Vector3(8f, 0f, 0f);
 
+            object chargeAttack = GetFieldValue<object>(harness.Boss, "ChargeAttack");
+
             InvokeMethod(harness.Boss, "ActivateBoss");
 
-            yield return new WaitUntil(() => GetPropertyValue<object>(harness.Boss, "State").ToString() == "Charge");
+            // The charge faces the player through its telegraph and locks the dash direction when the dash
+            // actually begins (ChargeAttack becomes active), not at charge-state entry. Capture the locked
+            // direction once the dash starts, then move the player to prove the dash does not re-home.
+            yield return new WaitUntil(() => GetPropertyValue<bool>(chargeAttack, "IsActive"));
 
             Vector3 lockedDirection = GetPropertyValue<Vector3>(harness.Boss, "CurrentChargeDirection");
             harness.PlayerTransform.position = new Vector3(-8f, 0f, 0f);
@@ -147,6 +166,9 @@ namespace Beavermania.Tests.PlayMode.NPC.WaspQueen
             SetFieldValue(phase1, "aoeTickRate", 0.2f);
             SetFieldValue(phase1, "aoeDamage", 10f);
             SetFieldValue(phase1, "aoeRecoveryDuration", 1f);
+            // Remove the ground warning-ring delay so the first damage tick lands as soon as the zone spawns,
+            // isolating the tick interval (the boss cast telegraph is already zeroed above).
+            SetFieldValue(phase1, "aoeGroundTelegraphTime", 0f);
             harness.PlayerTransform.position = new Vector3(1.5f, 0f, 0f);
             SetFieldValue(harness.Player, "CurrentHealth", 100f);
 
@@ -279,6 +301,14 @@ namespace Beavermania.Tests.PlayMode.NPC.WaspQueen
             SetFieldValue(phase, "chargeWeight", 4f);
             SetFieldValue(phase, "summonWeight", 1f);
             SetFieldValue(phase, "sameAbilityPenalty", 2f);
+        }
+
+        // Parks every ability out of reach so the decision planner returns Idle: a 20-unit gap exceeds the
+        // ranged/AoE/charge/sting ranges, summon is removed via a 0 cap, and sting weight is zeroed.
+        static void DisableAbilityChoices(object phase)
+        {
+            SetFieldValue(phase, "maxActiveSummonedWasps", 0);
+            SetFieldValue(phase, "stingWeight", 0f);
         }
 
         Component CreateProjectilePrefab()

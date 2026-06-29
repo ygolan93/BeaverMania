@@ -54,7 +54,9 @@ namespace Beavermania.Tests.EditMode.NPC.WaspQueen
         [Test]
         public void ChooseAbility_ReturnsCharge_WhenPlayerAtMediumRange()
         {
-            object context = CreateContext(distanceToPlayer: 7f);
+            // Summon is intentionally the strongest pick while no minions are out (summon urgency boost), so
+            // park it on cooldown to isolate the medium-range melee choice the planner should make: Charge.
+            object context = CreateContext(distanceToPlayer: 7f, summonCooldownRemaining: 3f);
 
             object ability = ChooseAbility(GetFieldValue<object>(config, "phase1"), context);
 
@@ -72,7 +74,8 @@ namespace Beavermania.Tests.EditMode.NPC.WaspQueen
                 activeSummonedWasps: GetFieldValue<int>(phase, "maxActiveSummonedWasps"),
                 rangedCooldownRemaining: 3f,
                 aoeCooldownRemaining: 3f,
-                chargeCooldownRemaining: 3f);
+                chargeCooldownRemaining: 3f,
+                stingCooldownRemaining: 3f);
 
             object ability = ChooseAbility(phase, context);
 
@@ -89,7 +92,8 @@ namespace Beavermania.Tests.EditMode.NPC.WaspQueen
                 rangedCooldownRemaining: 1f,
                 aoeCooldownRemaining: 1f,
                 chargeCooldownRemaining: 1f,
-                summonCooldownRemaining: 1f);
+                summonCooldownRemaining: 1f,
+                stingCooldownRemaining: 1f);
 
             object ability = ChooseAbility(phase, context);
 
@@ -145,6 +149,7 @@ namespace Beavermania.Tests.EditMode.NPC.WaspQueen
             float aoeCooldownRemaining = 0f,
             float chargeCooldownRemaining = 0f,
             float summonCooldownRemaining = 0f,
+            float stingCooldownRemaining = 0f,
             object previousAbility = null,
             int repeatedAbilityCount = 0)
         {
@@ -156,6 +161,7 @@ namespace Beavermania.Tests.EditMode.NPC.WaspQueen
                 aoeCooldownRemaining,
                 chargeCooldownRemaining,
                 summonCooldownRemaining,
+                stingCooldownRemaining,
                 previousAbility ?? GetEnumValue("Beavermania.NPC.WaspQueenAbility", "None"),
                 repeatedAbilityCount,
                 false);

@@ -55,7 +55,7 @@ MonoBehaviour:
   - {fileID: 8780894494686982430, guid: a9033b1178bcea14db0934d547c5b242, type: 3}
   phase1:
     maxActiveSummonedWasps: 3
-    waspsPerSummon: 3
+    waspsPerSummon: 1
     summonCooldown: 9
     summonTelegraphDuration: 0.9
     summonRecoveryDuration: 0.6
@@ -88,7 +88,7 @@ MonoBehaviour:
     sameAbilityPenalty: 1.5
   phase2:
     maxActiveSummonedWasps: 5
-    waspsPerSummon: 5
+    waspsPerSummon: 2
     summonCooldown: 7.5
     summonTelegraphDuration: 0.75
     summonRecoveryDuration: 0.5
@@ -120,8 +120,8 @@ MonoBehaviour:
     stingWeight: 3
     sameAbilityPenalty: 1.75
   phase3:
-    maxActiveSummonedWasps: 15
-    waspsPerSummon: 15
+    maxActiveSummonedWasps: 7
+    waspsPerSummon: 3
     summonCooldown: 6
     summonTelegraphDuration: 0.65
     summonRecoveryDuration: 0.45

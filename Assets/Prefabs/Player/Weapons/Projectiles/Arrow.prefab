@@ -101,7 +101,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Ball: {fileID: 4235718158573097607}
-  projectileType: 1
   isArrow: 1
   isFireBall: 0
   Sound: {fileID: 9007213431267383372}
@@ -122,17 +121,6 @@ MonoBehaviour:
   arrowVisualLocalRotationOffsetEuler: {x: 90, y: 0, z: 0}
   arrowMeshRotationOffsetEuler: {x: 90, y: 0, z: 0}
   debugLaunchRayLength: 12
-  pickupSurfaceOffset: 0.06
-  aoeRadius: 6
-  aoeDamage: 0
-  enemyLayerMask:
-    serializedVersion: 2
-    m_Bits: 1024
-  explosionPrefab: {fileID: 0}
-  minFireballForwardSpeed: 30
-  fireBreathOwnerCollisionGrace: 0.15
-  fireBreathMinTravelBeforeWorldImpact: 2
-  debugFireBreath: 0
 --- !u!54 &4235718158573097607
 Rigidbody:
   m_ObjectHideFlags: 0

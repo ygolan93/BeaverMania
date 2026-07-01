@@ -12,6 +12,7 @@ namespace Beavermania.Player.Combat
     {
         public BeaverPlayer player;
         public ScorpionScript Boss;
+        public MonoBehaviour bossVictorySourceBehaviour;
         //NPC_Audio bossSound;
         public GameObject ChatCollider;
         public GameObject BossBar;
@@ -21,7 +22,7 @@ namespace Beavermania.Player.Combat
         //public GameObject BossSkipButton;
         BossDialogueInteractionSource dialogueInteractionSource;
         Coroutine victorySequenceCoroutine;
-        ScorpionScript subscribedBoss;
+        IBossVictorySource subscribedBossVictorySource;
         bool victorySequenceStarted;
 
         void Awake()
@@ -57,7 +58,7 @@ namespace Beavermania.Player.Combat
             ResolveBossReference();
             RefreshBossSubscription();
 
-            if (Boss == null)
+            if (ResolveBossVictorySource() == null)
             {
                 if (BossBar != null && BossBar.activeSelf)
                     BossBar.SetActive(false);
@@ -180,28 +181,29 @@ namespace Beavermania.Player.Combat
 
         void RefreshBossSubscription()
         {
-            if (subscribedBoss == Boss)
+            IBossVictorySource currentSource = ResolveBossVictorySource();
+            if (ReferenceEquals(subscribedBossVictorySource, currentSource))
                 return;
 
             UnsubscribeFromBoss();
 
-            if (Boss == null)
+            if (currentSource == null)
                 return;
 
-            Boss.Defeated += OnBossDefeated;
-            subscribedBoss = Boss;
+            currentSource.Defeated += OnBossDefeated;
+            subscribedBossVictorySource = currentSource;
         }
 
         void UnsubscribeFromBoss()
         {
-            if (subscribedBoss == null)
+            if (subscribedBossVictorySource == null)
                 return;
 
-            subscribedBoss.Defeated -= OnBossDefeated;
-            subscribedBoss = null;
+            subscribedBossVictorySource.Defeated -= OnBossDefeated;
+            subscribedBossVictorySource = null;
         }
 
-        void OnBossDefeated(ScorpionScript defeatedBoss)
+        void OnBossDefeated(IBossVictorySource defeatedBoss)
         {
             if (victorySequenceStarted)
                 return;
@@ -218,6 +220,17 @@ namespace Beavermania.Player.Combat
 
             StopVictorySequence();
             victorySequenceCoroutine = StartCoroutine(TriggerVictoryAfterDelay(defeatedBoss != null ? defeatedBoss.VictoryDelay : 0f));
+        }
+
+        IBossVictorySource ResolveBossVictorySource()
+        {
+            if (bossVictorySourceBehaviour is IBossVictorySource configuredSource)
+                return configuredSource;
+
+            if (Boss != null)
+                return Boss;
+
+            return null;
         }
 
         IEnumerator TriggerVictoryAfterDelay(float delaySeconds)

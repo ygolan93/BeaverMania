@@ -276,6 +276,19 @@ namespace Beavermania.NPC
             PlayerHealth.Plattering = "Gotcha!";
             PlayerHealth.ChangeSpeech = 0.55f;
             PooledOneShotVfx.Spawn(Explosion, transform.position + new Vector3(0, 1, 0), transform.rotation);
+
+            // Boss-summoned wasps die light: a couple of short-lived debris and no currency drop, so the
+            // Wasp Queen arena does not fill up with corpses. World-placed wasps keep their full death below.
+            BossSummonedWasp summonMarker = GetComponent<BossSummonedWasp>();
+            if (summonMarker != null)
+            {
+                float summonDebrisLifetime = summonMarker.DebrisLifetime;
+                PooledDeathDebris.Spawn(Body, transform.position + new Vector3(0, 1, 0), transform.rotation, summonDebrisLifetime);
+                PooledDeathDebris.Spawn(Wing, transform.position + new Vector3(0, 1, 0), transform.rotation, summonDebrisLifetime);
+                GameObject.Destroy(gameObject);
+                return;
+            }
+
             PooledDeathDebris.Spawn(Body, transform.position + new Vector3(0, 1, 0), transform.rotation);
             PooledDeathDebris.Spawn(Head, transform.position + new Vector3(0, 1, 0), transform.rotation);
             PooledDeathDebris.Spawn(Wing, transform.position + new Vector3(0, 1, 0), transform.rotation);

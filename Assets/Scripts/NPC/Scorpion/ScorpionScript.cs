@@ -10,7 +10,7 @@ namespace Beavermania.NPC
 {
     [DisallowMultipleComponent]
     [RequireComponent(typeof(Rigidbody))]
-    public class ScorpionScript : MonoBehaviour, IEnemyDamageReceiver
+    public class ScorpionScript : MonoBehaviour, IEnemyDamageReceiver, IBossVictorySource
     {
         const float LookRotationEpsilon = 0.0001f;
         const float ReverseSpeed = 5f;
@@ -98,9 +98,15 @@ namespace Beavermania.NPC
         public float rotationSpeed => ActiveStats.rotationSpeed;
         public float recoveryDuration => ActiveStats.recoveryDuration;
         public event Action<ScorpionScript> Defeated;
+        event Action<IBossVictorySource> IBossVictorySource.Defeated
+        {
+            add => genericDefeated += value;
+            remove => genericDefeated -= value;
+        }
         bool IsAggressive => combo >= Mathf.Max(0, comboLimit - 5);
         float ReverseDistanceThreshold => Mathf.Max(0f, chargeDistance - 10f);
         ScorpionStatsData ActiveStats => statsData != null ? statsData : ResolveFallbackStats();
+        Action<IBossVictorySource> genericDefeated;
 
         void Awake()
         {
@@ -402,6 +408,7 @@ namespace Beavermania.NPC
             }
 
             Defeated?.Invoke(this);
+            genericDefeated?.Invoke(this);
             gameObject.SetActive(false);
         }
 

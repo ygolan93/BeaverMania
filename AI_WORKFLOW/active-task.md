@@ -2,9 +2,11 @@
 
 > **Status (2026-06-20):** Active branch for this mixed task is `feature/Wasp-Queen`. Codex owns the Wasp Queen C# foundation and test coverage. Cursor owns prefab, scene, animator, collider, audio/VFX asset, and Play Mode wiring.
 
+> **Design decision (2026-07-01):** The Wasp Queen is a **warm-up boss** the player fights in Level 1 **before** the final **Scorpion** boss (planned encounter order: Wasp Queen → Scorpion). The Scorpion remains the final boss and the end-of-level victory owner. The Wasp Queen boss package (PR #182) is test-arena verified; wiring it as a gated warm-up encounter in the Level 1 flow (activate on approach/trigger, not on scene load; its defeat gates progression, not victory) is a follow-up integration task. See `AI_WORKFLOW/handoffs/cursor-to-codex.md` ("Level 1 boss design — Wasp Queen as warm-up boss").
+
 ## Current mixed task
 
-- Wasp Queen boss foundation for Level 1 combat scenes
+- Wasp Queen boss foundation for Level 1 combat scenes (shipped as a warm-up boss before the final Scorpion; see design decision above)
 
 ## Current owner split
 

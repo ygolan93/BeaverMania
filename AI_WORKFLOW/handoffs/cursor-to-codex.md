@@ -34,9 +34,23 @@ EditMode (`WaspQueenDecisionPlannerTests`, found broken during the run — were 
 - `ChooseAbility_ReturnsCharge_WhenPlayerAtMediumRange` then revealed that summon narrowly out-scores charge at distance 7 with equal weights (summon urgency boost when no minions are out: 6.25 vs 6.2). Parked summon on cooldown in that test to isolate the medium-range melee choice. PASS. (Note for Codex: this is intended planner behavior, not a bug, but worth a glance if charge-vs-summon balance at equal weights matters.)
 - `WaspQueenPrefabReferenceAuditTests.WaspQueenPrefabs_HaveNoBrokenReferences` PASS (confirms the production prefab refs).
 
-### Level 1 final boss (scope note, 2026-06-30)
+### Level 1 boss design — Wasp Queen as warm-up boss (updated 2026-07-01)
 
-Per product direction, the Level 1 final boss remains the **Scorpion**. Swapping Level 1 to the Wasp Queen (wiring `BossHandler.bossVictorySourceBehaviour`, objective/dialogue text, scene boss instance) is intentionally **out of scope for `feature/Wasp-Queen`** and will be handled on a separate branch. The Wasp Queen ships here as a self-contained boss package validated in `ShadowRevenantTestArena`.
+**Product decision (supersedes the 2026-06-30 note below):** The Wasp Queen is a **warm-up boss** the player fights in Level 1 **before** the final **Scorpion** boss. Level 1 is intended to have two sequential boss encounters: **Wasp Queen (warm-up) → Scorpion (final)**. The Wasp Queen is therefore intentionally present in the Level 1 scene (not a mistake, and no longer "out of scope").
+
+**Current state on this branch:** `Level 1 - Remastered - Steam` contains a `PF_WaspQueen_Boss` instance at `WaspQueen_ArenaCenter`. The instance does not override `ActivateOnStart`, so it inherits the prefab default `ActivateOnStart: 1` and currently activates on scene load rather than when the player reaches its arena.
+
+**Integration follow-up (NOT done on this branch — Codex/Cursor):**
+
+- Gate the warm-up encounter so the Wasp Queen activates on player approach or an arena trigger, not on scene load (e.g. set the instance `ActivateOnStart = false` and rely on proximity `activateRange`, or wire an arena entry trigger). Place/sequence it earlier in the level than the Scorpion arena.
+- Keep the Scorpion as the **final boss and victory owner**: `BossHandler.bossVictorySourceBehaviour` (or the legacy `Boss` field) must stay the Scorpion so end-of-level victory only fires on the Scorpion. The Wasp Queen's defeat should gate progression toward the Scorpion, **not** trigger the victory screen.
+- Consider whether the shared `PF_WaspQueen_Boss` prefab default `ActivateOnStart` should be `false` (proximity-gated) with the test arena instance opting into `true`, so production scenes never get an on-load boss.
+
+**Addresses Codex PR #182 review (P1 "Remove Wasp Queen from the Level 1 scene"):** the instance is intentional per the warm-up design; the valid part of that comment (activates on scene load) is captured as the gating follow-up above.
+
+#### Prior note (2026-06-30, superseded)
+
+Per the earlier product direction, the Level 1 final boss remained the Scorpion and a Wasp Queen scene instance was considered out of scope for `feature/Wasp-Queen`. The Wasp Queen still ships here as a self-contained boss package validated in `ShadowRevenantTestArena`; the warm-up-encounter wiring in Level 1 is the follow-up described above.
 
 ---
 

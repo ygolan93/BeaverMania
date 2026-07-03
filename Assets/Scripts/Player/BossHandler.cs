@@ -24,6 +24,8 @@ namespace Beavermania.Player.Combat
         Coroutine victorySequenceCoroutine;
         IBossVictorySource subscribedBossVictorySource;
         bool victorySequenceStarted;
+        float nextBossResolveTime;
+        const float BossResolveInterval = 1f;
 
         void Awake()
         {
@@ -55,7 +57,11 @@ namespace Beavermania.Player.Combat
         void Update()
         {
             ResolvePlayerReference();
-            ResolveBossReference();
+            if (Boss == null && Time.time >= nextBossResolveTime)
+            {
+                nextBossResolveTime = Time.time + BossResolveInterval;
+                ResolveBossReference();
+            }
             RefreshBossSubscription();
 
             if (ResolveBossVictorySource() == null)

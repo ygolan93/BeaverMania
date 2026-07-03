@@ -12,12 +12,15 @@ namespace Beavermania.NPC
         [SerializeField] Collider projectileCollider;
         [SerializeField] GameObject impactVfxPrefab;
 
+        System.Action<WaspQueenProjectile> releaseToPool;
         BeaverPlayerBehaviour player;
         float damage;
         float lifetimeRemaining;
         bool released = true;
 
         public bool IsActive => !released;
+
+        public void Bind(System.Action<WaspQueenProjectile> release) { releaseToPool = release; }
 
         public void Activate(
             Vector3 position,
@@ -94,7 +97,15 @@ namespace Beavermania.NPC
             if (projectileCollider != null)
                 projectileCollider.enabled = false;
 
-            Destroy(gameObject);
+            if (releaseToPool != null)
+            {
+                gameObject.SetActive(false);
+                releaseToPool(this);
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
         }
 
         void TryResolveHit(Collider other)

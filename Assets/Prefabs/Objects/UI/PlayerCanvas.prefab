@@ -169,9 +169,9 @@ RectTransform:
   m_Father: {fileID: 79328898206216985}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 0.5}
-  m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: 0.000061035156, y: 70.00005}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 190, y: -253}
   m_SizeDelta: {x: 139.3158, y: 27}
   m_Pivot: {x: 1, y: 1}
 --- !u!222 &787531826251949500
@@ -1701,6 +1701,7 @@ MonoBehaviour:
   textComponent: {fileID: 6210885109094129292}
   ContinueButton: {fileID: 2436256627559058714}
   SkipButton: {fileID: 8879559502671748015}
+  ShopButton: {fileID: 0}
   panel: {fileID: 5991993123178805627}
   dialogueData: {fileID: 11400000, guid: 79f2cfb928044ea3a35d146af8d061ba, type: 2}
   Merchant: {fileID: 0}
@@ -2952,6 +2953,7 @@ MonoBehaviour:
   textComponent: {fileID: 9149388777633750855}
   ContinueButton: {fileID: 6593705074441376747}
   SkipButton: {fileID: 406628964665054243}
+  ShopButton: {fileID: 0}
   panel: {fileID: 7548159896987431503}
   dialogueData: {fileID: 11400000, guid: c9581441312b46b8a5bf2b70f5f8fc8a, type: 2}
   Merchant: {fileID: 0}
@@ -8350,7 +8352,7 @@ RectTransform:
   m_Children:
   - {fileID: 8281943336491452799}
   m_Father: {fileID: 79328898206216985}
-  m_RootOrder: 3
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
@@ -11378,7 +11380,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 56, y: 80}
+  m_AnchoredPosition: {x: 980, y: 341}
   m_SizeDelta: {x: 382, y: 104}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!222 &2405199762443094178
@@ -12211,7 +12213,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 60, y: -116}
+  m_AnchoredPosition: {x: 53, y: -241}
   m_SizeDelta: {x: 132.74121, y: 27}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!222 &589324091947621676
@@ -13250,12 +13252,12 @@ RectTransform:
   m_Children:
   - {fileID: 5811732079048242269}
   m_Father: {fileID: 79328898206216985}
-  m_RootOrder: 0
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 0.5}
-  m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -0, y: -40.499947}
-  m_SizeDelta: {x: 139.3158, y: 27.7366}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 191.99997, y: -189}
+  m_SizeDelta: {x: 139.3158, y: 27.736603}
   m_Pivot: {x: 1, y: 1}
 --- !u!222 &8178238688286454842
 CanvasRenderer:
@@ -15590,6 +15592,7 @@ MonoBehaviour:
   textComponent: {fileID: 3721008020309903161}
   ContinueButton: {fileID: 3947468820382612090}
   SkipButton: {fileID: 1339860330313813918}
+  ShopButton: {fileID: 0}
   panel: {fileID: 5661261204536247142}
   dialogueData: {fileID: 11400000, guid: 6c79e200a1554643b07f7e4bb56f1d1c, type: 2}
   Merchant: {fileID: 0}
@@ -15658,10 +15661,10 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 4465567383747084429}
   - {fileID: 8281943336737566938}
   - {fileID: 8281943335477456050}
   - {fileID: 3664632415969327228}
+  - {fileID: 4465567383747084429}
   - {fileID: 5032573199306989807}
   - {fileID: 5328541176756260780}
   m_Father: {fileID: 6569126030801917452}
@@ -16495,6 +16498,7 @@ MonoBehaviour:
   textComponent: {fileID: 4371064666631117352}
   ContinueButton: {fileID: 2124970683539647101}
   SkipButton: {fileID: 1757886617654388171}
+  ShopButton: {fileID: 0}
   panel: {fileID: 7368660946635415142}
   dialogueData: {fileID: 11400000, guid: fdd678ca5e5b4d379d46ec159d47b897, type: 2}
   Merchant: {fileID: 0}
@@ -17270,6 +17274,7 @@ MonoBehaviour:
   textComponent: {fileID: 7532686631890966707}
   ContinueButton: {fileID: 688190201841356966}
   SkipButton: {fileID: 4653911391456421066}
+  ShopButton: {fileID: 0}
   panel: {fileID: 6488950941198817778}
   dialogueData: {fileID: 11400000, guid: 563dd627ce1245efb3a6eb108f9ac1dc, type: 2}
   Merchant: {fileID: 0}
@@ -17599,6 +17604,7 @@ MonoBehaviour:
   textComponent: {fileID: 1874904063595934037}
   ContinueButton: {fileID: 8920610960199753868}
   SkipButton: {fileID: 8836186823830614011}
+  ShopButton: {fileID: 0}
   panel: {fileID: 2009297161225022612}
   dialogueData: {fileID: 11400000, guid: c35ce8e7637747e58bc6b74341d99ba2, type: 2}
   Merchant: {fileID: 0}
@@ -18311,7 +18317,7 @@ RectTransform:
   m_Children:
   - {fileID: 8281943337073298243}
   m_Father: {fileID: 79328898206216985}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
@@ -23319,7 +23325,7 @@ RectTransform:
   m_Children:
   - {fileID: 8281943336231821100}
   m_Father: {fileID: 79328898206216985}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
@@ -28640,6 +28646,7 @@ MonoBehaviour:
   textComponent: {fileID: 3463994527286014932}
   ContinueButton: {fileID: 1937037160652208781}
   SkipButton: {fileID: 6334150580774003261}
+  ShopButton: {fileID: 0}
   panel: {fileID: 7221408797744826299}
   dialogueData: {fileID: 11400000, guid: baf2b1f4983141069ee261ea591a597d, type: 2}
   Merchant: {fileID: 0}

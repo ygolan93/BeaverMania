@@ -261,6 +261,32 @@ namespace Beavermania.Player
         Transform cachedMainCameraTransform;
         const float LookRotationEpsilon = 0.0001f;
 
+        static readonly int AnimWalk = Animator.StringToHash("walk");
+        static readonly int AnimStrafeForward = Animator.StringToHash("strafeForward");
+        static readonly int AnimStrafeBack = Animator.StringToHash("strafeBack");
+        static readonly int AnimStrafeLeft = Animator.StringToHash("strafeLeft");
+        static readonly int AnimStrafeRight = Animator.StringToHash("strafeRight");
+        static readonly int AnimClimb = Animator.StringToHash("climb");
+        static readonly int AnimArmor = Animator.StringToHash("armor");
+        static readonly int AnimRun = Animator.StringToHash("run");
+        static readonly int AnimRoll = Animator.StringToHash("roll");
+        static readonly int AnimShieldParry = Animator.StringToHash("shieldParry");
+        static readonly int AnimSlash = Animator.StringToHash("slash");
+        static readonly int AnimFight = Animator.StringToHash("fight");
+        static readonly int AnimMidair = Animator.StringToHash("midair");
+        static readonly int AnimParry = Animator.StringToHash("Parry");
+        static readonly int AnimHammerParry = Animator.StringToHash("HammerParry");
+        static readonly int AnimCrouch = Animator.StringToHash("crouch");
+        static readonly int AnimAim = Animator.StringToHash("aim");
+        static readonly int AnimDraw = Animator.StringToHash("draw");
+        static readonly int AnimMoving = Animator.StringToHash("moving");
+
+        static readonly RaycastHit[] s_bowAimHits = new RaycastHit[16];
+        static readonly System.Comparison<RaycastHit> s_hitDistCompare = (a, b) => a.distance.CompareTo(b.distance);
+
+        ScorpionScript cachedScorpionScript;
+        GameObject cachedScorpionObject;
+
         public PlayerCombatBalanceData CombatBalance => combatBalance;
         public WeaponData EquippedWeaponData => weaponLoadout != null ? weaponLoadout.EquippedWeapon : null;
 
@@ -514,7 +540,13 @@ namespace Beavermania.Player
         {
             if (OBJ.gameObject.CompareTag("Scorpion"))
             {
-                scorpAttack = OBJ.gameObject.GetComponent<ScorpionScript>().isAttacking;
+                if (cachedScorpionObject != OBJ.gameObject)
+                {
+                    cachedScorpionObject = OBJ.gameObject;
+                    cachedScorpionScript = OBJ.gameObject.GetComponent<ScorpionScript>();
+                }
+                if (cachedScorpionScript != null)
+                    scorpAttack = cachedScorpionScript.isAttacking;
             }
             if (OBJ.gameObject.CompareTag("Tile"))
             {
@@ -678,7 +710,7 @@ namespace Beavermania.Player
                     rotGoal = Quaternion.LookRotation(Direction);
                     transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
                 }
-                Otter.SetBool("walk", true);
+                Otter.SetBool(AnimWalk, true);
             }
             //Strafe
             if (keepLooking == true)
@@ -692,32 +724,32 @@ namespace Beavermania.Player
                     rotGoal = Quaternion.LookRotation(flatFace);
                     transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, steer);
                 }
-                Otter.SetBool("walk", false);
+                Otter.SetBool(AnimWalk, false);
                 if (PlayerInputReader.IsMoveForwardHeld())
                 {
-                    Otter.SetBool("strafeForward", true);
+                    Otter.SetBool(AnimStrafeForward, true);
                 }
                 if (PlayerInputReader.IsMoveBackHeld())
                 {
-                    Otter.SetBool("strafeBack", true);
+                    Otter.SetBool(AnimStrafeBack, true);
                 }
                 if (PlayerInputReader.IsMoveLeftHeld())
                 {
-                    Otter.SetBool("strafeLeft", true);
+                    Otter.SetBool(AnimStrafeLeft, true);
                 }
                 if (PlayerInputReader.IsMoveRightHeld())
                 {
-                    Otter.SetBool("strafeRight", true);
+                    Otter.SetBool(AnimStrafeRight, true);
                 }
             }
             //Stairs
             if (step==true)
             {
-                Otter.SetBool("climb", true);
+                Otter.SetBool(AnimClimb, true);
             }
             else
             {
-                Otter.SetBool("climb", false);
+                Otter.SetBool(AnimClimb, false);
             }
             //Sprint
             if (grounded == true)
@@ -726,22 +758,22 @@ namespace Beavermania.Player
                 {
                     if (ArmorEquipped==true)
                     {
-                        Otter.SetBool("armor", true);
+                        Otter.SetBool(AnimArmor, true);
                     }
                     if (ArmorEquipped == false)
                     {
-                        Otter.SetBool("armor", false);
+                        Otter.SetBool(AnimArmor, false);
                     }
                     if (step==false)
                     {
-                        Otter.SetBool("run", true);
+                        Otter.SetBool(AnimRun, true);
                         speed = Run;
                         steer = 0.12f;
                     }
                 }
                 else
                 {
-                    Otter.SetBool("run", false);
+                    Otter.SetBool(AnimRun, false);
                     speed = Walk;
                     steer = 0.1f;
                 }
@@ -765,7 +797,7 @@ namespace Beavermania.Player
                     if (ArmorEquipped)
                         InterruptSwordAttackPresentation();
                     Rolling = true;
-                    Otter.SetBool("roll", true);
+                    Otter.SetBool(AnimRoll, true);
                     CurrentStamina -= 0.1f;
                     speed = 7;
                     HealthBar.SetStamina(CurrentStamina);
@@ -774,7 +806,7 @@ namespace Beavermania.Player
                 if (!PlayerInputReader.IsRollHeld() || CurrentStamina <= 0 || grounded == false)
                 {
                     Rolling = false;
-                    Otter.SetBool("roll", false);
+                    Otter.SetBool(AnimRoll, false);
                 }
 
             }
@@ -1062,23 +1094,23 @@ namespace Beavermania.Player
         bool TryGetValidScreenCenterHit(Ray ray, float maxDist, LayerMask mask, out RaycastHit validHit)
         {
             validHit = default;
-            RaycastHit[] hits = Physics.RaycastAll(ray, maxDist, mask, QueryTriggerInteraction.Ignore);
-            if (hits == null || hits.Length == 0)
+            int count = Physics.RaycastNonAlloc(ray, s_bowAimHits, maxDist, mask, QueryTriggerInteraction.Ignore);
+            if (count == 0)
                 return false;
 
-            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+            System.Array.Sort(s_bowAimHits, 0, count, Comparer<RaycastHit>.Create(s_hitDistCompare));
             float minCameraHit = Mathf.Max(0.1f, minFireBreathCameraHitDistance);
 
-            for (var i = 0; i < hits.Length; i++)
+            for (int i = 0; i < count; i++)
             {
-                Collider col = hits[i].collider;
+                Collider col = s_bowAimHits[i].collider;
                 if (col == null || IsBowAimHitSelf(col))
                     continue;
 
-                if (hits[i].distance < minCameraHit)
+                if (s_bowAimHits[i].distance < minCameraHit)
                     continue;
 
-                validHit = hits[i];
+                validHit = s_bowAimHits[i];
                 return true;
             }
 
@@ -1087,8 +1119,9 @@ namespace Beavermania.Player
 
         Camera ResolveFireBreathAimCamera()
         {
-            if (Camera.main != null)
-                return Camera.main;
+            Camera main = Camera.main;
+            if (main != null)
+                return main;
 
             return ResolveBowAimCamera();
         }
@@ -1383,7 +1416,7 @@ namespace Beavermania.Player
             if (Otter == null)
                 return;
 
-            Otter.SetBool("shieldParry", active);
+            Otter.SetBool(AnimShieldParry, active);
         }
 
         void SetSlashAnimator(bool active)
@@ -1391,8 +1424,8 @@ namespace Beavermania.Player
             if (Otter == null)
                 return;
 
-            if (Otter.GetBool("slash") != active)
-                Otter.SetBool("slash", active);
+            if (Otter.GetBool(AnimSlash) != active)
+                Otter.SetBool(AnimSlash, active);
         }
 
         void SetAimMarkVisible(AimMarkSource source, bool visible)
@@ -1449,7 +1482,7 @@ namespace Beavermania.Player
                 if (baseState.IsName("HuricaneSword") || baseState.IsName("NewSwordJump"))
                     return true;
 
-                if (Otter.GetBool("slash"))
+                if (Otter.GetBool(AnimSlash))
                     return true;
             }
 
@@ -1470,7 +1503,7 @@ namespace Beavermania.Player
             if (Otter != null)
             {
                 SetSlashAnimator(false);
-                Otter.SetBool("fight", false);
+                Otter.SetBool(AnimFight, false);
                 SetShieldParryAnimator(false);
             }
 
@@ -1519,7 +1552,7 @@ namespace Beavermania.Player
             if (Otter == null)
                 return;
 
-            Otter.SetBool("fight", false);
+            Otter.SetBool(AnimFight, false);
             SetSlashAnimator(true);
         }
 
@@ -1573,7 +1606,7 @@ namespace Beavermania.Player
             {
                 SetSlashAnimator(false);
                 if (Otter != null)
-                    Otter.SetBool("fight", false);
+                    Otter.SetBool(AnimFight, false);
                 ResetHeadAnimatorLayer();
                 SyncSwordShieldAimMark();
             }
@@ -1677,7 +1710,7 @@ namespace Beavermania.Player
             if (Otter == null)
                 return;
 
-            Otter.SetBool("fight", false);
+            Otter.SetBool(AnimFight, false);
             SetSlashAnimator(true);
 
             if (grounded == false)
@@ -2044,7 +2077,7 @@ namespace Beavermania.Player
             GobletClock = BoostDurationSeconds;
 
             if (!grounded && Otter != null)
-                Otter.SetBool("midair", true);
+                Otter.SetBool(AnimMidair, true);
         }
 
         void ApplyDeferredGobletJumpLimitIfGrounded()
@@ -2088,28 +2121,28 @@ namespace Beavermania.Player
             {
                 if (HammerHeld == false)
                 {
-                    Otter.SetBool("Parry", true);
-                    Otter.SetBool("HammerParry", false);
+                    Otter.SetBool(AnimParry, true);
+                    Otter.SetBool(AnimHammerParry, false);
                 }
                 if (HammerHeld == true)
                 {
-                    Otter.SetBool("HammerParry", true);
-                    Otter.SetBool("Parry", false);
-                    Otter.SetBool("shieldParry", false);
+                    Otter.SetBool(AnimHammerParry, true);
+                    Otter.SetBool(AnimParry, false);
+                    Otter.SetBool(AnimShieldParry, false);
                 }
                 if (ArmorEquipped == true)
                 {
                     SetShieldParryAnimator(true);
-                    Otter.SetBool("Parry", false);
-                    Otter.SetBool("HammerParry", false);
+                    Otter.SetBool(AnimParry, false);
+                    Otter.SetBool(AnimHammerParry, false);
                 }
             }
             isParried = true;
         }
         public void ParryOFF()
         {
-            Otter.SetBool("Parry", false);
-            Otter.SetBool("HammerParry", false);
+            Otter.SetBool(AnimParry, false);
+            Otter.SetBool(AnimHammerParry, false);
             SetShieldParryAnimator(false);
             isParried = false;
         }
@@ -2467,7 +2500,7 @@ namespace Beavermania.Player
                 if (PlayerInputReader.WasJumpPressed() && JumpNum > 0)
                 {
                     Rolling = false;
-                    Otter.SetBool("roll", false);
+                    Otter.SetBool(AnimRoll, false);
                     if (Player.transform.parent != null)
                     {
                         Player.transform.parent = null;
@@ -2519,7 +2552,7 @@ namespace Beavermania.Player
                     if (!PlayerInputReader.IsMoveForwardHeld() || !PlayerInputReader.IsPrimaryHeld())
                     {
                         speed = 0;
-                        Otter.SetBool("crouch", true);
+                        Otter.SetBool(AnimCrouch, true);
                     }
                     if (Honeypicked == true)
                     {
@@ -2537,7 +2570,7 @@ namespace Beavermania.Player
                 {
                     Physics.IgnoreLayerCollision(gameObject.layer, 7, false);
                     HologramedBridge.SetActive(false);
-                    Otter.SetBool("crouch", false);
+                    Otter.SetBool(AnimCrouch, false);
                     ParryOFF();
                     HealingText = "";
                 }
@@ -2668,8 +2701,8 @@ namespace Beavermania.Player
                                 CurrentStamina -= 0.1f;
 
                             HealthBar.SetStamina(CurrentStamina);
-                            Otter.SetBool("fight", true);
-                            Otter.SetBool("slash", false);
+                            Otter.SetBool(AnimFight, true);
+                            Otter.SetBool(AnimSlash, false);
 
                             if (grounded == false)
                             {
@@ -2687,8 +2720,8 @@ namespace Beavermania.Player
                             }
                             else
                             {
-                                Otter.SetBool("fight", true);
-                                Otter.SetBool("slash", false);
+                                Otter.SetBool(AnimFight, true);
+                                Otter.SetBool(AnimSlash, false);
                             }
                         }
                     }
@@ -2699,8 +2732,8 @@ namespace Beavermania.Player
                             UpdateSwordShieldHeldMelee(false);
                         else
                         {
-                            Otter.SetBool("slash", false);
-                            Otter.SetBool("fight", false);
+                            Otter.SetBool(AnimSlash, false);
+                            Otter.SetBool(AnimFight, false);
                         }
 
                         Beat = 0;
@@ -2820,18 +2853,18 @@ namespace Beavermania.Player
 
             //Switch off additional animations if not invoked
             {
-                Otter.SetBool("walk", false);
-                Otter.SetBool("strafeForward", false);
-                Otter.SetBool("strafeBack", false);
-                Otter.SetBool("strafeLeft", false);
-                Otter.SetBool("strafeRight", false);
-                Otter.SetBool("climb", false);
-                Otter.SetBool("run", false);
-                Otter.SetBool("midair", false);
-                Otter.SetBool("roll", false);
+                Otter.SetBool(AnimWalk, false);
+                Otter.SetBool(AnimStrafeForward, false);
+                Otter.SetBool(AnimStrafeBack, false);
+                Otter.SetBool(AnimStrafeLeft, false);
+                Otter.SetBool(AnimStrafeRight, false);
+                Otter.SetBool(AnimClimb, false);
+                Otter.SetBool(AnimRun, false);
+                Otter.SetBool(AnimMidair, false);
+                Otter.SetBool(AnimRoll, false);
                 if (!arrowReady && !_stoneAimSessionActive)
-                    Otter.SetBool("aim", false);
-                //Otter.SetBool("draw", false);
+                    Otter.SetBool(AnimAim, false);
+                //Otter.SetBool(AnimDraw, false);
                 Rolling = false;
                 movementInvoked = false;
                 //keepLooking = false;
@@ -2858,7 +2891,7 @@ namespace Beavermania.Player
                         if (Stone != null)
                             Stone.SetActive(true);
                         ShowAimMarkForStoning();
-                        Otter.SetBool("aim", true);
+                        Otter.SetBool(AnimAim, true);
                         Otter.Play("Aim");
                         if (PlayerInputReader.WasInteractPressed())
                         {
@@ -2878,7 +2911,7 @@ namespace Beavermania.Player
                             && grounded;
                         if (!canMaintainStoneAim)
                         {
-                            Otter.SetBool("aim", false);
+                            Otter.SetBool(AnimAim, false);
                             if (Stone != null)
                                 Stone.SetActive(false);
                             HideAimMarkForStoning();
@@ -2891,7 +2924,7 @@ namespace Beavermania.Player
                     {
                         if (CurrentStamina > 0)
                         {
-                            Otter.SetBool("slash", false);
+                            Otter.SetBool(AnimSlash, false);
                             Otter.Play("Throw");
                             Transform stoneSpawnOrigin = AttackPoint != null ? AttackPoint : (Spine != null ? Spine : transform);
                             TryGetProjectileLaunchFromCameraCenter(
@@ -2911,7 +2944,7 @@ namespace Beavermania.Player
                             HealthBar.SetStamina(CurrentStamina);
                         }
 
-                        Otter.SetBool("aim", false);
+                        Otter.SetBool(AnimAim, false);
                         if (Stone != null)
                             Stone.SetActive(false);
                         HideAimMarkForStoning();
@@ -2946,8 +2979,8 @@ namespace Beavermania.Player
                                 arrowModel.SetActive(true);
                             if (bowString != null)
                                 bowString.SetActive(false);
-                            Otter.SetBool("draw", true);
-                            Otter.SetBool("aim", true);
+                            Otter.SetBool(AnimDraw, true);
+                            Otter.SetBool(AnimAim, true);
                             if (stringLine != null)
                             {
                                 stringLine.enabled = true;
@@ -2997,8 +3030,8 @@ namespace Beavermania.Player
                     }
                     else if (arrowReady)
                     {
-                        Otter.SetBool("draw", true);
-                        Otter.SetBool("aim", true);
+                        Otter.SetBool(AnimDraw, true);
+                        Otter.SetBool(AnimAim, true);
                     }
                 }
 
@@ -3124,21 +3157,21 @@ namespace Beavermania.Player
                 {
                     if (_restoreJumpLimitAfterGobletWhenGrounded || JumpNum < JumpLimit)
                     {
-                        Otter.SetBool("midair", true);
+                        Otter.SetBool(AnimMidair, true);
                     }
                     else if (JumpNum == JumpLimit)
                     {
-                        Otter.SetBool("midair", false);
+                        Otter.SetBool(AnimMidair, false);
                         FallClock -= Time.deltaTime;
                         if (FallClock <= 0)
-                            Otter.SetBool("midair", true);
+                            Otter.SetBool(AnimMidair, true);
                     }
                 }
                 if (grounded == true)
                 {
                     ApplyDeferredGobletJumpLimitIfGrounded();
                     JumpNum = JumpLimit;
-                    Otter.SetBool("midair", false);
+                    Otter.SetBool(AnimMidair, false);
                     levitation = 10;
                     Otter.speed = AnimSpeed;
                     if (movementInvoked == false && Player.velocity.magnitude >= 6)
@@ -3171,12 +3204,12 @@ namespace Beavermania.Player
                             transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.5f);
                         }
                     }
-                    Otter.SetBool("moving", true);
+                    Otter.SetBool(AnimMoving, true);
                     SetParticleEmissionEnabled(SlideEffect, true);
                 }
                 if (neutralAndMoving == false)
                 {
-                    Otter.SetBool("moving", false);
+                    Otter.SetBool(AnimMoving, false);
                     SetParticleEmissionEnabled(SlideEffect, false);
                 }
             }
@@ -3296,7 +3329,7 @@ namespace Beavermania.Player
                     if (playEquipAnim)
                         Otter.Play("Disarm");
                     HammerHeld = false;
-                    Otter.SetBool("armor", false);
+                    Otter.SetBool(AnimArmor, false);
                     if (RightHandWeapon != null)
                         RightHandWeapon.SetActive(false);
                     if (LeftHandWeapon != null)
@@ -3312,7 +3345,7 @@ namespace Beavermania.Player
                     if (playEquipAnim)
                         Otter.Play("Equip");
                     HammerHeld = true;
-                    Otter.SetBool("armor", false);
+                    Otter.SetBool(AnimArmor, false);
                     if (RightHandWeapon != null)
                         RightHandWeapon.SetActive(true);
                     if (LeftHandWeapon != null)
@@ -3329,7 +3362,7 @@ namespace Beavermania.Player
                         Otter.Play("Equip");
                     CountArrows();
                     HammerHeld = false;
-                    Otter.SetBool("armor", false);
+                    Otter.SetBool(AnimArmor, false);
                     if (RightHandWeapon != null)
                         RightHandWeapon.SetActive(false);
                     if (LeftHandWeapon != null)
@@ -3345,7 +3378,7 @@ namespace Beavermania.Player
                     if (playEquipAnim)
                         Otter.Play("Equip");
                     HammerHeld = false;
-                    Otter.SetBool("armor", true);
+                    Otter.SetBool(AnimArmor, true);
                     if (RightHandWeapon != null)
                         RightHandWeapon.SetActive(false);
                     if (LeftHandWeapon != null)
@@ -3373,8 +3406,8 @@ namespace Beavermania.Player
                 bowString.SetActive(true);
             if (Otter != null)
             {
-                Otter.SetBool("draw", false);
-                Otter.SetBool("aim", false);
+                Otter.SetBool(AnimDraw, false);
+                Otter.SetBool(AnimAim, false);
             }
             HideAimMarkForBow();
             arrowReady = false;

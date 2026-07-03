@@ -12,6 +12,7 @@ namespace Beavermania.NPC
         [Tooltip("Radius (world units) the active fog visual reads well at when activeRoot localScale is 1.")]
         [SerializeField] float activeVisualBaseRadius = 3f;
 
+        System.Action<WaspQueenPoisonZone> releaseToPool;
         BeaverPlayerBehaviour player;
         float telegraphRemaining;
         float activeDurationRemaining;
@@ -22,6 +23,8 @@ namespace Beavermania.NPC
         bool damagePhaseActive;
 
         public bool IsActive => !released;
+
+        public void Bind(System.Action<WaspQueenPoisonZone> release) { releaseToPool = release; }
 
         public void Activate(
             Vector3 position,
@@ -111,7 +114,15 @@ namespace Beavermania.NPC
             if (zoneCollider != null)
                 zoneCollider.enabled = false;
 
-            Destroy(gameObject);
+            if (releaseToPool != null)
+            {
+                gameObject.SetActive(false);
+                releaseToPool(this);
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
         }
 
         void BeginDamagePhase()

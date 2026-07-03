@@ -8,17 +8,23 @@ namespace Beavermania.Objects
     public class RotateUI : MonoBehaviour
     {
         const float LookRotationEpsilon = 0.0001f;
-       GameObject CameraTarget;
+        const float CameraRetryInterval = 2f;
+
+        GameObject CameraTarget;
         public Vector3 Distance;
+        float nextCameraRetryTime;
+
         private void Awake()
         {
             CameraTarget = GameObject.FindGameObjectWithTag("MainCamera");
-
         }
+
         private void Update()
         {
             if (CameraTarget == null)
             {
+                if (Time.time < nextCameraRetryTime) return;
+                nextCameraRetryTime = Time.time + CameraRetryInterval;
                 CameraTarget = GameObject.FindGameObjectWithTag("MainCamera");
                 if (CameraTarget == null)
                     return;
@@ -31,6 +37,5 @@ namespace Beavermania.Objects
                 transform.rotation = Quaternion.Slerp(transform.rotation, rotGoal, 0.1f);
             }
         }
-
     }
 }

@@ -12,13 +12,19 @@ namespace Beavermania.UI.Hud
         public BeaverPlayer Player;
         public TextMeshProUGUI PlatetringText;
 
-        // Update is called once per frame
+        string lastPlattering;
+
         void Update()
         {
             if (PlatetringText == null || Player == null)
                 return;
 
-            PlatetringText.text = Player.Plattering ?? string.Empty;
+            string current = Player.Plattering ?? string.Empty;
+            if (current != lastPlattering)
+            {
+                lastPlattering = current;
+                PlatetringText.text = current;
+            }
         }
     }
 }

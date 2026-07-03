@@ -15,6 +15,7 @@ namespace Beavermania.Display
         const string DefaultFootstepMaterialPath = "Assets/Materials/VFX/M_FootstepDust_Cartoon.mat";
 
         static Material s_runtimeFallbackMaterial;
+        static readonly RaycastHit[] s_footstepHits = new RaycastHit[8];
 
         [SerializeField] FootstepSurfaceEffectProfile surfaceProfile;
         [SerializeField] Material footstepParticleMaterial;
@@ -27,6 +28,7 @@ namespace Beavermania.Display
 
         readonly Queue<ParticleSystem> proceduralPool = new();
         float nextAllowedStepTime;
+        WaitForSeconds cachedReturnWait;
 
         void Awake()
         {
@@ -73,25 +75,30 @@ namespace Beavermania.Display
         {
             Transform origin = raycastOrigin != null ? raycastOrigin : transform;
             Vector3 start = origin.position + Vector3.up * originHeight;
-            RaycastHit[] hits = Physics.RaycastAll(start, Vector3.down, raycastDistance, groundLayers, QueryTriggerInteraction.Ignore);
-            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+            int count = Physics.RaycastNonAlloc(start, Vector3.down, s_footstepHits, raycastDistance, groundLayers, QueryTriggerInteraction.Ignore);
+            if (count == 0) { hit = default; rule = default; return false; }
 
-            for (int i = 0; i < hits.Length; i++)
+            int closestIndex = -1;
+            float closestDist = float.MaxValue;
+            for (int i = 0; i < count; i++)
             {
-                Collider hitCollider = hits[i].collider;
+                Collider hitCollider = s_footstepHits[i].collider;
                 if (hitCollider == null || IsOwnedCollider(hitCollider))
                     continue;
-
-                hit = hits[i];
-                rule = surfaceProfile != null
-                    ? surfaceProfile.Resolve(hit)
-                    : ResolveDefaultSurface(hit);
-                return true;
+                if (s_footstepHits[i].distance < closestDist)
+                {
+                    closestDist = s_footstepHits[i].distance;
+                    closestIndex = i;
+                }
             }
 
-            hit = default;
-            rule = default;
-            return false;
+            if (closestIndex < 0) { hit = default; rule = default; return false; }
+
+            hit = s_footstepHits[closestIndex];
+            rule = surfaceProfile != null
+                ? surfaceProfile.Resolve(hit)
+                : ResolveDefaultSurface(hit);
+            return true;
         }
 
         bool IsOwnedCollider(Collider collider)
@@ -174,8 +181,10 @@ namespace Beavermania.Display
             if (particles == null)
                 yield break;
 
-            float lifetime = GetLifetime(particles);
-            yield return new WaitForSeconds(lifetime);
+            if (cachedReturnWait == null)
+                cachedReturnWait = new WaitForSeconds(GetLifetime(particles));
+
+            yield return cachedReturnWait;
 
             if (particles == null)
                 yield break;

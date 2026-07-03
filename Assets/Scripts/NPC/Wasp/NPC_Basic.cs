@@ -14,6 +14,13 @@ namespace Beavermania.NPC
 
     public class NPC_Basic : MonoBehaviour
     {
+        static readonly HashSet<NPC_Basic> s_activeWasps = new HashSet<NPC_Basic>();
+        public static IReadOnlyCollection<NPC_Basic> ActiveWasps => s_activeWasps;
+
+        static readonly int AnimSting = Animator.StringToHash("Sting");
+        static readonly int AnimBeat = Animator.StringToHash("Beat");
+        static readonly int AnimStunned = Animator.StringToHash("Stunned");
+
         const float LookRotationEpsilon = 0.0001f;
         const float AnotherWaspLookupCooldown = 1.0f;
         const float FarAiUpdateDistance = 40f;
@@ -103,7 +110,9 @@ namespace Beavermania.NPC
         public GameObject Wing;
         public GameObject Leg;
         public GameObject Reward;
-        // Start is called before the first frame update    
+        void OnEnable() { s_activeWasps.Add(this); }
+        void OnDisable() { s_activeWasps.Remove(this); }
+
         public void Start()
         {
             SpawnPos = transform.position;
@@ -147,7 +156,7 @@ namespace Beavermania.NPC
             {
                 if (floating == true)
                 {
-                    Wasp.SetBool("Sting", false);
+                    Wasp.SetBool(AnimSting, false);
                     currentPos = transform.position;
                     FloatOnAir(currentPos);
                 }
@@ -161,7 +170,7 @@ namespace Beavermania.NPC
                         if (ChangeNav <= 0)
                         {
                             BuzzSource.SetActive(true);
-                            Wasp.SetBool("Sting", false);
+                            Wasp.SetBool(AnimSting, false);
                             RandoMovement();
                         }
                         else
@@ -182,12 +191,12 @@ namespace Beavermania.NPC
                                 Physics.IgnoreCollision(AnotherWaspCollider, npcCollider);
                             }
                             NPC.velocity = (Distance.normalized * 50f);
-                            Wasp.SetBool("Sting", true);
+                            Wasp.SetBool(AnimSting, true);
                             ChangeNav = 0;
                         }
                         if (Contact == true)
                         {
-                            Wasp.SetBool("Sting", false);
+                            Wasp.SetBool(AnimSting, false);
                             NPC.AddForce(new Vector3(-Distance.x, 0.01f, -Distance.z).normalized * 0.1f);
                             if (Distance.sqrMagnitude > LookRotationEpsilon)
                                 transform.rotation = (Quaternion.LookRotation(Distance));
@@ -221,7 +230,7 @@ namespace Beavermania.NPC
         { 
             if (!PlayerInputReader.IsPrimaryHeld() || Distance.magnitude > 6)
             {
-                Wasp.SetBool("Beat", false);
+                Wasp.SetBool(AnimBeat, false);
             }
             if (CurrentHealth <= 0)
             {
@@ -245,22 +254,12 @@ namespace Beavermania.NPC
             AnotherWasp = null;
             AnotherWaspCollider = null;
 
-            GameObject[] npcs = GameObject.FindGameObjectsWithTag("NPC");
-            foreach (GameObject npc in npcs)
+            foreach (NPC_Basic other in s_activeWasps)
             {
-                if (npc == null || npc == gameObject)
-                {
-                    continue;
-                }
-
-                Collider collider = npc.GetComponent<Collider>();
-                if (collider == null)
-                {
-                    continue;
-                }
-
-                AnotherWasp = npc;
-                AnotherWaspCollider = collider;
+                if (other == null || other == this) continue;
+                if (other.npcCollider == null) continue;
+                AnotherWasp = other.gameObject;
+                AnotherWaspCollider = other.npcCollider;
                 return;
             }
         }
@@ -325,7 +324,7 @@ namespace Beavermania.NPC
             }
             if (OBJ.gameObject.CompareTag("Damage"))
             {
-                Wasp.SetBool("Beat", true);
+                Wasp.SetBool(AnimBeat, true);
                 TakeDamage(ActiveStats.weaponHitDamage);
                 Sound.Beat();
                 combo = hit2stun;
@@ -339,7 +338,7 @@ namespace Beavermania.NPC
         public void TurnBack()
         {
             BuzzSource.SetActive(true);
-            Wasp.SetBool("Sting", false);
+            Wasp.SetBool(AnimSting, false);
             if ((transform.position - SpawnPos).magnitude > 30)
             {
                 NPC.velocity = (SpawnPos - transform.position).normalized * 10;
@@ -374,15 +373,15 @@ namespace Beavermania.NPC
             floating = false;
             NPC.constraints = RigidbodyConstraints.None;
             NPC.useGravity = true;
-            Wasp.SetBool("Stunned", true);
-            Wasp.SetBool("Sting", false);
+            Wasp.SetBool(AnimStunned, true);
+            Wasp.SetBool(AnimSting, false);
         }
 
         void Recovered()
         {
             BuzzSource.SetActive(true);
             floating = false;
-            Wasp.SetBool("Stunned", false);
+            Wasp.SetBool(AnimStunned, false);
             stunRecoveryClock = ActiveStats.stunRecovery;
             NPC.constraints = RigidbodyConstraints.FreezeRotation;
             NPC.useGravity = false;
@@ -396,7 +395,7 @@ namespace Beavermania.NPC
                 Sound.Sting();
                 PlayerHealth.TakeDamage(Damage2Player);
             }
-            Wasp.SetBool("Sting", false);
+            Wasp.SetBool(AnimSting, false);
             if (PlayerHealth.isParried == true)
             {
                 PlayerHealth.TakeDamage(0.01f);
@@ -432,8 +431,8 @@ namespace Beavermania.NPC
                 transform.rotation = rotGoal;
             }
             NPC.useGravity = true;
-            Wasp.SetBool("Beat", true);
-            Wasp.SetBool("Sting", false);
+            Wasp.SetBool(AnimBeat, true);
+            Wasp.SetBool(AnimSting, false);
             CurrentHealth -= Damage;
             var playerArsenal = PlayerHealth.Arsenal;
             var currentWeapon = PlayerHealth.arsenalBrowser;

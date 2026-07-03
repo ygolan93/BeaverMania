@@ -8,13 +8,34 @@ Steam release candidate stability.
 
 - Level 1 Remastered integration and stability.
 - **Level 1 north forest FPS** — pass 1 done (terrain draw distances); pass 2 open (canopy fill-rate / open-sky sightline).
+- **FPS script-level remediation (2026-07-03)** — Phase 1–3 implemented (see below). Phase 4 Play Mode verification pending.
 - Trader UI, dialogue, and shop flow.
 - Player combat polish.
 - FireBreath, SwordGlare, Bow, and Stoning regression risks.
 - Audio balance and SFX/music routing.
-- FPS and rendering optimization.
 
 Large architecture work should be deferred unless it directly stabilizes the Steam release candidate.
+
+## FPS Performance Remediation (2026-07-03, Cursor-owned)
+
+Script-level hot-path optimizations across Level 1 Remastered. All changes are behavior-preserving.
+
+**Completed:**
+
+- **Task A — BeaverPlayerBehaviour:** 19 cached animator hash IDs (~68 string→int SetBool/GetBool replacements), `RaycastNonAlloc` for bow aim, cached `ScorpionScript` in `OnTriggerStay`, fixed double `Camera.main`.
+- **Task B — NPC_Basic:** static `HashSet<NPC_Basic>` wasp registry replacing `FindGameObjectsWithTag("NPC")` O(n²), `OnEnable`/`OnDisable` lifecycle, 3 cached animator hashes (13 call sites).
+- **Task C — AnimatedAttack + FootstepVfxEmitter:** `OverlapSphereNonAlloc` (32-element buffer), `RaycastNonAlloc` with closest-hit scan, cached `WaitForSeconds`.
+- **Task D — Polling throttles:** `EnemyHealthBarVisibility` 0.25s with randomized offset, `UpdatePlattering` dirty-check, `BossHandler` 1s resolve throttle, `RotateUI` 2s camera retry.
+- **Task E — WaspQueenPoolHub:** new `ObjectPool<T>` hub for projectiles and poison zones (mirrors `ShadowRevenantPoolHub`). `WaspQueenProjectile` and `WaspQueenPoisonZone` support pool release callbacks. Summoned wasps remain `Instantiate`/`Destroy` (NPC_Basic.Death self-destructs).
+- **Task G — QualitySettings:** Standalone default changed from Ultra (index 2) to Medium (index 1). Runtime `FrameBudgetGovernor` can step up if headroom exists.
+
+**Manual work remaining:**
+
+- **Task F — Debris colliders (user):** Replace `MeshCollider` (convex) with `SphereCollider` on `NewHive.prefab` and ScorpionBoss explosion debris children.
+- **Task E inspector wiring:** Add `WaspQueenPoolHub` component to `PF_WaspQueen_Boss` prefab, assign `config` and `poolRoot`.
+- **Play Mode verification (Task H):** Full checklist in plan file `fps_perf_implementation_bb9e18cf.plan.md`.
+
+**CI note:** `dotnet build .ci/BeaverMania.CI.csproj` fails with pre-existing `UnityEngine could not be found` assembly reference errors (affects all files including untouched ones). No new compilation errors introduced.
 
 ## Recent Branch Activity (`fix/log-carry-animation-load`, as of 2026-06-13)
 

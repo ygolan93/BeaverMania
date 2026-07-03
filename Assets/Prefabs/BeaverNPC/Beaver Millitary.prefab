@@ -49,12 +49,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b613b49d73dcc940951bad3d5a63d5a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  wayPoints: []
+  beavers: []
+  currentPoint: 0
+  isHIT: 0
   steer: 0.12
   speed: 1.5
   heading: 0
-  time2turn: 4
-  time2REST: 4
+  wait: 4
   MaxHealth: 2000
+  moveClock: 0
   Wander: {x: 0, y: 0, z: 0}
   rotGoal: {x: 0, y: 0, z: 0, w: 0}
 --- !u!95 &6770568348554882656

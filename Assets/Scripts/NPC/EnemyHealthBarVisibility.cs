@@ -13,7 +13,10 @@ namespace Beavermania.NPC
         [SerializeField] bool alwaysShow;
         [SerializeField] ShadowRevenantController shadowRevenant;
 
+        const float VisibilityCheckInterval = 0.25f;
+
         float damagedVisibleUntil;
+        float nextVisibilityCheck;
         NPC_Basic wasp;
 
         void Awake()
@@ -27,6 +30,8 @@ namespace Beavermania.NPC
             wasp = GetComponentInParent<NPC_Basic>();
             if (wasp == null)
                 wasp = GetComponent<NPC_Basic>();
+
+            nextVisibilityCheck = Time.time + Random.Range(0f, VisibilityCheckInterval);
         }
 
         void Start()
@@ -43,6 +48,8 @@ namespace Beavermania.NPC
 
         void Update()
         {
+            if (Time.time < nextVisibilityCheck) return;
+            nextVisibilityCheck = Time.time + VisibilityCheckInterval;
             ApplyVisibility(ShouldShowHealthBar());
         }
 

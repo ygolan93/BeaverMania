@@ -21,6 +21,8 @@ namespace Beavermania.Player.Combat
         const float FallbackBareHandsGroundRadius = 0.7f;
         const float FallbackBareHandsAirRadius = 2.5f;
 
+        static readonly Collider[] s_hitBuffer = new Collider[32];
+
         private void Start()
         {
             Player = transform.parent.GetComponent<BeaverPlayer>();
@@ -40,9 +42,10 @@ namespace Beavermania.Player.Combat
 
         public void CauseDamage(Vector3 origin, float range, int Damage)
         {
-            Collider[] hitEnemies = Physics.OverlapSphere(origin, range, enemyLayers);
-            foreach (Collider enemy in hitEnemies)
+            int count = Physics.OverlapSphereNonAlloc(origin, range, s_hitBuffer, enemyLayers);
+            for (int i = 0; i < count; i++)
             {
+                Collider enemy = s_hitBuffer[i];
                 if (enemy == null)
                     continue;
 

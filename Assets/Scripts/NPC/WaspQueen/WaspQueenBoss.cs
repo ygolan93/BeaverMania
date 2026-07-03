@@ -96,6 +96,9 @@ namespace Beavermania.NPC
         [Tooltip("Optional arena anchor. If unassigned, the boss captures its spawn position as the arena center.")]
         [SerializeField] Transform arenaCenter;
 
+        [Header("Pooling")]
+        [SerializeField] WaspQueenPoolHub poolHub;
+
         readonly List<GameObject> activeSummonedWasps = new List<GameObject>(8);
         readonly List<WaspQueenProjectile> activeProjectiles = new List<WaspQueenProjectile>(4);
         readonly List<WaspQueenPoisonZone> activePoisonZones = new List<WaspQueenPoisonZone>(4);
@@ -1043,13 +1046,14 @@ namespace Beavermania.NPC
                 direction = transform.forward;
 
             TrimProjectileCap();
-            WaspQueenProjectile projectile = Instantiate(
-                Config.poisonProjectilePrefab,
-                origin,
-                Quaternion.LookRotation(direction.normalized, Vector3.up));
+            Quaternion projectileRotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
+            WaspQueenProjectile projectile = poolHub != null
+                ? poolHub.SpawnProjectile(origin, projectileRotation)
+                : Instantiate(Config.poisonProjectilePrefab, origin, projectileRotation);
+            if (projectile == null) return;
             projectile.Activate(
                 origin,
-                Quaternion.LookRotation(direction.normalized, Vector3.up),
+                projectileRotation,
                 direction,
                 Player,
                 CurrentPhase().rangedDamage,
@@ -1065,7 +1069,10 @@ namespace Beavermania.NPC
                 return;
 
             TrimPoisonZoneCap();
-            WaspQueenPoisonZone poisonZone = Instantiate(Config.poisonZonePrefab, cachedAoeTargetPosition, Quaternion.identity);
+            WaspQueenPoisonZone poisonZone = poolHub != null
+                ? poolHub.SpawnPoisonZone(cachedAoeTargetPosition)
+                : Instantiate(Config.poisonZonePrefab, cachedAoeTargetPosition, Quaternion.identity);
+            if (poisonZone == null) return;
             poisonZone.Activate(
                 cachedAoeTargetPosition,
                 CurrentPhase().aoeRadius,

@@ -34,6 +34,16 @@ namespace Beavermania.Tests.PlayMode.NPC.WaspQueen
                     UnityEngine.Object.DestroyImmediate(createdAssets[index]);
             }
 
+            GameObject[] runtimePoolRoots = UnityEngine.Object.FindObjectsOfType<GameObject>();
+            for (int index = runtimePoolRoots.Length - 1; index >= 0; index--)
+            {
+                if (runtimePoolRoots[index] != null
+                    && runtimePoolRoots[index].name.StartsWith("WaspQueenHazardPool_", StringComparison.Ordinal))
+                {
+                    UnityEngine.Object.DestroyImmediate(runtimePoolRoots[index]);
+                }
+            }
+
             spawnedObjects.Clear();
             createdAssets.Clear();
         }
@@ -188,7 +198,121 @@ namespace Beavermania.Tests.PlayMode.NPC.WaspQueen
             Assert.That(GetFieldValue<float>(harness.Player, "CurrentHealth"), Is.EqualTo(80f).Within(0.001f));
         }
 
-        BossHarness CreateHarness()
+        [UnityTest]
+        public IEnumerator PoisonAoe_SpawnsAtGroundLevel_WhenPlayerIsAirborne()
+        {
+            BossHarness harness = CreateHarness();
+
+            // Place a ground plane so SnapToGround has something to hit.
+            GameObject ground = Spawn(GameObject.CreatePrimitive(PrimitiveType.Cube));
+            ground.name = "GroundPlane";
+            ground.layer = LayerMask.NameToLayer("Default");
+            ground.transform.position = Vector3.zero;
+            ground.transform.localScale = new Vector3(100f, 1f, 100f);
+
+            object phase1 = GetFieldValue<object>(harness.Config, "phase1");
+            SetFieldValue(phase1, "rangedWeight", 0f);
+            SetFieldValue(phase1, "chargeWeight", 0f);
+            SetFieldValue(phase1, "summonWeight", 0f);
+            SetFieldValue(phase1, "stingWeight", 0f);
+            SetFieldValue(phase1, "aoeWeight", 10f);
+            SetFieldValue(phase1, "aoeTelegraphDuration", 0f);
+            SetFieldValue(phase1, "aoeGroundTelegraphTime", 0f);
+            SetFieldValue(phase1, "aoeDuration", 0.3f);
+            SetFieldValue(phase1, "aoeRecoveryDuration", 1f);
+
+            // Ground surface is at Y=0.5 (top of the 1-unit cube). Raise the player to simulate a jump.
+            const float groundSurfaceY = 0.5f;
+            const float playerAirborneY = 5f;
+            harness.PlayerTransform.gameObject.layer = LayerMask.NameToLayer("Character");
+            harness.PlayerTransform.position = new Vector3(3f, playerAirborneY, 0f);
+
+            SetFieldValue(harness.Config, "groundCheckStartHeight", 10f);
+            SetFieldValue(harness.Config, "groundCheckDistance", 24f);
+            SetFieldValue(harness.Config, "groundMask", CreateLayerMask("Default"));
+
+            InvokeMethod(harness.Boss, "ActivateBoss");
+            yield return new WaitUntil(() => GetPropertyValue<object>(harness.Boss, "State").ToString() == "Recovery");
+
+            // Find the spawned poison zone (active only — excludes the inactive prefab template).
+            Type zoneType = ResolveRuntimeType("Beavermania.NPC.WaspQueenPoisonZone");
+            UnityEngine.Object[] zones = UnityEngine.Object.FindObjectsOfType(zoneType, false);
+            Assert.That(zones.Length, Is.GreaterThanOrEqualTo(1), "A poison zone should have spawned");
+
+            float zoneY = ((Component)zones[0]).transform.position.y;
+
+            // The zone should be near ground level, not at the player's airborne height.
+            Assert.That(zoneY, Is.LessThan(groundSurfaceY + 0.5f),
+                $"Zone Y ({zoneY:F2}) should be near ground ({groundSurfaceY:F2}), not at airborne player Y ({playerAirborneY:F2})");
+            Assert.That(zoneY, Is.GreaterThan(groundSurfaceY - 0.5f),
+                $"Zone Y ({zoneY:F2}) should not be below ground ({groundSurfaceY:F2})");
+        }
+
+        [UnityTest]
+        public IEnumerator PooledPoisonZone_DetachesFromBossHierarchy_AndReturnsToSceneRootPool()
+        {
+            BossHarness harness = CreateHarness(addPoolHub: true, poolRootUnderBoss: true);
+            Transform bossTransform = ((Component)harness.Boss).transform;
+
+            object phase1 = GetFieldValue<object>(harness.Config, "phase1");
+            SetFieldValue(phase1, "rangedWeight", 0f);
+            SetFieldValue(phase1, "chargeWeight", 0f);
+            SetFieldValue(phase1, "summonWeight", 0f);
+            SetFieldValue(phase1, "stingWeight", 0f);
+            SetFieldValue(phase1, "aoeWeight", 10f);
+            SetFieldValue(phase1, "aoeTelegraphDuration", 0f);
+            SetFieldValue(phase1, "aoeGroundTelegraphTime", 0f);
+            SetFieldValue(phase1, "aoeDuration", 1f);
+            SetFieldValue(phase1, "aoeRecoveryDuration", 1f);
+            harness.PlayerTransform.position = new Vector3(2f, 0f, 0f);
+
+            InvokeMethod(harness.Boss, "ActivateBoss");
+            yield return new WaitUntil(() => GetPropertyValue<object>(harness.Boss, "State").ToString() == "Recovery");
+
+            Component poisonZone = FindSingleActiveComponent("Beavermania.NPC.WaspQueenPoisonZone");
+            Vector3 spawnedPosition = poisonZone.transform.position;
+
+            Assert.That(poisonZone.transform.IsChildOf(bossTransform), Is.False, "Active poison zones must not live under the boss hierarchy.");
+
+            bossTransform.SetPositionAndRotation(new Vector3(10f, 0f, 0f), Quaternion.Euler(0f, 90f, 0f));
+            yield return null;
+
+            Assert.That(Vector3.Distance(poisonZone.transform.position, spawnedPosition), Is.LessThan(0.001f), "Active poison zones must stay fixed in world space when the boss moves.");
+
+            InvokeMethod(poisonZone, "Deactivate");
+            yield return null;
+
+            Transform inactiveParent = poisonZone.transform.parent;
+            Assert.That(inactiveParent, Is.Not.Null, "Inactive pooled poison zones should be parked under a pool container.");
+            Assert.That(inactiveParent.name.StartsWith("WaspQueenHazardPool_", StringComparison.Ordinal), Is.True);
+            Assert.That(inactiveParent.IsChildOf(bossTransform), Is.False, "Inactive pooled poison zones must not return under the boss hierarchy.");
+        }
+
+        [UnityTest]
+        public IEnumerator PooledProjectile_DetachesFromBossHierarchy_AndKeepsWorldVelocity()
+        {
+            BossHarness harness = CreateHarness(addPoolHub: true, poolRootUnderBoss: true);
+            Transform bossTransform = ((Component)harness.Boss).transform;
+            harness.PlayerTransform.position = new Vector3(8f, 1f, 0f);
+
+            InvokeMethod(harness.Boss, "FireProjectile");
+            yield return new WaitForFixedUpdate();
+
+            Component projectile = FindSingleActiveComponent("Beavermania.NPC.WaspQueenProjectile");
+            Rigidbody body = projectile.GetComponent<Rigidbody>();
+            Assert.That(projectile.transform.IsChildOf(bossTransform), Is.False, "Active poison projectiles must not live under the boss hierarchy.");
+            Assert.That(body, Is.Not.Null);
+
+            Vector3 velocityBeforeBossMove = body.velocity;
+            bossTransform.SetPositionAndRotation(new Vector3(-12f, 0f, 4f), Quaternion.Euler(0f, 180f, 0f));
+            yield return new WaitForFixedUpdate();
+
+            Assert.That(projectile.transform.IsChildOf(bossTransform), Is.False);
+            Assert.That(Vector3.Angle(velocityBeforeBossMove, body.velocity), Is.LessThan(0.01f), "Projectile direction must not bend when the boss rotates.");
+            Assert.That(body.velocity.magnitude, Is.EqualTo(velocityBeforeBossMove.magnitude).Within(0.001f));
+        }
+
+        BossHarness CreateHarness(bool addPoolHub = false, bool poolRootUnderBoss = false)
         {
             GameObject cameraObject = Spawn(new GameObject("Main Camera"));
             cameraObject.tag = "MainCamera";
@@ -222,6 +346,16 @@ namespace Beavermania.Tests.PlayMode.NPC.WaspQueen
 
             Component chargeAttack = bossObject.AddComponent(ResolveRuntimeType("Beavermania.NPC.WaspQueenChargeAttack"));
             Component boss = bossObject.AddComponent(ResolveRuntimeType("Beavermania.NPC.WaspQueenBoss"));
+            Component poolHub = null;
+            if (addPoolHub)
+            {
+                poolHub = bossObject.AddComponent(ResolveRuntimeType("Beavermania.NPC.WaspQueenPoolHub"));
+                SetFieldValue(poolHub, "config", config);
+                if (poolRootUnderBoss)
+                    SetFieldValue(poolHub, "poolRoot", CreateChildTransform(bossObject.transform, "BossChildPoolRoot"));
+                InvokeMethod(poolHub, "Initialize", config);
+            }
+
             SetFieldValue(boss, "Config", config);
             SetFieldValue(boss, "Body", bossBody);
             SetFieldValue(boss, "Player", player);
@@ -230,9 +364,11 @@ namespace Beavermania.Tests.PlayMode.NPC.WaspQueen
             SetFieldValue(boss, "WaspSpawnPoints", new[] { summonPoint });
             SetFieldValue(boss, "ChargeAttack", chargeAttack);
             SetFieldValue(boss, "AudioSource", audioSource);
+            if (poolHub != null)
+                SetFieldValue(boss, "poolHub", poolHub);
             SetFieldValue(boss, "ActivateOnStart", false);
 
-            return new BossHarness(config, boss, player, playerObject.transform);
+            return new BossHarness(config, boss, player, playerObject.transform, poolHub);
         }
 
         ScriptableObject CreateConfig()
@@ -391,6 +527,21 @@ namespace Beavermania.Tests.PlayMode.NPC.WaspQueen
             return gameObject;
         }
 
+        Component FindSingleActiveComponent(string typeName)
+        {
+            Type componentType = ResolveRuntimeType(typeName);
+            UnityEngine.Object[] components = UnityEngine.Object.FindObjectsOfType(componentType, false);
+            Assert.That(components.Length, Is.EqualTo(1), $"Expected exactly one active {typeName} instance.");
+            return (Component)components[0];
+        }
+
+        static LayerMask CreateLayerMask(params string[] layerNames)
+        {
+            LayerMask mask = default;
+            mask.value = LayerMask.GetMask(layerNames);
+            return mask;
+        }
+
         Type ResolveRuntimeType(string fullName)
         {
             if (cachedRuntimeTypes.TryGetValue(fullName, out Type cachedType))
@@ -489,18 +640,21 @@ namespace Beavermania.Tests.PlayMode.NPC.WaspQueen
                 ScriptableObject config,
                 Component boss,
                 Component player,
-                Transform playerTransform)
+                Transform playerTransform,
+                Component poolHub)
             {
                 Config = config;
                 Boss = boss;
                 Player = player;
                 PlayerTransform = playerTransform;
+                PoolHub = poolHub;
             }
 
             public ScriptableObject Config { get; }
             public Component Boss { get; }
             public Component Player { get; }
             public Transform PlayerTransform { get; }
+            public Component PoolHub { get; }
         }
     }
 }

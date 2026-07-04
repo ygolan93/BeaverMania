@@ -1130,13 +1130,35 @@ namespace Beavermania.NPC
 
         Vector3 ResolveAoeTargetPosition()
         {
+            Vector3 candidate;
             if (Player != null)
-                return Player.transform.position;
+                candidate = Player.transform.position;
+            else if (AoeOrigin != null)
+                candidate = AoeOrigin.position;
+            else
+                candidate = transform.position;
 
-            if (AoeOrigin != null)
-                return AoeOrigin.position;
+            return SnapToGround(candidate);
+        }
 
-            return transform.position;
+        Vector3 SnapToGround(Vector3 position)
+        {
+            if (Config == null)
+                return position;
+
+            Vector3 rayOrigin = position + Vector3.up * Mathf.Max(0.1f, Config.groundCheckStartHeight);
+            if (Physics.Raycast(
+                    rayOrigin,
+                    Vector3.down,
+                    out RaycastHit hit,
+                    Config.groundCheckDistance,
+                    Config.groundMask,
+                    QueryTriggerInteraction.Ignore))
+            {
+                return new Vector3(position.x, hit.point.y + 0.02f, position.z);
+            }
+
+            return position;
         }
 
         void TickCooldowns()
@@ -1551,6 +1573,12 @@ namespace Beavermania.NPC
             healthBarVisibility = GetComponent<EnemyHealthBarVisibility>();
             if (healthBarVisibility == null)
                 healthBarVisibility = gameObject.AddComponent<EnemyHealthBarVisibility>();
+
+            if (poolHub == null)
+                poolHub = GetComponent<WaspQueenPoolHub>();
+
+            if (poolHub != null)
+                poolHub.Initialize(Config);
 
             HideHitEffects();
         }

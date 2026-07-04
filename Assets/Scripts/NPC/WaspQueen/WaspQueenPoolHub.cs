@@ -13,6 +13,8 @@ namespace Beavermania.NPC
 
         ObjectPool<WaspQueenProjectile> projectilePool;
         ObjectPool<WaspQueenPoisonZone> poisonZonePool;
+        Transform resolvedPoolRoot;
+        GameObject createdPoolRoot;
 
         readonly List<WaspQueenProjectile> activeProjectiles = new List<WaspQueenProjectile>(8);
         readonly List<WaspQueenPoisonZone> activePoisonZones = new List<WaspQueenPoisonZone>(4);
@@ -28,6 +30,14 @@ namespace Beavermania.NPC
         void Awake()
         {
             EnsurePools();
+        }
+
+        void OnDestroy()
+        {
+            ReleaseAllActive();
+            projectilePool?.Clear();
+            poisonZonePool?.Clear();
+            DestroyCreatedPoolRoot();
         }
 
         public WaspQueenProjectile SpawnProjectile(Vector3 position, Quaternion rotation)
@@ -82,8 +92,7 @@ namespace Beavermania.NPC
             if (config == null)
                 return;
 
-            if (poolRoot == null)
-                poolRoot = transform;
+            ResolvePoolRoot();
 
             if (projectilePool == null && config.poisonProjectilePrefab != null)
             {
@@ -106,13 +115,16 @@ namespace Beavermania.NPC
                 item =>
                 {
                     if (item != null)
-                        item.gameObject.SetActive(true);
+                    {
+                        item.transform.SetParent(null, true);
+                    }
                 },
                 item =>
                 {
                     if (item == null)
                         return;
                     item.gameObject.SetActive(false);
+                    item.transform.SetParent(ResolvePoolRoot(), false);
                 },
                 item =>
                 {
@@ -127,7 +139,7 @@ namespace Beavermania.NPC
 
         T CreateInstance<T>(T prefab) where T : Component
         {
-            T instance = Instantiate(prefab, poolRoot);
+            T instance = Instantiate(prefab, ResolvePoolRoot());
 
             switch (instance)
             {
@@ -141,6 +153,48 @@ namespace Beavermania.NPC
 
             instance.gameObject.SetActive(false);
             return instance;
+        }
+
+        Transform ResolvePoolRoot()
+        {
+            if (resolvedPoolRoot != null && !IsBossHierarchy(resolvedPoolRoot))
+                return resolvedPoolRoot;
+
+            if (poolRoot != null && !IsBossHierarchy(poolRoot))
+            {
+                resolvedPoolRoot = poolRoot;
+                return resolvedPoolRoot;
+            }
+
+            if (createdPoolRoot == null)
+            {
+                createdPoolRoot = new GameObject($"WaspQueenHazardPool_{GetInstanceID()}");
+                createdPoolRoot.transform.SetParent(null, false);
+            }
+
+            resolvedPoolRoot = createdPoolRoot.transform;
+            return resolvedPoolRoot;
+        }
+
+        bool IsBossHierarchy(Transform candidate)
+        {
+            return candidate == null || candidate == transform || candidate.IsChildOf(transform);
+        }
+
+        void DestroyCreatedPoolRoot()
+        {
+            if (createdPoolRoot == null)
+                return;
+
+            GameObject root = createdPoolRoot;
+            createdPoolRoot = null;
+            if (resolvedPoolRoot == root.transform)
+                resolvedPoolRoot = null;
+
+            if (Application.isPlaying)
+                Destroy(root);
+            else
+                DestroyImmediate(root);
         }
 
         void ReleaseProjectile(WaspQueenProjectile projectile)

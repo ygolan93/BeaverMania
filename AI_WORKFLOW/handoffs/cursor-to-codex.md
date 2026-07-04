@@ -54,6 +54,65 @@ Per the earlier product direction, the Level 1 final boss remained the Scorpion 
 
 ---
 
+## WaspQueen pool parenting + ground-snap — FAILED in Play Mode (2026-07-04, branch `feature/settlement-layout-only`)
+
+### What was attempted
+
+Two changes were made to the Wasp Queen hazard spawning system:
+
+#### 1. Poison zone ground-snap fix (WaspQueenBoss.cs)
+
+**Problem:** `ResolveAoeTargetPosition()` returned the raw `Player.transform.position`. When the player was mid-jump (+3.42 units measured live), the poison zone (telegraph ring, fog cloud, damage sphere) spawned floating in the air instead of on the ground.
+
+**Fix applied:** Refactored `ResolveAoeTargetPosition()` to resolve a candidate position (player / AoeOrigin / self), then project it onto the ground via a new private `SnapToGround()` helper. Uses `Physics.Raycast` with `Config.groundMask`, `Config.groundCheckStartHeight`, `Config.groundCheckDistance` — same pattern as the existing `ResolveHoverPosition()`. Falls back to the unmodified position when `Config` is null or the raycast misses. Small +0.02 Y offset to avoid telegraph z-fighting.
+
+**Test added:** `PoisonAoe_SpawnsAtGroundLevel_WhenPlayerIsAirborne` in `WaspQueenBossPlayModeTests.cs` — creates a ground-plane cube, raises the player to Y=5, forces PoisonAoE, asserts zone spawns at ground level. Uses `FindObjectsOfType(zoneType, false)` (active only) to avoid matching the inactive prefab template.
+
+**Review status:** Passed spec compliance review and Unity quality review (two-stage subagent review). No compilation errors in Unity console. Script-only, no Inspector assignments required.
+
+**Risk flagged:** `Config.groundMask` defaults to `~0` in the C# field declaration, which includes the Player physics layer. If the Inspector asset value also includes the Player layer, the downward raycast from above the player could hit the player's own capsule collider instead of the ground. The fix uses the same mask as `ResolveHoverPosition()` (which works because the boss hovers from a different XZ). Codex should verify the `WaspQueenConfig.asset` `groundMask` value only includes terrain/ground layers.
+
+#### 2. Pool parenting fix (WaspQueenPoolHub.cs) — FAILED
+
+**Problem:** Pooled poison zones and projectiles spawned as children of the boss prefab (confirmed in Hierarchy screenshot). Root cause: `CreateInstance` calls `Instantiate(prefab, poolRoot)` where `poolRoot` defaults to `transform` (the boss's own transform). Active hazards inherited boss movement/rotation — zones slid when the boss moved, projectiles veered off course.
+
+**Fix applied:**
+
+- `onGet` callback: added `item.transform.SetParent(null, true)` before `SetActive(true)` — unparent to world root when taken from pool
+- `onRelease` callback: added `item.transform.SetParent(poolRoot, false)` after `SetActive(false)` — re-parent under poolRoot when returned
+
+**Result:** User reports the fix **failed** in Play Mode. The exact failure mode is not yet diagnosed. Possible causes for Codex to investigate:
+
+1. **`SetParent(null, true)` may not behave as expected with kinematic Rigidbody on the pooled objects** — projectiles have `Rigidbody.isKinematic = true` and the unparenting with `worldPositionStays = true` may interact poorly with the physics system.
+2. **Ordering issue**: `SetParent(null)` happens before `SetActive(true)` in the `onGet` callback. The object may need to be active first, or the `Activate()` call in `WaspQueenBoss.cs` may re-set positions in local space that assumes a parent.
+3. **The `poolRoot` fallback to `transform`** (line 85-86 in `EnsurePools`) means the pool container IS the boss. Even the inactive parenting means the pool objects show as children. A cleaner solution might be to create a dedicated static root (`new GameObject("WaspQueenPool")`) or use `Instantiate(prefab)` without a parent at all.
+4. **`WaspQueenProjectile.Activate()` and `WaspQueenPoisonZone.Activate()` may set `transform.position`/`rotation` AFTER the pool's `onGet`** — this should work with world-space position on an unparented object, but needs verification.
+5. **The `Prewarm` cycle** (get then immediately release) may trigger `SetParent(null)` + `SetParent(poolRoot)` on prewarm, which could leave objects in unexpected state.
+
+### Files changed (working tree, uncommitted)
+
+| File                                                                | Change                                                           |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `Assets/Scripts/NPC/WaspQueen/WaspQueenBoss.cs`                     | `ResolveAoeTargetPosition()` refactored + `SnapToGround()` added |
+| `Assets/Scripts/NPC/WaspQueen/WaspQueenPoolHub.cs`                  | `onGet`/`onRelease` callbacks modified for unparent/re-parent    |
+| `Assets/Tests/PlayMode/NPC/WaspQueen/WaspQueenBossPlayModeTests.cs` | New test `PoisonAoe_SpawnsAtGroundLevel_WhenPlayerIsAirborne`    |
+
+### What Codex should do
+
+1. **Review the pool parenting failure.** Read `WaspQueenPoolHub.cs`, `WaspQueenProjectile.cs`, and `WaspQueenPoisonZone.cs` to determine why unparenting in `onGet` failed. Check `Activate()` methods for local-space assumptions.
+2. **Decide on the correct pool architecture.** Options: (a) unparent in `onGet` / re-parent in `onRelease` (current attempt, failed), (b) never parent under the boss — use `Instantiate(prefab)` without a parent in `CreateInstance`, (c) create a dedicated static pool root that doesn't move.
+3. **Verify `groundMask` in the config asset** does not include the Player layer.
+4. **Review whether the ground-snap fix is sound** independent of the pool parenting issue (it passed both subagent reviews but has not been verified in Play Mode with the pool fix failing).
+
+### What Codex must not change
+
+- Prefab/scene YAML
+- `WaspQueenConfig.cs` field layout (config asset values are fine to note but not change in code)
+- Unrelated Wasp Queen systems (decision planner, charge, sting, summon)
+- Test file structure or harness pattern
+
+---
+
 ## Task
 
 - **Level 1 Remastered — north forest hotspot FPS fix** on branch `fix/log-carry-animation-load`.

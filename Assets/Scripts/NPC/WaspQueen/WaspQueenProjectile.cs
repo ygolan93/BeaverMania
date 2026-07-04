@@ -33,6 +33,7 @@ namespace Beavermania.NPC
             GameObject overrideImpactVfx = null)
         {
             CacheReferences();
+            transform.SetPositionAndRotation(position, rotation);
             released = false;
             player = playerTarget;
             damage = Mathf.Max(0f, projectileDamage);
@@ -40,7 +41,6 @@ namespace Beavermania.NPC
             impactVfxPrefab = overrideImpactVfx != null ? overrideImpactVfx : impactVfxPrefab;
 
             gameObject.SetActive(true);
-            transform.SetPositionAndRotation(position, rotation);
 
             if (projectileCollider != null)
                 projectileCollider.enabled = true;

@@ -1,5 +1,49 @@
 # Codex to Cursor Handoff
 
+> **Status (2026-07-04, Wasp Queen hazard pool detachment):** Codex implemented the script-side fix so pooled Wasp Queen poison projectiles and poison zones no longer use a boss-child transform as their runtime storage root. Unity Play Mode verification is still required because the local batchmode test run crashed with `HandleProjectAlreadyOpenInAnotherInstance` while the project was already open.
+
+## Wasp Queen hazard pool detachment - Cursor verification required
+
+### What Codex changed
+
+- `Assets/Scripts/NPC/WaspQueen/WaspQueenPoolHub.cs`
+  - Resolves a stable scene-root `WaspQueenHazardPool_<instanceId>` when `poolRoot` is null, the hub transform, or any child of `PF_WaspQueen_Boss`.
+  - Keeps external non-boss `poolRoot` assignments valid.
+  - Detaches active pooled hazards to world root on get.
+  - Parks inactive pooled hazards under the stable pool root on release.
+  - Releases active hazards before clearing pools if the hub is destroyed.
+  - Destroys the runtime-created pool root with the hub.
+- `Assets/Scripts/NPC/WaspQueen/WaspQueenProjectile.cs`
+  - Applies world position/rotation before activating the pooled projectile.
+- `Assets/Scripts/NPC/WaspQueen/WaspQueenPoisonZone.cs`
+  - Applies world position before activating the pooled poison zone.
+- `Assets/Scripts/NPC/WaspQueen/WaspQueenBoss.cs`
+  - Auto-caches `WaspQueenPoolHub` and initializes it from `Config` when present.
+- `Assets/Tests/PlayMode/NPC/WaspQueen/WaspQueenBossPlayModeTests.cs`
+  - Adds pooled poison-zone parent/world-position regression coverage.
+  - Adds pooled projectile parent/velocity regression coverage.
+  - Makes the ground-snap test use explicit `Default` ground mask and `Character` player layer.
+
+### Cursor / Unity checks
+
+- Inspect `PF_WaspQueen_Boss.prefab` and clear or replace `WaspQueenPoolHub.poolRoot`; do not assign a boss child or nested model transform.
+- Run the Wasp Queen PlayMode suite, especially:
+  - `PooledPoisonZone_DetachesFromBossHierarchy_AndReturnsToSceneRootPool`
+  - `PooledProjectile_DetachesFromBossHierarchy_AndKeepsWorldVelocity`
+  - `PoisonAoe_SpawnsAtGroundLevel_WhenPlayerIsAirborne`
+- In Play Mode, trigger ranged poison and poison AoE:
+  - Active `PF_WaspQueen_PoisonProjectile(Clone)` and `PF_WaspQueen_PoisonZone(Clone)` should not appear under `PF_WaspQueen_Boss`.
+  - Inactive pooled clones may appear under `WaspQueenHazardPool_<instanceId>` at scene root.
+  - Moving/turning the boss after AoE spawn must not move the zone.
+  - Projectile trajectory must not bend when the boss rotates.
+- Verify `WaspQueenConfig.asset` `groundMask` excludes `Character` and `Enemy` while including actual terrain/ground layers.
+
+### Codex verification
+
+- `git diff --check` passed on the touched C# script/test files.
+- `dotnet build .ci/BeaverMania.CI.csproj` remains blocked by unresolved Unity assemblies in this Windows checkout.
+- Direct Unity batchmode PlayMode verification was attempted with Unity 2021.3.3f1 but crashed because the project was already open in another Unity instance.
+
 > **Status (2026-06-20):** Active mixed-task handoff is the **Wasp Queen boss foundation** on branch `feature/Wasp-Queen`. Codex completed the script-side foundation and tests. Cursor now owns Unity wiring and Play Mode proof.
 
 ## What Codex changed

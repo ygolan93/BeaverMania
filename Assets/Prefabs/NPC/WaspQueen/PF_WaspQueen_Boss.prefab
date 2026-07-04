@@ -253,6 +253,7 @@ GameObject:
   - component: {fileID: 4149804427175841137}
   - component: {fileID: 8367922088356062224}
   - component: {fileID: 7026933911218337069}
+  - component: {fileID: 8803488433720139401}
   m_Layer: 10
   m_Name: PF_WaspQueen_Boss
   m_TagString: Boss
@@ -476,11 +477,27 @@ MonoBehaviour:
   stingClip: {fileID: 8300000, guid: d902e14d51277a24d9a1de8ca3765e72, type: 3}
   slashEffect: {fileID: 904662820145583817, guid: 019faff12646bd8438ea56e8e7861fd8, type: 3}
   hitEffect: {fileID: 3400547379593215125, guid: 29caf87e6282fd044adbb00bd35e129a, type: 3}
-  hitEffectVisibleDuration: 0.7
+  hitEffectVisibleDuration: 1
   deathDisableDelay: 1
   minFlinchInterval: 0.5
   suppressFlinchDuringAttacks: 1
   arenaCenter: {fileID: 0}
+  poolHub: {fileID: 8803488433720139401}
+--- !u!114 &8803488433720139401
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4686593985213499039}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fd5d9e4f05add148b4bbb5a36230a01, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  config: {fileID: 11400000, guid: 10ad822a137971a498442704794d5d18, type: 2}
+  poolRoot: {fileID: 7030458589617603495}
+  enableDebugLogs: 0
 --- !u!1 &4755183866611219715
 GameObject:
   m_ObjectHideFlags: 0
@@ -1164,6 +1181,11 @@ MonoBehaviour:
 --- !u!4 &3021836926851187029 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 5367afda68e1232428a04e8af06f5f54, type: 3}
+  m_PrefabInstance: {fileID: 3343080298985481918}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &7030458589617603495 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5761288128952444185, guid: 5367afda68e1232428a04e8af06f5f54, type: 3}
   m_PrefabInstance: {fileID: 3343080298985481918}
   m_PrefabAsset: {fileID: 0}
 --- !u!95 &9155699811513686831 stripped

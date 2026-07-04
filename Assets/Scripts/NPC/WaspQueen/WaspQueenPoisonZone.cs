@@ -36,6 +36,7 @@ namespace Beavermania.NPC
             BeaverPlayerBehaviour playerTarget)
         {
             CacheReferences();
+            transform.position = position;
             released = false;
             damagePhaseActive = false;
             player = playerTarget;
@@ -46,7 +47,6 @@ namespace Beavermania.NPC
             damagePerTick = Mathf.Max(0f, tickDamage);
 
             gameObject.SetActive(true);
-            transform.position = position;
 
             float resolvedRadius = Mathf.Max(0.1f, radius);
             if (zoneCollider != null)

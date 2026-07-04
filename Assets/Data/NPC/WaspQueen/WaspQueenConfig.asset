@@ -44,10 +44,19 @@ MonoBehaviour:
     m_Bits: 0
   maxActiveProjectiles: 4
   maxActivePoisonZones: 2
+  arenaRadius: 22
+  leashRange: 32
+  reengageRange: 20
+  recenterSpeed: 14
+  repositionChance: 0.5
+  repositionDuration: 0.6
+  repositionSpeed: 9
+  repositionTooCloseRange: 4
+  repositionStep: 4
   waspPrefab: {fileID: 2969994238874094856, guid: 6418a51a4bd5c1f46bb8507bd8627f51, type: 3}
   poisonProjectilePrefab: {fileID: 6625110933801570253, guid: d887762e9b140e44490fd598c051f4ce, type: 3}
   poisonZonePrefab: {fileID: 7437149189997659980, guid: 0de47fc80d411e34a8699c80ad1bdcf8, type: 3}
-  deathExplosionPrefab: {fileID: 2433282508537954060, guid: 9cfe40900aead6b46be69d2c02675f7e, type: 3}
+  deathExplosionPrefab: {fileID: 5985634496115995773, guid: 463cf9f7af4680240898f6aeba3fe3e6, type: 3}
   fragmentPrefabs:
   - {fileID: 3724478295433116455, guid: 7a893927e808bf64082005bcae3b4f22, type: 3}
   - {fileID: 4554149956192257749, guid: 449680e7642839640acb0b771194ee9b, type: 3}
@@ -71,6 +80,7 @@ MonoBehaviour:
     aoeDamage: 10
     aoeDuration: 4
     aoeTickRate: 0.6
+    aoeGroundTelegraphTime: 0.5
     chargeCooldown: 8
     chargeTelegraphDuration: 0.95
     chargeSpeed: 16
@@ -104,6 +114,7 @@ MonoBehaviour:
     aoeDamage: 12
     aoeDuration: 6
     aoeTickRate: 0.5
+    aoeGroundTelegraphTime: 0.45
     chargeCooldown: 6.5
     chargeTelegraphDuration: 0.75
     chargeSpeed: 18
@@ -137,6 +148,7 @@ MonoBehaviour:
     aoeDamage: 14
     aoeDuration: 8
     aoeTickRate: 0.45
+    aoeGroundTelegraphTime: 0.4
     chargeCooldown: 5.5
     chargeTelegraphDuration: 0.65
     chargeSpeed: 20

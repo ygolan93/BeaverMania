@@ -129,6 +129,7 @@ namespace Beavermania.NPC
         Vector3 capturedArenaCenter;
         bool arenaCenterCaptured;
         Vector3 repositionTarget;
+        readonly RaycastHit[] groundSnapHits = new RaycastHit[8];
         Coroutine hitEffectHideRoutine;
         Coroutine deathRoutine;
 
@@ -1147,16 +1148,36 @@ namespace Beavermania.NPC
                 return position;
 
             Vector3 rayOrigin = position + Vector3.up * Mathf.Max(0.1f, Config.groundCheckStartHeight);
-            if (Physics.Raycast(
-                    rayOrigin,
-                    Vector3.down,
-                    out RaycastHit hit,
-                    Config.groundCheckDistance,
-                    Config.groundMask,
-                    QueryTriggerInteraction.Ignore))
+            int hitCount = Physics.RaycastNonAlloc(
+                rayOrigin,
+                Vector3.down,
+                groundSnapHits,
+                Config.groundCheckDistance,
+                Config.groundMask,
+                QueryTriggerInteraction.Ignore);
+
+            // The ray starts above the player, so it can hit the player's own colliders
+            // (Character layer is in the production groundMask). Skip those hits.
+            Transform playerTransform = Player != null ? Player.transform : null;
+            float closestDistance = float.MaxValue;
+            float groundY = 0f;
+            bool foundGround = false;
+            for (int i = 0; i < hitCount; i++)
             {
-                return new Vector3(position.x, hit.point.y + 0.02f, position.z);
+                RaycastHit hit = groundSnapHits[i];
+                if (playerTransform != null && hit.transform != null && hit.transform.IsChildOf(playerTransform))
+                    continue;
+
+                if (hit.distance < closestDistance)
+                {
+                    closestDistance = hit.distance;
+                    groundY = hit.point.y;
+                    foundGround = true;
+                }
             }
+
+            if (foundGround)
+                return new Vector3(position.x, groundY + 0.02f, position.z);
 
             return position;
         }

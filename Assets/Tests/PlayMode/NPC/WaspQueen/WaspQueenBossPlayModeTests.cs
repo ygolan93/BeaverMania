@@ -249,6 +249,56 @@ namespace Beavermania.Tests.PlayMode.NPC.WaspQueen
         }
 
         [UnityTest]
+        public IEnumerator PoisonAoe_IgnoresPlayerCollider_WhenGroundMaskIncludesCharacterLayer()
+        {
+            BossHarness harness = CreateHarness();
+
+            GameObject ground = Spawn(GameObject.CreatePrimitive(PrimitiveType.Cube));
+            ground.name = "GroundPlane";
+            ground.layer = LayerMask.NameToLayer("Default");
+            ground.transform.position = Vector3.zero;
+            ground.transform.localScale = new Vector3(100f, 1f, 100f);
+
+            object phase1 = GetFieldValue<object>(harness.Config, "phase1");
+            SetFieldValue(phase1, "rangedWeight", 0f);
+            SetFieldValue(phase1, "chargeWeight", 0f);
+            SetFieldValue(phase1, "summonWeight", 0f);
+            SetFieldValue(phase1, "stingWeight", 0f);
+            SetFieldValue(phase1, "aoeWeight", 10f);
+            SetFieldValue(phase1, "aoeTelegraphDuration", 0f);
+            SetFieldValue(phase1, "aoeGroundTelegraphTime", 0f);
+            SetFieldValue(phase1, "aoeDuration", 0.3f);
+            SetFieldValue(phase1, "aoeRecoveryDuration", 1f);
+
+            // Reproduce the production setup: the player's non-trigger capsule sits on the
+            // Character layer and the ground mask includes that layer. The downward snap ray
+            // starts above the player, so without player filtering it hits the player's own
+            // collider instead of the ground below.
+            const float groundSurfaceY = 0.5f;
+            const float playerAirborneY = 5f;
+            harness.PlayerTransform.gameObject.layer = LayerMask.NameToLayer("Character");
+            harness.PlayerTransform.position = new Vector3(3f, playerAirborneY, 0f);
+
+            SetFieldValue(harness.Config, "groundCheckStartHeight", 10f);
+            SetFieldValue(harness.Config, "groundCheckDistance", 24f);
+            SetFieldValue(harness.Config, "groundMask", CreateLayerMask("Default", "Character"));
+
+            InvokeMethod(harness.Boss, "ActivateBoss");
+            yield return new WaitUntil(() => GetPropertyValue<object>(harness.Boss, "State").ToString() == "Recovery");
+
+            Type zoneType = ResolveRuntimeType("Beavermania.NPC.WaspQueenPoisonZone");
+            UnityEngine.Object[] zones = UnityEngine.Object.FindObjectsOfType(zoneType, false);
+            Assert.That(zones.Length, Is.GreaterThanOrEqualTo(1), "A poison zone should have spawned");
+
+            float zoneY = ((Component)zones[0]).transform.position.y;
+
+            Assert.That(zoneY, Is.LessThan(groundSurfaceY + 0.5f),
+                $"Zone Y ({zoneY:F2}) should be near ground ({groundSurfaceY:F2}) even when the player collider is on a masked layer");
+            Assert.That(zoneY, Is.GreaterThan(groundSurfaceY - 0.5f),
+                $"Zone Y ({zoneY:F2}) should not be below ground ({groundSurfaceY:F2})");
+        }
+
+        [UnityTest]
         public IEnumerator PooledPoisonZone_DetachesFromBossHierarchy_AndReturnsToSceneRootPool()
         {
             BossHarness harness = CreateHarness(addPoolHub: true, poolRootUnderBoss: true);

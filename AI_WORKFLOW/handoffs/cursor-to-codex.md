@@ -194,3 +194,49 @@ Does **not** certify the canopy-facing repro — that remains user-reported open
 
 - Active task + checklists: `AI_WORKFLOW/active-task.md`
 - Codex → Cursor A/B steps: `AI_WORKFLOW/handoffs/codex-to-cursor.md`
+
+---
+
+## Scorpion boss AI rework — architecture and merge-readiness review (2026-08-12)
+
+### Ownership
+
+- **Branch:** `feature/ScorpionBoss_Rework`
+- **Cursor completed:** focused gameplay implementation, boss stats tuning, obstruction bug fix, automated tests, and controlled production-scene trials.
+- **Codex requested:** architecture/risk review before merge. Do not broaden gameplay behavior.
+
+### Implemented behavior
+
+- Boss-only advanced AI gated by `ScorpionStatsData.advancedAiEnabled`.
+- Distance-aware weighted Attack/Charge/Reverse/Hold decisions with maximum two identical macro selections.
+- Charge windup, brief tracking, locked horizontal direction, variants, and time/distance/pass/contact termination.
+- Persistent opposing wall contact now terminates Charge even when contact began during ChargeWindup; flat and walkable sloped ground contacts are filtered before horizontal obstruction evaluation.
+- Attack timeout, profile recovery, post-stun pressure, and intentional Parry counter reward of two combo.
+- Normal Scorpion remains on the legacy FSM path.
+
+### Fresh verification
+
+- Unity EditMode batch: **46/46 passed** for `Beavermania.Tests.EditMode.NPC.Scorpion`.
+- Unity PlayMode batch: **4/4 passed** for `ScorpionBossVictoryFlowPlayModeTests`.
+- New state-boundary coverage includes Attack timeout/recovery, Charge timeout, persistent collision exit, post-stun timing, and stun interruption.
+- Repository `.ci` build remains blocked on Windows by its existing Linux Unity assembly hint paths.
+
+### Architecture concerns requiring Codex decision
+
+1. `ScorpionScript.cs` now exceeds 1,000 lines and mixes legacy plus advanced FSM responsibilities.
+2. `ScorpionStatsData` has repeated scalar fields for three phase profiles and Charge variants.
+3. `stateTimer` still carries several state-specific meanings.
+4. EditMode tests use reflection because the runtime code is in `Assembly-CSharp` while tests are in an asmdef.
+
+### Requested Codex output
+
+1. Decide whether extraction into a focused advanced-combat runtime/brain is required before merge or should be a separate serialized-safe follow-up.
+2. If extraction is required, provide exact ownership boundaries that preserve `ScorpionScript` public/serialized contracts, enum values, prefab GUIDs, legacy normal-Scorpion behavior, and Animator bools.
+3. Decide whether grouped serializable tuning can be introduced without removing or renaming existing serialized fields in this branch.
+4. Review the final diff for merge readiness after the obstruction fix and expanded FSM tests.
+
+### Protected areas
+
+- Do not edit scene, prefab, Animator, animation, model, collider wiring, or `.meta` GUIDs.
+- Do not change HP/damage tuning, add abilities, or alter the approved combat grammar.
+- Do not remove/rename serialized fields without an explicit migration plan.

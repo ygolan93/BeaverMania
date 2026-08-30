@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Beavermania.Data.Combat;
 using Beavermania.NPC;
 using Beavermania.Objects;
@@ -22,6 +23,7 @@ namespace Beavermania.Player.Combat
         const float FallbackBareHandsAirRadius = 2.5f;
 
         static readonly Collider[] s_hitBuffer = new Collider[32];
+        static readonly HashSet<int> s_routedReceiverIds = new HashSet<int>();
 
         private void Start()
         {
@@ -42,6 +44,7 @@ namespace Beavermania.Player.Combat
 
         public void CauseDamage(Vector3 origin, float range, int Damage)
         {
+            s_routedReceiverIds.Clear();
             int count = Physics.OverlapSphereNonAlloc(origin, range, s_hitBuffer, enemyLayers);
             for (int i = 0; i < count; i++)
             {
@@ -88,7 +91,44 @@ namespace Beavermania.Player.Combat
                 return false;
 
             IEnemyDamageReceiver damageReceiver = enemy.GetComponentInParent<IEnemyDamageReceiver>();
-            return damageReceiver != null && damageReceiver.ReceiveDamage(damage, EnemyDamageType.Normal, transform);
+            if (damageReceiver == null)
+                return false;
+
+            if (!TryClaimReceiverForThisSwing(damageReceiver))
+                return true;
+
+            return TryRouteInterfaceDamage(damageReceiver, damage);
+        }
+
+        /// <summary>
+        /// A boss overlaps the swing sphere with several colliders (jaws, sting, body), all resolving to the
+        /// same receiver. One animation event must reach that receiver once, so the first collider claims it
+        /// for the remainder of this <see cref="CauseDamage"/> call and later duplicates are reported as
+        /// already owned. The claim set is per-swing state on a single-threaded call path, so reusing it
+        /// keeps the hit loop allocation-free.
+        /// </summary>
+        static bool TryClaimReceiverForThisSwing(IEnemyDamageReceiver damageReceiver)
+        {
+            return s_routedReceiverIds.Add(GetDamageReceiverId(damageReceiver));
+        }
+
+        static int GetDamageReceiverId(IEnemyDamageReceiver damageReceiver)
+        {
+            return damageReceiver is Component component ? component.GetInstanceID() : damageReceiver.GetHashCode();
+        }
+
+        /// <summary>
+        /// Reports whether the receiver owned the hit, not whether health was reduced. A receiver that
+        /// rejects the hit (for example a boss outside a punish window) has still consumed it, so the
+        /// legacy tag fallback must not damage the same enemy a second time.
+        /// </summary>
+        bool TryRouteInterfaceDamage(IEnemyDamageReceiver damageReceiver, int damage)
+        {
+            if (damageReceiver == null)
+                return false;
+
+            damageReceiver.ReceiveDamage(damage, EnemyDamageType.Normal, transform);
+            return true;
         }
 
         public void RollAttack()

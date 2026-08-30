@@ -36,7 +36,7 @@ namespace Beavermania.NPC
 
         void ApplyHit(bool isStingHit)
         {
-            if (Player == null || Scorpion == null || Scorpion.combo >= Scorpion.comboLimit)
+            if (Player == null || Scorpion == null || IsContactDamageMuted())
                 return;
 
             if (!Player.isParried)
@@ -48,8 +48,12 @@ namespace Beavermania.NPC
             }
 
             Player.TakeDamage(ParryChipDamage);
-            Scorpion.ReceiveDamage(Mathf.RoundToInt(CounterDamage), EnemyDamageType.Light, transform);
-            Scorpion.combo++;
+            Scorpion.ReceiveCounterHit(Mathf.RoundToInt(CounterDamage), EnemyDamageType.Light, transform);
+        }
+
+        bool IsContactDamageMuted()
+        {
+            return Scorpion != null && !Scorpion.UsesAdvancedAi && Scorpion.combo >= Scorpion.comboLimit;
         }
 
         float ResolveJawDamage()

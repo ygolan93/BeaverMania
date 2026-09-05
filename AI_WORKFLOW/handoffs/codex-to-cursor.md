@@ -1,5 +1,25 @@
 # Codex to Cursor Handoff
 
+## 2026-09-05 - PR #185 review fixes
+
+### Scope and ownership
+
+- Codex gated typed attack multipliers to advanced Scorpions and added focused EditMode regression coverage. Ordinary Scorpions now take the supplied base damage for every typed attack, preserving their legacy damage behavior.
+- Codex restored the `Level 1 - Remastered - Steam` player prefab override to `(431.64, 70.74, 228.66)` and removed the scene's `victoryDelay: 10` override so the Scorpion prefab's inherited two-second delay applies.
+- No Inspector assignments, prefab changes, or new serialized fields are required.
+
+### Unity verification required
+
+1. Load `Assets/Scenes/Level 1 - Remastered - Steam.unity` and confirm the player starts in the progression area rather than inside the boss's detection range.
+2. Defeat the Scorpion boss and confirm the victory screen appears after the inherited two-second delay, with no ten-second stall.
+3. Hit an ordinary Scorpion with Arrow, Sword Swing, Hurricane Kick, and Hurricane Sword routes and confirm each uses its legacy base damage while the advanced boss retains its configured typed multipliers.
+
+### Verification status
+
+- Scoped `git diff --check` passed.
+- The repository's `.NET` compilation check could not run because `dotnet` is not installed in this environment.
+- Unity Editor and Play Mode were not run. Needs Unity Play Mode verification.
+
 ## 2026-09-05 - Hurricane aerial retreat and covering claws
 
 ### Scope and ownership

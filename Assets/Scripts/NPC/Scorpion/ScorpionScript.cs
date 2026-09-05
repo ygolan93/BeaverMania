@@ -621,11 +621,13 @@ namespace Beavermania.NPC
             EnemyDamageType damageType,
             Transform source)
         {
-            int resolvedDamage = PlayerAttackDamageRules.ResolveDamage(
-                baseDamage,
-                attackKind,
-                UsesAdvancedAi && currentState == ScorpionState.Stunned,
-                ActiveStats.stunnedDamageMultiplier);
+            int resolvedDamage = UsesAdvancedAi
+                ? PlayerAttackDamageRules.ResolveDamage(
+                    baseDamage,
+                    attackKind,
+                    currentState == ScorpionState.Stunned,
+                    ActiveStats.stunnedDamageMultiplier)
+                : baseDamage;
             bool accepted = ApplyDamage(resolvedDamage, damageType, source, NormalHitComboReward);
             if (accepted && (attackKind == PlayerAttackKind.HurricaneKick
                 || attackKind == PlayerAttackKind.HurricaneSword))

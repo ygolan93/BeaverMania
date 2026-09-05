@@ -150,6 +150,25 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
             Assert.That(GetFieldValue<int>(scorpion, "CurrentHealth"), Is.EqualTo(MaxHealth - expectedDamage));
         }
 
+        [TestCase("BareHands")]
+        [TestCase("HurricaneKick")]
+        [TestCase("Arrow")]
+        [TestCase("SwordSwing")]
+        [TestCase("HurricaneSword")]
+        public void ReceivePlayerAttack_NormalScorpion_IgnoresTypedMultiplier(string attackKindName)
+        {
+            // Arrange
+            SetFieldValue(stats, "advancedAiEnabled", false);
+            SetState("Attack");
+
+            // Act
+            bool accepted = ReceivePlayerAttack(10, attackKindName);
+
+            // Assert
+            Assert.That(accepted, Is.True);
+            Assert.That(GetFieldValue<int>(scorpion, "CurrentHealth"), Is.EqualTo(MaxHealth - 10));
+        }
+
         [Test]
         public void ReceivePlayerAttack_WhileStunned_AppliesConfiguredStunnedMultiplier()
         {

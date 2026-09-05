@@ -139,11 +139,6 @@ namespace Beavermania.Player.Combat
             return $"Boost {GetChargeDisplayPercent()}%";
         }
 
-        public string GetHudLabel()
-        {
-            return GetHudLabelText();
-        }
-
         void MarkCombatActivity()
         {
             lastCombatActivityTime = Time.time;

@@ -10,14 +10,20 @@ namespace Beavermania.NPC
 {
     [DisallowMultipleComponent]
     [RequireComponent(typeof(Rigidbody))]
-    public class ScorpionScript : MonoBehaviour, IEnemyDamageReceiver, IBossVictorySource
+    public class ScorpionScript : MonoBehaviour, IEnemyDamageReceiver, IPlayerAttackReceiver, IBossVictorySource
     {
         const float LookRotationEpsilon = 0.0001f;
+        const float ChargeObstructionDotThreshold = -0.1f;
+        const float FrontalTreeImpactDotThreshold = 0.5f;
         const float ReverseSpeed = 5f;
         const float HitEffectDuration = 0.1f;
         const int BridgeComboOverride = 10;
         const int DefaultAttackDamage = 15;
         const int DefaultStingDamage = 30;
+        const int NormalHitComboReward = 1;
+        const int CounterHitComboReward = 2;
+        const string StunnedAnimatorParameter = "Stunned";
+        static readonly int BackwardsAnimatorStateHash = Animator.StringToHash("Base Layer.Backwards");
         [Header("General")]
         Rigidbody rbScorpion;
         [SerializeField] Animator Scorpion;
@@ -78,32 +84,45 @@ namespace Beavermania.NPC
         float stateTimer;
         float minimumChargeTimeRemaining;
         float hitEffectTimer;
+        float chargeElapsed;
+        float chargeTravelledDistance;
+        Vector3 previousChargePosition;
+        Vector3 lockedChargeDirection;
+        ScorpionChargeVariant activeChargeVariant = ScorpionChargeVariant.Normal;
+        ScorpionChargeLimits activeChargeLimits;
+        float postStunPressureTimer;
+        ScorpionMacroAction previousMacroAction = ScorpionMacroAction.Hold;
+        int consecutiveMacroSelections;
+        float stunCooldownRemaining;
+        Vector3 hurricaneRetreatDirection;
+        bool hurricaneRetreatActive;
+        bool startStunCooldownAfterRecovery;
         bool deathHandled;
         [SerializeField] float victoryDelay = 2f;
 
         public ScorpionState State => currentState;
-        public ScorpionStatsData StatsData => ActiveStats;
         public int MaxHealth => ActiveStats.maxHealth;
         public float VictoryDelay => Mathf.Max(0f, victoryDelay);
         public int comboLimit => ActiveStats.comboLimit;
-        public float StunnedClock => currentState == ScorpionState.Stunned ? stateTimer : 0f;
         public float chargeSpeed => ActiveStats.chargeSpeed;
         public float chargeDuration => ActiveStats.chargeDuration;
-        public float chargeClock => minimumChargeTimeRemaining;
         public float lookDistance => ActiveStats.lookDistance;
         public float chargeDistance => ActiveStats.chargeDistance;
         public float attackDistance => ActiveStats.attackDistance;
         public int AttackDamageAmount => ActiveStats.attackDamage;
         public int StingDamageAmount => ActiveStats.stingDamage;
         public float rotationSpeed => ActiveStats.rotationSpeed;
-        public float recoveryDuration => ActiveStats.recoveryDuration;
         public event Action<ScorpionScript> Defeated;
         event Action<IBossVictorySource> IBossVictorySource.Defeated
         {
             add => genericDefeated += value;
             remove => genericDefeated -= value;
         }
+        public bool UsesAdvancedAi => ActiveStats.advancedAiEnabled;
         bool IsAggressive => combo >= Mathf.Max(0, comboLimit - 5);
+        bool HasPostStunPressure => postStunPressureTimer > 0f;
+        ScorpionHealthProfile ActiveHealthProfile => ScorpionCombatDecision.SelectHealthProfile(
+            MaxHealth > 0 ? (float)CurrentHealth / MaxHealth : 0f);
         float ReverseDistanceThreshold => Mathf.Max(0f, chargeDistance - 10f);
         ScorpionStatsData ActiveStats => statsData != null ? statsData : ResolveFallbackStats();
         Action<IBossVictorySource> genericDefeated;
@@ -162,6 +181,11 @@ namespace Beavermania.NPC
             if (deathHandled)
                 return;
 
+            if (postStunPressureTimer > 0f)
+                postStunPressureTimer = Mathf.Max(0f, postStunPressureTimer - Time.fixedDeltaTime);
+            if (stunCooldownRemaining > 0f)
+                stunCooldownRemaining = Mathf.Max(0f, stunCooldownRemaining - Time.fixedDeltaTime);
+
             RefreshTargetContext();
 
             if (CurrentHealth <= 0)
@@ -170,7 +194,10 @@ namespace Beavermania.NPC
                 return;
             }
 
-            if (combo >= comboLimit && currentState != ScorpionState.Stunned && currentState != ScorpionState.Recovered)
+            if (!UsesAdvancedAi
+                && combo >= comboLimit
+                && currentState != ScorpionState.Stunned
+                && currentState != ScorpionState.Recovered)
                 EnterState(ScorpionState.Stunned);
 
             switch (currentState)
@@ -214,10 +241,18 @@ namespace Beavermania.NPC
 
         void TickLook()
         {
+            bool hasTarget = HasCombatTargetInRange();
             ApplyLookPresentation();
-            if (!HasCombatTargetInRange())
+
+            if (!hasTarget)
             {
                 EnterState(ScorpionState.Idle);
+                return;
+            }
+
+            if (UsesAdvancedAi)
+            {
+                TickAdvancedLook();
                 return;
             }
 
@@ -237,6 +272,54 @@ namespace Beavermania.NPC
                 EnterState(ScorpionState.ChargeWindup);
         }
 
+        void TickAdvancedLook()
+        {
+            if (stateTimer > 0f)
+            {
+                stateTimer -= Time.fixedDeltaTime;
+                if (stateTimer > 0f)
+                    return;
+            }
+
+            ScorpionStatsData stats = ActiveStats;
+            ScorpionHealthProfile profile = ActiveHealthProfile;
+            var context = new ScorpionDecisionContext(
+                currentDistance,
+                attackDistance,
+                chargeDistance,
+                lookDistance,
+                previousMacroAction,
+                consecutiveMacroSelections);
+            ScorpionDecisionWeights weights = ResolveDecisionWeights(stats, profile);
+            if (HasPostStunPressure)
+            {
+                weights = ScorpionCombatDecision.ApplyPostStunPressure(
+                    weights,
+                    stats.postStunChargeWeightMultiplier,
+                    stats.postStunHoldWeightMultiplier);
+            }
+
+            ScorpionMacroAction selectedAction = ScorpionCombatDecision.SelectAction(context, weights, UnityEngine.Random.value);
+            RecordMacroSelection(selectedAction);
+
+            switch (selectedAction)
+            {
+                case ScorpionMacroAction.Attack:
+                    EnterState(ScorpionState.Attack);
+                    break;
+                case ScorpionMacroAction.Charge:
+                    EnterState(ScorpionState.ChargeWindup);
+                    break;
+                case ScorpionMacroAction.Reverse:
+                    EnterState(ScorpionState.Reverse);
+                    break;
+                case ScorpionMacroAction.Hold:
+                    ResolveDecisionHoldRange(stats, profile, out float holdMinimum, out float holdMaximum);
+                    stateTimer = RandomRange(holdMinimum, holdMaximum);
+                    break;
+            }
+        }
+
         void TickChargeWindup()
         {
             ApplyLookPresentation();
@@ -246,7 +329,7 @@ namespace Beavermania.NPC
                 return;
             }
 
-            if (currentDistance > chargeDistance)
+            if (!UsesAdvancedAi && currentDistance > chargeDistance)
             {
                 EnterState(ScorpionState.Look);
                 return;
@@ -259,6 +342,12 @@ namespace Beavermania.NPC
 
         void TickCharge()
         {
+            if (UsesAdvancedAi)
+            {
+                TickAdvancedCharge();
+                return;
+            }
+
             if (!HasCombatTargetInRange())
             {
                 ResetChargeCycle();
@@ -275,6 +364,155 @@ namespace Beavermania.NPC
                 EnterState(ScorpionState.Attack);
         }
 
+        void TickAdvancedCharge()
+        {
+            if (!HasCombatTargetInRange())
+            {
+                EnterState(ScorpionState.Idle);
+                return;
+            }
+
+            chargeElapsed += Time.fixedDeltaTime;
+            chargeTravelledDistance = ScorpionCombatDecision.AccumulateHorizontalDistance(
+                chargeTravelledDistance,
+                previousChargePosition,
+                rbScorpion.position);
+            previousChargePosition = rbScorpion.position;
+            Vector3 horizontalToTarget = HorizontalTargetDirection();
+
+            if (chargeElapsed <= activeChargeLimits.TrackingDuration)
+            {
+                Vector3 trackingDirection = ScorpionCombatDecision.LockHorizontalDirection(horizontalToTarget);
+                if (trackingDirection.sqrMagnitude > LookRotationEpsilon)
+                    lockedChargeDirection = trackingDirection;
+
+                RotateTowards(horizontalToTarget);
+            }
+
+            bool passedTarget = lockedChargeDirection.sqrMagnitude > LookRotationEpsilon
+                && Vector3.Dot(lockedChargeDirection, horizontalToTarget) <= 0f;
+            bool chargeExpired = chargeElapsed >= activeChargeLimits.MaximumDuration;
+            bool travelledMaximumDistance = chargeTravelledDistance >= activeChargeLimits.MaximumDistance;
+            bool contactOpportunity = currentDistance <= attackDistance;
+            if (chargeExpired || travelledMaximumDistance || passedTarget || contactOpportunity)
+            {
+                EnterState(ScorpionState.Look);
+                return;
+            }
+
+            SetHorizontalVelocity(lockedChargeDirection * chargeSpeed);
+            SetAnimatorState(walk: true, backwards: false, attack: false, stunned: false);
+            isAttacking = true;
+        }
+
+        void RecordMacroSelection(ScorpionMacroAction selectedAction)
+        {
+            if (selectedAction == previousMacroAction)
+                consecutiveMacroSelections++;
+            else
+            {
+                previousMacroAction = selectedAction;
+                consecutiveMacroSelections = 1;
+            }
+        }
+
+        static float RandomRange(float minimum, float maximum)
+        {
+            float clampedMinimum = Mathf.Max(0f, minimum);
+            return UnityEngine.Random.Range(clampedMinimum, Mathf.Max(clampedMinimum, maximum));
+        }
+
+        static ScorpionDecisionWeights ResolveDecisionWeights(
+            ScorpionStatsData stats,
+            ScorpionHealthProfile profile)
+        {
+            var controlled = new ScorpionDecisionWeights(
+                stats.phaseOneAttackWeight,
+                stats.phaseOneChargeWeight,
+                stats.phaseOneReverseWeight,
+                stats.phaseOneHoldWeight);
+            var aggressive = new ScorpionDecisionWeights(
+                stats.phaseTwoAttackWeight,
+                stats.phaseTwoChargeWeight,
+                stats.phaseTwoReverseWeight,
+                stats.phaseTwoHoldWeight);
+            var frenzy = new ScorpionDecisionWeights(
+                stats.phaseThreeAttackWeight,
+                stats.phaseThreeChargeWeight,
+                stats.phaseThreeReverseWeight,
+                stats.phaseThreeHoldWeight);
+            return ScorpionCombatDecision.SelectProfileValue(profile, controlled, aggressive, frenzy);
+        }
+
+        static ScorpionChargeVariantWeights ResolveChargeVariantWeights(
+            ScorpionStatsData stats,
+            ScorpionHealthProfile profile)
+        {
+            var controlled = new ScorpionChargeVariantWeights(
+                stats.phaseOneShortChargeWeight,
+                stats.phaseOneNormalChargeWeight,
+                stats.phaseOneCommittedChargeWeight);
+            var aggressive = new ScorpionChargeVariantWeights(
+                stats.phaseTwoShortChargeWeight,
+                stats.phaseTwoNormalChargeWeight,
+                stats.phaseTwoCommittedChargeWeight);
+            var frenzy = new ScorpionChargeVariantWeights(
+                stats.phaseThreeShortChargeWeight,
+                stats.phaseThreeNormalChargeWeight,
+                stats.phaseThreeCommittedChargeWeight);
+            return ScorpionCombatDecision.SelectProfileValue(profile, controlled, aggressive, frenzy);
+        }
+
+        static void ResolveDecisionHoldRange(
+            ScorpionStatsData stats,
+            ScorpionHealthProfile profile,
+            out float minimum,
+            out float maximum)
+        {
+            minimum = ScorpionCombatDecision.SelectProfileValue(
+                profile,
+                stats.decisionHoldMin,
+                stats.phaseTwoDecisionHoldMin,
+                stats.phaseThreeDecisionHoldMin);
+            maximum = ScorpionCombatDecision.SelectProfileValue(
+                profile,
+                stats.decisionHoldMax,
+                stats.phaseTwoDecisionHoldMax,
+                stats.phaseThreeDecisionHoldMax);
+        }
+
+        float ResolveActionRecovery(ScorpionState completedState)
+        {
+            ScorpionStatsData stats = ActiveStats;
+            ScorpionHealthProfile profile = ActiveHealthProfile;
+            float profileRecovery;
+            if (completedState == ScorpionState.Attack)
+            {
+                profileRecovery = ScorpionCombatDecision.SelectProfileValue(
+                    profile,
+                    stats.phaseOneAttackRecovery,
+                    stats.phaseTwoAttackRecovery,
+                    stats.phaseThreeAttackRecovery);
+            }
+            else if (completedState == ScorpionState.Charge)
+            {
+                profileRecovery = ScorpionCombatDecision.SelectProfileValue(
+                    profile,
+                    stats.phaseOneChargeRecovery,
+                    stats.phaseTwoChargeRecovery,
+                    stats.phaseThreeChargeRecovery);
+            }
+            else if (completedState == ScorpionState.Reverse)
+                profileRecovery = stats.reverseVulnerabilityDuration;
+            else
+                return 0f;
+
+            return ScorpionCombatDecision.ResolveRecovery(
+                profileRecovery,
+                HasPostStunPressure,
+                stats.postStunRecoveryMultiplier);
+        }
+
         void TickAttack()
         {
             ApplyAttackPresentation();
@@ -282,6 +520,15 @@ namespace Beavermania.NPC
             {
                 ResetChargeCycle();
                 EnterState(ScorpionState.Idle);
+                return;
+            }
+
+            if (UsesAdvancedAi)
+            {
+                stateTimer -= Time.fixedDeltaTime;
+                if (stateTimer <= 0f)
+                    EnterState(ScorpionState.Look);
+
                 return;
             }
 
@@ -294,9 +541,38 @@ namespace Beavermania.NPC
 
         void TickReverse()
         {
+            if (UsesAdvancedAi && hurricaneRetreatActive)
+            {
+                stateTimer -= Time.fixedDeltaTime;
+                if (stateTimer <= 0f)
+                {
+                    EnterState(HasCombatTargetInRange() ? ScorpionState.Look : ScorpionState.Idle);
+                    SetAnimatorState(walk: false, backwards: false, attack: false, stunned: false);
+                    return;
+                }
+
+                ApplyHurricaneRetreatPresentation();
+                return;
+            }
+
             if (!HasCombatTargetInRange())
             {
                 EnterState(ScorpionState.Idle);
+                return;
+            }
+
+            if (UsesAdvancedAi)
+            {
+                stateTimer -= Time.fixedDeltaTime;
+                if (stateTimer <= 0f)
+                {
+                    EnterState(ScorpionState.Look);
+                    return;
+                }
+
+                MoveAwayFromTarget(ReverseSpeed);
+                SetAnimatorState(walk: false, backwards: true, attack: false, stunned: false);
+                isAttacking = true;
                 return;
             }
 
@@ -336,21 +612,57 @@ namespace Beavermania.NPC
 
         public bool ReceiveDamage(int damage, EnemyDamageType damageType, Transform source)
         {
+            return ReceivePlayerAttack(damage, PlayerAttackKind.Unspecified, damageType, source);
+        }
+
+        public bool ReceivePlayerAttack(
+            int baseDamage,
+            PlayerAttackKind attackKind,
+            EnemyDamageType damageType,
+            Transform source)
+        {
+            int resolvedDamage = UsesAdvancedAi
+                ? PlayerAttackDamageRules.ResolveDamage(
+                    baseDamage,
+                    attackKind,
+                    currentState == ScorpionState.Stunned,
+                    ActiveStats.stunnedDamageMultiplier)
+                : baseDamage;
+            bool accepted = ApplyDamage(resolvedDamage, damageType, source, NormalHitComboReward);
+            if (accepted && (attackKind == PlayerAttackKind.HurricaneKick
+                || attackKind == PlayerAttackKind.HurricaneSword))
+                TryStartHurricaneRetreat(source);
+
+            return accepted;
+        }
+
+        public bool ReceiveCounterHit(int damage, EnemyDamageType damageType, Transform source)
+        {
+            int resolvedDamage = PlayerAttackDamageRules.ResolveDamage(
+                damage,
+                PlayerAttackKind.Unspecified,
+                UsesAdvancedAi && currentState == ScorpionState.Stunned,
+                ActiveStats.stunnedDamageMultiplier);
+            return ApplyDamage(resolvedDamage, damageType, source, CounterHitComboReward);
+        }
+
+        bool ApplyDamage(int damage, EnemyDamageType damageType, Transform source, int comboReward)
+        {
             if (deathHandled || CurrentHealth <= 0 || damage <= 0)
                 return false;
 
             transform.rotation = rotGoal;
             SetEffectActive(HitEffect, true);
             hitEffectTimer = HitEffectDuration;
-            int resolvedDamage = ResolveIncomingDamage(damage, damageType, source);
-            CurrentHealth = Mathf.Max(0, CurrentHealth - resolvedDamage);
-            combo++;
+            combo += comboReward;
             Sound?.Beat();
+
+            CurrentHealth = Mathf.Max(0, CurrentHealth - damage);
             if (BossHealth != null)
                 BossHealth.SetNPCHealth(CurrentHealth);
 
             EnsureBoostChargeResolved();
-            boostCharge?.RegisterHit(resolvedDamage);
+            boostCharge?.RegisterHit(damage);
 
             if (CurrentHealth <= 0)
                 Death();
@@ -358,19 +670,50 @@ namespace Beavermania.NPC
             return true;
         }
 
-        int ResolveIncomingDamage(int damage, EnemyDamageType damageType, Transform source)
+        void TryStartHurricaneRetreat(Transform source)
         {
-            if (damageType != EnemyDamageType.Normal || source == null)
-                return damage;
+            if (!UsesAdvancedAi
+                || rbScorpion == null
+                || deathHandled
+                || CurrentHealth <= 0
+                || currentState == ScorpionState.Stunned
+                || currentState == ScorpionState.Dead)
+            {
+                return;
+            }
 
-            if (source.GetComponentInParent<Projectile>() == null)
-                return damage;
+            if (hurricaneRetreatActive && currentState == ScorpionState.Reverse)
+                return;
 
-            float multiplier = Mathf.Clamp01(ActiveStats.projectileDamageMultiplier);
-            if (multiplier >= 0.999f)
-                return damage;
+            Vector3 retreatDirection = source != null
+                ? transform.position - source.position
+                : targetTransform != null
+                    ? transform.position - targetTransform.position
+                    : -transform.forward;
+            hurricaneRetreatDirection = ScorpionCombatDecision.LockHorizontalDirection(retreatDirection);
+            if (hurricaneRetreatDirection.sqrMagnitude <= LookRotationEpsilon)
+                hurricaneRetreatDirection = ScorpionCombatDecision.LockHorizontalDirection(-transform.forward);
 
-            return Mathf.Max(1, Mathf.RoundToInt(damage * multiplier));
+            hurricaneRetreatActive = true;
+            if (currentState == ScorpionState.Reverse)
+                stateTimer = Mathf.Max(0f, ActiveStats.hurricaneKickRetreatDuration);
+            else
+                EnterState(ScorpionState.Reverse);
+
+            rotGoal = Quaternion.LookRotation(-hurricaneRetreatDirection);
+            rbScorpion.rotation = rotGoal;
+            ApplyHurricaneRetreatPresentation();
+            // Walk's exit transition is longer than this retreat. Enter the existing
+            // rapid, looping claw-cover animation once; later hits must not rewind it.
+            if (Scorpion != null && Scorpion.HasState(0, BackwardsAnimatorStateHash))
+                Scorpion.Play(BackwardsAnimatorStateHash, 0, 0f);
+        }
+
+        void ApplyHurricaneRetreatPresentation()
+        {
+            SetHorizontalVelocity(hurricaneRetreatDirection * ActiveStats.hurricaneKickRetreatSpeed);
+            SetAnimatorState(walk: false, backwards: true, attack: false, stunned: false);
+            isAttacking = true;
         }
 
         void Death()
@@ -383,6 +726,7 @@ namespace Beavermania.NPC
             state = currentState.ToString();
             CurrentHealth = 0;
             isAttacking = false;
+            hurricaneRetreatActive = false;
             EnsureBoostChargeResolved();
             boostCharge?.RegisterKill();
             if (BossHealth != null)
@@ -414,9 +758,12 @@ namespace Beavermania.NPC
 
         void OnCollisionEnter(Collision OBJ)
         {
+            if (HandleMarkedGivingTreeChargeCollision(OBJ))
+                return;
+
             if (OBJ.gameObject.CompareTag("Strike"))
             {
-                Death();
+                ApplyStrikeCollision(OBJ.transform);
                 return;
             }
 
@@ -429,6 +776,111 @@ namespace Beavermania.NPC
                 ReceiveDamage(10, EnemyDamageType.Normal, OBJ.transform);
                 combo = Mathf.Max(combo, BridgeComboOverride);
             }
+
+            HandleChargeCollision(OBJ);
+        }
+
+        bool ApplyStrikeCollision(Transform source)
+        {
+            if (deathHandled || CurrentHealth <= 0)
+                return false;
+
+            return ReceiveDamage(CurrentHealth, EnemyDamageType.Normal, source);
+        }
+
+        void OnCollisionStay(Collision collision)
+        {
+            HandleChargeCollision(collision);
+        }
+
+        void HandleChargeCollision(Collision collision)
+        {
+            if (!UsesAdvancedAi || currentState != ScorpionState.Charge || collision == null)
+                return;
+
+            if (HandleMarkedGivingTreeChargeCollision(collision))
+                return;
+
+            for (int index = 0; index < collision.contactCount; index++)
+            {
+                Vector3 contactNormal = collision.GetContact(index).normal;
+                if (HandleChargeCollisionNormal(contactNormal))
+                    return;
+            }
+        }
+
+        bool HandleMarkedGivingTreeChargeCollision(Collision collision)
+        {
+            if (!UsesAdvancedAi || currentState != ScorpionState.Charge || collision == null)
+                return false;
+
+            LogSpawner tree = collision.collider != null
+                ? collision.collider.GetComponentInParent<LogSpawner>()
+                : null;
+            if (tree == null || !tree.CanStunScorpionBoss)
+                return false;
+
+            for (int index = 0; index < collision.contactCount; index++)
+            {
+                if (HandleMarkedGivingTreeChargeContact(tree, collision.GetContact(index).normal))
+                    return true;
+            }
+
+            return false;
+        }
+
+        bool HandleMarkedGivingTreeChargeContact(LogSpawner tree, Vector3 contactNormal)
+        {
+            if (!UsesAdvancedAi
+                || currentState != ScorpionState.Charge
+                || tree == null
+                || !tree.CanStunScorpionBoss
+                || !IsFrontalChargeContact(contactNormal))
+            {
+                return false;
+            }
+
+            tree.DestroyTree(transform);
+            ScorpionState nextState = stunCooldownRemaining <= 0f
+                ? ScorpionState.Stunned
+                : HasCombatTargetInRange()
+                    ? ScorpionState.Look
+                    : ScorpionState.Idle;
+            EnterState(nextState);
+            return true;
+        }
+
+        bool IsFrontalChargeContact(Vector3 contactNormal)
+        {
+            Vector3 horizontalNormal = ScorpionCombatDecision.LockHorizontalDirection(contactNormal);
+            if (horizontalNormal.sqrMagnitude <= LookRotationEpsilon
+                || lockedChargeDirection.sqrMagnitude <= LookRotationEpsilon)
+            {
+                return false;
+            }
+
+            Vector3 impactDirection = -horizontalNormal;
+            return Vector3.Dot(lockedChargeDirection, impactDirection) >= FrontalTreeImpactDotThreshold;
+        }
+
+        bool HandleChargeCollisionNormal(Vector3 contactNormal)
+        {
+            if (!UsesAdvancedAi || currentState != ScorpionState.Charge)
+                return false;
+
+            Vector3 horizontalContactNormal = contactNormal;
+            horizontalContactNormal.y = 0f;
+            if (contactNormal.y > horizontalContactNormal.magnitude)
+                return false;
+
+            Vector3 horizontalNormal = ScorpionCombatDecision.LockHorizontalDirection(contactNormal);
+            if (horizontalNormal.sqrMagnitude <= LookRotationEpsilon
+                || lockedChargeDirection.sqrMagnitude <= LookRotationEpsilon
+                || Vector3.Dot(lockedChargeDirection, horizontalNormal) > ChargeObstructionDotThreshold)
+                return false;
+
+            EnterState(HasCombatTargetInRange() ? ScorpionState.Look : ScorpionState.Idle);
+            return true;
         }
 
         void ResolvePlayerReferences()
@@ -471,17 +923,94 @@ namespace Beavermania.NPC
             if (currentState == nextState)
                 return;
 
+            ScorpionState previousState = currentState;
             currentState = nextState;
             state = nextState.ToString();
+            if (UsesAdvancedAi && previousState == ScorpionState.Charge && nextState != ScorpionState.Charge)
+                ResetAdvancedChargeTracking();
+            if (previousState == ScorpionState.Reverse && nextState != ScorpionState.Reverse)
+                hurricaneRetreatActive = false;
+            if (UsesAdvancedAi && previousState == ScorpionState.Recovered)
+            {
+                postStunPressureTimer = Mathf.Max(0f, ActiveStats.postStunPressureDuration);
+                if (startStunCooldownAfterRecovery)
+                {
+                    stunCooldownRemaining = Mathf.Max(0f, ActiveStats.bossStunCooldown);
+                    startStunCooldownAfterRecovery = false;
+                }
+            }
 
             switch (nextState)
             {
                 case ScorpionState.ChargeWindup:
                     minimumChargeTimeRemaining = chargeDuration;
-                    stateTimer = Time.fixedDeltaTime;
+                    if (UsesAdvancedAi)
+                    {
+                        ScorpionStatsData stats = ActiveStats;
+                        ScorpionChargeVariantWeights variantWeights = ResolveChargeVariantWeights(
+                            stats,
+                            ActiveHealthProfile);
+                        activeChargeVariant = ScorpionCombatDecision.SelectChargeVariant(
+                            variantWeights,
+                            UnityEngine.Random.value);
+                        activeChargeLimits = ScorpionCombatDecision.ResolveChargeLimits(
+                            activeChargeVariant,
+                            stats.chargeMaximumDuration,
+                            stats.chargeMaximumDistance,
+                            stats.chargeTrackingDuration,
+                            stats.shortChargeDurationMultiplier,
+                            stats.shortChargeDistanceMultiplier,
+                            stats.committedChargeDurationMultiplier,
+                            stats.committedChargeDistanceMultiplier,
+                            stats.committedChargeTrackingMultiplier);
+                        float minimumWindup = Mathf.Max(ScorpionStatsData.MinimumChargeWindup, stats.chargeWindupMin);
+                        stateTimer = RandomRange(minimumWindup, Mathf.Max(minimumWindup, stats.chargeWindupMax));
+                    }
+                    else
+                        stateTimer = Time.fixedDeltaTime;
+                    break;
+                case ScorpionState.Charge:
+                    if (UsesAdvancedAi)
+                    {
+                        chargeElapsed = 0f;
+                        chargeTravelledDistance = 0f;
+                        previousChargePosition = rbScorpion.position;
+                        lockedChargeDirection = ScorpionCombatDecision.LockHorizontalDirection(HorizontalTargetDirection());
+                    }
+                    stateTimer = 0f;
+                    break;
+                case ScorpionState.Attack:
+                    stateTimer = UsesAdvancedAi ? Mathf.Max(0f, ActiveStats.attackWindowDuration) : 0f;
+                    break;
+                case ScorpionState.Reverse:
+                    stateTimer = UsesAdvancedAi && hurricaneRetreatActive
+                        ? Mathf.Max(0f, ActiveStats.hurricaneKickRetreatDuration)
+                        : UsesAdvancedAi
+                        ? RandomRange(ActiveStats.decisionHoldMin, ActiveStats.decisionHoldMax)
+                        : 0f;
+                    break;
+                case ScorpionState.Look:
+                    stateTimer = UsesAdvancedAi ? ResolveActionRecovery(previousState) : 0f;
+                    if (UsesAdvancedAi)
+                    {
+                        isAttacking = false;
+                        SetHorizontalVelocity(Vector3.zero);
+                    }
+                    break;
+                case ScorpionState.Idle:
+                    stateTimer = 0f;
+                    if (UsesAdvancedAi)
+                    {
+                        isAttacking = false;
+                        SetHorizontalVelocity(Vector3.zero);
+                    }
                     break;
                 case ScorpionState.Stunned:
-                    stateTimer = ActiveStats.stunDuration;
+                    stateTimer = UsesAdvancedAi
+                        ? Mathf.Max(0f, ActiveStats.bossStunDuration)
+                        : ActiveStats.stunDuration;
+                    if (UsesAdvancedAi)
+                        startStunCooldownAfterRecovery = true;
                     break;
                 case ScorpionState.Recovered:
                     combo = 0;
@@ -512,6 +1041,14 @@ namespace Beavermania.NPC
         void ResetChargeCycle()
         {
             minimumChargeTimeRemaining = chargeDuration;
+        }
+
+        void ResetAdvancedChargeTracking()
+        {
+            chargeElapsed = 0f;
+            chargeTravelledDistance = 0f;
+            previousChargePosition = Vector3.zero;
+            lockedChargeDirection = Vector3.zero;
         }
 
         Vector3 HorizontalTargetDirection()
@@ -620,7 +1157,7 @@ namespace Beavermania.NPC
             Scorpion.SetBool("Walk", walk);
             Scorpion.SetBool("Backwards", backwards);
             Scorpion.SetBool("Attack", attack);
-            Scorpion.SetBool("Stunned", stunned);
+            Scorpion.SetBool(StunnedAnimatorParameter, stunned);
         }
 
         void SetEffectActive(GameObject effect, bool active)

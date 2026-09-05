@@ -24,6 +24,7 @@ namespace Beavermania.Player.Combat
     {
         const int DefaultPoolCapacity = 8;
         const int MaxActiveInstances = 64;
+        const int LegacyScorpionComboBonus = 3;
 
         struct StoredIgnoreCollision
         {
@@ -685,6 +686,31 @@ namespace Beavermania.Player.Combat
             return damageReceiver is Component component ? component.GetInstanceID() : damageReceiver.GetHashCode();
         }
 
+        /// <summary>
+        /// Reports whether the receiver owned the hit, not whether health was reduced. The receiver remains
+        /// responsible for rejecting invalid or terminal-state damage, so the legacy tag fallback must not
+        /// damage the same enemy a second time or grant a legacy combo bonus.
+        /// </summary>
+        static bool TryRouteDamageToReceiver(
+            IEnemyDamageReceiver damageReceiver,
+            int damage,
+            PlayerAttackKind attackKind,
+            EnemyDamageType damageType,
+            Transform source,
+            int legacyScorpionComboBonus)
+        {
+            if (damageReceiver == null)
+                return false;
+
+            bool accepted = damageReceiver is IPlayerAttackReceiver playerAttackReceiver
+                ? playerAttackReceiver.ReceivePlayerAttack(damage, attackKind, damageType, source)
+                : damageReceiver.ReceiveDamage(damage, damageType, source);
+            if (accepted)
+                ApplyLegacyScorpionComboBonus(damageReceiver, legacyScorpionComboBonus);
+
+            return true;
+        }
+
         static void ApplyLegacyScorpionComboBonus(IEnemyDamageReceiver damageReceiver, int bonus)
         {
             if (bonus <= 0)
@@ -754,9 +780,14 @@ namespace Beavermania.Player.Combat
             Collider hitCollider = collision.collider;
 
             IEnemyDamageReceiver damageReceiver = GetEnemyDamageReceiver(hitCollider);
-            if (damageReceiver != null && damageReceiver.ReceiveDamage(Damage, EnemyDamageType.Normal, transform))
+            if (TryRouteDamageToReceiver(
+                damageReceiver,
+                Damage,
+                PlayerAttackKind.Arrow,
+                EnemyDamageType.Normal,
+                transform,
+                LegacyScorpionComboBonus))
             {
-                ApplyLegacyScorpionComboBonus(damageReceiver, 3);
                 ArrowHit();
                 return;
             }
@@ -778,7 +809,7 @@ namespace Beavermania.Player.Combat
             ScorpionScript scorpion = GetComponentInParentSafe<ScorpionScript>(hitCollider);
             if (scorpion != null)
             {
-                scorpion.TakeDamage(Damage);
+                scorpion.ReceivePlayerAttack(Damage, PlayerAttackKind.Arrow, EnemyDamageType.Normal, transform);
                 scorpion.combo += 3;
                 ArrowHit();
                 return;
@@ -984,10 +1015,13 @@ namespace Beavermania.Player.Combat
                 IEnemyDamageReceiver damageReceiver = GetEnemyDamageReceiver(hitCollider);
                 if (damageReceiver != null && damagedTargets.Add(GetDamageReceiverId(damageReceiver)))
                 {
-                    bool appliedDamage = damageReceiver.ReceiveDamage(damageAmount, EnemyDamageType.Fire, transform);
-                    if (appliedDamage)
-                        ApplyLegacyScorpionComboBonus(damageReceiver, 3);
-
+                    TryRouteDamageToReceiver(
+                        damageReceiver,
+                        damageAmount,
+                        PlayerAttackKind.Unspecified,
+                        EnemyDamageType.Fire,
+                        transform,
+                        LegacyScorpionComboBonus);
                     continue;
                 }
 
@@ -1002,7 +1036,11 @@ namespace Beavermania.Player.Combat
                 ScorpionScript scorpion = GetComponentInParentSafe<ScorpionScript>(hitCollider);
                 if (scorpion != null && damagedTargets.Add(scorpion.GetInstanceID()))
                 {
-                    scorpion.TakeDamage(damageAmount);
+                    scorpion.ReceivePlayerAttack(
+                        damageAmount,
+                        PlayerAttackKind.Unspecified,
+                        EnemyDamageType.Fire,
+                        transform);
                     scorpion.combo += 3;
                     continue;
                 }
@@ -1204,9 +1242,14 @@ namespace Beavermania.Player.Combat
 
             var hit = false;
             IEnemyDamageReceiver damageReceiver = GetEnemyDamageReceiver(OBJ.collider);
-            if (damageReceiver != null && damageReceiver.ReceiveDamage(Damage, EnemyDamageType.Normal, transform))
+            if (TryRouteDamageToReceiver(
+                damageReceiver,
+                Damage,
+                PlayerAttackKind.Unspecified,
+                EnemyDamageType.Normal,
+                transform,
+                LegacyScorpionComboBonus))
             {
-                ApplyLegacyScorpionComboBonus(damageReceiver, 3);
                 hit = true;
                 RockHit();
             }
@@ -1236,7 +1279,11 @@ namespace Beavermania.Player.Combat
                 ScorpionScript scorpion = GetComponentInParentSafe<ScorpionScript>(OBJ.collider);
                 if (scorpion != null)
                 {
-                    scorpion.TakeDamage(Damage);
+                    scorpion.ReceivePlayerAttack(
+                        Damage,
+                        PlayerAttackKind.Unspecified,
+                        EnemyDamageType.Normal,
+                        transform);
                     scorpion.combo += 3;
                 }
                 if (UsesFireBreathLogic)

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Beavermania.Data.Combat;
 using Beavermania.NPC;
 using Beavermania.Objects;
@@ -22,6 +23,7 @@ namespace Beavermania.Player.Combat
         const float FallbackBareHandsAirRadius = 2.5f;
 
         static readonly Collider[] s_hitBuffer = new Collider[32];
+        static readonly HashSet<int> s_routedReceiverIds = new HashSet<int>();
 
         private void Start()
         {
@@ -42,6 +44,12 @@ namespace Beavermania.Player.Combat
 
         public void CauseDamage(Vector3 origin, float range, int Damage)
         {
+            CauseDamage(origin, range, Damage, PlayerAttackKind.Unspecified);
+        }
+
+        void CauseDamage(Vector3 origin, float range, int damage, PlayerAttackKind attackKind)
+        {
+            s_routedReceiverIds.Clear();
             int count = Physics.OverlapSphereNonAlloc(origin, range, s_hitBuffer, enemyLayers);
             for (int i = 0; i < count; i++)
             {
@@ -52,7 +60,7 @@ namespace Beavermania.Player.Combat
                 if (enableHitDebugLogs && enemy.name != null)
                     Debug.Log("Hit " + enemy.name);
 
-                if (TryApplyInterfaceDamage(enemy, Damage))
+                if (TryApplyInterfaceDamage(enemy, damage, attackKind))
                     continue;
 
                 switch (enemy.tag)
@@ -61,39 +69,83 @@ namespace Beavermania.Player.Combat
                         {
                             var wasp = enemy.gameObject.GetComponent<NPC_Basic>();
                             if (wasp != null)
-                                wasp.TakeDamage(Damage);
+                                wasp.TakeDamage(damage);
                             break;
                         }
                     case "Hive":
                         {
                             var hive = enemy.gameObject.GetComponent<Static_Hive>();
                             if (hive != null)
-                                hive.TakeDamage(Damage);
+                                hive.TakeDamage(damage);
                             break;
                         }
                     case "Scorpion":
                         {
                             var scorpion = enemy.gameObject.GetComponent<ScorpionScript>();
                             if (scorpion != null)
-                                scorpion.TakeDamage(Damage);
+                                scorpion.ReceivePlayerAttack(damage, attackKind, EnemyDamageType.Normal, transform);
                             break;
                         }
                 }
             }
         }
 
-        bool TryApplyInterfaceDamage(Collider enemy, int damage)
+        bool TryApplyInterfaceDamage(Collider enemy, int damage, PlayerAttackKind attackKind)
         {
             if (enemy == null)
                 return false;
 
             IEnemyDamageReceiver damageReceiver = enemy.GetComponentInParent<IEnemyDamageReceiver>();
-            return damageReceiver != null && damageReceiver.ReceiveDamage(damage, EnemyDamageType.Normal, transform);
+            if (damageReceiver == null)
+                return false;
+
+            if (!TryClaimReceiverForThisSwing(damageReceiver))
+                return true;
+
+            return TryRouteInterfaceDamage(damageReceiver, damage, attackKind);
+        }
+
+        /// <summary>
+        /// A boss overlaps the swing sphere with several colliders (jaws, sting, body), all resolving to the
+        /// same receiver. One animation event must reach that receiver once, so the first collider claims it
+        /// for the remainder of this <see cref="CauseDamage"/> call and later duplicates are reported as
+        /// already owned. The claim set is per-swing state on a single-threaded call path, so reusing it
+        /// keeps the hit loop allocation-free.
+        /// </summary>
+        static bool TryClaimReceiverForThisSwing(IEnemyDamageReceiver damageReceiver)
+        {
+            return s_routedReceiverIds.Add(GetDamageReceiverId(damageReceiver));
+        }
+
+        static int GetDamageReceiverId(IEnemyDamageReceiver damageReceiver)
+        {
+            return damageReceiver is Component component ? component.GetInstanceID() : damageReceiver.GetHashCode();
+        }
+
+        /// <summary>
+        /// Reports whether the receiver owned the hit, not whether health was reduced. The receiver remains
+        /// responsible for rejecting invalid or terminal-state damage, so the legacy tag fallback must not
+        /// damage the same enemy a second time.
+        /// </summary>
+        bool TryRouteInterfaceDamage(
+            IEnemyDamageReceiver damageReceiver,
+            int damage,
+            PlayerAttackKind attackKind)
+        {
+            if (damageReceiver == null)
+                return false;
+
+            if (damageReceiver is IPlayerAttackReceiver playerAttackReceiver)
+                playerAttackReceiver.ReceivePlayerAttack(damage, attackKind, EnemyDamageType.Normal, transform);
+            else
+                damageReceiver.ReceiveDamage(damage, EnemyDamageType.Normal, transform);
+
+            return true;
         }
 
         public void RollAttack()
         {
-            CauseDamage(AttackPoint.position, 1.5f, RollAttackDamage);
+            CauseDamage(AttackPoint.position, 1.5f, RollAttackDamage, PlayerAttackKind.Unspecified);
         }
 
         public void GroundAttack()
@@ -104,7 +156,8 @@ namespace Beavermania.Player.Combat
                 CauseDamage(
                     AttackPoint.position,
                     FallbackBareHandsGroundRadius,
-                    FallbackBareHandsGroundDamage);
+                    FallbackBareHandsGroundDamage,
+                    PlayerAttackKind.BareHands);
                 return;
             }
 
@@ -112,7 +165,12 @@ namespace Beavermania.Player.Combat
                 ? Sphere.position + Vector3.up * weaponData.groundAttackOriginYOffset
                 : AttackPoint.position + Vector3.up * weaponData.groundAttackOriginYOffset;
 
-            CauseDamage(origin, weaponData.groundAttackRadius, weaponData.groundMeleeDamage);
+            PlayerAttackKind attackKind = weaponData.category == WeaponCategory.ArmorSet
+                ? PlayerAttackKind.SwordSwing
+                : weaponData.category == WeaponCategory.BareHands
+                    ? PlayerAttackKind.BareHands
+                    : PlayerAttackKind.Unspecified;
+            CauseDamage(origin, weaponData.groundAttackRadius, weaponData.groundMeleeDamage, attackKind);
         }
 
         /// <summary>
@@ -132,13 +190,17 @@ namespace Beavermania.Player.Combat
             if (weaponData != null && weaponData.category == WeaponCategory.ArmorSet)
             {
                 Vector3 origin = Sphere.position + Vector3.up * weaponData.groundAttackOriginYOffset;
-                CauseDamage(origin, weaponData.airAttackRadius, weaponData.airMeleeDamage);
+                CauseDamage(
+                    origin,
+                    weaponData.airAttackRadius,
+                    weaponData.airMeleeDamage,
+                    PlayerAttackKind.HurricaneSword);
                 return;
             }
 
             int airDamage = weaponData != null ? weaponData.airMeleeDamage : FallbackBareHandsAirDamage;
             float airRadius = weaponData != null ? weaponData.airAttackRadius : FallbackBareHandsAirRadius;
-            CauseDamage(Sphere.position, airRadius, airDamage);
+            CauseDamage(Sphere.position, airRadius, airDamage, PlayerAttackKind.HurricaneKick);
         }
 
         public void ShieldParryON()

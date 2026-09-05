@@ -194,3 +194,200 @@ Does **not** certify the canopy-facing repro — that remains user-reported open
 
 - Active task + checklists: `AI_WORKFLOW/active-task.md`
 - Codex → Cursor A/B steps: `AI_WORKFLOW/handoffs/codex-to-cursor.md`
+
+---
+
+## Scorpion boss AI rework — architecture and merge-readiness review (2026-08-12)
+
+### Ownership
+
+- **Branch:** `feature/ScorpionBoss_Rework`
+- **Cursor completed:** focused gameplay implementation, boss stats tuning, obstruction bug fix, automated tests, and controlled production-scene trials.
+- **Codex requested:** architecture/risk review before merge. Do not broaden gameplay behavior.
+
+### Implemented behavior
+
+- Boss-only advanced AI gated by `ScorpionStatsData.advancedAiEnabled`.
+- Distance-aware weighted Attack/Charge/Reverse/Hold decisions with maximum two identical macro selections.
+- Charge windup, brief tracking, locked horizontal direction, variants, and time/distance/pass/contact termination.
+- Persistent opposing wall contact now terminates Charge even when contact began during ChargeWindup; flat and walkable sloped ground contacts are filtered before horizontal obstruction evaluation.
+- Attack timeout, profile recovery, post-stun pressure, and intentional Parry counter reward of two combo.
+- Normal Scorpion remains on the legacy FSM path.
+
+### Fresh verification
+
+- Unity EditMode batch: **46/46 passed** for `Beavermania.Tests.EditMode.NPC.Scorpion`.
+- Unity PlayMode batch: **4/4 passed** for `ScorpionBossVictoryFlowPlayModeTests`.
+- New state-boundary coverage includes Attack timeout/recovery, Charge timeout, persistent collision exit, post-stun timing, and stun interruption.
+- Repository `.ci` build remains blocked on Windows by its existing Linux Unity assembly hint paths.
+
+### Architecture concerns requiring Codex decision
+
+1. `ScorpionScript.cs` now exceeds 1,000 lines and mixes legacy plus advanced FSM responsibilities.
+2. `ScorpionStatsData` has repeated scalar fields for three phase profiles and Charge variants.
+3. `stateTimer` still carries several state-specific meanings.
+4. EditMode tests use reflection because the runtime code is in `Assembly-CSharp` while tests are in an asmdef.
+
+### Requested Codex output
+
+1. Decide whether extraction into a focused advanced-combat runtime/brain is required before merge or should be a separate serialized-safe follow-up.
+2. If extraction is required, provide exact ownership boundaries that preserve `ScorpionScript` public/serialized contracts, enum values, prefab GUIDs, legacy normal-Scorpion behavior, and Animator bools.
+3. Decide whether grouped serializable tuning can be introduced without removing or renaming existing serialized fields in this branch.
+4. Review the final diff for merge readiness after the obstruction fix and expanded FSM tests.
+
+### Protected areas
+
+- Do not edit scene, prefab, Animator, animation, model, collider wiring, or `.meta` GUIDs.
+- Do not change HP/damage tuning, add abilities, or alter the approved combat grammar.
+- Do not remove/rename serialized fields without an explicit migration plan.
+
+---
+
+## Scorpion boss combat contract — Unity verification results + balance findings (2026-09-05)
+
+### Ownership
+
+- **Branch:** `feature/ScorpionBoss_Rework`, HEAD `74c82bf6` ("feat: implement scorpion boss combat contract").
+- **Cursor completed:** Unity-side integration (Giving Tree marker, boss stats values), plus the **first actually-executed** EditMode/PlayMode verification of the boss contract via Unity MCP against `BeaverProject@d3b470b190d10be0` (Unity 2021.3.3f1).
+- **Codex requested:** one C# defect decision (P1 below), one balance/design decision, and two pre-existing test failures that will block CI.
+- Cursor changed **no C# and no formulas** in this pass.
+
+### Verification status — contract is GREEN
+
+All prior Scorpion passes reported "0 EditMode and 0 PlayMode tests were executed". That gap is now closed.
+
+| Run | Result |
+| --- | --- |
+| Scorpion EditMode contract suites (scoped) | **48/48 passed** |
+| Scorpion boss PlayMode + victory-flow (scoped) | **8/8 passed** |
+| Full EditMode suite | 111 ran, **6 failed — none Scorpion** (3 audio-routing, 3 input-lifecycle) |
+| Full PlayMode suite | **Aborted at 36/111** — see P3 |
+
+Every item on the user's contract checklist has executed-test evidence except respawn/fight-restart (no test exists). `ScorpionCombatContractTests` pins the exact shipped asset values (`bossStunDuration 3.5`, `bossStunCooldown 10`, `stunnedDamageMultiplier 2`, `hurricaneKickRetreatSpeed 12`, `hurricaneKickRetreatDuration 0.6`), so the asset and the suite agree.
+
+Note the suite has changed shape since the 2026-08-26 notes above: `ScorpionVulnerabilityWindowTests.cs` is **gone**, replaced by `ScorpionCombatContractTests.cs`. `ReceiveDamage_AdvancedBossInNormalState_IsAlwaysDamageable` now asserts the advanced boss is damageable in Idle/Attack/Charge/Reverse/Look. The punish-window model described in `active-task.md` is therefore superseded by "always damageable, 2x while stunned"; the deferred-lethal-hazard latch and `reverseVulnerabilityDuration` should be re-read in that light.
+
+### P1 (Codex-owned, C#) — Hammers ground attack gets no weapon multiplier
+
+`AnimatedAttack.GroundAttack()` maps only `WeaponCategory.ArmorSet` to `PlayerAttackKind.SwordSwing`; `Hammers` and `Bow` fall through to `Unspecified` (x1.0):
+
+```csharp
+PlayerAttackKind attackKind = weaponData.category == WeaponCategory.ArmorSet
+    ? PlayerAttackKind.SwordSwing
+    : weaponData.category == WeaponCategory.BareHands
+        ? PlayerAttackKind.BareHands
+        : PlayerAttackKind.Unspecified;
+```
+
+Effect with the shipped weapon assets: Hammers deals **700** per ground swing (700 x 1.0) while the Armor Set — the kit that also owns `HurricaneSword`, fire breath and sword glare — deals **600** (200 x 3.0). The intended progression is inverted, and `SwordSwing`'s approved x3 multiplier is unreachable by any weapon except Armor Set.
+
+Cursor did not touch this (C# is out of the approved scope). **Codex decision needed:** is `Hammers` supposed to map to `SwordSwing`, or is the Armor Set `groundMeleeDamage: 200` the value that should rise? Either fix changes tuning, so it needs an explicit call rather than a guess.
+
+### Observed damage values (base from real weapon assets; boss `maxHealth: 150000`)
+
+| Attack | Base | Kind resolved | x | Normal | Stunned | Hits to kill |
+| --- | --- | --- | --- | --- | --- | --- |
+| Armor Set ground | 200 | SwordSwing | 3.0 | 600 | 1200 | 250 |
+| Armor Set air | 350 | HurricaneSword | 1.5 | 525 | 1050 | 286 |
+| Hammers ground | 700 | Unspecified | 1.0 | 700 | 1400 | 215 |
+| Arrow | 2000 | Arrow | 2.0 | 4000 | 8000 | 38 |
+| Bare Hands ground | 50 | BareHands | 1.0 | 50 | 100 | 3000 |
+| Air kick (non-sword) | 20 | HurricaneKick | 0.8 | 16 | 32 | 9375 |
+| Roll attack | 200 | Unspecified | 1.0 | 200 | 400 | 750 |
+| RockShot (stone) | 5 | Unspecified | 1.0 | 5 | 10 | 30000 |
+
+### P2 (design/tuning decision) — the stun reward is currently marginal
+
+A 3.5 s stun at 2x yields roughly four extra Armor Set swings, about **2,400 bonus damage = 1.6 % of the boss health bar**. The cycle floor is 13.5 s (3.5 stun + 10 cooldown), so reaching even 30 % of the bar through stuns needs ~19 flawless tree charges across 4+ minutes.
+
+Two compounding constraints:
+
+- **Tree supply is finite and consumed.** `Level 1 - Remastered - Steam` contains **25** `TheGivingTree` prefab instances scene-wide, each destroyed on use. How many sit inside the boss arena within charge range is unverified — if it is under ~8, the mechanic runs dry mid-fight.
+- **`maxHealth: 150000` dominates fight length.** Sustained melee needs 215–250 connected swings, so roughly 4–5 minutes of pure uninterrupted hitting and realistically 6–8 minutes with charges, retreats and repositioning. (Arithmetic from the table above, not a measured playthrough.)
+
+Raising `stunnedDamageMultiplier` to its `[Range(1.5, 3)]` ceiling only moves stun value from 1.6 % to 3.2 %, so it does not fix the ratio alone. **Codex recommendation requested:** lowering `maxHealth` to roughly 40,000–60,000 would land the fight in a 2–3 minute band and make each stun worth 4–6 % of the bar. `maxHealth` was outside the user's approved tuning range, so Cursor left it unchanged.
+
+### P3 (blocks PlayMode CI) — pre-existing failures unrelated to Scorpion
+
+- `WaspQueenBossPlayModeTests.Charge_LocksDirectionAtStart` **hangs to the 180 s timeout** (`Timeout value of 180000ms was exceeded` in both test and TearDown), which aborted the unscoped PlayMode run at 36/111. This regressed since the 2026-06-30 note above, which recorded it PASS.
+- `WaspQueenBossPlayModeTests.PooledProjectile_DetachesFromBossHierarchy_AndKeepsWorldVelocity` fails (expected 1 active projectile, got 0) — consistent with the still-open pool parenting failure documented earlier in this file.
+- Full PlayMode also pulls in the Input System package's own `IntegrationTests.WindowsInput_*` cases; worth excluding from the project's CI filter.
+- EditMode: 3 `AudioRoutingEditModeTests` (mixer dB values) and 3 `InputReaderLifecycleTests` (jump event count 1 vs 0) fail. Pre-existing, non-Scorpion.
+
+### Lower-priority notes
+
+- **Covering claws are functional but not animated.** `HurricaneKick_StartsCoveringReverseAtConfiguredSpeedAndDuration` passes on `isAttacking == true`, so contact damage stays live during retreat. But the Animator plays `Backwards` with `Attack` false, so no claw motion is visible. Contract met, presentation is not.
+- **`reverseVulnerabilityDuration: 0.8`** remains in `ScorpionBossStatsData.asset` but nothing gates on it now that the boss is always damageable — likely vestigial, confirm before removing (serialized field).
+- **Coverage gap:** respawn and fight restart have no automated test. Cursor could not hand-play the fight (no way to inject player input through MCP), so these need either a new PlayMode test or manual verification.
+- **Test hygiene:** `ScorpionBossVictoryFlowPlayModeTests` logs `ScorpionBoss: ScorpionStatsData reference missing. Using legacy serialized fallback values.` on every case — the same fallback-leak pattern that was fixed in `ScorpionComboRewardTests` on 2026-08-26, still present in the victory fixture.
+- **Stunned-state coverage is partial:** only `SwordSwing` has a dedicated stunned-damage test. The other four kinds share `ResolveDamage`, whose composition order is pinned by `ResolveDamage_AppliesAttackThenStunnedMultiplierBeforeRounding`, so the risk is low but the cases are not individually asserted.
+
+### Cursor working-tree state (uncommitted, not committed by request)
+
+| File | Change |
+| --- | --- |
+| `Assets/Data/NPC/Scorpion/ScorpionBossStatsData.asset` | +5 lines: the five approved boss-contract values |
+| `Assets/Prefabs/Objects/Interactable/TheGivingTree.prefab` | +3 lines: `canStunScorpionBoss: 1` plus two Unity-added explicit nulls |
+
+No other asset was dirtied by the test runs. A stale `.git/index.lock` blocked the intended separate Unity-wiring commit and the user chose to commit manually.
+
+### What Codex must not change
+
+- The five approved values in `ScorpionBossStatsData.asset`, or the `canStunScorpionBoss` marker.
+- Scene, prefab, Animator, animation, collider wiring, or `.meta` GUIDs.
+- The passing contract suites' assertions (they encode the approved combat grammar).
+- `maxHealth` or `stunnedDamageMultiplier` without an explicit user decision on P2.
+
+---
+
+## BLOCKER — aerial-retreat pass removed serialized fields that are bound in two Scorpion prefabs (2026-09-05, acceptance testing)
+
+### Ownership
+
+- **Owner: Codex** (`Assets/Scripts/NPC/Scorpion/ScorpionScript.cs`, uncommitted working tree on `feature/ScorpionBoss_Rework`).
+- Raised by Cursor during final acceptance testing of the "Hurricane aerial retreat and covering claws" handoff dated 2026-09-05. **Acceptance is BLOCKED on this item.**
+
+### The regression
+
+The retreat patch deleted six public serialized members from `ScorpionScript`:
+
+```csharp
+-        public Collider Jaw1A;
+-        public Collider Jaw1B;
+-        public Collider Jaw2A;
+-        public Collider Jaw2B;
+-        public Collider Sting;
+-        public string state = nameof(ScorpionState.Idle);
+```
+
+All six are **serialized in both boss prefabs today**, verified by direct YAML scan:
+
+| Prefab | Bound members |
+| --- | --- |
+| `Assets/Prefabs/Scorpion/Scorpion.prefab` | `Jaw1A` `2631068468930072073`, `Jaw1B` `3574585947653929594`, `Jaw2A` `3877933947483839307`, `Jaw2B` `9083913364248970971`, `Sting` `747129927400765033`, `state: Idle` |
+| `Assets/Prefabs/Scorpion/ScorpionBoss.prefab` | `Jaw1A` `2526920102824034338`, `Jaw1B` `3893775697488114769`, `Jaw2A` `3621794351671399776`, `Jaw2B` `8755712033370654960`, `Sting` `994262058274469954`, `state: Idle` |
+
+That is **12 live serialized bindings**. This is the exact case the handoff above listed under "What Codex must not change" and that `AGENTS.md` prohibits ("Do not remove public or serialized fields without checking prefab and scene usage").
+
+### Why it is a blocker even though runtime behavior looks unaffected
+
+Cursor confirmed no C# in `Assets/Scripts` or `Assets/Tests` reads `Jaw1A`/`Jaw1B`/`Jaw2A`/`Jaw2B`, and nothing reads the public `state` string, so there is **no runtime logic failure** from the removal itself. The problem is data, not behavior:
+
+1. **Silent, irreversible loss.** Unity discards unknown serialized keys without raising a Missing Reference, so this will not surface in the Console. The five collider bindings per prefab disappear permanently the first time either prefab reserializes.
+2. **It destroys the only remaining map of which colliders are the claws and the sting.** The current acceptance criterion — "the claws provide cover during retreat and register damage only as allowed by the existing attack-event system" — is the exact feature that would need those references to gate claw hitboxes per attack window. Re-deriving them later means hand-re-wiring ten collider references across two prefabs.
+3. **The four removed public properties** (`StatsData`, `StunnedClock`, `chargeClock`, `recoveryDuration`) are confirmed unreferenced and are fine to drop; the issue is scoped to the six serialized members above.
+
+### Requested Codex action
+
+Restore the six serialized members on `ScorpionScript` (keeping them unused is acceptable), or supply an explicit migration plan plus the prefab edits that intentionally clear those bindings. Cursor will not edit prefab YAML or C# to work around this.
+
+### Verified-good in the same pass (no action needed)
+
+- **`ScorpionDamage.cs` deletion is safe.** Its script GUID `05f23018af447874fbc32a2f700f7956` appears in no `.prefab`, `.unity`, `.asset`, or `.controller`, confirming it was never attached. The live boss-contact damage path is `BeaverPlayerBehaviour.OnTriggerEnter` on tags `ScorpionDamage` / `ScorpionSting`, which is untouched. The pre-existing empty parried `else` branch at `BeaverPlayerBehaviour.cs:526` remains, so outgoing parry counters still never fire — unchanged, still unwired.
+- **Covering-claw damage chain is intact.** `ApplyHurricaneRetreatPresentation()` sets `isAttacking = true`; `BeaverPlayerBehaviour.cs:549` polls `scorpAttack = cachedScorpionScript.isAttacking`; claw damage at `:521` and sting damage at `:533` gate on it. Retreat therefore keeps contact damage live through the existing path with no new damage route.
+- **Forced `Backwards` entry will resolve.** `Scorpion.controller` has layer `Base Layer` and states `Idle`, `Walk`, `Attack`, `Backwards`, `Stunned`, so `Animator.StringToHash("Base Layer.Backwards")` with `HasState(0, ...)` matches and every post-stun / post-retreat target state exists.
+- **Re-entry guard is correct.** `if (hurricaneRetreatActive && currentState == ScorpionState.Reverse) return;` prevents both timer extension and animation rewind, while a non-hurricane `Reverse` is still convertible into a retreat.
+
+### Minor, non-blocking
+
+`TryStartHurricaneRetreat` dereferences `rbScorpion.rotation` without a null guard, unlike the neighbouring `Scorpion != null` check. Production prefabs have a Rigidbody so this is low risk, but it is inconsistent with the file's defensive style.

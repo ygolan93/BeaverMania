@@ -22,6 +22,13 @@ namespace Beavermania.Data.NPC
         [Min(0f)] public float recoveryDuration = 0f;
         [Range(0.05f, 1f)] public float projectileDamageMultiplier = 1f;
 
+        [Header("Boss Combat Contract")]
+        [Min(0f)] public float bossStunDuration = 3.5f;
+        [Min(0f)] public float bossStunCooldown = 10f;
+        [Range(1.5f, 3f)] public float stunnedDamageMultiplier = 2f;
+        [Min(0f)] public float hurricaneKickRetreatSpeed = 12f;
+        [Min(0f)] public float hurricaneKickRetreatDuration = 0.6f;
+
         [Header("Advanced Combat AI")]
         public bool advancedAiEnabled;
         [Min(MinimumChargeWindup)] public float chargeWindupMin = MinimumChargeWindup;
@@ -95,6 +102,11 @@ namespace Beavermania.Data.NPC
             phaseTwoChargeRecovery = Mathf.Max(MinimumActionRecovery, phaseTwoChargeRecovery);
             phaseThreeChargeRecovery = Mathf.Max(MinimumActionRecovery, phaseThreeChargeRecovery);
             reverseVulnerabilityDuration = Mathf.Max(MinimumActionRecovery, reverseVulnerabilityDuration);
+            bossStunDuration = Mathf.Max(0f, bossStunDuration);
+            bossStunCooldown = Mathf.Max(0f, bossStunCooldown);
+            stunnedDamageMultiplier = Mathf.Clamp(stunnedDamageMultiplier, 1.5f, 3f);
+            hurricaneKickRetreatSpeed = Mathf.Max(0f, hurricaneKickRetreatSpeed);
+            hurricaneKickRetreatDuration = Mathf.Max(0f, hurricaneKickRetreatDuration);
 
             WarnIf(chargeDistance > lookDistance, "chargeDistance should be <= lookDistance.");
             WarnIf(attackDistance > chargeDistance, "attackDistance should be <= chargeDistance.");

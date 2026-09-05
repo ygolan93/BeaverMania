@@ -6,45 +6,53 @@ using UnityEngine;
 
 namespace Beavermania.Tests.EditMode.NPC.Scorpion
 {
-    /// <summary>
-    /// Guards the caller contract that a rejected advanced-boss hit is still owned by the damage receiver,
-    /// so melee and projectile callers never fall through to the legacy tag path and hit the same boss twice.
-    /// </summary>
-    public sealed class ScorpionRejectedHitRoutingTests
+    public sealed class ScorpionAttackContextRoutingTests
     {
         const string AnimatedAttackTypeName = "Beavermania.Player.Combat.AnimatedAttack";
+        const string BoostChargeSettingsTypeName = "Beavermania.Data.Combat.BoostChargeSettings";
+        const string BoostChargeTypeName = "Beavermania.Player.Combat.BoostChargeController";
         const string DamageTypeName = "Beavermania.NPC.EnemyDamageType";
+        const string PlayerAttackKindTypeName = "Beavermania.Player.Combat.PlayerAttackKind";
         const string ProjectileTypeName = "Beavermania.Player.Combat.Projectile";
         const string ScorpionTypeName = "Beavermania.NPC.ScorpionScript";
         const string StatsTypeName = "Beavermania.Data.NPC.ScorpionStatsData";
-        const string VulnerabilityWindowFieldName = "vulnerabilityWindowRemaining";
         const int LegacyScorpionComboBonus = 3;
         const int HitDamage = 10;
 
         GameObject scorpionObject;
         GameObject attackObject;
+        GameObject boostObject;
         Component scorpion;
         Component animatedAttack;
+        Component boostCharge;
         ScriptableObject stats;
+        ScriptableObject boostSettings;
 
         [SetUp]
         public void SetUp()
         {
-            scorpionObject = new GameObject("ScorpionRejectedHitRoutingBoss");
+            scorpionObject = new GameObject("ScorpionAttackContextBoss");
             scorpionObject.SetActive(false);
             Rigidbody rigidbody = scorpionObject.AddComponent<Rigidbody>();
             scorpion = scorpionObject.AddComponent(ResolveType(ScorpionTypeName));
             stats = ScriptableObject.CreateInstance(ResolveType(StatsTypeName));
-
             SetFieldValue(stats, "advancedAiEnabled", true);
-            SetFieldValue(stats, "comboLimit", 15);
+            SetFieldValue(stats, "maxHealth", 100);
             SetFieldValue(scorpion, "statsData", stats);
             SetFieldValue(scorpion, "rbScorpion", rigidbody);
             SetFieldValue(scorpion, "CurrentHealth", 100);
-            SetFieldValue(scorpion, "combo", 0);
             SetFieldValue(scorpion, "rotGoal", Quaternion.identity);
 
-            attackObject = new GameObject("ScorpionRejectedHitRoutingAttacker");
+            boostObject = new GameObject("ScorpionAttackContextBoost");
+            boostObject.SetActive(false);
+            boostCharge = boostObject.AddComponent(ResolveType(BoostChargeTypeName));
+            boostSettings = ScriptableObject.CreateInstance(ResolveType(BoostChargeSettingsTypeName));
+            SetFieldValue(boostSettings, "chargePerHit", 8f);
+            SetFieldValue(boostSettings, "comboHitsForBonus", 99);
+            SetFieldValue(boostCharge, "settings", boostSettings);
+            SetFieldValue(scorpion, "boostCharge", boostCharge);
+
+            attackObject = new GameObject("ScorpionAttackContextAttacker");
             attackObject.SetActive(false);
             animatedAttack = attackObject.AddComponent(ResolveType(AnimatedAttackTypeName));
         }
@@ -52,6 +60,10 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
         [TearDown]
         public void TearDown()
         {
+            if (boostSettings != null)
+                UnityEngine.Object.DestroyImmediate(boostSettings);
+            if (boostObject != null)
+                UnityEngine.Object.DestroyImmediate(boostObject);
             if (stats != null)
                 UnityEngine.Object.DestroyImmediate(stats);
             if (attackObject != null)
@@ -61,101 +73,99 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
         }
 
         [Test]
-        public void TryRouteInterfaceDamage_AdvancedBossOutsideWindow_ConsumesHitWithoutFallbackDamage()
-        {
-            // Act
-            bool handled = (bool)InvokeMethod(animatedAttack, "TryRouteInterfaceDamage", scorpion, HitDamage);
-
-            // Assert
-            Assert.That(handled, Is.True, "A rejected boss hit must still be reported as handled.");
-            Assert.That(GetFieldValue<int>(scorpion, "CurrentHealth"), Is.EqualTo(100));
-            Assert.That(GetFieldValue<int>(scorpion, "combo"), Is.EqualTo(1));
-        }
-
-        [Test]
-        public void TryRouteInterfaceDamage_AdvancedBossInsideWindow_AppliesHealthDamage()
+        public void AnimatedAttack_RoutesExplicitSwordSwingContext()
         {
             // Arrange
-            SetFieldValue(scorpion, VulnerabilityWindowFieldName, 0.5f);
+            object swordSwing = CreateEnum(PlayerAttackKindTypeName, "SwordSwing");
 
             // Act
-            bool handled = (bool)InvokeMethod(animatedAttack, "TryRouteInterfaceDamage", scorpion, HitDamage);
+            bool handled = (bool)InvokeMethod(animatedAttack, "TryRouteInterfaceDamage", scorpion, HitDamage, swordSwing);
 
             // Assert
             Assert.That(handled, Is.True);
-            Assert.That(GetFieldValue<int>(scorpion, "CurrentHealth"), Is.EqualTo(90));
-            Assert.That(GetFieldValue<int>(scorpion, "combo"), Is.EqualTo(1));
+            Assert.That(GetFieldValue<int>(scorpion, "CurrentHealth"), Is.EqualTo(70));
         }
 
         [Test]
-        public void TryRouteInterfaceDamage_NoReceiver_LeavesLegacyFallbackAvailable()
-        {
-            // Act
-            bool handled = (bool)InvokeMethod(animatedAttack, "TryRouteInterfaceDamage", null, HitDamage);
-
-            // Assert
-            Assert.That(handled, Is.False);
-        }
-
-        [Test]
-        public void TryRouteDamageToReceiver_AdvancedBossOutsideWindow_ConsumesHitWithoutLegacyComboBonus()
-        {
-            // Act
-            bool handled = RouteProjectileDamage("Normal");
-
-            // Assert
-            Assert.That(handled, Is.True, "A rejected boss hit must still be reported as handled.");
-            Assert.That(GetFieldValue<int>(scorpion, "CurrentHealth"), Is.EqualTo(100));
-            Assert.That(GetFieldValue<int>(scorpion, "combo"), Is.EqualTo(1));
-        }
-
-        [Test]
-        public void TryRouteDamageToReceiver_AdvancedBossInsideWindow_AppliesLegacyComboBonus()
+        public void Projectile_RoutesArrowContextAndRegistersBoostOnce()
         {
             // Arrange
-            SetFieldValue(scorpion, VulnerabilityWindowFieldName, 0.5f);
+            object arrow = CreateEnum(PlayerAttackKindTypeName, "Arrow");
+            object normalDamage = CreateEnum(DamageTypeName, "Normal");
 
-            // Act
-            bool handled = RouteProjectileDamage("Normal");
-
-            // Assert
-            Assert.That(handled, Is.True);
-            Assert.That(GetFieldValue<int>(scorpion, "CurrentHealth"), Is.EqualTo(90));
-            Assert.That(GetFieldValue<int>(scorpion, "combo"), Is.EqualTo(1 + LegacyScorpionComboBonus));
-        }
-
-        [Test]
-        public void TryRouteDamageToReceiver_NoReceiver_LeavesLegacyFallbackAvailable()
-        {
             // Act
             bool handled = (bool)InvokeStaticMethod(
                 ResolveType(ProjectileTypeName),
                 "TryRouteDamageToReceiver",
-                null,
+                scorpion,
                 HitDamage,
-                CreateDamageType("Normal"),
+                arrow,
+                normalDamage,
                 null,
                 LegacyScorpionComboBonus);
 
             // Assert
-            Assert.That(handled, Is.False);
+            Assert.That(handled, Is.True);
+            Assert.That(GetFieldValue<int>(scorpion, "CurrentHealth"), Is.EqualTo(80));
+            Assert.That(GetFieldValue<int>(scorpion, "combo"), Is.EqualTo(1 + LegacyScorpionComboBonus));
+            Assert.That(GetFieldValue<float>(boostCharge, "currentCharge"), Is.EqualTo(8f).Within(0.0001f));
         }
 
-        bool RouteProjectileDamage(string damageTypeName)
+        [Test]
+        public void Projectile_UnspecifiedStoneContextDamagesWithoutStunningAdvancedBoss()
         {
-            return (bool)InvokeStaticMethod(
+            // Arrange
+            SetFieldValue(stats, "comboLimit", 1);
+            object unspecified = CreateEnum(PlayerAttackKindTypeName, "Unspecified");
+
+            // Act
+            InvokeStaticMethod(
                 ResolveType(ProjectileTypeName),
                 "TryRouteDamageToReceiver",
                 scorpion,
                 HitDamage,
-                CreateDamageType(damageTypeName),
+                unspecified,
+                CreateEnum(DamageTypeName, "Normal"),
                 null,
                 LegacyScorpionComboBonus);
+            InvokeMethod(scorpion, "FixedUpdate");
+
+            // Assert
+            Assert.That(GetFieldValue<int>(scorpion, "CurrentHealth"), Is.EqualTo(90));
+            Assert.That(GetFieldValue<object>(scorpion, "currentState").ToString(), Is.Not.EqualTo("Stunned"));
         }
 
-        static object CreateDamageType(string name)
+        [Test]
+        public void RoutingMethods_NullReceiverLeaveLegacyFallbackAvailable()
         {
-            return Enum.Parse(ResolveType(DamageTypeName), name);
+            // Arrange
+            object unspecified = CreateEnum(PlayerAttackKindTypeName, "Unspecified");
+
+            // Act
+            bool meleeHandled = (bool)InvokeMethod(
+                animatedAttack,
+                "TryRouteInterfaceDamage",
+                null,
+                HitDamage,
+                unspecified);
+            bool projectileHandled = (bool)InvokeStaticMethod(
+                ResolveType(ProjectileTypeName),
+                "TryRouteDamageToReceiver",
+                null,
+                HitDamage,
+                unspecified,
+                CreateEnum(DamageTypeName, "Normal"),
+                null,
+                LegacyScorpionComboBonus);
+
+            // Assert
+            Assert.That(meleeHandled, Is.False);
+            Assert.That(projectileHandled, Is.False);
+        }
+
+        static object CreateEnum(string typeName, string value)
+        {
+            return Enum.Parse(ResolveType(typeName), value);
         }
 
         static object InvokeMethod(object target, string methodName, params object[] parameters)
@@ -163,7 +173,6 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
             MethodInfo method = target.GetType().GetMethod(
                 methodName,
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-
             Assert.That(method, Is.Not.Null, $"Missing method {methodName}.");
             return method.Invoke(target, parameters);
         }
@@ -173,7 +182,6 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
             MethodInfo method = type.GetMethod(
                 methodName,
                 BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-
             Assert.That(method, Is.Not.Null, $"Missing static method {methodName}.");
             return method.Invoke(null, parameters);
         }
@@ -183,7 +191,6 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
             FieldInfo field = target.GetType().GetField(
                 fieldName,
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-
             Assert.That(field, Is.Not.Null, $"Missing field {fieldName}.");
             return (T)field.GetValue(target);
         }
@@ -193,7 +200,6 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
             FieldInfo field = target.GetType().GetField(
                 fieldName,
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-
             Assert.That(field, Is.Not.Null, $"Missing field {fieldName}.");
             field.SetValue(target, value);
         }
@@ -204,10 +210,8 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
                 .GetAssemblies()
                 .Select(assembly => assembly.GetType(fullName, throwOnError: false))
                 .FirstOrDefault(candidate => candidate != null);
-
             if (type == null)
                 throw new InvalidOperationException($"Failed to resolve runtime type '{fullName}'.");
-
             return type;
         }
     }

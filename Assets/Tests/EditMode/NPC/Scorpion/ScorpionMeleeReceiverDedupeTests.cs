@@ -9,8 +9,8 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
     /// <summary>
     /// Drives the real <c>AnimatedAttack.CauseDamage</c> overlap loop against a boss whose hitboxes are split
     /// across several colliders. One animation event must reach the damage receiver exactly once, whether the
-    /// receiver accepts or rejects the hit. Combo is the observable call counter: every reached
-    /// <c>ApplyDamage</c> pass awards exactly one combo, accepted or not.
+    /// receiver accepts the hit. Combo is the observable call counter: every reached
+    /// <c>ApplyDamage</c> pass awards exactly one combo.
     /// </summary>
     public sealed class ScorpionMeleeReceiverDedupeTests
     {
@@ -18,7 +18,6 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
         const string BoostChargeTypeName = "Beavermania.Player.Combat.BoostChargeController";
         const string ScorpionTypeName = "Beavermania.NPC.ScorpionScript";
         const string StatsTypeName = "Beavermania.Data.NPC.ScorpionStatsData";
-        const string VulnerabilityWindowFieldName = "vulnerabilityWindowRemaining";
         const int ConfiguredMaxHealth = 100;
         const int HitDamage = 10;
         const int BossColliderCount = 2;
@@ -120,7 +119,7 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
         }
 
         [Test]
-        public void CauseDamage_MultipleCollidersOnRejectingReceiver_RoutesExactlyOneHit()
+        public void CauseDamage_MultipleCollidersOnReceiver_RoutesExactlyOneHit()
         {
             // Arrange
             AssertPhysicsSeesEveryBossCollider();
@@ -132,22 +131,7 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
             Assert.That(
                 GetFieldValue<int>(scorpion, "combo"),
                 Is.EqualTo(1),
-                "A rejected hit must reach the boss once per animation event, not once per overlapping collider.");
-            Assert.That(GetFieldValue<int>(scorpion, "CurrentHealth"), Is.EqualTo(ConfiguredMaxHealth));
-        }
-
-        [Test]
-        public void CauseDamage_MultipleCollidersOnAcceptingReceiver_AppliesDamageOnce()
-        {
-            // Arrange
-            AssertPhysicsSeesEveryBossCollider();
-            SetFieldValue(scorpion, VulnerabilityWindowFieldName, 0.5f);
-
-            // Act
-            InvokeMethod(animatedAttack, "CauseDamage", IsolatedFixtureOrigin, SwingRadius, HitDamage);
-
-            // Assert
-            Assert.That(GetFieldValue<int>(scorpion, "combo"), Is.EqualTo(1));
+                "The hit must reach the boss once per animation event, not once per overlapping collider.");
             Assert.That(
                 GetFieldValue<int>(scorpion, "CurrentHealth"),
                 Is.EqualTo(ConfiguredMaxHealth - HitDamage),
@@ -203,9 +187,11 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
 
         static object InvokeMethod(object target, string methodName, params object[] parameters)
         {
-            MethodInfo method = target.GetType().GetMethod(
-                methodName,
-                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            MethodInfo method = target.GetType()
+                .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                .SingleOrDefault(candidate =>
+                    candidate.Name == methodName
+                    && candidate.GetParameters().Length == parameters.Length);
 
             Assert.That(method, Is.Not.Null, $"Missing method {methodName}.");
             return method.Invoke(target, parameters);

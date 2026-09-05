@@ -18,8 +18,11 @@ namespace Beavermania.Objects
         public GameObject TreeDeath;
         [SerializeField] Material givingTreeBark;
         [SerializeField] Material givingTreeLeaves;
+        [SerializeField] bool canStunScorpionBoss;
 
         bool _logsDropped;
+
+        public bool CanStunScorpionBoss => canStunScorpionBoss;
 
         void Awake()
         {

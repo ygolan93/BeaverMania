@@ -10,10 +10,11 @@ namespace Beavermania.NPC
 {
     [DisallowMultipleComponent]
     [RequireComponent(typeof(Rigidbody))]
-    public class ScorpionScript : MonoBehaviour, IEnemyDamageReceiver, IBossVictorySource
+    public class ScorpionScript : MonoBehaviour, IEnemyDamageReceiver, IPlayerAttackReceiver, IBossVictorySource
     {
         const float LookRotationEpsilon = 0.0001f;
         const float ChargeObstructionDotThreshold = -0.1f;
+        const float FrontalTreeImpactDotThreshold = 0.5f;
         const float ReverseSpeed = 5f;
         const float HitEffectDuration = 0.1f;
         const int BridgeComboOverride = 10;
@@ -89,10 +90,12 @@ namespace Beavermania.NPC
         ScorpionChargeVariant activeChargeVariant = ScorpionChargeVariant.Normal;
         ScorpionChargeLimits activeChargeLimits;
         float postStunPressureTimer;
-        float vulnerabilityWindowRemaining;
         ScorpionMacroAction previousMacroAction = ScorpionMacroAction.Hold;
         int consecutiveMacroSelections;
-        bool pendingLethalHazard;
+        float stunCooldownRemaining;
+        Vector3 hurricaneKickRetreatDirection;
+        bool hurricaneKickRetreatActive;
+        bool startStunCooldownAfterRecovery;
         bool deathHandled;
         [SerializeField] float victoryDelay = 2f;
 
@@ -120,7 +123,6 @@ namespace Beavermania.NPC
         }
         public bool UsesAdvancedAi => ActiveStats.advancedAiEnabled;
         bool IsAggressive => combo >= Mathf.Max(0, comboLimit - 5);
-        bool IsVulnerabilityWindowOpen => vulnerabilityWindowRemaining > 0f;
         bool HasPostStunPressure => postStunPressureTimer > 0f;
         ScorpionHealthProfile ActiveHealthProfile => ScorpionCombatDecision.SelectHealthProfile(
             MaxHealth > 0 ? (float)CurrentHealth / MaxHealth : 0f);
@@ -184,8 +186,9 @@ namespace Beavermania.NPC
 
             if (postStunPressureTimer > 0f)
                 postStunPressureTimer = Mathf.Max(0f, postStunPressureTimer - Time.fixedDeltaTime);
+            if (stunCooldownRemaining > 0f)
+                stunCooldownRemaining = Mathf.Max(0f, stunCooldownRemaining - Time.fixedDeltaTime);
 
-            TickVulnerabilityWindow();
             RefreshTargetContext();
 
             if (CurrentHealth <= 0)
@@ -232,31 +235,6 @@ namespace Beavermania.NPC
             }
         }
 
-        /// <summary>
-        /// Guards the window against states that can never punish. The countdown itself lives in
-        /// <see cref="TickAdvancedLook"/> so the window and the Look recovery timer share one decision boundary.
-        /// </summary>
-        void TickVulnerabilityWindow()
-        {
-            if (vulnerabilityWindowRemaining <= 0f)
-                return;
-
-            if (!UsesAdvancedAi || currentState != ScorpionState.Look)
-                CloseVulnerabilityWindow();
-        }
-
-        /// <summary>
-        /// Always clears the borrowed stun presentation, because the timer may already have been clamped to
-        /// zero by the countdown in the same call. Legacy <see cref="ScorpionState.Stunned"/> owns that
-        /// presentation for ordinary Scorpions, so it is never cleared out from under them.
-        /// </summary>
-        void CloseVulnerabilityWindow()
-        {
-            vulnerabilityWindowRemaining = 0f;
-            if (UsesAdvancedAi && currentState != ScorpionState.Stunned)
-                ClearStunnedPresentation();
-        }
-
         void TickIdle()
         {
             ApplyIdlePresentation();
@@ -267,10 +245,7 @@ namespace Beavermania.NPC
         void TickLook()
         {
             bool hasTarget = HasCombatTargetInRange();
-            if (hasTarget && UsesAdvancedAi && IsVulnerabilityWindowOpen)
-                ApplyStunnedPresentation();
-            else
-                ApplyLookPresentation();
+            ApplyLookPresentation();
 
             if (!hasTarget)
             {
@@ -305,14 +280,9 @@ namespace Beavermania.NPC
             if (stateTimer > 0f)
             {
                 stateTimer -= Time.fixedDeltaTime;
-                if (vulnerabilityWindowRemaining > 0f)
-                    vulnerabilityWindowRemaining = Mathf.Max(0f, vulnerabilityWindowRemaining - Time.fixedDeltaTime);
-
                 if (stateTimer > 0f)
                     return;
             }
-
-            CloseVulnerabilityWindow();
 
             ScorpionStatsData stats = ActiveStats;
             ScorpionHealthProfile profile = ActiveHealthProfile;
@@ -574,6 +544,21 @@ namespace Beavermania.NPC
 
         void TickReverse()
         {
+            if (UsesAdvancedAi && hurricaneKickRetreatActive)
+            {
+                stateTimer -= Time.fixedDeltaTime;
+                if (stateTimer <= 0f)
+                {
+                    EnterState(HasCombatTargetInRange() ? ScorpionState.Look : ScorpionState.Idle);
+                    return;
+                }
+
+                SetHorizontalVelocity(hurricaneKickRetreatDirection * ActiveStats.hurricaneKickRetreatSpeed);
+                SetAnimatorState(walk: false, backwards: true, attack: false, stunned: false);
+                isAttacking = true;
+                return;
+            }
+
             if (!HasCombatTargetInRange())
             {
                 EnterState(ScorpionState.Idle);
@@ -631,12 +616,35 @@ namespace Beavermania.NPC
 
         public bool ReceiveDamage(int damage, EnemyDamageType damageType, Transform source)
         {
-            return ApplyDamage(damage, damageType, source, NormalHitComboReward);
+            return ReceivePlayerAttack(damage, PlayerAttackKind.Unspecified, damageType, source);
+        }
+
+        public bool ReceivePlayerAttack(
+            int baseDamage,
+            PlayerAttackKind attackKind,
+            EnemyDamageType damageType,
+            Transform source)
+        {
+            int resolvedDamage = PlayerAttackDamageRules.ResolveDamage(
+                baseDamage,
+                attackKind,
+                UsesAdvancedAi && currentState == ScorpionState.Stunned,
+                ActiveStats.stunnedDamageMultiplier);
+            bool accepted = ApplyDamage(resolvedDamage, damageType, source, NormalHitComboReward);
+            if (accepted && attackKind == PlayerAttackKind.HurricaneKick)
+                TryStartHurricaneKickRetreat(source);
+
+            return accepted;
         }
 
         public bool ReceiveCounterHit(int damage, EnemyDamageType damageType, Transform source)
         {
-            return ApplyDamage(damage, damageType, source, CounterHitComboReward);
+            int resolvedDamage = PlayerAttackDamageRules.ResolveDamage(
+                damage,
+                PlayerAttackKind.Unspecified,
+                UsesAdvancedAi && currentState == ScorpionState.Stunned,
+                ActiveStats.stunnedDamageMultiplier);
+            return ApplyDamage(resolvedDamage, damageType, source, CounterHitComboReward);
         }
 
         bool ApplyDamage(int damage, EnemyDamageType damageType, Transform source, int comboReward)
@@ -650,16 +658,12 @@ namespace Beavermania.NPC
             combo += comboReward;
             Sound?.Beat();
 
-            if (UsesAdvancedAi && !IsVulnerabilityWindowOpen)
-                return false;
-
-            int resolvedDamage = ResolveIncomingDamage(damage, damageType, source);
-            CurrentHealth = Mathf.Max(0, CurrentHealth - resolvedDamage);
+            CurrentHealth = Mathf.Max(0, CurrentHealth - damage);
             if (BossHealth != null)
                 BossHealth.SetNPCHealth(CurrentHealth);
 
             EnsureBoostChargeResolved();
-            boostCharge?.RegisterHit(resolvedDamage);
+            boostCharge?.RegisterHit(damage);
 
             if (CurrentHealth <= 0)
                 Death();
@@ -667,19 +671,34 @@ namespace Beavermania.NPC
             return true;
         }
 
-        int ResolveIncomingDamage(int damage, EnemyDamageType damageType, Transform source)
+        void TryStartHurricaneKickRetreat(Transform source)
         {
-            if (damageType != EnemyDamageType.Normal || source == null)
-                return damage;
+            if (!UsesAdvancedAi
+                || deathHandled
+                || CurrentHealth <= 0
+                || currentState == ScorpionState.Stunned
+                || currentState == ScorpionState.Dead)
+            {
+                return;
+            }
 
-            if (source.GetComponentInParent<Projectile>() == null)
-                return damage;
+            if (hurricaneKickRetreatActive && currentState == ScorpionState.Reverse)
+                return;
 
-            float multiplier = Mathf.Clamp01(ActiveStats.projectileDamageMultiplier);
-            if (multiplier >= 0.999f)
-                return damage;
+            Vector3 retreatDirection = source != null
+                ? transform.position - source.position
+                : targetTransform != null
+                    ? transform.position - targetTransform.position
+                    : -transform.forward;
+            hurricaneKickRetreatDirection = ScorpionCombatDecision.LockHorizontalDirection(retreatDirection);
+            if (hurricaneKickRetreatDirection.sqrMagnitude <= LookRotationEpsilon)
+                hurricaneKickRetreatDirection = ScorpionCombatDecision.LockHorizontalDirection(-transform.forward);
 
-            return Mathf.Max(1, Mathf.RoundToInt(damage * multiplier));
+            hurricaneKickRetreatActive = true;
+            if (currentState == ScorpionState.Reverse)
+                stateTimer = Mathf.Max(0f, ActiveStats.hurricaneKickRetreatDuration);
+            else
+                EnterState(ScorpionState.Reverse);
         }
 
         void Death()
@@ -692,8 +711,7 @@ namespace Beavermania.NPC
             state = currentState.ToString();
             CurrentHealth = 0;
             isAttacking = false;
-            pendingLethalHazard = false;
-            CloseVulnerabilityWindow();
+            hurricaneKickRetreatActive = false;
             EnsureBoostChargeResolved();
             boostCharge?.RegisterKill();
             if (BossHealth != null)
@@ -725,6 +743,9 @@ namespace Beavermania.NPC
 
         void OnCollisionEnter(Collision OBJ)
         {
+            if (HandleMarkedGivingTreeChargeCollision(OBJ))
+                return;
+
             if (OBJ.gameObject.CompareTag("Strike"))
             {
                 ApplyStrikeCollision(OBJ.transform);
@@ -744,46 +765,12 @@ namespace Beavermania.NPC
             HandleChargeCollision(OBJ);
         }
 
-        /// <summary>
-        /// A Strike hazard is lethal, but it must still pass the vulnerability gate. Calling
-        /// <see cref="Death"/> directly let an advanced boss be killed instantly outside a punish window,
-        /// which contradicts the whole window design. Routing current health as damage keeps ordinary
-        /// Scorpions dying on contact while the boss only dies to a Strike inside a window.
-        /// <para>
-        /// A Strike hazard is also a one-shot <c>OnCollisionEnter</c> event. Dropping a rejected hit would
-        /// let an advanced boss sit inside a kill volume it can never die to, so the rejection is latched
-        /// and resolved on the next punish window instead of being retried every contact frame.
-        /// </para>
-        /// </summary>
         bool ApplyStrikeCollision(Transform source)
         {
             if (deathHandled || CurrentHealth <= 0)
                 return false;
 
-            // The outcome is already decided; re-routing would only restack hit feedback.
-            if (pendingLethalHazard)
-                return false;
-
-            if (ReceiveDamage(CurrentHealth, EnemyDamageType.Normal, source))
-                return true;
-
-            if (UsesAdvancedAi && !IsVulnerabilityWindowOpen)
-                pendingLethalHazard = true;
-
-            return false;
-        }
-
-        /// <summary>
-        /// Consumes a latched lethal hazard while a punish window is open, so the deferred kill resolves
-        /// through the same gate as any other accepted hit. The latch survives a rejection rather than
-        /// being discarded, so a lethal hazard can never be silently lost. <see cref="Death"/> clears it.
-        /// </summary>
-        bool TryResolvePendingLethalHazard()
-        {
-            if (!pendingLethalHazard || deathHandled || CurrentHealth <= 0)
-                return false;
-
-            return ReceiveDamage(CurrentHealth, EnemyDamageType.Normal, null);
+            return ReceiveDamage(CurrentHealth, EnemyDamageType.Normal, source);
         }
 
         void OnCollisionStay(Collision collision)
@@ -796,11 +783,69 @@ namespace Beavermania.NPC
             if (!UsesAdvancedAi || currentState != ScorpionState.Charge || collision == null)
                 return;
 
+            if (HandleMarkedGivingTreeChargeCollision(collision))
+                return;
+
             for (int index = 0; index < collision.contactCount; index++)
             {
-                if (HandleChargeCollisionNormal(collision.GetContact(index).normal))
+                Vector3 contactNormal = collision.GetContact(index).normal;
+                if (HandleChargeCollisionNormal(contactNormal))
                     return;
             }
+        }
+
+        bool HandleMarkedGivingTreeChargeCollision(Collision collision)
+        {
+            if (!UsesAdvancedAi || currentState != ScorpionState.Charge || collision == null)
+                return false;
+
+            LogSpawner tree = collision.collider != null
+                ? collision.collider.GetComponentInParent<LogSpawner>()
+                : null;
+            if (tree == null || !tree.CanStunScorpionBoss)
+                return false;
+
+            for (int index = 0; index < collision.contactCount; index++)
+            {
+                if (HandleMarkedGivingTreeChargeContact(tree, collision.GetContact(index).normal))
+                    return true;
+            }
+
+            return false;
+        }
+
+        bool HandleMarkedGivingTreeChargeContact(LogSpawner tree, Vector3 contactNormal)
+        {
+            if (!UsesAdvancedAi
+                || currentState != ScorpionState.Charge
+                || tree == null
+                || !tree.CanStunScorpionBoss
+                || !IsFrontalChargeContact(contactNormal))
+            {
+                return false;
+            }
+
+            tree.DestroyTree(transform);
+            ScorpionState nextState = stunCooldownRemaining <= 0f
+                ? ScorpionState.Stunned
+                : HasCombatTargetInRange()
+                    ? ScorpionState.Look
+                    : ScorpionState.Idle;
+            EnterState(nextState);
+            return true;
+        }
+
+        bool IsFrontalChargeContact(Vector3 contactNormal)
+        {
+            Vector3 horizontalNormal = ScorpionCombatDecision.LockHorizontalDirection(contactNormal);
+            if (horizontalNormal.sqrMagnitude <= LookRotationEpsilon
+                || lockedChargeDirection.sqrMagnitude <= LookRotationEpsilon)
+            {
+                return false;
+            }
+
+            Vector3 impactDirection = -horizontalNormal;
+            return Vector3.Dot(lockedChargeDirection, impactDirection) >= FrontalTreeImpactDotThreshold;
         }
 
         bool HandleChargeCollisionNormal(Vector3 contactNormal)
@@ -866,11 +911,19 @@ namespace Beavermania.NPC
             ScorpionState previousState = currentState;
             currentState = nextState;
             state = nextState.ToString();
-            CloseVulnerabilityWindow();
             if (UsesAdvancedAi && previousState == ScorpionState.Charge && nextState != ScorpionState.Charge)
                 ResetAdvancedChargeTracking();
+            if (previousState == ScorpionState.Reverse && nextState != ScorpionState.Reverse)
+                hurricaneKickRetreatActive = false;
             if (UsesAdvancedAi && previousState == ScorpionState.Recovered)
+            {
                 postStunPressureTimer = Mathf.Max(0f, ActiveStats.postStunPressureDuration);
+                if (startStunCooldownAfterRecovery)
+                {
+                    stunCooldownRemaining = Mathf.Max(0f, ActiveStats.bossStunCooldown);
+                    startStunCooldownAfterRecovery = false;
+                }
+            }
 
             switch (nextState)
             {
@@ -915,7 +968,9 @@ namespace Beavermania.NPC
                     stateTimer = UsesAdvancedAi ? Mathf.Max(0f, ActiveStats.attackWindowDuration) : 0f;
                     break;
                 case ScorpionState.Reverse:
-                    stateTimer = UsesAdvancedAi
+                    stateTimer = UsesAdvancedAi && hurricaneKickRetreatActive
+                        ? Mathf.Max(0f, ActiveStats.hurricaneKickRetreatDuration)
+                        : UsesAdvancedAi
                         ? RandomRange(ActiveStats.decisionHoldMin, ActiveStats.decisionHoldMax)
                         : 0f;
                     break;
@@ -923,15 +978,6 @@ namespace Beavermania.NPC
                     stateTimer = UsesAdvancedAi ? ResolveActionRecovery(previousState) : 0f;
                     if (UsesAdvancedAi)
                     {
-                        if (OpensVulnerabilityWindow(previousState))
-                        {
-                            vulnerabilityWindowRemaining = stateTimer;
-
-                            // Death deactivates this GameObject, so no Look bookkeeping may follow it.
-                            if (TryResolvePendingLethalHazard())
-                                return;
-                        }
-
                         isAttacking = false;
                         SetHorizontalVelocity(Vector3.zero);
                     }
@@ -945,7 +991,11 @@ namespace Beavermania.NPC
                     }
                     break;
                 case ScorpionState.Stunned:
-                    stateTimer = ActiveStats.stunDuration;
+                    stateTimer = UsesAdvancedAi
+                        ? Mathf.Max(0f, ActiveStats.bossStunDuration)
+                        : ActiveStats.stunDuration;
+                    if (UsesAdvancedAi)
+                        startStunCooldownAfterRecovery = true;
                     break;
                 case ScorpionState.Recovered:
                     combo = 0;
@@ -956,13 +1006,6 @@ namespace Beavermania.NPC
                     stateTimer = 0f;
                     break;
             }
-        }
-
-        static bool OpensVulnerabilityWindow(ScorpionState completedState)
-        {
-            return completedState == ScorpionState.Charge
-                || completedState == ScorpionState.Attack
-                || completedState == ScorpionState.Reverse;
         }
 
         bool HasCombatTargetInRange()

@@ -674,6 +674,7 @@ namespace Beavermania.NPC
         void TryStartHurricaneKickRetreat(Transform source)
         {
             if (!UsesAdvancedAi
+                || rbScorpion == null
                 || deathHandled
                 || CurrentHealth <= 0
                 || currentState == ScorpionState.Stunned

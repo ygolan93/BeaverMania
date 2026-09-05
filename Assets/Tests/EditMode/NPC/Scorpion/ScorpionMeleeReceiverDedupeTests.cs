@@ -15,6 +15,7 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
     public sealed class ScorpionMeleeReceiverDedupeTests
     {
         const string AnimatedAttackTypeName = "Beavermania.Player.Combat.AnimatedAttack";
+        const string BoostChargeSettingsTypeName = "Beavermania.Data.Combat.BoostChargeSettings";
         const string BoostChargeTypeName = "Beavermania.Player.Combat.BoostChargeController";
         const string ScorpionTypeName = "Beavermania.NPC.ScorpionScript";
         const string StatsTypeName = "Beavermania.Data.NPC.ScorpionStatsData";
@@ -37,7 +38,9 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
         GameObject boostChargeObject;
         Component scorpion;
         Component animatedAttack;
+        Component boostCharge;
         ScriptableObject stats;
+        ScriptableObject boostSettings;
         bool originalIgnoreEnemyLayerCollision;
         bool ignoreLayerCollisionCaptured;
 
@@ -66,7 +69,11 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
             // path from re-running FindObjectOfType and touching a player in whatever scene is open.
             boostChargeObject = new GameObject("ScorpionMeleeDedupeBoostCharge");
             boostChargeObject.SetActive(false);
-            Component boostCharge = boostChargeObject.AddComponent(ResolveType(BoostChargeTypeName));
+            boostCharge = boostChargeObject.AddComponent(ResolveType(BoostChargeTypeName));
+            boostSettings = ScriptableObject.CreateInstance(ResolveType(BoostChargeSettingsTypeName));
+            SetFieldValue(boostSettings, "chargePerHit", 8f);
+            SetFieldValue(boostSettings, "comboHitsForBonus", 99);
+            SetFieldValue(boostCharge, "settings", boostSettings);
 
             scorpion = scorpionObject.AddComponent(ResolveType(ScorpionTypeName));
             SetFieldValue(scorpion, "statsData", stats);
@@ -114,6 +121,8 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
                 UnityEngine.Object.DestroyImmediate(scorpionObject);
             if (boostChargeObject != null)
                 UnityEngine.Object.DestroyImmediate(boostChargeObject);
+            if (boostSettings != null)
+                UnityEngine.Object.DestroyImmediate(boostSettings);
             if (stats != null)
                 UnityEngine.Object.DestroyImmediate(stats);
         }
@@ -136,6 +145,10 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
                 GetFieldValue<int>(scorpion, "CurrentHealth"),
                 Is.EqualTo(ConfiguredMaxHealth - HitDamage),
                 "An accepted hit must subtract one hit of damage, not one per overlapping collider.");
+            Assert.That(
+                GetFieldValue<float>(boostCharge, "currentCharge"),
+                Is.EqualTo(8f).Within(0.0001f),
+                "One animation event must register Boost Charge once, not once per overlapping collider.");
         }
 
         [Test]
@@ -153,6 +166,10 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
                 GetFieldValue<int>(scorpion, "combo"),
                 Is.EqualTo(2),
                 "Deduplication is per swing; the claim set must be cleared at the start of every CauseDamage call.");
+            Assert.That(
+                GetFieldValue<float>(boostCharge, "currentCharge"),
+                Is.EqualTo(16f).Within(0.0001f),
+                "Each distinct animation event must register exactly one Boost Charge hit.");
         }
 
         void AddHitboxChild(string name)

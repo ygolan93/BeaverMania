@@ -23,6 +23,7 @@ namespace Beavermania.NPC
         const int NormalHitComboReward = 1;
         const int CounterHitComboReward = 2;
         const string StunnedAnimatorParameter = "Stunned";
+        static readonly int BackwardsAnimatorStateHash = Animator.StringToHash("Base Layer.Backwards");
         [Header("General")]
         Rigidbody rbScorpion;
         [SerializeField] Animator Scorpion;
@@ -93,28 +94,24 @@ namespace Beavermania.NPC
         ScorpionMacroAction previousMacroAction = ScorpionMacroAction.Hold;
         int consecutiveMacroSelections;
         float stunCooldownRemaining;
-        Vector3 hurricaneKickRetreatDirection;
-        bool hurricaneKickRetreatActive;
+        Vector3 hurricaneRetreatDirection;
+        bool hurricaneRetreatActive;
         bool startStunCooldownAfterRecovery;
         bool deathHandled;
         [SerializeField] float victoryDelay = 2f;
 
         public ScorpionState State => currentState;
-        public ScorpionStatsData StatsData => ActiveStats;
         public int MaxHealth => ActiveStats.maxHealth;
         public float VictoryDelay => Mathf.Max(0f, victoryDelay);
         public int comboLimit => ActiveStats.comboLimit;
-        public float StunnedClock => currentState == ScorpionState.Stunned ? stateTimer : 0f;
         public float chargeSpeed => ActiveStats.chargeSpeed;
         public float chargeDuration => ActiveStats.chargeDuration;
-        public float chargeClock => minimumChargeTimeRemaining;
         public float lookDistance => ActiveStats.lookDistance;
         public float chargeDistance => ActiveStats.chargeDistance;
         public float attackDistance => ActiveStats.attackDistance;
         public int AttackDamageAmount => ActiveStats.attackDamage;
         public int StingDamageAmount => ActiveStats.stingDamage;
         public float rotationSpeed => ActiveStats.rotationSpeed;
-        public float recoveryDuration => ActiveStats.recoveryDuration;
         public event Action<ScorpionScript> Defeated;
         event Action<IBossVictorySource> IBossVictorySource.Defeated
         {
@@ -544,18 +541,17 @@ namespace Beavermania.NPC
 
         void TickReverse()
         {
-            if (UsesAdvancedAi && hurricaneKickRetreatActive)
+            if (UsesAdvancedAi && hurricaneRetreatActive)
             {
                 stateTimer -= Time.fixedDeltaTime;
                 if (stateTimer <= 0f)
                 {
                     EnterState(HasCombatTargetInRange() ? ScorpionState.Look : ScorpionState.Idle);
+                    SetAnimatorState(walk: false, backwards: false, attack: false, stunned: false);
                     return;
                 }
 
-                SetHorizontalVelocity(hurricaneKickRetreatDirection * ActiveStats.hurricaneKickRetreatSpeed);
-                SetAnimatorState(walk: false, backwards: true, attack: false, stunned: false);
-                isAttacking = true;
+                ApplyHurricaneRetreatPresentation();
                 return;
             }
 
@@ -631,8 +627,9 @@ namespace Beavermania.NPC
                 UsesAdvancedAi && currentState == ScorpionState.Stunned,
                 ActiveStats.stunnedDamageMultiplier);
             bool accepted = ApplyDamage(resolvedDamage, damageType, source, NormalHitComboReward);
-            if (accepted && attackKind == PlayerAttackKind.HurricaneKick)
-                TryStartHurricaneKickRetreat(source);
+            if (accepted && (attackKind == PlayerAttackKind.HurricaneKick
+                || attackKind == PlayerAttackKind.HurricaneSword))
+                TryStartHurricaneRetreat(source);
 
             return accepted;
         }
@@ -671,7 +668,7 @@ namespace Beavermania.NPC
             return true;
         }
 
-        void TryStartHurricaneKickRetreat(Transform source)
+        void TryStartHurricaneRetreat(Transform source)
         {
             if (!UsesAdvancedAi
                 || rbScorpion == null
@@ -683,7 +680,7 @@ namespace Beavermania.NPC
                 return;
             }
 
-            if (hurricaneKickRetreatActive && currentState == ScorpionState.Reverse)
+            if (hurricaneRetreatActive && currentState == ScorpionState.Reverse)
                 return;
 
             Vector3 retreatDirection = source != null
@@ -691,15 +688,30 @@ namespace Beavermania.NPC
                 : targetTransform != null
                     ? transform.position - targetTransform.position
                     : -transform.forward;
-            hurricaneKickRetreatDirection = ScorpionCombatDecision.LockHorizontalDirection(retreatDirection);
-            if (hurricaneKickRetreatDirection.sqrMagnitude <= LookRotationEpsilon)
-                hurricaneKickRetreatDirection = ScorpionCombatDecision.LockHorizontalDirection(-transform.forward);
+            hurricaneRetreatDirection = ScorpionCombatDecision.LockHorizontalDirection(retreatDirection);
+            if (hurricaneRetreatDirection.sqrMagnitude <= LookRotationEpsilon)
+                hurricaneRetreatDirection = ScorpionCombatDecision.LockHorizontalDirection(-transform.forward);
 
-            hurricaneKickRetreatActive = true;
+            hurricaneRetreatActive = true;
             if (currentState == ScorpionState.Reverse)
                 stateTimer = Mathf.Max(0f, ActiveStats.hurricaneKickRetreatDuration);
             else
                 EnterState(ScorpionState.Reverse);
+
+            rotGoal = Quaternion.LookRotation(-hurricaneRetreatDirection);
+            rbScorpion.rotation = rotGoal;
+            ApplyHurricaneRetreatPresentation();
+            // Walk's exit transition is longer than this retreat. Enter the existing
+            // rapid, looping claw-cover animation once; later hits must not rewind it.
+            if (Scorpion != null && Scorpion.HasState(0, BackwardsAnimatorStateHash))
+                Scorpion.Play(BackwardsAnimatorStateHash, 0, 0f);
+        }
+
+        void ApplyHurricaneRetreatPresentation()
+        {
+            SetHorizontalVelocity(hurricaneRetreatDirection * ActiveStats.hurricaneKickRetreatSpeed);
+            SetAnimatorState(walk: false, backwards: true, attack: false, stunned: false);
+            isAttacking = true;
         }
 
         void Death()
@@ -712,7 +724,7 @@ namespace Beavermania.NPC
             state = currentState.ToString();
             CurrentHealth = 0;
             isAttacking = false;
-            hurricaneKickRetreatActive = false;
+            hurricaneRetreatActive = false;
             EnsureBoostChargeResolved();
             boostCharge?.RegisterKill();
             if (BossHealth != null)
@@ -915,7 +927,7 @@ namespace Beavermania.NPC
             if (UsesAdvancedAi && previousState == ScorpionState.Charge && nextState != ScorpionState.Charge)
                 ResetAdvancedChargeTracking();
             if (previousState == ScorpionState.Reverse && nextState != ScorpionState.Reverse)
-                hurricaneKickRetreatActive = false;
+                hurricaneRetreatActive = false;
             if (UsesAdvancedAi && previousState == ScorpionState.Recovered)
             {
                 postStunPressureTimer = Mathf.Max(0f, ActiveStats.postStunPressureDuration);
@@ -969,7 +981,7 @@ namespace Beavermania.NPC
                     stateTimer = UsesAdvancedAi ? Mathf.Max(0f, ActiveStats.attackWindowDuration) : 0f;
                     break;
                 case ScorpionState.Reverse:
-                    stateTimer = UsesAdvancedAi && hurricaneKickRetreatActive
+                    stateTimer = UsesAdvancedAi && hurricaneRetreatActive
                         ? Mathf.Max(0f, ActiveStats.hurricaneKickRetreatDuration)
                         : UsesAdvancedAi
                         ? RandomRange(ActiveStats.decisionHoldMin, ActiveStats.decisionHoldMax)
@@ -1144,14 +1156,6 @@ namespace Beavermania.NPC
             Scorpion.SetBool("Backwards", backwards);
             Scorpion.SetBool("Attack", attack);
             Scorpion.SetBool(StunnedAnimatorParameter, stunned);
-        }
-
-        void ClearStunnedPresentation()
-        {
-            if (Scorpion != null)
-                Scorpion.SetBool(StunnedAnimatorParameter, false);
-
-            SetEffectActive(StunEffect, false);
         }
 
         void SetEffectActive(GameObject effect, bool active)

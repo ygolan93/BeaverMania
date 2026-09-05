@@ -1,5 +1,33 @@
 # Codex to Cursor Handoff
 
+## 2026-09-05 - Hurricane aerial retreat and covering claws
+
+### Scope and ownership
+
+- Mixed: Codex owns `ScorpionScript.cs` and focused combat tests; Cursor owns final in-scene animation/contact verification. Do not modify the user's existing unrelated scene/prefab/asset changes.
+- Both explicit `HurricaneKick` and `HurricaneSword` attacks now trigger the same advanced-boss retreat. Damage multipliers remain 0.8x and 1.5x respectively.
+- Movement and `isAttacking` start immediately. The boss faces the attacker and retreats in the locked opposite direction at the existing 12 speed for 0.6 seconds. Further Hurricane hits do not change the direction/timer or rewind the animation.
+- Start the existing `Base Layer.Backwards` state once. The shipped controller already plays this looping clip at 2x; forcing entry avoids Walk's 1.2476-second exit blend swallowing the retreat. Do not add another animation-speed multiplier or duplicate animation events.
+- Preserve the serialized `hurricaneKickRetreatSpeed` / `hurricaneKickRetreatDuration` field names; both Hurricane kinds use them. No Inspector assignments or asset edits are required by the script patch.
+- Normal scorpions, Stunned/Dead rejection, Tree Stun/cooldown, damage pipeline, Boost registration, and victory/death flow are unchanged.
+
+### Unity verification required
+
+1. Hit a walking/charging/attacking boss with each aerial Hurricane: it immediately faces the player, moves backwards, and visibly cycles its covering claws throughout the retreat.
+2. Approach its moving claw colliders and confirm existing player contact damage occurs. Check player invulnerability/parry behavior and existing claw SFX; no duplicated events or new damage path should be introduced.
+3. Land further Kick/Sword hits during the same retreat: the 0.6-second timer and animation phase must not restart. Confirm normal animation and movement resume afterwards.
+4. While Tree-Stunned or dead, neither Hurricane can start retreat. Verify normal scorpions retain their ordinary combo stun behavior.
+5. Controller/clip: `Assets/Prefabs/Scorpion/BossAnimations/Scorpion.controller`, `Scorpion_Backwards.fbx`. Automated Animator-state coverage does not prove bone motion, physical contact, or visual quality in the production scene.
+
+### Verification status
+
+- Unity 2021.3.3f1 compiled the script changes; no C# compiler errors reported after refresh.
+- Six Scorpion EditMode suites: **94/94 passed**, job `8df3a523d03f4ca0a0658771aabd4984`. The first run exposed two fixture-state failures; owned inactive Boost dependencies and explicit target isolation fixed them without changing gameplay.
+- Scorpion combat/controller and victory PlayMode: job `4c81eb58e9ba4928902ed0835af95566` **succeeded**, **10 completed**, **zero reported failures**. The bridge reconnected after a domain reload but did not retain the detailed result payload; the 124 discovery count is not the executed test count.
+- Read-only clip inspection confirms `Scorpion_Backwards` loops over 0.666667 seconds at state speed 2, with 17 varying rotation keys on each `Jaw_Left.001` / `Jaw_Right.001`. Actual model motion, collider contact, and SFX still need the in-scene checks above.
+- Scoped `git diff --check` passed. The Windows `.ci` build shim remains unavailable due to its unresolved Unity assembly paths; the live Unity compile and selected tests were used. Full unrelated suites were not rerun for this follow-up.
+- No Prefab, Scene, Animator Controller, animation clip, `.asset`, or `.meta` file was changed for this follow-up.
+
 > **Status (2026-07-04, Wasp Queen hazard pool detachment):** Codex implemented the script-side fix so pooled Wasp Queen poison projectiles and poison zones no longer use a boss-child transform as their runtime storage root. Unity Play Mode verification is still required because the local batchmode test run crashed with `HandleProjectAlreadyOpenInAnotherInstance` while the project was already open.
 
 ## Wasp Queen hazard pool detachment - Cursor verification required

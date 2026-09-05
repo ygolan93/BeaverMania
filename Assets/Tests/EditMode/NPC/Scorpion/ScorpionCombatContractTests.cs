@@ -8,6 +8,8 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
 {
     public sealed class ScorpionCombatContractTests
     {
+        const string BoostChargeSettingsTypeName = "Beavermania.Data.Combat.BoostChargeSettings";
+        const string BoostChargeTypeName = "Beavermania.Player.Combat.BoostChargeController";
         const string DamageRulesTypeName = "Beavermania.Player.Combat.PlayerAttackDamageRules";
         const string DamageTypeName = "Beavermania.NPC.EnemyDamageType";
         const string PlayerAttackKindTypeName = "Beavermania.Player.Combat.PlayerAttackKind";
@@ -20,6 +22,7 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
         GameObject sourceObject;
         Component scorpion;
         ScriptableObject stats;
+        ScriptableObject boostSettings;
 
         [SetUp]
         public void SetUp()
@@ -43,6 +46,12 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
             SetFieldValue(scorpion, "CurrentHealth", MaxHealth);
             SetFieldValue(scorpion, "rotGoal", Quaternion.identity);
 
+            // Keep accepted hits from resolving and charging a player in the open scene.
+            Component boostCharge = scorpionObject.AddComponent(ResolveType(BoostChargeTypeName));
+            boostSettings = ScriptableObject.CreateInstance(ResolveType(BoostChargeSettingsTypeName));
+            SetFieldValue(boostCharge, "settings", boostSettings);
+            SetFieldValue(scorpion, "boostCharge", boostCharge);
+
             sourceObject = new GameObject("ScorpionCombatContractSource");
             sourceObject.transform.position = Vector3.back;
         }
@@ -56,6 +65,8 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
                 UnityEngine.Object.DestroyImmediate(stats);
             if (scorpionObject != null)
                 UnityEngine.Object.DestroyImmediate(scorpionObject);
+            if (boostSettings != null)
+                UnityEngine.Object.DestroyImmediate(boostSettings);
         }
 
         [TestCase("Unspecified", 1f)]
@@ -152,57 +163,145 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
             Assert.That(GetFieldValue<int>(scorpion, "CurrentHealth"), Is.EqualTo(MaxHealth - 60));
         }
 
-        [Test]
-        public void HurricaneKick_SecondHitDuringForcedReverse_DoesNotExtendTimer()
+        [TestCase("HurricaneKick", "HurricaneKick")]
+        [TestCase("HurricaneKick", "HurricaneSword")]
+        [TestCase("HurricaneSword", "HurricaneKick")]
+        [TestCase("HurricaneSword", "HurricaneSword")]
+        public void HurricaneAttack_AdditionalHitDuringForcedReverse_DoesNotExtendOrRedirect(
+            string firstAttackKindName,
+            string secondAttackKindName)
         {
             // Arrange
             SetState("Attack");
-            ReceivePlayerAttack(10, "HurricaneKick");
+            ReceivePlayerAttack(10, firstAttackKindName);
+            Vector3 originalDirection = GetFieldValue<Vector3>(scorpion, "hurricaneRetreatDirection");
+            Quaternion originalFacing = GetFieldValue<Quaternion>(scorpion, "rotGoal");
             SetFieldValue(scorpion, "stateTimer", 0.25f);
+            sourceObject.transform.position = Vector3.right;
 
             // Act
-            ReceivePlayerAttack(10, "HurricaneKick");
+            bool accepted = ReceivePlayerAttack(10, secondAttackKindName);
 
             // Assert
+            Assert.That(accepted, Is.True);
             Assert.That(GetStateName(), Is.EqualTo("Reverse"));
-            Assert.That(GetFieldValue<bool>(scorpion, "hurricaneKickRetreatActive"), Is.True);
+            Assert.That(GetFieldValue<bool>(scorpion, "hurricaneRetreatActive"), Is.True);
             Assert.That(GetFieldValue<float>(scorpion, "stateTimer"), Is.EqualTo(0.25f).Within(0.0001f));
+            Assert.That(Vector3.Distance(GetFieldValue<Vector3>(scorpion, "hurricaneRetreatDirection"), originalDirection),
+                Is.LessThan(0.0001f));
+            Assert.That(Quaternion.Angle(GetFieldValue<Quaternion>(scorpion, "rotGoal"), originalFacing),
+                Is.LessThan(0.0001f));
         }
 
-        [Test]
-        public void HurricaneKick_StartsCoveringReverseAtConfiguredSpeedAndDuration()
+        [TestCase("HurricaneKick", "Attack")]
+        [TestCase("HurricaneSword", "Attack")]
+        [TestCase("HurricaneKick", "Reverse")]
+        [TestCase("HurricaneSword", "Reverse")]
+        public void HurricaneAttack_StartsCoveringReverseImmediatelyAndKeepsConfiguredSpeed(
+            string attackKindName,
+            string initialStateName)
         {
             // Arrange
-            SetState("Attack");
+            SetState(initialStateName);
+            Rigidbody rigidbody = GetFieldValue<Rigidbody>(scorpion, "rbScorpion");
 
             // Act
-            ReceivePlayerAttack(10, "HurricaneKick");
+            ReceivePlayerAttack(10, attackKindName);
             float initialTimer = GetFieldValue<float>(scorpion, "stateTimer");
+            Vector3 immediateVelocity = rigidbody.velocity;
+            bool immediatelyAttacking = GetFieldValue<bool>(scorpion, "isAttacking");
+            Vector3 coveringFacing = GetFieldValue<Quaternion>(scorpion, "rotGoal") * Vector3.forward;
             InvokeMethod(scorpion, "TickReverse");
 
             // Assert
             Assert.That(GetStateName(), Is.EqualTo("Reverse"));
             Assert.That(initialTimer, Is.EqualTo(0.6f).Within(0.0001f));
-            Assert.That(GetFieldValue<Rigidbody>(scorpion, "rbScorpion").velocity.z, Is.EqualTo(12f).Within(0.0001f));
+            Assert.That(Vector3.Distance(immediateVelocity, Vector3.forward * 12f), Is.LessThan(0.0001f));
+            Assert.That(immediatelyAttacking, Is.True, "Covering-claw damage must start on the accepted hit, before the next tick.");
+            Assert.That(Vector3.Dot(coveringFacing, immediateVelocity.normalized), Is.EqualTo(-1f).Within(0.0001f),
+                "The claws must face the attacker while the boss moves backwards, including hits from behind.");
+            Assert.That(Vector3.Distance(rigidbody.velocity, immediateVelocity), Is.LessThan(0.0001f));
             Assert.That(GetFieldValue<bool>(scorpion, "isAttacking"), Is.True);
+            Assert.That(GetFieldValue<float>(scorpion, "stateTimer"),
+                Is.EqualTo(0.6f - Time.fixedDeltaTime).Within(0.0001f));
         }
 
-        [Test]
-        public void HurricaneKick_WhileStunned_DamagesWithoutRetreating()
+        [TestCase("HurricaneKick")]
+        [TestCase("HurricaneSword")]
+        public void HurricaneAttack_RetreatExpires_StopsMotionAndCoveringClawDamage(string attackKindName)
+        {
+            // Arrange
+            SetState("Attack");
+            ReceivePlayerAttack(10, attackKindName);
+            SetFieldValue(scorpion, "targetTransform", null);
+            SetFieldValue(scorpion, "stateTimer", Time.fixedDeltaTime);
+
+            // Act
+            InvokeMethod(scorpion, "TickReverse");
+
+            // Assert
+            Assert.That(GetStateName(), Is.EqualTo("Idle"));
+            Assert.That(GetFieldValue<bool>(scorpion, "hurricaneRetreatActive"), Is.False);
+            Assert.That(GetFieldValue<bool>(scorpion, "isAttacking"), Is.False);
+            Assert.That(GetFieldValue<Rigidbody>(scorpion, "rbScorpion").velocity.sqrMagnitude,
+                Is.LessThan(0.0001f));
+        }
+
+        [TestCase("Unspecified")]
+        [TestCase("BareHands")]
+        [TestCase("Arrow")]
+        [TestCase("SwordSwing")]
+        public void OrdinaryAttack_DamagesWithoutForcingRetreat(string attackKindName)
+        {
+            // Arrange
+            SetState("Attack");
+
+            // Act
+            bool accepted = ReceivePlayerAttack(10, attackKindName);
+
+            // Assert
+            Assert.That(accepted, Is.True);
+            Assert.That(GetStateName(), Is.EqualTo("Attack"));
+            Assert.That(GetFieldValue<bool>(scorpion, "hurricaneRetreatActive"), Is.False);
+        }
+
+        [TestCase("HurricaneKick")]
+        [TestCase("HurricaneSword")]
+        public void HurricaneAttack_NormalScorpion_DoesNotForceRetreat(string attackKindName)
+        {
+            // Arrange
+            SetFieldValue(stats, "advancedAiEnabled", false);
+            SetState("Attack");
+
+            // Act
+            bool accepted = ReceivePlayerAttack(10, attackKindName);
+
+            // Assert
+            Assert.That(accepted, Is.True);
+            Assert.That(GetStateName(), Is.EqualTo("Attack"));
+            Assert.That(GetFieldValue<bool>(scorpion, "hurricaneRetreatActive"), Is.False);
+        }
+
+        [TestCase("HurricaneKick", 16)]
+        [TestCase("HurricaneSword", 30)]
+        public void HurricaneAttack_WhileStunned_DamagesWithoutRetreating(string attackKindName, int expectedDamage)
         {
             // Arrange
             SetState("Stunned");
 
             // Act
-            ReceivePlayerAttack(10, "HurricaneKick");
+            bool accepted = ReceivePlayerAttack(10, attackKindName);
 
             // Assert
+            Assert.That(accepted, Is.True);
+            Assert.That(GetFieldValue<int>(scorpion, "CurrentHealth"), Is.EqualTo(MaxHealth - expectedDamage));
             Assert.That(GetStateName(), Is.EqualTo("Stunned"));
-            Assert.That(GetFieldValue<bool>(scorpion, "hurricaneKickRetreatActive"), Is.False);
+            Assert.That(GetFieldValue<bool>(scorpion, "hurricaneRetreatActive"), Is.False);
         }
 
-        [Test]
-        public void HurricaneKick_WhileDead_IsRejectedWithoutRetreating()
+        [TestCase("HurricaneKick")]
+        [TestCase("HurricaneSword")]
+        public void HurricaneAttack_WhileDead_IsRejectedWithoutRetreating(string attackKindName)
         {
             // Arrange
             SetState("Dead");
@@ -210,12 +309,12 @@ namespace Beavermania.Tests.EditMode.NPC.Scorpion
             SetFieldValue(scorpion, "deathHandled", true);
 
             // Act
-            bool accepted = ReceivePlayerAttack(10, "HurricaneKick");
+            bool accepted = ReceivePlayerAttack(10, attackKindName);
 
             // Assert
             Assert.That(accepted, Is.False);
             Assert.That(GetStateName(), Is.EqualTo("Dead"));
-            Assert.That(GetFieldValue<bool>(scorpion, "hurricaneKickRetreatActive"), Is.False);
+            Assert.That(GetFieldValue<bool>(scorpion, "hurricaneRetreatActive"), Is.False);
         }
 
         [Test]
